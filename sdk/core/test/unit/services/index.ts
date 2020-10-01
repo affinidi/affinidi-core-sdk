@@ -1,0 +1,5 @@
+require('./ApiService.test')
+require('./EmailIssuerService.test')
+require('./CognitoService.test')
+require('./PhoneIssuerService.test')
+require('./WalletStorageService.test')

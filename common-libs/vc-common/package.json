@@ -1,0 +1,69 @@
+{
+  "name": "@affinidi/vc-common",
+  "version": "1.1.0",
+  "main": "dist/index.js",
+  "module": "dist/vc-common.esm.js",
+  "typings": "dist/index.d.ts",
+  "description": "Shared types and utilities for credential related libraries",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/affinityproject/affinidi-core-sdk.git",
+    "directory": "common-libs/vc-common"
+  },
+  "author": "Issuer Squad",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "start": "tsdx watch --tsconfig ./tsconfig.build.json",
+    "build": "tsdx build --tsconfig ./tsconfig.build.json",
+    "test": "tsdx test --passWithNoTests",
+    "test:watch": "npm run test -- --watch",
+    "test:coverage": "npm run test -- --coverage",
+    "test:coverage:codeclimate": "npm run test -- --coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.vc_common.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)  || echo \"lcov file is empty. There is no tests\"",
+    "lint": "tsdx lint src",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run test && npm run lint",
+    "test:integration": "",
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+  },
+  "dependencies": {
+    "did-resolver": "2.0.1",
+    "jsonld": "^2.0.2",
+    "jsonld-signatures": "^5.1.0",
+    "tiny-warning": "^1.0.3",
+    "tslib": "^2.0.1"
+  },
+  "devDependencies": {
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
+    "@affinidi/eslint-config": "1.0.1",
+    "@affinidi/prettier-config": "1.0.1",
+    "@types/jest": "24.9.1",
+    "@types/node": "13.13.12",
+    "@typescript-eslint/eslint-plugin": "3.2.0",
+    "@typescript-eslint/parser": "3.2.0",
+    "acorn": "7.2.0",
+    "eslint": "7.2.0",
+    "eslint-config-prettier": "6.11.0",
+    "eslint-plugin-prettier": "3.1.3",
+    "license-checker": "25.0.1",
+    "prettier": "2.0.5",
+    "tsdx": "0.13.3",
+    "ts-node": "8.10.2",
+    "typescript": "3.9.7"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

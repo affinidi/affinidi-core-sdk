@@ -1,0 +1,70 @@
+{
+  "name": "@affinidi/tiny-lds-ecdsa-secp256k1-2019",
+  "version": "1.0.1",
+  "description": "tiny version of lds-ecdsa-secp256k1-2019",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/tiny-lds-ecdsa-secp256k1-2019.esm.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "tsdx watch --target node --tsconfig ./tsconfig.build.json",
+    "build": "tsdx build --target node --tsconfig ./tsconfig.build.json",
+    "test": "tsdx test",
+    "test:watch": "tsdx test --watch",
+    "lint": "tsdx lint src",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run test && npm run lint",
+    "test:coverage": "tsdx test --coverage",
+    "test:coverage:codeclimate": "tsdx test --coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.verifier_util.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
+    "test:integration": "",
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/affinityproject/affinidi-core-sdk.git",
+    "directory": "common-libs/tiny-lds-ecdsa-secp256k1-2019"
+  },
+  "dependencies": {
+    "@types/create-hash": "^1.2.2",
+    "@types/tiny-secp256k1": "^1.0.0",
+    "base64url": "^3.0.1",
+    "create-hash": "^1.2.0",
+    "jsonld": "^2.0.2",
+    "jsonld-signatures": "^5.1.0",
+    "tiny-secp256k1": "^1.1.5",
+    "tslib": "^2.0.1"
+  },
+  "devDependencies": {
+    "@affinidi/eslint-config": "^1.0.1",
+    "@affinidi/prettier-config": "^1.0.1",
+    "@transmute/lds-ecdsa-secp256k1-2019": "^0.1.3",
+    "@transmute/es256k-jws-ts": "^0.1.3",
+    "@types/jest": "^24.0.25",
+    "@typescript-eslint/eslint-plugin": "^3.2.0",
+    "@typescript-eslint/parser": "^3.2.0",
+    "acorn": "^7.1.0",
+    "eslint": "^7.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "license-checker": "25.0.1",
+    "prettier": "^2.0.5",
+    "ts-node": "^8.6.2",
+    "tsdx": "^0.13.3",
+    "typescript": "^4.0.2"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

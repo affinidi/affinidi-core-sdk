@@ -1,0 +1,20 @@
+{
+  "title": [
+    {
+      "pattern": "^(build|ci|docs|feature|fix|perf|refactor|style|test)((.+))?:\\s.+",
+      "message": "Your title needs to be prefixed with a topic and have a short description"
+    }
+  ],
+  "body": [
+    {
+      "pattern": ".{1,}",
+      "message": "You need literally anything in your description"
+    }
+  ],
+  "requested_reviewers.0.login": [
+    {
+      "pattern": ".+",
+      "message": "Someone from the team has to be added as a reviewer"
+    }
+  ]
+}

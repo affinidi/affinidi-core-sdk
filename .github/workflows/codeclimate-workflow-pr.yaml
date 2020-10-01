@@ -1,0 +1,64 @@
+on:
+  pull_request:
+    branches:
+      - master
+name: CodeClimate Workflow
+jobs:
+  codeClimateTrigger:
+    name: CodeClimate Trigger
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set env vars
+        id: vars
+        run: echo "::set-output name=pr_key::$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')"
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Download cc-test-reporter
+        run: |
+            mkdir -p tmp/
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./tmp/cc-test-reporter
+            chmod +x ./tmp/cc-test-reporter
+      - uses: actions/upload-artifact@v1
+        with:
+          name: test-reporter
+          path: ./tmp/cc-test-reporter
+      - name: Install dependencies
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - name: Link
+        run: npm run link
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - name: Bootstrap
+        run: npm run bootstrap
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - name: Check Diff
+        run: git diff --exit-code
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - name: Lerna checkLicenses
+        run: npm run checkLicenses
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - name: Lint packages
+        run: npm run lint
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - uses: paambaati/codeclimate-action@v2.6.0
+        env:
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}} 
+          TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
+        with:
+          coverageCommand: npm run test:coverage:codeclimate
+      - name: Generate and Upload Test Coverage
+        run: |
+            $GITHUB_WORKSPACE/tmp/cc-test-reporter sum-coverage $GITHUB_WORKSPACE/tmp/codeclimate.*.json -p $(ls -1q $GITHUB_WORKSPACE/tmp/codeclimate.*.json | wc -l) -d -o tmp/codeclimate.total.json
+            $GITHUB_WORKSPACE/tmp/cc-test-reporter upload-coverage -i $GITHUB_WORKSPACE/tmp/codeclimate.total.json
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}} 

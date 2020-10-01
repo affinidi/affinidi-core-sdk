@@ -1,0 +1,43 @@
+name: Public Release to npmjs.com
+
+on:
+  repository_dispatch:
+    types: [release_to_npm]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Lerna link
+        run: npm run link
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Lerna bootstrap
+        run: npm run bootstrap
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Build the package
+        run: npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: "https://registry.npmjs.org"
+          scope: "@affinidi"
+      - name: Publish to npmjs.org
+        run: npm run exec -- --scope @affinidi/${{ github.event.client_payload.packageName }} npm publish -- --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}

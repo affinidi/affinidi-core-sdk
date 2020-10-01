@@ -1,0 +1,51 @@
+name: Public Packages publish workflow
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: npm install
+      - name: Lerna link
+        run: npm run link
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Lerna bootstrap
+        run: npm run bootstrap
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Lerna checkLicenses
+        run: npm run checkLicenses
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+          TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
+      - name: Build the package
+        run: npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: "https://registry.npmjs.org"
+          scope: "@affinidi"
+      - name: Publish to npmjs.org
+        run: npm run publish from-package -- --yes --registry https://registry.npmjs.org/
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}

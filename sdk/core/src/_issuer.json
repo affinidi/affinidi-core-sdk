@@ -1,0 +1,193 @@
+{
+  "components": {
+    "examples": {},
+    "headers": {},
+    "parameters": {},
+    "requestBodies": {},
+    "responses": {},
+    "schemas": {
+      "FreeFormObject": {
+        "properties": {},
+        "type": "object",
+        "additionalProperties": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "BuildCredentialOfferOutput": {
+        "properties": {
+          "credentialOffer": {
+            "$ref": "#/components/schemas/FreeFormObject"
+          }
+        },
+        "required": ["credentialOffer"],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "OfferedCredential": {
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "renderInfo": {
+            "$ref": "#/components/schemas/FreeFormObject",
+            "nullable": true
+          }
+        },
+        "required": ["type"],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "BuildCredentialOfferInput": {
+        "properties": {
+          "offeredCredentials": {
+            "items": {
+              "$ref": "#/components/schemas/OfferedCredential"
+            },
+            "type": "array"
+          },
+          "callbackUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "audienceDid": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "nonce": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["offeredCredentials"],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VerifyCredentialOfferResponseOutput": {
+        "properties": {
+          "jti": {
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "isValid": {
+            "type": "boolean"
+          },
+          "selectedCredentials": {
+            "items": {
+              "$ref": "#/components/schemas/OfferedCredential"
+            },
+            "type": "array"
+          }
+        },
+        "required": ["jti", "errors", "issuer", "isValid", "selectedCredentials"],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VerifyCredentialOfferResponseInput": {
+        "properties": {
+          "credentialOfferResponseToken": {
+            "type": "string"
+          },
+          "credentialOfferRequestToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["credentialOfferResponseToken"],
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {}
+  },
+  "info": {
+    "title": "affinity-issuer",
+    "version": "0.0.75",
+    "description": "Affinity issuer",
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/issuer/build-credential-offer": {
+      "post": {
+        "operationId": "BuildCredentialOffer",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildCredentialOfferOutput"
+                }
+              }
+            },
+            "description": "Ok"
+          }
+        },
+        "description": "Build credential offer JWT object from input data.",
+        "summary": "Builds credential offer object.",
+        "tags": ["Issuer"],
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildCredentialOfferInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/issuer/verify-offer-response": {
+      "post": {
+        "operationId": "VerifyCredentialOfferResponse",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyCredentialOfferResponseOutput"
+                }
+              }
+            },
+            "description": "Ok"
+          }
+        },
+        "description": "Verifying JWT token (signature and expiration), validate response against request if requestToken was passed.",
+        "summary": "Verifying offer response token.",
+        "tags": ["Issuer"],
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyCredentialOfferResponseInput"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ]
+}

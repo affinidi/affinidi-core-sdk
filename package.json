@@ -1,0 +1,34 @@
+{
+  "name": "affinidi-core-sdk",
+  "private": true,
+  "devDependencies": {
+    "@types/sinon": "^9.0.5",
+    "husky": "4.2.5",
+    "lerna": "3.20.2",
+    "sinon": "^9.0.3",
+    "typescript": "3.9.7"
+  },
+  "scripts": {
+    "ci": "lerna exec npm ci",
+    "clean": "lerna clean",
+    "tsc": "lerna run tsc",
+    "link": "lerna link",
+    "version": "lerna version",
+    "lint": "lerna run lint",
+    "build": "lerna run lint && lerna run tsc && lerna run build",
+    "bootstrap": "lerna bootstrap",
+    "publish": "lerna publish",
+    "test": "lerna run test",
+    "test:coverage": "lerna run test:coverage",
+    "test:coverage:codeclimate": "lerna run test:coverage:codeclimate",
+    "test:integration": "lerna run test:integration",
+    "exec": "lerna exec",
+    "list-packages": "lerna list --json",
+    "checkLicenses": "lerna run checkLicenses"
+  },
+  "dependencies": {
+    "@ahryman40k/ts-fhir-types": "4.0.25",
+    "@types/axios": "0.14.0",
+    "axios": "0.19.2"
+  }
+}

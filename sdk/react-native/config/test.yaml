@@ -1,0 +1,5 @@
+log:
+  level: error
+
+network:
+  url: https://api.dev.affinity-project.org
