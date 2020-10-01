@@ -56,7 +56,7 @@ Extend `app.json` and add a postPublish hook:
         "config": {
           "organization": "Affinity",
           "project": "wallet-sdk",
-          "authToken": "***REMOVED***"
+          "authToken": "67dcf0e0d4b14994bc350f2faa9630e60d4007f6db4e4d62b0a35bf23cee7692"
         }
       }
     ]
