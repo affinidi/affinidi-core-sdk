@@ -1,0 +1,66 @@
+{
+  "name": "@affinidi/vc-data",
+  "version": "1.0.2",
+  "main": "dist/index.js",
+  "module": "dist/vc-data.esm.js",
+  "typings": "dist/index.d.ts",
+  "description": "Data types for verifiable credentials",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/affinityproject/affinidi-core-sdk.git",
+    "directory": "sdk/vc-data"
+  },
+  "author": "Issuer Squad",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "start": "tsdx watch --tsconfig ./tsconfig.build.json",
+    "build": "tsdx build --tsconfig ./tsconfig.build.json",
+    "test": "tsdx test",
+    "test:watch": "tsdx test --watch",
+    "lint": "tsdx lint src",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run test && npm run lint",
+    "test:coverage": "tsdx test --coverage",
+    "test:coverage:codeclimate": "tsdx test --coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.vc_dats.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
+    "test:integration": "",
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@affinidi/vc-common": "^1.1.0",
+    "@ahryman40k/ts-fhir-types": "^4.0.29",
+    "ts-toolbelt": "^6.4.2",
+    "tslib": "^2.0.0"
+  },
+  "devDependencies": {
+    "@affinidi/eslint-config": "1.0.1",
+    "@affinidi/prettier-config": "1.0.1",
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
+    "@types/jest": "25.2.3",
+    "@typescript-eslint/eslint-plugin": "3.2.0",
+    "@typescript-eslint/parser": "3.2.0",
+    "eslint": "7.2.0",
+    "eslint-config-prettier": "6.11.0",
+    "eslint-plugin-prettier": "3.1.3",
+    "jsonld": "^2.0.2",
+    "license-checker": "25.0.1",
+    "prettier": "2.0.5",
+    "tsdx": "0.13.3",
+    "typescript": "3.9.7"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  }
+}
