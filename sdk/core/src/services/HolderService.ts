@@ -4,7 +4,7 @@ import { Affinity, JwtService, DidDocumentService, DigestService, KeysService } 
 
 import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
-import { stripParamsFromDidUrl } from '../../src/_helpers'
+import { stripParamsFromDidUrl } from '../_helpers'
 
 @profile()
 export default class HolderService {
