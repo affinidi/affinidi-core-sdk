@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-expo-sdk",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "SDK monorepo for affinity DID solution for Expo",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
