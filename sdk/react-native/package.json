@@ -34,7 +34,7 @@
   "license": "ISC",
   "dependencies": {
     "@affinidi/common": "1.1.0",
-    "@affinidi/wallet-core-sdk": "1.2.0",
+    "@affinidi/wallet-core-sdk": "1.2.1",
     "@react-native-community/netinfo": "^5.9.3",
     "@sentry/react-native": "^1.5.0",
     "@types/text-encoding": "0.0.35",
