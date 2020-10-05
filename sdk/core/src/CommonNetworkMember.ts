@@ -1850,7 +1850,17 @@ export class CommonNetworkMember {
   protected _sendVCSavedMetrics(credentials: any) {
     for (const credential of credentials) {
       const vcMetadata = {vcType: credential.type}
-      this._sendVCSavedMetric(credential.id, credential.issuer, vcMetadata)
+      const vcId = credential.id
+      // the issuer property could be either an URI string or an object with id propoerty
+      // https://www.w3.org/TR/vc-data-model/#issuer
+      let issuerId: string
+      const issuer = credential.issuer
+      if (typeof issuer === 'string') {
+        issuerId = issuer
+      } else {
+        issuerId = issuer.id
+      }
+      this._sendVCSavedMetric(vcId, issuerId, vcMetadata)
     }
   }
 
