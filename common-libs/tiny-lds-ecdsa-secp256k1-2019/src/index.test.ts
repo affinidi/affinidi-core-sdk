@@ -8,6 +8,19 @@ const jsigs = require('jsonld-signatures')
 
 const { AssertionProofPurpose } = jsigs.purposes
 
+/*
+ _____  _                        _   __                     ___                _   _         _     _____                    _  _    _              
+|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)             
+  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___ 
+  | |  | '_ \  / _ \/ __| / _ \ |    \  / _ \| | | |/ __| |  _  || '__| / _ \ | . ` | / _ \ | __|  `--. \ / _ \| '_ \ / __|| || __|| |\ \ / / / _ \
+  | |  | | | ||  __/\__ \|  __/ | |\  \|  __/| |_| |\__ \ | | | || |   |  __/ | |\  || (_) || |_  /\__/ /|  __/| | | |\__ \| || |_ | | \ V / |  __/
+  \_/  |_| |_| \___||___/ \___| \_| \_/ \___| \__, ||___/ \_| |_/|_|    \___| \_| \_/ \___/  \__| \____/  \___||_| |_||___/|_| \__||_|  \_/   \___|
+                                               __/ |                                                                                               
+                                              |___/                                                                                                
+
+The keys below this message are used to test that key cryptographic functionality does not break.
+They are fixtures and should not be considered sensitive.
+*/
 const didConfig = {
   did: 'did:elem:EiBOH3jRdJZmRE4ew_lKc0RgSDsZphs3ddXmz2MHfKHXcQ',
   didDoc: {
@@ -137,6 +150,16 @@ const didConfigWOBackwardsCompat = {
     },
   },
 }
+/*
+ _____             _           __    __  _        _                           
+|  ___|           | |         / _|  / _|(_)      | |                          
+| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___ 
+|  __| | '_ \  / _` |  / _ \ |  _| |  _|| |\ \/ /| __|| | | || '__| / _ \/ __|
+| |___ | | | || (_| | | (_) || |   | |  | | >  < | |_ | |_| || |   |  __/\__ \
+\____/ |_| |_| \__,_|  \___/ |_|   |_|  |_|/_/\_\ \__| \__,_||_|    \___||___/
+                                                                              
+                                                                              
+*/
 
 const document = {
   '@context': {
