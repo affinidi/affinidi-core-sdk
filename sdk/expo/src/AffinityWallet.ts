@@ -178,6 +178,9 @@ export class AffinityWallet extends CoreNetwork {
   async saveCredentials(data: any): Promise<any> {
     const encryptedCredentials = await this.walletStorageService.encryptCredentials(data)
 
+    this._sendVCSavedMetrics(data) // encryption and saving are both async, saveCredentials returns a promise.
+                                   // we should only send metrics once it is actually saved, but how?
+
     this._credentials = this._credentials.concat(data)
 
     return this.saveEncryptedCredentials(encryptedCredentials)
