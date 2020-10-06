@@ -4,7 +4,7 @@ import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affini
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
-import { EventCategory, EventName, VcMetadata } from '@affinityproject/affinity-metrics-lib'
+import { EventCategory, EventName, EventMetadata } from '@affinityproject/affinity-metrics-lib'
 
 import API from './services/ApiService'
 import CognitoService from './services/CognitoService'
@@ -1834,33 +1834,36 @@ export class CommonNetworkMember {
     this._metricsService.send(event)
   }
 
-  private _sendVCSavedMetric(vcId: string, issuerId: string, vcMetadata: VcMetadata) {
+  private _sendVCSavedMetric(vcId: string, issuerId: string, metadata: EventMetadata) {
     const event = {
       link: vcId,
       secondaryLink: issuerId,
       name: EventName.VC_SAVED,
       category: EventCategory.VC,
       subCategory: 'save',
-      vcMetadata: vcMetadata,
+      metadata: metadata,
     }
 
     this._metricsService.send(event)
   }
 
-  protected _sendVCSavedMetrics(credentials: any) {
+  protected _sendVCSavedMetrics(credentials: SignedCredential[]) {
     for (const credential of credentials) {
-      const vcMetadata = {vcType: credential.type}
+      const metadata = {
+        vcType: credential.type
+      }
       const vcId = credential.id
       // the issuer property could be either an URI string or an object with id propoerty
       // https://www.w3.org/TR/vc-data-model/#issuer
       let issuerId: string
       const issuer = credential.issuer
+
       if (typeof issuer === 'string') {
         issuerId = issuer
       } else {
         issuerId = issuer.id
       }
-      this._sendVCSavedMetric(vcId, issuerId, vcMetadata)
+      this._sendVCSavedMetric(vcId, issuerId, metadata)
     }
   }
 
