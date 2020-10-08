@@ -52,7 +52,11 @@ export type ObservationV1 = CreateThing<
   }
 >
 
-export type FHIRResourceList = ImmunizationV1 | FHIRPatientE | ObservationV1
+export type SpecimenV1 = CreateThing<'Specimen', R4.ISpecimen>
+
+export type FHIROrganizationV1 = CreateThing<'Organization', R4.IOrganization>
+
+export type FHIRResourceList = ImmunizationV1 | FHIRPatientE | ObservationV1 | SpecimenV1 | FHIROrganizationV1
 
 export type FHIRBundleEntry = CreateThing<
   'BundleEntry',
@@ -149,7 +153,6 @@ export const getVCHealthPassportGeneralV1Context = () => {
     type: 'HealthPassportGeneralCredentialV1',
     typeIdBase: 'fhir',
     entries: [entryImmunization, entryObservation, ...getFHIRV1ContextEntries()],
-
     vocab: 'fhir',
   })
 }
@@ -164,6 +167,20 @@ export const getVCHealthPassportBundleV1Context = () => {
 
   const observationEntry = createContextEntry<ObservationV1, R4.IObservation>({
     type: 'Observation',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const specimenEntry = createContextEntry<SpecimenV1, R4.ISpecimen>({
+    type: 'Specimen',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const organizationEntry = createContextEntry<FHIROrganizationV1, R4.IOrganization>({
+    type: 'Organization',
     typeIdBase: 'fhir',
     fields: {},
     vocab: 'fhir',
@@ -198,10 +215,13 @@ export const getVCHealthPassportBundleV1Context = () => {
     entries: [
       observationEntry,
       immunizationEntry,
+      specimenEntry,
+      organizationEntry,
       bundleEntryEntry,
       bundleEntry,
       bundleContainerEntry,
       ...getFHIRV1ContextEntries(),
     ],
+    vocab: 'fhir',
   })
 }
