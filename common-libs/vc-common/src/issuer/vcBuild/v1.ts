@@ -1,3 +1,5 @@
+import warning from 'tiny-warning'
+
 import {
   VCV1SubjectBaseMA,
   VCV1Revocation,
@@ -8,34 +10,10 @@ import {
   VCV1Skeleton,
   DocumentLoader,
 } from '../../'
-import warning from 'tiny-warning'
-
-import {
-  Signer,
-  // GetSignSuiteOptions,
-  // GetProofPurposeOptionsOptions,
-  GetSignSuiteFn,
-  GetProofPurposeOptionsFn,
-} from '../common'
+import { Signer, GetSignSuiteFn, GetProofPurposeOptionsFn, removeIfExists, validateId } from '../common'
 
 const jsigs = require('jsonld-signatures')
 const { AssertionProofPurpose } = jsigs.purposes
-
-const removeIfExists = <T>(input: T | T[] | undefined, ...items: T[]) => {
-  if (typeof input === 'undefined') {
-    return []
-  }
-
-  const array = (Array.isArray(input) ? input : [input]).slice()
-  for (const item of items) {
-    const foundIndex = array.indexOf(item)
-    if (foundIndex >= 0) {
-      array.splice(foundIndex, 1)
-    }
-  }
-
-  return array
-}
 
 export const getVCV1JSONContext = () => {
   warning(
@@ -60,16 +38,20 @@ type BuildVCV1Skeleton = <S extends VCV1SubjectBaseMA>(opts: {
   context?: TContext
 }) => VCV1Skeleton<S>
 
-export const buildVCV1Skeleton: BuildVCV1Skeleton = ({ id, credentialSubject, holder, type, context }) => ({
-  '@context': [
-    'https://www.w3.org/2018/credentials/v1',
-    ...removeIfExists(context, 'https://www.w3.org/2018/credentials/v1'),
-  ],
-  id,
-  type: ['VerifiableCredential', ...removeIfExists(type, 'VerifiableCredential')],
-  holder,
-  credentialSubject,
-})
+export const buildVCV1Skeleton: BuildVCV1Skeleton = ({ id, credentialSubject, holder, type, context }) => {
+  validateId(id)
+
+  return {
+    '@context': [
+      'https://www.w3.org/2018/credentials/v1',
+      ...removeIfExists(context, 'https://www.w3.org/2018/credentials/v1'),
+    ],
+    id,
+    type: ['VerifiableCredential', ...removeIfExists(type, 'VerifiableCredential')],
+    holder,
+    credentialSubject,
+  }
+}
 
 type BuildVCV1Unsigned = <S extends VCV1SubjectBaseMA, R extends VCV1Revocation>(opts: {
   skeleton: VCV1Skeleton<S>
@@ -78,12 +60,16 @@ type BuildVCV1Unsigned = <S extends VCV1SubjectBaseMA, R extends VCV1Revocation>
   revocation?: R
 }) => VCV1Unsigned<S>
 
-export const buildVCV1Unsigned: BuildVCV1Unsigned = ({ skeleton, issuanceDate, expirationDate, revocation }) => ({
-  ...skeleton,
-  issuanceDate,
-  ...(expirationDate ? { expirationDate } : undefined),
-  ...(revocation ? { revocation } : undefined),
-})
+export const buildVCV1Unsigned: BuildVCV1Unsigned = ({ skeleton, issuanceDate, expirationDate, revocation }) => {
+  validateId(skeleton.id)
+
+  return {
+    ...skeleton,
+    issuanceDate,
+    ...(expirationDate ? { expirationDate } : undefined),
+    ...(revocation ? { revocation } : undefined),
+  }
+}
 
 export type GetAssertionProofPurposeOptionsFn = GetProofPurposeOptionsFn<Record<string, any>>
 
@@ -102,6 +88,8 @@ export const buildVCV1: BuildVCV1 = async ({
   documentLoader,
   getProofPurposeOptions,
 }) => {
+  validateId(unsigned.id)
+
   try {
     const result = await jsigs.sign(
       {

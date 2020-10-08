@@ -1,39 +1,35 @@
-import { VCV1, TContext, VPV1, VPV1Unsigned, VPV1Holder, DocumentLoader } from '../../'
+import warning from 'tiny-warning'
 
-import { Signer, GetSignSuiteFn, GetProofPurposeOptionsFn } from '../common'
+import { VCV1, TContext, VPV1, VPV1Unsigned, VPV1Holder, DocumentLoader } from '../../'
+import { Signer, GetSignSuiteFn, GetProofPurposeOptionsFn, removeIfExists, validateId } from '../common'
 
 const jsigs = require('jsonld-signatures')
 const { AuthenticationProofPurpose } = jsigs.purposes
 
-const removeIfExists = <T>(input: T | T[] | undefined, ...items: T[]) => {
-  if (typeof input === 'undefined') {
-    return []
-  }
-
-  const array = (Array.isArray(input) ? input : [input]).slice()
-  for (const item of items) {
-    const foundIndex = array.indexOf(item)
-    if (foundIndex >= 0) {
-      array.splice(foundIndex, 1)
-    }
-  }
-
-  return array
-}
-
 type BuildVPV1Unsigned = (opts: {
+  id?: string
   vcs: VCV1[]
   holder: VPV1Holder
   type?: string | string[]
   context?: TContext
 }) => VPV1Unsigned
 
-export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ vcs, holder, type, context }): VPV1Unsigned => {
+export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, context }): VPV1Unsigned => {
+  if (id) {
+    validateId(id)
+  } else {
+    warning(
+      true,
+      'An id should be supplied for the VP. Otherwise top-level, non-object properties (like "type") will be malleable.',
+    )
+  }
+
   return {
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
       ...removeIfExists(context, 'https://www.w3.org/2018/credentials/v1'),
     ],
+    ...(id ? { id } : {}),
     type: ['VerifiablePresentation', ...removeIfExists(type, 'VerifiablePresentation')],
     holder: holder,
     verifiableCredential: vcs,
@@ -61,8 +57,10 @@ export const buildVPV1: BuildVPV1 = async ({
   getSignSuite,
   documentLoader,
   getProofPurposeOptions,
-}) =>
-  jsigs.sign(
+}) => {
+  if (unsigned.id) validateId(unsigned.id)
+
+  return jsigs.sign(
     {
       ...unsigned,
     },
@@ -82,3 +80,4 @@ export const buildVPV1: BuildVPV1 = async ({
       compactProof: false,
     },
   )
+}

@@ -1,5 +1,4 @@
-import { buildVCV1Unsigned, buildVCV1 } from '@affinidi/vc-common'
-import { VCV1, VCV1Skeleton, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, VCV1Subject, buildVCV1Unsigned, buildVCV1, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 
 const jsonld = require('jsonld')
@@ -28,14 +27,14 @@ const didDoc = {
 }
 
 /*
- _____  _                        _   __                     ___                _   _         _     _____                    _  _    _              
-|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)             
-  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___ 
+ _____  _                        _   __                     ___                _   _         _     _____                    _  _    _
+|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)
+  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___
   | |  | '_ \  / _ \/ __| / _ \ |    \  / _ \| | | |/ __| |  _  || '__| / _ \ | . ` | / _ \ | __|  `--. \ / _ \| '_ \ / __|| || __|| |\ \ / / / _ \
   | |  | | | ||  __/\__ \|  __/ | |\  \|  __/| |_| |\__ \ | | | || |   |  __/ | |\  || (_) || |_  /\__/ /|  __/| | | |\__ \| || |_ | | \ V / |  __/
   \_/  |_| |_| \___||___/ \___| \_| \_/ \___| \__, ||___/ \_| |_/|_|    \___| \_| \_/ \___/  \__| \____/  \___||_| |_||___/|_| \__||_|  \_/   \___|
-                                               __/ |                                                                                               
-                                              |___/                                                                                                
+                                               __/ |
+                                              |___/
 
 The keys below this message are used to test that key cryptographic functionality does not break.
 They are fixtures and should not be considered sensitive.
@@ -51,14 +50,14 @@ const keys = {
   },
 }
 /*
- _____             _           __    __  _        _                           
-|  ___|           | |         / _|  / _|(_)      | |                          
-| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___ 
+ _____             _           __    __  _        _
+|  ___|           | |         / _|  / _|(_)      | |
+| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___
 |  __| | '_ \  / _` |  / _ \ |  _| |  _|| |\ \/ /| __|| | | || '__| / _ \/ __|
 | |___ | | | || (_| | | (_) || |   | |  | | >  < | |_ | |_| || |   |  __/\__ \
 \____/ |_| |_| \__,_|  \___/ |_|   |_|  |_|/_/\_\ \__| \__,_||_|    \___||___/
-                                                                              
-                                                                              
+
+
 */
 
 export const expandVC = async <VC extends VCV1, VCS extends VCV1Subject<any>>({
@@ -70,23 +69,21 @@ export const expandVC = async <VC extends VCV1, VCS extends VCV1Subject<any>>({
   type: VC['type'][1]
   context: { [key: string]: any }
 }) => {
-  const skeleton: Omit<VCV1Skeleton<VC['credentialSubject']>, 'id' | 'holder'> = {
-    '@context': ['https://www.w3.org/2018/credentials/v1', context],
-    type: ['VerifiableCredential', type],
+  const skeleton = buildVCV1Skeleton<VC['credentialSubject']>({
+    id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
     credentialSubject: (Array.isArray(data) ? data : [data]).map((item) => ({ data: item })),
-  }
+    holder: {
+      id: 'did:elem:123',
+    },
+    type,
+    context,
+  })
 
   // Ensure that the VC can be signed, this makes sure all fields are properly mapped in the context
   try {
     await buildVCV1({
-      unsigned: buildVCV1Unsigned<VC['credentialSubject'], never>({
-        skeleton: {
-          ...skeleton,
-          id: '123',
-          holder: {
-            id: 'did:elem:123',
-          },
-        },
+      unsigned: buildVCV1Unsigned({
+        skeleton,
         issuanceDate: new Date().toDateString(),
       }),
       issuer: {

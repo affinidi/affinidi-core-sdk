@@ -1,14 +1,12 @@
-import { VPV1, VCV1, VCV1Unsigned, VCV1SubjectBase } from '../../'
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 import { parse } from 'did-resolver'
 
+import { VPV1, VCV1, VCV1SubjectBase, GetSignSuiteFn } from '../../'
 import { validateVPV1, validateVCV1, GetVerifySuiteFn } from './'
 import { Validatied, ErrorConfig } from '../util'
+import { buildVCV1, buildVCV1Skeleton, buildVCV1Unsigned, buildVPV1, buildVPV1Unsigned } from '../../issuer'
 
 const jsonld = require('jsonld')
-const jsigs = require('jsonld-signatures')
-
-const { AssertionProofPurpose, AuthenticationProofPurpose } = jsigs.purposes
 
 type KeyPair = {
   privateKey: string
@@ -38,14 +36,14 @@ type DidConfigs = {
 }
 
 /*
- _____  _                        _   __                     ___                _   _         _     _____                    _  _    _              
-|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)             
-  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___ 
+ _____  _                        _   __                     ___                _   _         _     _____                    _  _    _
+|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)
+  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___
   | |  | '_ \  / _ \/ __| / _ \ |    \  / _ \| | | |/ __| |  _  || '__| / _ \ | . ` | / _ \ | __|  `--. \ / _ \| '_ \ / __|| || __|| |\ \ / / / _ \
   | |  | | | ||  __/\__ \|  __/ | |\  \|  __/| |_| |\__ \ | | | || |   |  __/ | |\  || (_) || |_  /\__/ /|  __/| | | |\__ \| || |_ | | \ V / |  __/
   \_/  |_| |_| \___||___/ \___| \_| \_/ \___| \__, ||___/ \_| |_/|_|    \___| \_| \_/ \___/  \__| \____/  \___||_| |_||___/|_| \__||_|  \_/   \___|
-                                               __/ |                                                                                               
-                                              |___/                                                                                                
+                                               __/ |
+                                              |___/
 
 The keys below this message are used to test that key cryptographic functionality does not break.
 They are fixtures and should not be considered sensitive.
@@ -170,14 +168,14 @@ const didConfigs: DidConfigs = {
   },
 }
 /*
- _____             _           __    __  _        _                           
-|  ___|           | |         / _|  / _|(_)      | |                          
-| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___ 
+ _____             _           __    __  _        _
+|  ___|           | |         / _|  / _|(_)      | |
+| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___
 |  __| | '_ \  / _` |  / _ \ |  _| |  _|| |\ \/ /| __|| | | || '__| / _ \/ __|
 | |___ | | | || (_| | | (_) || |   | |  | | >  < | |_ | |_| || |   |  __/\__ \
 \____/ |_| |_| \__,_|  \___/ |_|   |_|  |_|/_/\_\ \__| \__,_||_|    \___||___/
-                                                                              
-                                                                              
+
+
 */
 
 const documentLoader = async (url: string): Promise<any> => {
@@ -222,12 +220,12 @@ type Holder = {
   did: string
 }
 
-const getSignSuite = async (signer: Signer) =>
+const getSignSuite: GetSignSuiteFn = async ({ controller, keyId, privateKey }) =>
   new Secp256k1Signature({
     key: new Secp256k1Key({
-      id: `${signer.did}#${signer.keyId}`,
-      controller: signer.did,
-      privateKeyHex: signer.privateKey,
+      id: keyId,
+      controller: controller,
+      privateKeyHex: privateKey,
     }),
   })
 
@@ -264,66 +262,75 @@ const createVC = async (
     revocation?: boolean
   } = {},
 ): Promise<VCV1> => {
-  const unsigedVC: VCV1Unsigned = {
-    '@context': [
-      'https://www.w3.org/2018/credentials/v1',
-      {
-        '@version': 1.1,
-        data: {
-          '@id': 'https://example.com/data',
-          '@type': '@json',
+  const signed = await buildVCV1({
+    unsigned: buildVCV1Unsigned({
+      skeleton: buildVCV1Skeleton({
+        id: 'urn:uuid:75442486-0878-440c-9db1-a7006c25a39f',
+        holder: {
+          id: holder.did,
         },
-        revocation: {
-          '@id': 'https://example.com/revocation',
-          '@type': '@json',
+        credentialSubject: {
+          id: holder.did,
+          data: {
+            '@type': 'Person',
+          },
         },
-      },
-    ],
-    id: '1234',
-    type: ['VerifiableCredential'],
-    holder: { id: holder.did },
-    credentialSubject: {
-      id: holder.did,
-      data: {
-        '@type': 'Person',
-      },
-    },
-    issuanceDate: new Date().toISOString(),
-    expirationDate: options.exirationDate ? new Date(new Date().getTime() + 10000).toISOString() : undefined,
-    revocation: options.revocation ? { id: '1234' } : undefined,
-  }
+        type: ['CustomCredential'],
+        context: {
+          '@version': 1.1,
 
-  const signed: VCV1 = jsigs.sign(
-    { ...unsigedVC, issuer: issuer.did },
-    {
-      suite: await getSignSuite(issuer),
-      documentLoader,
-      purpose: new AssertionProofPurpose(),
-      compactProof: false,
-      expansionMap: false, // TODO: remove this
-    },
-  )
+          CustomCredential: {
+            '@id': 'https://example.com/CustomCredential',
+            '@context': {
+              '@version': 1.1,
+              '@protected': true,
+            },
+          },
+
+          OtherType: {
+            '@id': 'https://example.com/OtherType',
+            '@context': {
+              '@version': 1.1,
+              '@protected': true,
+            },
+          },
+
+          data: {
+            '@id': 'https://example.com/data',
+            '@type': '@json',
+          },
+          revocation: {
+            '@id': 'https://example.com/revocation',
+            '@type': '@json',
+          },
+        } as any,
+      }),
+      issuanceDate: new Date().toISOString(),
+      expirationDate: options.exirationDate ? new Date(new Date().getTime() + 10000).toISOString() : undefined,
+      revocation: options.revocation ? { id: 'urn:uuid:004aadf4-8e1a-4450-905b-6039179f52da' } : undefined,
+    }),
+    issuer,
+    documentLoader,
+    getSignSuite,
+  })
 
   return signed
 }
 
-const createVP = async (sharer: Signer, ...vc: VCV1<any>[]): Promise<VPV1> => {
-  const unsigedVP: Omit<VPV1, 'proof'> = {
-    '@context': 'https://www.w3.org/2018/credentials/v1',
-    type: ['VerifiablePresentation'],
-    verifiableCredential: vc,
-    holder: { id: sharer.did },
-  }
-
-  const signed: VPV1 = await jsigs.sign(unsigedVP, {
-    suite: await getSignSuite(sharer),
+const createVP = async (sharer: Signer, ...vcs: VCV1<any>[]): Promise<VPV1> => {
+  const signed = await buildVPV1({
+    unsigned: buildVPV1Unsigned({
+      id: 'urn:uuid:11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000',
+      vcs,
+      holder: { id: sharer.did },
+    }),
     documentLoader,
-    purpose: new AuthenticationProofPurpose({
+    getSignSuite,
+    holder: sharer,
+    getProofPurposeOptions: () => ({
       challenge: 'challenge',
       domain: 'domain',
     }),
-    compactProof: false,
-    expansionMap: false, // TODO: remove this
   })
 
   return signed
@@ -348,7 +355,7 @@ describe('validateVCV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -372,7 +379,7 @@ describe('validateVCV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -393,7 +400,7 @@ describe('validateVCV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -414,7 +421,7 @@ describe('validateVCV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -440,7 +447,7 @@ describe('validateVCV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -466,7 +473,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -491,7 +498,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -518,7 +525,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -544,7 +551,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -572,7 +579,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -597,7 +604,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -624,7 +631,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -651,7 +658,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -676,7 +683,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -703,7 +710,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -735,7 +742,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -767,7 +774,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -801,7 +808,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -821,7 +828,61 @@ describe('validateVCV1', () => {
   })
 
   describe('fails with an invalid proof', () => {
-    it('when the contents is tampered with', async () => {
+    describe('when the top level fields are tampered with', async () => {
+      it('(issuanceDate/string value)', async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Verify the VC
+        const res = await validateVCV1({ documentLoader, getVerifySuite })({
+          ...vc,
+          issuanceDate: new Date(0).toISOString(),
+        })
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message: 'Invalid value for field "proof": Invalid credential proof:\nError: Invalid signature.',
+        })
+      })
+
+      it.skip('(types/array value)', async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Verify the VC
+        const res = await validateVCV1({ documentLoader, getVerifySuite })({
+          ...vc,
+          type: [...vc.type, 'OtherType'],
+        })
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message: 'Invalid value for field "proof": Invalid credential proof:\nError: Invalid signature.',
+        })
+      })
+    })
+
+    it('when the content are tampered with', async () => {
       expect.assertions(1)
 
       const { issuer, bob } = didConfigs
@@ -829,7 +890,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -861,7 +922,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -887,7 +948,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -913,7 +974,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -939,7 +1000,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -965,7 +1026,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -991,7 +1052,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1017,7 +1078,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1043,7 +1104,7 @@ describe('validateVCV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1069,7 +1130,7 @@ describe('validateVCV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -1095,7 +1156,7 @@ describe('validateVPV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -1105,7 +1166,7 @@ describe('validateVPV1', () => {
     const vp = await createVP(
       {
         did: bob.did,
-        keyId: 'primary',
+        keyId: `${bob.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
       },
       vc,
@@ -1125,7 +1186,7 @@ describe('validateVPV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       {
@@ -1138,7 +1199,7 @@ describe('validateVPV1', () => {
     const vp = await createVP(
       {
         did: bob.did,
-        keyId: 'primary',
+        keyId: `${bob.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
       },
       vc,
@@ -1158,7 +1219,7 @@ describe('validateVPV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -1168,7 +1229,7 @@ describe('validateVPV1', () => {
     const vp = await createVP(
       {
         did: bob.did,
-        keyId: 'primary',
+        keyId: `${bob.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
       },
       vc,
@@ -1195,7 +1256,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1205,7 +1266,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1230,7 +1291,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1240,7 +1301,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1267,7 +1328,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1277,7 +1338,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1303,7 +1364,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1313,7 +1374,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1341,7 +1402,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1351,7 +1412,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1376,7 +1437,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1388,7 +1449,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1412,7 +1473,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: alice.did },
@@ -1422,7 +1483,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1439,7 +1500,45 @@ describe('validateVPV1', () => {
   })
 
   describe('fails with an invalid proof', () => {
-    it('when the contents is tampered with', async () => {
+    it('when the top level fields are tampered with', async () => {
+      it.skip('(type/array value)', async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Bob creates a VP containing his VC
+        const vp = await createVP(
+          {
+            did: bob.did,
+            keyId: `${bob.did}#primary`,
+            privateKey: bob.primaryKey.privateKey,
+          },
+          vc,
+        )
+
+        // Verify the VP
+        const res = await validateVPV1({ documentLoader, getVerifySuite })({
+          ...vp,
+          type: [...vp.type, 'OtherType'],
+        })
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message: 'Invalid value for field "proof": Invalid presentation proof:\nError: Invalid signature.',
+        })
+      })
+    })
+
+    it('when the content is tampered with', async () => {
       expect.assertions(1)
 
       const { issuer, bob } = didConfigs
@@ -1447,7 +1546,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1457,7 +1556,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1494,7 +1593,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1504,7 +1603,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1530,7 +1629,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1540,7 +1639,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1566,7 +1665,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1576,7 +1675,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1602,7 +1701,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1612,7 +1711,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1638,7 +1737,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1648,7 +1747,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1674,7 +1773,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1684,7 +1783,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1710,7 +1809,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1720,7 +1819,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1746,7 +1845,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1756,7 +1855,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1782,7 +1881,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1792,7 +1891,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1818,7 +1917,7 @@ describe('validateVPV1', () => {
       const vc = await createVC(
         {
           did: issuer.did,
-          keyId: 'primary',
+          keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
@@ -1828,7 +1927,7 @@ describe('validateVPV1', () => {
       const vp = await createVP(
         {
           did: bob.did,
-          keyId: 'primary',
+          keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
         },
         vc,
@@ -1854,7 +1953,7 @@ describe('validateVPV1', () => {
     const vc = await createVC(
       {
         did: issuer.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
@@ -1864,7 +1963,7 @@ describe('validateVPV1', () => {
     const vp = await createVP(
       {
         did: bob.did,
-        keyId: 'primary',
+        keyId: `${issuer.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
       },
       vc,

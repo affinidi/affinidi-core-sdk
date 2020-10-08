@@ -394,6 +394,7 @@ describe('VCHealthPassportV1', () => {
 
     expect(expanded).toMatchInlineSnapshot(`
       Object {
+        "@id": "urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
         "@type": Array [
           "https://www.w3.org/2018/credentials#VerifiableCredential",
           "http://hl7.org/fhir/HealthPassportGeneralCredentialV1",
@@ -1431,6 +1432,11 @@ describe('VCHealthPassportV1', () => {
                 ],
               },
             ],
+          },
+        ],
+        "https://www.w3.org/2018/credentials#holder": Array [
+          Object {
+            "@id": "did:elem:123",
           },
         ],
       }
