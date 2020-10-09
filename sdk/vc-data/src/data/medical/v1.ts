@@ -52,6 +52,34 @@ export type ObservationV1 = CreateThing<
   }
 >
 
+export type SpecimenV1 = CreateThing<'Specimen', R4.ISpecimen>
+
+export type FHIROrganizationV1 = CreateThing<'Organization', R4.IOrganization>
+
+export type FHIRResourceList = ImmunizationV1 | FHIRPatientE | ObservationV1 | SpecimenV1 | FHIROrganizationV1
+
+export type FHIRBundleEntry = CreateThing<
+  'BundleEntry',
+  R4.IBundle_Entry & {
+    resource: FHIRResourceList
+  }
+>
+
+export type FHIRBundleV1 = CreateThing<
+  'Bundle',
+  R4.IBundle & {
+    entry: FHIRBundleEntry[]
+  }
+>
+
+export type FHIRBundleContainer = CreateThing<
+  'BundleContainer',
+  {
+    fhirVersion: string
+    fhirBundle: FHIRBundleV1
+  }
+>
+
 export type VCSImmunizationV1 = VCV1Subject<ImmunizationV1>
 export type VCSObservationV1 = VCV1Subject<ObservationV1>
 export type VCSPatientV1 = VCV1Subject<FHIRPatientE>
@@ -59,6 +87,7 @@ export type VCSPatientV1 = VCV1Subject<FHIRPatientE>
 export type VCSHealthPassportImmunizationV1 = [VCSImmunizationV1, VCSPatientV1]
 export type VCSHealthPassportObservationV1 = [VCSObservationV1, VCSPatientV1]
 export type VCSHealthPassportGeneralV1 = [VCSImmunizationV1, VCSObservationV1, VCSPatientV1]
+export type VCSHealthPassportBundleV1 = VCV1Subject<FHIRBundleContainer>
 
 export type VCHealthPassportImmunizationV1 = VCV1<
   VCSHealthPassportImmunizationV1,
@@ -69,6 +98,7 @@ export type VCHealthPassportObservationV1 = VCV1<
   Type<'HealthPassportObservationCredentialV1'>
 >
 export type VCHealthPassportGeneralV1 = VCV1<VCSHealthPassportGeneralV1, Type<'HealthPassportGeneralCredentialV1'>>
+export type VCHealthPassportBundleV1 = VCV1<VCSHealthPassportBundleV1, Type<'HealthPassportBundleCredentialV1'>>
 
 export const getVCHealthPassportImmunizationV1Context = () => {
   const entryImmunization = createContextEntry<ImmunizationV1, R4.IImmunization>({
@@ -123,7 +153,75 @@ export const getVCHealthPassportGeneralV1Context = () => {
     type: 'HealthPassportGeneralCredentialV1',
     typeIdBase: 'fhir',
     entries: [entryImmunization, entryObservation, ...getFHIRV1ContextEntries()],
+    vocab: 'fhir',
+  })
+}
 
+export const getVCHealthPassportBundleV1Context = () => {
+  const immunizationEntry = createContextEntry<ImmunizationV1, R4.IImmunization>({
+    type: 'Immunization',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const observationEntry = createContextEntry<ObservationV1, R4.IObservation>({
+    type: 'Observation',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const specimenEntry = createContextEntry<SpecimenV1, R4.ISpecimen>({
+    type: 'Specimen',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const organizationEntry = createContextEntry<FHIROrganizationV1, R4.IOrganization>({
+    type: 'Organization',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const bundleEntryEntry = createContextEntry<FHIRBundleEntry, R4.IBundle_Entry>({
+    type: 'BundleEntry',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const bundleEntry = createContextEntry<FHIRBundleV1, R4.IBundle>({
+    type: 'Bundle',
+    typeIdBase: 'fhir',
+    fields: {},
+    vocab: 'fhir',
+  })
+
+  const bundleContainerEntry = createContextEntry<FHIRBundleContainer>({
+    type: 'BundleContainer',
+    typeIdBase: 'affSchema',
+    fields: {
+      fhirVersion: 'affSchema',
+      fhirBundle: 'affSchema',
+    },
+  })
+
+  return createVCContextEntry<VCHealthPassportBundleV1>({
+    type: 'HealthPassportBundleCredentialV1',
+    typeIdBase: 'affSchema',
+    entries: [
+      observationEntry,
+      immunizationEntry,
+      specimenEntry,
+      organizationEntry,
+      bundleEntryEntry,
+      bundleEntry,
+      bundleContainerEntry,
+      ...getFHIRV1ContextEntries(),
+    ],
     vocab: 'fhir',
   })
 }
