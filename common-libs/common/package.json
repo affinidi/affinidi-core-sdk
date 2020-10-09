@@ -68,7 +68,7 @@
     "vc-revocation-list": "^2.0.0"
   },
   "devDependencies": {
-    "@affinidi/vc-data": "^1.0.2",
+    "@affinidi/vc-data": "^1.1.0",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@affinidi/wallet-core-sdk": "1.2.2",
