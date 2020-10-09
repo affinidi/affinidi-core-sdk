@@ -528,21 +528,21 @@ describe('getVerifySchema', () => {
   const vcs = [
     buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-        id: '1234',
+        id: 'absoluteUri:1234',
         credentialSubject: {
           data: {
             '@type': ['Person', 'PersonE', 'PhonePerson'],
             telephone: '+1 555 555 5555',
           },
         },
-        holder: { id: '1234' },
-        type: '',
+        holder: { id: 'did:method:1234' },
+        type: 'PhoneCredentialPersonV1',
         context: getVCPhonePersonV1Context(),
       }),
       issuanceDate: new Date().toISOString(),
       expirationDate: new Date().toISOString(),
       revocation: {
-        id: '1234',
+        id: 'did:method:1234',
       },
     }),
   ]
@@ -722,7 +722,7 @@ describe('getVerifySchema', () => {
       vcs: [
         buildVCV1Unsigned({
           skeleton: buildVCV1Skeleton<VCSPhonePersonV1[]>({
-            id: '1234',
+            id: 'absoluteUri:1234',
             credentialSubject: [
               {
                 data: {
@@ -731,13 +731,13 @@ describe('getVerifySchema', () => {
                 },
               },
             ],
-            holder: { id: '1234' },
-            type: '',
+            holder: { id: 'did:method:1234' },
+            type: 'PhoneCredentialPersonV1',
             context: getVCPhonePersonV1Context(),
           }),
           issuanceDate: new Date().toISOString(),
           revocation: {
-            id: '1234',
+            id: 'did:method:1234',
           },
         }),
       ],
