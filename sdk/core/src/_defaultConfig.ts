@@ -1,7 +1,7 @@
 export const DEFAULT_COGNITO_REGION = 'ap-southeast-1'
 
-export const DEV_COGNITO_CLIENT_ID = '62n5mn2qh1ril1hgi9qns8kf5g'
-export const DEV_COGNITO_USER_POOL_ID = 'ap-southeast-1_ZGlz0tcNK'
+export const DEV_COGNITO_CLIENT_ID = '7j47p2lstje9cqnd1ah0qls2ap'
+export const DEV_COGNITO_USER_POOL_ID = 'ap-southeast-1_HfvRKQgvU'
 export const DEV_REGISTRY_URL = 'https://affinity-registry.dev.affinity-project.org'
 export const DEV_ISSUER_URL = 'https://affinity-issuer.dev.affinity-project.org'
 export const DEV_VERIFIER_URL = 'https://affinity-verifier.dev.affinity-project.org'
