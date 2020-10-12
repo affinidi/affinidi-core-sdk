@@ -675,7 +675,11 @@ export class CommonNetworkMember {
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
    */
-  static async forgotPassword(username: string, options: SdkOptions = {}): Promise<void> {
+  static async forgotPassword(
+    username: string,
+    options: SdkOptions = {},
+    messageParameters?: MessageParameters,
+  ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -685,7 +689,7 @@ export class CommonNetworkMember {
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
-    await cognitoService.forgotPassword(username)
+    await cognitoService.forgotPassword(username, messageParameters)
   }
 
   /**
@@ -1019,7 +1023,11 @@ export class CommonNetworkMember {
    * @param username - email/phoneNumber, registered and unconfirmed in Cognito
    * @param options - optional parameters with specified environment
    */
-  static async resendSignUpConfirmationCode(username: string, options: SdkOptions = {}): Promise<void> {
+  static async resendSignUpConfirmationCode(
+    username: string,
+    options: SdkOptions = {},
+    messageParameters?: MessageParameters,
+  ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -1029,7 +1037,7 @@ export class CommonNetworkMember {
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
-    await cognitoService.resendSignUp(username)
+    await cognitoService.resendSignUp(username, messageParameters)
   }
 
   /**

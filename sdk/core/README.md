@@ -275,12 +275,13 @@ username is an arbitrary username.
 To re-send sign up confirmation code (in case when username is email/phoneNumber):
 
 ```ts
-await CommonNetworkMember.resendSignUpConfirmationCode(username, options)
+await CommonNetworkMember.resendSignUpConfirmationCode(username, options, messageParameters)
 ```
 
 `username` - email/phoneNumber.
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
+`messageParameters` - (optional) used to specify message, htmlMessage, subject, see signup method.
 
 ##### Sign up with email/phoneNumber (example)
 
@@ -427,12 +428,13 @@ await CommonNetworkMember.completeLoginChallenge(token, confirmationCode, option
 NOTE: Password recovery is not possible with arbitrary username.
 
 ```ts
-await CommonNetworkMember.forgotPassword(username, options)
+await CommonNetworkMember.forgotPassword(username, options, messageParameters)
 ```
 
 `username` - email or phone number, at which confirmation code will be sent.
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
+`messageParameters` - (optional) used to specify message, htmlMessage, subject, see signup method.
 
 Complete change password challenge:
 
