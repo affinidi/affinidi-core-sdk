@@ -95,6 +95,7 @@ export class CommonNetworkMember {
   private readonly _api: API
   private _did: string
   private _apiKey: string
+  private _accessApiKey: string
   private readonly _encryptedSeed: string
   private _password: string
   private readonly _walletStorageService: WalletStorageService
@@ -136,19 +137,17 @@ export class CommonNetworkMember {
       emailIssuerBasePath,
     } = this._sdkOptions
 
-    const apiKey = this._sdkOptions.apiKey || 'testApiKey'
-    const apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
-    this._apiKey = apiKeyBuffer.toString('hex')
+    this._accessApiKey = CommonNetworkMember._setAccessApiKey(this._sdkOptions)
 
-    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._apiKey })
-    this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._apiKey })
+    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey })
+    this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions)
     this._didDocumentService = new DidDocumentService(this._keysService)
-    this._affinity = new Affinity({ registryUrl, apiKey: this._apiKey })
+    this._affinity = new Affinity({ registryUrl, apiKey: this._accessApiKey })
     this._encryptedSeed = encryptedSeed
     this._password = password
     this.cognitoUserTokens = options && options.cognitoUserTokens ? options.cognitoUserTokens : undefined
@@ -156,6 +155,31 @@ export class CommonNetworkMember {
     this._didDocumentKeyId = null
     this._phoneIssuer = new PhoneIssuerService({ basePath: phoneIssuerBasePath })
     this._emailIssuer = new EmailIssuerService({ basePath: emailIssuerBasePath })
+  }
+
+  private static _setAccessApiKey(options: SdkOptions) {
+    let apiKey
+    let accessApiKey
+    let apiKeyBuffer
+
+    accessApiKey = options.accessApiKey
+
+    const useTestApiKey = !options.apiKey && !options.accessApiKey
+
+    if (useTestApiKey) {
+      apiKey = 'testApiKey'
+
+      apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
+      accessApiKey = apiKeyBuffer.toString('hex')
+    }
+
+    if (options.apiKey) {
+      apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
+
+      accessApiKey = apiKeyBuffer.toString('hex')
+    }
+
+    return accessApiKey
   }
 
   protected static setEnvironmentVarialbles(options: SdkOptions) {
@@ -371,11 +395,9 @@ export class CommonNetworkMember {
   ) {
     const { registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const apiKey = options.apiKey || 'testApiKey'
-    const apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
-    const apiKeyHash = apiKeyBuffer.toString('hex')
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
 
-    const api = new API(registryUrl, null, null, { apiKey: apiKeyHash })
+    const api = new API(registryUrl, null, null, { apiKey: accessApiKey })
 
     const did = didDocument.id
 

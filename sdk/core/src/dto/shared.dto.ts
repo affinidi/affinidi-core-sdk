@@ -90,6 +90,9 @@ export class SdkOptions {
   @IsOptional()
   apiKey?: string
 
+  @IsOptional()
+  accessApiKey?: string
+
   @IsBoolean()
   @IsOptional()
   isProfilerActive?: boolean
