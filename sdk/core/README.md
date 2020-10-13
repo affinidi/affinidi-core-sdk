@@ -63,7 +63,8 @@ You should register your entity at Affinity for appropriate environment
 [staging](https://affinity-onboarding-frontend.staging.affinity-project.org/),
 [production](https://affinity-onboarding-frontend.prod.affinity-project.org/) or
 [dev](https://affinity-onboarding-frontend.dev.affinity-project.org/),
-to obtain the `apiKey` value which should be passed at `options` as a required parameter.
+to obtain the `apiKey` and `apiKeyHash` values, one of which should be passed
+via `options` as a required parameter.
 
 If you want to specify issuer's URL, pass it in the options.
 
@@ -74,9 +75,20 @@ You can also specify the stack environment to be used in `env` variable.
 ```ts
 const options = {
   issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
-  apiKey: '....'
+  apiKey: 'YOUR API KEY'
 }
+```
 
+OR
+
+```ts
+const options = {
+  issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
+  accessApiKey: 'YOUR API KEY HASH VALUE'
+}
+```
+
+```ts
 const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
 ```
 
