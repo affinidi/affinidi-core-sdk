@@ -1,5 +1,5 @@
 import { profile } from '@affinidi/common'
-import { metrics, EventComponent } from '@affinityproject/affinity-metrics-lib'
+import { metrics, EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import { MetricsEvent, MetricsServiceOptions } from '../dto/shared.dto'
 
