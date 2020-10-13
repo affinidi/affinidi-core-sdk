@@ -4,7 +4,7 @@ import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affini
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
-import { EventCategory, EventName, EventMetadata } from '@affinityproject/affinity-metrics-lib'
+import { EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 
 import API from './services/ApiService'
 import CognitoService from './services/CognitoService'
