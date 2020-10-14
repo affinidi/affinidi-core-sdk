@@ -54,7 +54,7 @@ import { generateUsername } from '../helpers/generateUsername'
 // test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
 
-describe('CommonNetworkMember', () => {
+describe.only('CommonNetworkMember', () => {
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
 
   const offeredCredentials = [
@@ -91,7 +91,7 @@ describe('CommonNetworkMember', () => {
 
   // This started failing with this error: LimitExceededException: Attempt limit exceeded, please try after some time.
   // Also it's not clear how this tests the resending of the OTP.
-  it.only('resends OTP when UNCONFIRMED user signs up (for the Nth time)', async () => {
+  it('resends OTP when UNCONFIRMED user signs up (for the Nth time)', async () => {
     const username = emailUnconfirmed
 
     await CommonNetworkMember.signUp(username, cognitoPassword)
