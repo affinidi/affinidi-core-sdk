@@ -54,7 +54,7 @@ import { generateUsername } from '../helpers/generateUsername'
 // test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
 
-describe.only('CommonNetworkMember', () => {
+describe('CommonNetworkMember', () => {
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
 
   const offeredCredentials = [
@@ -69,7 +69,7 @@ describe.only('CommonNetworkMember', () => {
     },
   ]
 
-  it.only('#throws `COR-4 / 400` when UNCONFIRMED user signs in', async () => {
+  it('#throws `COR-4 / 400` when UNCONFIRMED user signs in', async () => {
     const username = emailUnconfirmed
 
     await CommonNetworkMember.signUp(username, cognitoPassword, options)
