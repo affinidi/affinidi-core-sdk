@@ -1833,32 +1833,35 @@ export class CommonNetworkMember {
     const verifierDid = this.did
 
     for (const credential of credentials) {
-      this._sendVCVerifiedMetric(holderDid)
+      const metadata = { vcType: credential.type }
+      this._sendVCVerifiedMetric(holderDid, metadata)
 
-      this._sendVCVerifiedPerPartyMetric(credential.id, verifierDid)
+      this._sendVCVerifiedPerPartyMetric(credential.id, verifierDid, metadata)
     }
   }
 
   /* istanbul ignore next: private method */
-  private _sendVCVerifiedMetric(holderDid: string) {
+  private _sendVCVerifiedMetric(holderDid: string, metadata: EventMetadata) {
     const event = {
       link: holderDid,
       name: EventName.VC_VERIFIED,
       category: EventCategory.VC,
       subCategory: 'verify',
+      metadata: metadata,
     }
 
     this._metricsService.send(event)
   }
 
   /* istanbul ignore next: private method */
-  private _sendVCVerifiedPerPartyMetric(vcId: string, verifierDid: string) {
+  private _sendVCVerifiedPerPartyMetric(vcId: string, verifierDid: string, metadata: EventMetadata) {
     const event = {
       link: vcId,
       secondaryLink: verifierDid,
       name: EventName.VC_VERIFIED_PER_PARTY,
       category: EventCategory.VC,
       subCategory: 'verify',
+      metadata: metadata,
     }
 
     this._metricsService.send(event)
