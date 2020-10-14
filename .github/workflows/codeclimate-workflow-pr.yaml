@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: 12
       - name: Check for skipped tests
-        run: ! find . -maxdepth 6 -name *.test.ts -exec grep \\.only {} \;
+        run: [ $(find . -maxdepth 6 -name *.test.ts -exec grep \\.only {} \; | wc -l) -eq 0 ];
       - name: Download cc-test-reporter
         run: |
             mkdir -p tmp/
