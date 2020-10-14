@@ -69,7 +69,7 @@ describe.only('CommonNetworkMember', () => {
     },
   ]
 
-  it('#throws `COR-4 / 400` when UNCONFIRMED user signs in', async () => {
+  it.only('#throws `COR-4 / 400` when UNCONFIRMED user signs in', async () => {
     const username = emailUnconfirmed
 
     await CommonNetworkMember.signUp(username, cognitoPassword, options)

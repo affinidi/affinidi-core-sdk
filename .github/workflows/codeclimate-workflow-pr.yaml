@@ -8,8 +8,6 @@ jobs:
     name: CodeClimate Trigger
     runs-on: ubuntu-latest
     steps:
-      - name: Check for skipped tests
-        run: find . -maxdepth 6 -name *.test.ts -exec grep \\.only {} \;
       - name: Set env vars
         id: vars
         run: echo "::set-output name=pr_key::$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')"
@@ -17,6 +15,8 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 12
+      - name: Check for skipped tests
+        run: find . -maxdepth 6 -name *.test.ts -exec grep \\.only {} \;
       - name: Download cc-test-reporter
         run: |
             mkdir -p tmp/
