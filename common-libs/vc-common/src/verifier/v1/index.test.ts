@@ -828,7 +828,7 @@ describe('validateVCV1', () => {
   })
 
   describe('fails with an invalid proof', () => {
-    describe('when the top level fields are tampered with', async () => {
+    describe('when the top level fields are tampered with', () => {
       it('(issuanceDate/string value)', async () => {
         expect.assertions(1)
 
@@ -1500,7 +1500,7 @@ describe('validateVPV1', () => {
   })
 
   describe('fails with an invalid proof', () => {
-    it('when the top level fields are tampered with', async () => {
+    describe('when the top level fields are tampered with', () => {
       it.skip('(type/array value)', async () => {
         expect.assertions(1)
 

@@ -2,7 +2,7 @@ import { VCV1Subject, VCV1, VPV1Unsigned, VPV1 } from '../../'
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 
 import { buildVPV1Unsigned, buildVPV1 } from './v1'
-import { buildVCV1Skeleton, buildVCV1Unsigned, buildVCV1, getVCV1JSONContext } from '../vcBuild/v1'
+import { buildVCV1Skeleton, buildVCV1Unsigned, buildVCV1 } from '../vcBuild/v1'
 import { GetSignSuiteFn } from '../common'
 
 const jsonld = require('jsonld')
@@ -31,14 +31,14 @@ const didDoc = {
 }
 
 /*
- _____  _                        _   __                     ___                _   _         _     _____                    _  _    _              
-|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)             
-  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___ 
+ _____  _                        _   __                     ___                _   _         _     _____                    _  _    _
+|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)
+  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___
   | |  | '_ \  / _ \/ __| / _ \ |    \  / _ \| | | |/ __| |  _  || '__| / _ \ | . ` | / _ \ | __|  `--. \ / _ \| '_ \ / __|| || __|| |\ \ / / / _ \
   | |  | | | ||  __/\__ \|  __/ | |\  \|  __/| |_| |\__ \ | | | || |   |  __/ | |\  || (_) || |_  /\__/ /|  __/| | | |\__ \| || |_ | | \ V / |  __/
   \_/  |_| |_| \___||___/ \___| \_| \_/ \___| \__, ||___/ \_| |_/|_|    \___| \_| \_/ \___/  \__| \____/  \___||_| |_||___/|_| \__||_|  \_/   \___|
-                                               __/ |                                                                                               
-                                              |___/                                                                                                
+                                               __/ |
+                                              |___/
 
 The keys below this message are used to test that key cryptographic functionality does not break.
 They are fixtures and should not be considered sensitive.
@@ -54,14 +54,14 @@ const keys = {
   },
 }
 /*
- _____             _           __    __  _        _                           
-|  ___|           | |         / _|  / _|(_)      | |                          
-| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___ 
+ _____             _           __    __  _        _
+|  ___|           | |         / _|  / _|(_)      | |
+| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___
 |  __| | '_ \  / _` |  / _ \ |  _| |  _|| |\ \/ /| __|| | | || '__| / _ \/ __|
 | |___ | | | || (_| | | (_) || |   | |  | | >  < | |_ | |_| || |   |  __/\__ \
 \____/ |_| |_| \__,_|  \___/ |_|   |_|  |_|/_/\_\ \__| \__,_||_|    \___||___/
-                                                                              
-                                                                              
+
+
 */
 
 const documentLoader = async (url: string): Promise<any> => {
@@ -105,8 +105,11 @@ const holder = {
 
 describe('buildVPV1Unsigned', () => {
   let vcs: VCV1[]
+  const warnSpy = jest.spyOn(global.console, 'warn')
 
   beforeEach(async () => {
+    jest.clearAllMocks()
+
     const vc = await buildVCV1({
       unsigned: buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton({
@@ -114,7 +117,13 @@ describe('buildVPV1Unsigned', () => {
           credentialSubject,
           holder,
           type: 'CustomCredential',
-          context: getVCV1JSONContext(),
+          context: {
+            '@version': 1.1,
+            data: {
+              '@id': 'https://docs.affinity-project.org/vc-common/vc/context/index.html#data',
+              '@type': '@json',
+            },
+          },
         }),
         issuanceDate: new Date().toISOString(),
       }),
@@ -134,6 +143,7 @@ describe('buildVPV1Unsigned', () => {
     toStrictEqual: (expected: Record<string, any>) => {
       expect(unsigned).toStrictEqual({
         '@context': ['https://www.w3.org/2018/credentials/v1'],
+        id: vpId,
         type: ['VerifiablePresentation'],
         holder,
         verifiableCredential: vcs,
@@ -212,13 +222,45 @@ describe('buildVPV1Unsigned', () => {
       '@context': ['https://www.w3.org/2018/credentials/v1', 'https://example.com', 'https://example2.com'],
     })
   })
+
+  it('warns when id is not provided', () => {
+    buildVPV1Unsigned({
+      vcs,
+      holder,
+      context: ['https://example.com', 'https://example2.com'],
+    })
+
+    expect(warnSpy).toBeCalledTimes(1)
+    expect(warnSpy).toBeCalledWith(
+      'Warning: An id should be supplied for the VP. Otherwise top-level, non-object properties (like "type") will be malleable.',
+    )
+  })
+
+  it('warns when id is not an absolute URI', () => {
+    buildVPV1Unsigned({
+      id: '123',
+      vcs,
+      holder,
+      context: ['https://example.com', 'https://example2.com'],
+    })
+
+    expect(warnSpy).toBeCalledTimes(1)
+    expect(warnSpy).toBeCalledWith(
+      'Warning: VC ids must be absolute URIs ' +
+        '(https://www.w3.org/TR/vc-data-model/#identifiers). ' +
+        'To use UUIDs prefix the UUID with "urn:uuid:" ' +
+        '(eg. "urn:uuid:11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000")',
+    )
+  })
 })
 
 describe('buildVPV1', () => {
   let unsigned: VPV1Unsigned
   let vcs: VCV1[]
+  const warnSpy = jest.spyOn(global.console, 'warn')
 
   beforeEach(async () => {
+    jest.clearAllMocks()
     const vc = await buildVCV1({
       unsigned: buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton({
@@ -226,7 +268,13 @@ describe('buildVPV1', () => {
           credentialSubject,
           holder,
           type: 'CustomCredential',
-          context: getVCV1JSONContext(),
+          context: {
+            '@version': 1.1,
+            data: {
+              '@id': 'https://docs.affinity-project.org/vc-common/vc/context/index.html#data',
+              '@type': '@json',
+            },
+          },
         }),
         issuanceDate: new Date().toISOString(),
       }),
@@ -253,6 +301,7 @@ describe('buildVPV1', () => {
       expect(vp).toStrictEqual({
         ...expected,
         '@context': ['https://www.w3.org/2018/credentials/v1'],
+        id: vpId,
         type: ['VerifiablePresentation'],
         holder,
         verifiableCredential: vcs,
@@ -286,5 +335,47 @@ describe('buildVPV1', () => {
         jws: expect.any(String),
       },
     })
+  })
+
+  it('warns when id is not provided', async () => {
+    expect.assertions(2)
+
+    const copy = { ...unsigned }
+    delete copy['id']
+
+    await buildVPV1({
+      unsigned: copy,
+      holder: {
+        did: didLongForm,
+        keyId: `${did}#primary`,
+        privateKey: keys.primaryKey.privateKey,
+      },
+      documentLoader,
+      getSignSuite,
+      getProofPurposeOptions: () => ({ challenge: 'challenge', domain: 'domain' }),
+    })
+
+    expect(warnSpy).toBeCalledTimes(1)
+    expect(warnSpy).toBeCalledWith(
+      'Warning: An id should be supplied for the VP. Otherwise top-level, non-object properties (like "type") will be malleable.',
+    )
+  })
+
+  it('throws when id is not an absolute URI', async () => {
+    expect.assertions(1)
+
+    expect(
+      buildVPV1({
+        unsigned: { ...unsigned, id: '123' },
+        holder: {
+          did: didLongForm,
+          keyId: `${did}#primary`,
+          privateKey: keys.primaryKey.privateKey,
+        },
+        documentLoader,
+        getSignSuite,
+        getProofPurposeOptions: () => ({ challenge: 'challenge', domain: 'domain' }),
+      }),
+    ).rejects.toThrow()
   })
 })

@@ -1,7 +1,7 @@
 import { VCV1Subject, VCV1Skeleton, VCV1Unsigned, VCV1 } from '../../'
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 
-import { buildVCV1Skeleton, buildVCV1Unsigned, buildVCV1, getVCV1JSONContext } from './v1'
+import { buildVCV1Skeleton, buildVCV1Unsigned, buildVCV1 } from './v1'
 import { GetSignSuiteFn } from '../common'
 
 const jsonld = require('jsonld')
@@ -29,7 +29,6 @@ const didDoc = {
   id: 'did:elem:EiBOH3jRdJZmRE4ew_lKc0RgSDsZphs3ddXmz2MHfKHXcQ',
 }
 
-// prettier-ignore
 /*
  _____  _                        _   __                     ___                _   _         _     _____                    _  _    _
 |_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)
@@ -103,6 +102,12 @@ const getSignSuite: GetSignSuiteFn = async ({ controller, keyId, privateKey }) =
   })
 
 describe('buildVCV1Skeleton', () => {
+  const warnSpy = jest.spyOn(global.console, 'warn')
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('builds a VCV1Skeleton', () => {
     const skeleton = buildVCV1Skeleton({
       id: vcId,
@@ -208,21 +213,32 @@ describe('buildVCV1Skeleton', () => {
     })
   })
 
-  it('throws when id is not an absolute URI', () => {
-    expect(() => {
-      buildVCV1Skeleton({
-        id: '1234',
-        credentialSubject,
-        holder,
-        type: 'CustomCredential',
-        context: ['https://example.com', 'https://example2.com'],
-      })
-    }).toThrow()
+  it('warns when id is not an absolute URI', () => {
+    buildVCV1Skeleton({
+      id: '1234',
+      credentialSubject,
+      holder,
+      type: 'CustomCredential',
+      context: ['https://example.com', 'https://example2.com'],
+    })
+
+    expect(warnSpy).toBeCalledTimes(1)
+    expect(warnSpy).toBeCalledWith(
+      'Warning: VC ids must be absolute URIs ' +
+        '(https://www.w3.org/TR/vc-data-model/#identifiers). ' +
+        'To use UUIDs prefix the UUID with "urn:uuid:" ' +
+        '(eg. "urn:uuid:11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000")',
+    )
   })
 })
 
 describe('buildVCV1Unsigned', () => {
+  const warnSpy = jest.spyOn(global.console, 'warn')
   let skeleton: VCV1Skeleton
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
 
   beforeAll(() => {
     skeleton = buildVCV1Skeleton({
@@ -287,13 +303,19 @@ describe('buildVCV1Unsigned', () => {
     })
   })
 
-  it('throws when id is not an absolute URI', () => {
-    expect(() => {
-      buildVCV1Unsigned({
-        skeleton: { ...skeleton, id: '1234' },
-        issuanceDate: new Date().toISOString(),
-      })
-    }).toThrow()
+  it('warns when id is not an absolute URI', () => {
+    buildVCV1Unsigned({
+      skeleton: { ...skeleton, id: '1234' },
+      issuanceDate: new Date().toISOString(),
+    })
+
+    expect(warnSpy).toBeCalledTimes(1)
+    expect(warnSpy).toBeCalledWith(
+      'Warning: VC ids must be absolute URIs ' +
+        '(https://www.w3.org/TR/vc-data-model/#identifiers). ' +
+        'To use UUIDs prefix the UUID with "urn:uuid:" ' +
+        '(eg. "urn:uuid:11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000")',
+    )
   })
 })
 
@@ -303,7 +325,16 @@ describe('buildVCV1', () => {
       expect(signed).toStrictEqual({
         ...expected,
         id: vcId,
-        '@context': ['https://www.w3.org/2018/credentials/v1', getVCV1JSONContext()],
+        '@context': [
+          'https://www.w3.org/2018/credentials/v1',
+          {
+            '@version': 1.1,
+            data: {
+              '@id': 'https://docs.affinity-project.org/vc-common/vc/context/index.html#data',
+              '@type': '@json',
+            },
+          },
+        ],
         type: ['VerifiableCredential', 'CustomCredential'],
         holder,
         credentialSubject,
@@ -320,7 +351,13 @@ describe('buildVCV1', () => {
       credentialSubject,
       holder,
       type: 'CustomCredential',
-      context: getVCV1JSONContext(),
+      context: {
+        '@version': 1.1,
+        data: {
+          '@id': 'https://docs.affinity-project.org/vc-common/vc/context/index.html#data',
+          '@type': '@json',
+        },
+      },
     })
 
     const unsigned = buildVCV1Unsigned({ skeleton, issuanceDate: new Date().toISOString() })
@@ -375,6 +412,8 @@ describe('buildVCV1', () => {
   })
 
   it('throws when id is not an absolute URI', () => {
+    expect.assertions(1)
+
     const skeleton = buildVCV1Skeleton({
       id: vcId,
       credentialSubject,

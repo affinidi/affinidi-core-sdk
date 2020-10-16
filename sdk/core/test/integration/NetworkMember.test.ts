@@ -222,7 +222,7 @@ describe('CommonNetworkMember', () => {
     const credId = new Date().toISOString()
     const unsignedCredential = buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-        id: `credId_${credId}`,
+        id: `credId:${credId}`,
         credentialSubject: {
           data: {
             '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -685,7 +685,7 @@ describe('CommonNetworkMember', () => {
     const unsignedCredentials = [
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: 'placeholder',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],

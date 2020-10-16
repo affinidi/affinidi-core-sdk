@@ -17,7 +17,7 @@ const { AssertionProofPurpose } = jsigs.purposes
 
 export const getVCV1JSONContext = () => {
   warning(
-    true,
+    false,
     'getVCV1JSONContext should be treated as a temporary solution and not a final solution for VC contexts.',
   )
 
@@ -88,7 +88,7 @@ export const buildVCV1: BuildVCV1 = async ({
   documentLoader,
   getProofPurposeOptions,
 }) => {
-  validateId(unsigned.id)
+  validateId(unsigned.id, true)
 
   try {
     const result = await jsigs.sign(

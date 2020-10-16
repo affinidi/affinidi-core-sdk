@@ -19,7 +19,7 @@ export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, co
     validateId(id)
   } else {
     warning(
-      true,
+      false,
       'An id should be supplied for the VP. Otherwise top-level, non-object properties (like "type") will be malleable.',
     )
   }
@@ -58,7 +58,14 @@ export const buildVPV1: BuildVPV1 = async ({
   documentLoader,
   getProofPurposeOptions,
 }) => {
-  if (unsigned.id) validateId(unsigned.id)
+  if (unsigned.id) {
+    validateId(unsigned.id, true)
+  } else {
+    warning(
+      false,
+      'An id should be supplied for the VP. Otherwise top-level, non-object properties (like "type") will be malleable.',
+    )
+  }
 
   return jsigs.sign(
     {
