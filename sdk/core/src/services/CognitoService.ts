@@ -165,7 +165,7 @@ export default class CognitoService {
     this.cognitoidentityserviceprovider.globalSignOut({ AccessToken })
   }
 
-  async forgotPassword(Username: string): Promise<any> {
+  async forgotPassword(Username: string, messageParameters?: MessageParameters): Promise<any> {
     this._usernameShouldBeEmailOrPhoneNumber(Username)
 
     const { clientId: ClientId } = this.cognitoOptions
@@ -173,6 +173,10 @@ export default class CognitoService {
     const params = {
       ClientId,
       Username,
+    }
+
+    if (messageParameters) {
+      Object.assign(params, { ClientMetadata: messageParameters })
     }
 
     try {
@@ -271,12 +275,16 @@ export default class CognitoService {
     }
   }
 
-  async resendSignUp(Username: string): Promise<any> {
+  async resendSignUp(Username: string, messageParameters?: MessageParameters): Promise<any> {
     Username = normalizeUsername(Username)
 
     const { clientId: ClientId } = this.cognitoOptions
 
     const params = { ClientId, Username }
+
+    if (messageParameters) {
+      Object.assign(params, { ClientMetadata: messageParameters })
+    }
 
     try {
       const response = await this.cognitoidentityserviceprovider.resendConfirmationCode(params).promise()
