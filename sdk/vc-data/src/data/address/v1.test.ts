@@ -30,6 +30,7 @@ describe('VCAddressPersonV1', () => {
 
     expect(expanded).toMatchInlineSnapshot(`
       Object {
+        "@id": "urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
         "@type": Array [
           "https://www.w3.org/2018/credentials#VerifiableCredential",
           "https://schema.affinity-project.org/AddressCredentialPersonV1",
@@ -79,6 +80,11 @@ describe('VCAddressPersonV1', () => {
             ],
           },
         ],
+        "https://www.w3.org/2018/credentials#holder": Array [
+          Object {
+            "@id": "did:elem:123",
+          },
+        ],
       }
     `)
   })
@@ -106,6 +112,7 @@ describe('VCAddressOrganizationV1', () => {
 
     expect(expanded).toMatchInlineSnapshot(`
       Object {
+        "@id": "urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
         "@type": Array [
           "https://www.w3.org/2018/credentials#VerifiableCredential",
           "https://schema.affinity-project.org/AddressCredentialOrganizationV1",
@@ -153,6 +160,11 @@ describe('VCAddressOrganizationV1', () => {
                 ],
               },
             ],
+          },
+        ],
+        "https://www.w3.org/2018/credentials#holder": Array [
+          Object {
+            "@id": "did:elem:123",
           },
         ],
       }

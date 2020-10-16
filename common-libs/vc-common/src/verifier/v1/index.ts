@@ -1,6 +1,16 @@
-import { VPV1, VCV1, VCV1Holder, VPV1Proof, VCV1Revocation, VCV1Proof, VCV1Subject, DocumentLoader } from '../../'
 import { parse } from 'did-resolver'
 
+import {
+  VPV1,
+  VCV1,
+  VCV1Holder,
+  VPV1Proof,
+  VCV1Revocation,
+  VCV1Proof,
+  VCV1Subject,
+  DocumentLoader,
+  absoluteURIRegex,
+} from '../../'
 import {
   genValidateFn,
   Validator,
@@ -19,6 +29,10 @@ const { AssertionProofPurpose, AuthenticationProofPurpose } = jsigs.purposes
 
 const isValidDID: Validator<string> = (value) => {
   return createValidatorResponse(value.startsWith('did:'), 'Expected to start with "did:"')
+}
+
+const isAbsoluteURI: Validator<string> = (value) => {
+  return createValidatorResponse(absoluteURIRegex.test(value), 'Expected to start with "did:"')
 }
 
 const isValidContext: Validator = (value) => {
@@ -207,7 +221,7 @@ export const validateVCV1 = ({
 }) =>
   genValidateFn<VCV1>({
     '@context': isValidContext,
-    id: isNonEmptyString,
+    id: [isNonEmptyString, isAbsoluteURI],
     type: [isArrayOfNonEmptyStrings, isArrayIncluding('VerifiableCredential')],
     holder: isValid(validateHolder),
     issuer: [isNonEmptyString, isValidDID],
@@ -238,6 +252,7 @@ export const validateVPV1 = ({
 }) =>
   genValidateFn<VPV1<VCV1>>({
     '@context': isValidContext,
+    id: [isUndefinedOr(isNonEmptyString), isUndefinedOr(isAbsoluteURI)],
     type: [isArrayOfNonEmptyStrings, isArrayIncluding('VerifiablePresentation')],
     verifiableCredential: [
       isArrayOf(isValid(validateVCV1({ documentLoader, getVerifySuite, getProofPurposeOptions }))),

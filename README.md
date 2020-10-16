@@ -20,7 +20,7 @@ The Affinidi open source monorepo has the following structure
 ```
 
 ### common-libs/common
-The `common` folder contains the `@affinidi/common` [npm package](https://www.npmjs.com/package/@affinidi/common). This package implements DID, VC, and VP utilities that are used throughout Affinidi libraries and services. This package is considered more *opinionated* because it supports DID methods and VC proofs that Affinidi actively supports. 
+The `common` folder contains the `@affinidi/common` [npm package](https://www.npmjs.com/package/@affinidi/common). This package implements DID, VC, and VP utilities that are used throughout Affinidi libraries and services. This package is considered more *opinionated* because it supports DID methods and VC proofs that Affinidi actively supports.
 
 The main entry point to this package is a class called `Affinity`. In this class you will find utilities for handling JSON-LD, DIDs, VCs, VPs, JWTs, and legacy credential types from early MVPs.
 
@@ -30,7 +30,7 @@ This packages is the same as https://github.com/decentralized-identity/lds-ecdsa
 ### common-libs/vc-common
 The `vc-common` folder contains the `@affinidi/vc-common` [npm package](https://www.npmjs.com/package/@affinidi/vc-common). This package implements VC and VP types and utility functions that help with type-safe credential issuance and verification. It is considered less *opinionated* because it supports a wider variety of DIDs and VCs as long as they conform to the core data model.
 
-Find more docs [here](./common/getting-started.md).
+Find more docs [here](https://docs.affinity-project.org/common/getting-started).
 
 ### sdk/core
 The `core` folder contins the `@affinidi/wallet-core-sdk` [npm package](https://www.npmjs.com/package/@affinidi/wallet-core-sdk). This package implements the common logic for account registration & management, credential issuance & verification and more.

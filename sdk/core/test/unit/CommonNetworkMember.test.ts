@@ -857,7 +857,7 @@ describe('CommonNetworkMember', () => {
     const credentials = [
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: 'placeholder',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -904,7 +904,7 @@ describe('CommonNetworkMember', () => {
     const credentials = [
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: 'placeholder',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -952,7 +952,7 @@ describe('CommonNetworkMember', () => {
     const credentials = [
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: 'placeholder',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -998,7 +998,7 @@ describe('CommonNetworkMember', () => {
     const credentials = [
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: 'placeholder',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -1417,7 +1417,7 @@ describe('CommonNetworkMember', () => {
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: '123',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -1454,7 +1454,7 @@ describe('CommonNetworkMember', () => {
     const emailVC = await affinity.signCredential(
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSEmailPersonV1>({
-          id: '123',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'EmailPerson'],
@@ -1474,7 +1474,7 @@ describe('CommonNetworkMember', () => {
     const phoneVC = await affinity.signCredential(
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: '123',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -1516,7 +1516,7 @@ describe('CommonNetworkMember', () => {
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: '123',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -1559,7 +1559,7 @@ describe('CommonNetworkMember', () => {
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: '123',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
@@ -1595,7 +1595,7 @@ describe('CommonNetworkMember', () => {
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
         skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: '123',
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
           credentialSubject: {
             data: {
               '@type': ['Person', 'PersonE', 'PhonePerson'],
