@@ -1,3 +1,9 @@
+# release 1.3.5 (2020-10-16)
+
+# Improvements
+
+- Bump to latest VC Common that includes protection against malleable VCs and VPs, see [here](https://github.com/affinityproject/affinidi-core-sdk/blob/master/common-libs/vc-common/CHANGELOG.md#111) for more details.
+
 # release 0.13.0 (2020-09-08)
 
 ## Update behavior
