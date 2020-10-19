@@ -7,9 +7,9 @@ const otherCredential = require('../../factory/signedCredential') // this is a l
 
 const apiKeyHash = 'dummyHash'
 const metricsUrl = 'https://dummy'
-const metricsService = new MetricsService({ metricsUrl, apiKey: apiKeyHash })
 
 describe('MetricsService', () => {
+  const metricsService = new MetricsService({ metricsUrl, apiKey: apiKeyHash })
 
   describe('parseVcMetadata', () => {
     const vcType = 'HealthPassportBundleCredentialV1'
