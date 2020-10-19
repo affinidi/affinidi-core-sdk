@@ -13,9 +13,10 @@ import { MetricsEvent, MetricsServiceOptions, SignedCredential } from '../dto/sh
 // TODO: move to a single file for all vcType-specific parsers?
 class HealthPassportVCParser extends VcMetadataParser {
   parseSpecific(credential: any): SpecificVcMetadada {
+    const targetResources = ['Specimen', 'Observation', 'Organization']
     const entriesIn = credential.credentialSubject.data.fhirBundle.entry
     const entriesOut = entriesIn.filter(function (entry: any) {
-      return entry.resource.resourceType !== 'Patient'
+      return targetResources.includes(entry.resource.resourceType)
     })
     return { data: entriesOut }
   }
