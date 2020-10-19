@@ -63,7 +63,7 @@ describe('AffinityWallet', () => {
     expect(affinityWallet.encryptedSeed).to.exist
   })
 
-  it('#createEncryptedMessage and #readEncryptedMessage (jolo)', async () => {
+  it.skip('#createEncryptedMessage and #readEncryptedMessage (jolo)', async () => {
     const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, options)
     const encryptedMessage = await affinityWallet.createEncryptedMessage(did, data)
 
