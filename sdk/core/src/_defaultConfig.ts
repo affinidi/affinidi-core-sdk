@@ -1,7 +1,7 @@
 export const DEFAULT_COGNITO_REGION = 'ap-southeast-1'
 
-export const DEV_COGNITO_CLIENT_ID = '7j47p2lstje9cqnd1ah0qls2ap'
-export const DEV_COGNITO_USER_POOL_ID = 'ap-southeast-1_HfvRKQgvU'
+export const DEV_COGNITO_CLIENT_ID = '1a8vhef3bnep5lafunqncf5opv'
+export const DEV_COGNITO_USER_POOL_ID = 'ap-southeast-1_lCQNNgx6b'
 export const DEV_REGISTRY_URL = 'https://affinity-registry.dev.affinity-project.org'
 export const DEV_ISSUER_URL = 'https://affinity-issuer.dev.affinity-project.org'
 export const DEV_VERIFIER_URL = 'https://affinity-verifier.dev.affinity-project.org'
@@ -11,8 +11,8 @@ export const DEV_PHONE_ISSUER_BASE_PATH = 'https://issuer-phone-twillio.dev.affi
 export const DEV_EMAIL_ISSUER_BASE_PATH = 'https://issuer-email-ses.dev.affinity-project.org'
 export const DEV_METRICS_URL = 'https://affinity-metrics.dev.affinity-project.org'
 
-export const STAGING_COGNITO_CLIENT_ID = '63u370qajnae4v5m75riqqsr64'
-export const STAGING_COGNITO_USER_POOL_ID = 'ap-southeast-1_xQUwVVYnq'
+export const STAGING_COGNITO_CLIENT_ID = '640chorik9mgeqenmsbt08ks51'
+export const STAGING_COGNITO_USER_POOL_ID = 'ap-southeast-1_y2jlNAYfX'
 export const STAGING_REGISTRY_URL = 'https://affinity-registry.staging.affinity-project.org'
 export const STAGING_ISSUER_URL = 'https://affinity-issuer.staging.affinity-project.org'
 export const STAGING_VERIFIER_URL = 'https://affinity-verifier.staging.affinity-project.org'
@@ -22,8 +22,8 @@ export const STAGING_PHONE_ISSUER_BASE_PATH = 'https://issuer-phone-twillio.stag
 export const STAGING_EMAIL_ISSUER_BASE_PATH = 'https://issuer-email-ses.staging.affinity-project.org'
 export const STAGING_METRICS_URL = 'https://affinity-metrics.staging.affinity-project.org'
 
-export const PROD_COGNITO_CLIENT_ID = 'r5v70me2tro6ifni6ts3fao02'
-export const PROD_COGNITO_USER_POOL_ID = 'ap-southeast-1_GmX16s3x5'
+export const PROD_COGNITO_CLIENT_ID = '3bqoujbhqqkqpp7bbavvsl5rs6'
+export const PROD_COGNITO_USER_POOL_ID = 'ap-southeast-1_VDuBDCmYz'
 export const PROD_REGISTRY_URL = 'https://affinity-registry.prod.affinity-project.org'
 export const PROD_ISSUER_URL = 'https://affinity-issuer.prod.affinity-project.org'
 export const PROD_VERIFIER_URL = 'https://affinity-verifier.prod.affinity-project.org'
