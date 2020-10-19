@@ -1,16 +1,47 @@
 import { profile } from '@affinidi/common'
-import { metrics, EventComponent } from '@affinidi/affinity-metrics-lib'
+import {
+  metrics,
+  EventComponent,
+  VcMetadata,
+  SpecificVcMetadada,
+  VcMetadataParser,
+  DefaultVcMetadataParser,
+} from '@affinidi/affinity-metrics-lib'
 
-import { MetricsEvent, MetricsServiceOptions } from '../dto/shared.dto'
+import { MetricsEvent, MetricsServiceOptions, SignedCredential } from '../dto/shared.dto'
+
+// TODO: move to a single file for all vcType-specific parsers?
+class HealthPassportVCParser extends VcMetadataParser {
+  parseSpecific(credential: any): SpecificVcMetadada {
+    const entriesIn = credential.credentialSubject.data.fhirBundle.entry
+    const entriesOut = entriesIn.filter(function (entry: any) {
+      return entry.resource.resourceType !== 'Patient'
+    })
+    return { data: entriesOut }
+  }
+}
+
+class VcMetadataParserFactory {
+  createParser(vcType: string): VcMetadataParser {
+    switch (vcType) {
+      case 'HealthPassportBundleCredentialV1': // TODO: can we import this value from vc-data in a modular way?
+        return new HealthPassportVCParser()
+      default:
+        return new DefaultVcMetadataParser()
+    }
+  }
+}
 
 @profile()
 export default class MetricsService {
   _apiKey: string
   _metricsUrl: string
+  _vcMetadataParserFactory: VcMetadataParserFactory
 
   constructor(options: MetricsServiceOptions) {
     this._apiKey = options.apiKey
     this._metricsUrl = options.metricsUrl
+    this._vcMetadataParserFactory = new VcMetadataParserFactory()
   }
 
   send(event: MetricsEvent): void {
@@ -19,5 +50,11 @@ export default class MetricsService {
     const metricsEvent = Object.assign({}, event, { component })
 
     metrics.send(metricsEvent, this._apiKey, this._metricsUrl)
+  }
+
+  parseVcMetadata(credential: SignedCredential): VcMetadata {
+    const vcMetadataParser = this._vcMetadataParserFactory.createParser(credential.type[1])
+    const metadata = vcMetadataParser.parse(credential)
+    return metadata
   }
 }
