@@ -15,7 +15,7 @@ const {
   COGNITO_USERNAME,
   COGNITO_PHONE_NUMBER,
   COGNITO_USERNAME_NO_KEY,
-  COGNITO_USERNAME_UNCONFIRMED,
+  COGNITO_USER_UNCONFIRMED,
   COGNITO_USERNAME_EXISTS,
   ENCRYPTED_SEED_JOLO,
   ENCRYPTED_SEED_ELEM,
@@ -44,7 +44,7 @@ const cognitoUsername = COGNITO_USERNAME
 const cognitoPassword = COGNITO_PASSWORD
 
 const userWithoutKey = COGNITO_USERNAME_NO_KEY
-const emailUnconfirmed = COGNITO_USERNAME_UNCONFIRMED
+const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 
 import { SdkOptions } from '../../src/dto/shared.dto'
 
