@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-react-native-sdk",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "SDK for affinity DID solution for React Native",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -34,7 +34,7 @@
   "license": "ISC",
   "dependencies": {
     "@affinidi/common": "1.1.2",
-    "@affinidi/wallet-core-sdk": "2.0.0",
+    "@affinidi/wallet-core-sdk": "2.1.0",
     "@react-native-community/netinfo": "^5.9.3",
     "@sentry/react-native": "^1.5.0",
     "@types/text-encoding": "0.0.35",

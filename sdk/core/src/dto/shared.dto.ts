@@ -101,6 +101,9 @@ export class SdkOptions {
   @IsUrl({ require_tld: false })
   @IsOptional()
   metricsUrl?: string
+
+  @IsOptional()
+  storageRegion?: string
 }
 
 export class MessageParameters {

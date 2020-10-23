@@ -76,10 +76,23 @@ const options = {
   issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
 }
 
-const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
+const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
 ```
 
 `options` - (optional) if not defined, values posted above will be used.
+
+### Initialize region for storing credentials
+
+You can specify AWS region where user credentials will be stored using optional
+`storageRegion` parameter.
+
+```ts
+const options = {
+  storageRegion: 'ap-southeast-1'
+}
+
+const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
+```
 
 ### Initialize from user access token
 

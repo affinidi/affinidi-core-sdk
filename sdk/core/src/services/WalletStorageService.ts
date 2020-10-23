@@ -51,6 +51,7 @@ export default class WalletStorageService {
   _vaultUrl: string
   _clientId: string
   _userPoolId: string
+  _storageRegion: string
   _keysService: KeysService
   _api: API
 
@@ -62,7 +63,9 @@ export default class WalletStorageService {
     this._clientId = options.clientId || STAGING_COGNITO_CLIENT_ID
     this._userPoolId = options.userPoolId || STAGING_COGNITO_USER_POOL_ID
 
-    const { registryUrl, issuerUrl, verifierUrl } = options
+    const { registryUrl, issuerUrl, verifierUrl, storageRegion } = options
+
+    this._storageRegion = storageRegion
 
     this._api = new API(registryUrl, issuerUrl, verifierUrl)
   }
@@ -161,6 +164,12 @@ export default class WalletStorageService {
   }
 
   async authorizeVcVault() {
+    const headers: any = {}
+
+    if (this._storageRegion) {
+      headers['X-DST-REGION'] = this._storageRegion
+    }
+
     const { addressHex, privateKeyHex } = this.getVaultKeys()
 
     const didEth = `did:ethr:0x${addressHex}`
@@ -172,10 +181,12 @@ export default class WalletStorageService {
       url: tokenChallengeUrl,
       params: {},
       method: 'POST',
+      headers,
     })
 
     const signature = this.signByVaultKeys(token, privateKeyHex)
     const tokenChallengeValidationUrl = `${this._vaultUrl}/auth/validate-token`
+
     await this._api.execute(null, {
       url: tokenChallengeValidationUrl,
       params: { accessToken: token, signature, did: didEth },
@@ -394,6 +405,7 @@ export default class WalletStorageService {
       delete options.issueSignupCredential // not required
       delete options.metricsUrl // not required
       delete options.apiKey // not required
+      delete options.storageRegion // not required
 
       params.options = options
     }

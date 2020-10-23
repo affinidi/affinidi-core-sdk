@@ -40,6 +40,7 @@
     - [Validate Holder Response on Share Request](#validate-holder-response-on-share-request)
     - [Validate Holder Response on Did auth Request](#validate-holder-response-on-did-auth-request)
   - [Wallet](#wallet)
+    - [Initialize region for storing credentials](#initialize-region-for-storing-credentials)
     - [Create Response on credential share request](#create-response-on-credential-share-request)
     - [Create Response on credential offer request](#create-response-on-credential-offer-request)
     - [Create Response on DID auth request](#create-response-on-did-auth-request)
@@ -701,6 +702,19 @@ Its validate response token, if verification not passed response `{ isValid: fal
 if response is valid returns also `{ did, nonce }`
 
 ### Wallet
+
+#### Initialize region for storing credentials
+
+You can specify AWS region where user credentials will be stored using optional
+`storageRegion` parameter.
+
+```ts
+const options = {
+  storageRegion: 'ap-southeast-1'
+}
+
+const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
+```
 
 #### Create Response on credential share request
 
