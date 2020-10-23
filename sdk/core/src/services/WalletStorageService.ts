@@ -206,10 +206,7 @@ export default class WalletStorageService {
 
     const headers: any = {
       Authorization: `Bearer ${token}`,
-      ...(storageRegion ?
-        { ['X-DST-REGION']: storageRegion } :
-        {}
-      )
+      ...(storageRegion ? { ['X-DST-REGION']: storageRegion } : {}),
     }
 
     const url = `${this._vaultUrl}/data`
@@ -271,10 +268,7 @@ export default class WalletStorageService {
 
     const headers: any = {
       Authorization: `Bearer ${token}`,
-      ...(this._storageRegion ?
-        { ['X-DST-REGION']: this._storageRegion } :
-        {}
-      )
+      ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
 
     const url = `${this._vaultUrl}/data/0/99`
@@ -297,10 +291,7 @@ export default class WalletStorageService {
 
     const headers: any = {
       Authorization: `Bearer ${token}`,
-      ...(this._storageRegion ?
-        { ['X-DST-REGION']: this._storageRegion } :
-        {}
-      )
+      ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
 
     // NOTE: deletes the data objects associated with the included access token
@@ -332,10 +323,7 @@ export default class WalletStorageService {
 
     const headers: any = {
       Authorization: `Bearer ${token}`,
-      ...(this._storageRegion ?
-        { ['X-DST-REGION']: this._storageRegion } :
-        {}
-      )
+      ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
 
     const url = `${this._vaultUrl}/data/0/99`
