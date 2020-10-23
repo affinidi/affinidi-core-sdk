@@ -163,11 +163,13 @@ export default class WalletStorageService {
     return toRpcSig(sig.v, sig.r, sig.s)
   }
 
-  async authorizeVcVault() {
+  async authorizeVcVault(region?: string) {
     const headers: any = {}
 
-    if (this._storageRegion) {
-      headers['X-DST-REGION'] = this._storageRegion
+    const storageRegion = region || this._storageRegion
+
+    if (storageRegion) {
+      headers['X-DST-REGION'] = storageRegion
     }
 
     const { addressHex, privateKeyHex } = this.getVaultKeys()
@@ -196,12 +198,18 @@ export default class WalletStorageService {
     return token
   }
 
-  async saveCredentials(data: any) {
+  async saveCredentials(data: any, region?: string) {
     const responses = []
-    const token = await this.authorizeVcVault()
+    const token = await this.authorizeVcVault(region)
 
-    const headers = {
+    const storageRegion = region || this._storageRegion
+
+    const headers: any = {
       Authorization: `Bearer ${token}`,
+      ...(storageRegion ?
+        { ['X-DST-REGION']: storageRegion } :
+        {}
+      )
     }
 
     const url = `${this._vaultUrl}/data`
@@ -260,9 +268,15 @@ export default class WalletStorageService {
 
   async deleteAllCredentials(): Promise<void> {
     const token = await this.authorizeVcVault()
-    const headers = {
+
+    const headers: any = {
       Authorization: `Bearer ${token}`,
+      ...(this._storageRegion ?
+        { ['X-DST-REGION']: this._storageRegion } :
+        {}
+      )
     }
+
     const url = `${this._vaultUrl}/data/0/99`
 
     try {
@@ -280,8 +294,13 @@ export default class WalletStorageService {
 
   async deleteCredentialByIndex(index: string): Promise<void> {
     const token = await this.authorizeVcVault()
-    const headers = {
+
+    const headers: any = {
       Authorization: `Bearer ${token}`,
+      ...(this._storageRegion ?
+        { ['X-DST-REGION']: this._storageRegion } :
+        {}
+      )
     }
 
     // NOTE: deletes the data objects associated with the included access token
@@ -311,8 +330,12 @@ export default class WalletStorageService {
   async fetchEncryptedCredentials(): Promise<any> {
     const token = await this.authorizeVcVault()
 
-    const headers = {
+    const headers: any = {
       Authorization: `Bearer ${token}`,
+      ...(this._storageRegion ?
+        { ['X-DST-REGION']: this._storageRegion } :
+        {}
+      )
     }
 
     const url = `${this._vaultUrl}/data/0/99`

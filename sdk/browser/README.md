@@ -76,10 +76,14 @@ const message = await affinityWallet.readEncryptedMessage(encryptedMessage)
 ### Put credential to VC vault
 
 ```ts
-await affinityWallet.saveCredentials([signedCredential])
+const credentials = [ signedCredential ]
+const storageRegion = 'ap-southeast-1'
+
+await affinityWallet.saveCredentials(credentials, storageRegion)
 ```
 
-accepts array of credentials to store in the vault.
+`credentials` - array of credentials to store in the vault.
+`storageRegion` - (optional) AWS region where user's credentials will be stored.
 
 ### Pull credential from VC vault
 
