@@ -8,7 +8,7 @@ import { DEV_COGNITO_CLIENT_ID, DEV_COGNITO_USER_POOL_ID } from '../../../src/_d
 import { waitConfirmationCodeInput } from '../../helpers/waitConfirmationCodeInput'
 
 const { TEST_SECRETS } = process.env
-const { COGNITO_PASSWORD, COGNITO_USERNAME } = JSON.parse(TEST_SECRETS)
+const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = JSON.parse(TEST_SECRETS)
 
 let username: string
 let randomPassword: string
@@ -17,7 +17,7 @@ const email = COGNITO_USERNAME
 const password = COGNITO_PASSWORD
 
 const existingConfirmedCognitoUser = email
-const existingUnconfirmedCognitoUser = 'test_user_unconfirmed'
+const existingUnconfirmedCognitoUser = COGNITO_USERNAME_UNCONFIRMED
 const nonExistingCognitoUser = 'non_existing_user'
 
 // NOTE: consider having special pool for test users
