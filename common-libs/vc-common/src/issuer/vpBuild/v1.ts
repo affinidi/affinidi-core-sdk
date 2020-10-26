@@ -2,6 +2,7 @@ import warning from 'tiny-warning'
 
 import { VCV1, TContext, VPV1, VPV1Unsigned, VPV1Holder, DocumentLoader } from '../../'
 import { Signer, GetSignSuiteFn, GetProofPurposeOptionsFn, removeIfExists, validateId } from '../common'
+import { PresentationSubmissionV1 } from '../../vp'
 
 const jsigs = require('jsonld-signatures')
 const { AuthenticationProofPurpose } = jsigs.purposes
@@ -11,10 +12,11 @@ type BuildVPV1Unsigned = (opts: {
   vcs: VCV1[]
   holder: VPV1Holder
   type?: string | string[]
-  context?: TContext
+  context?: TContext,
+  presentation_submission?: PresentationSubmissionV1
 }) => VPV1Unsigned
 
-export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, context }): VPV1Unsigned => {
+export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, context, presentation_submission }): VPV1Unsigned => {
   if (id) {
     validateId(id)
   } else {
@@ -28,11 +30,13 @@ export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, co
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
       ...removeIfExists(context, 'https://www.w3.org/2018/credentials/v1'),
+      ...(typeof presentation_submission === 'undefined' ? [] : ['https://identity.foundation/presentation-exchange/submission/v1'])
     ],
     ...(id ? { id } : {}),
     type: ['VerifiablePresentation', ...removeIfExists(type, 'VerifiablePresentation')],
     holder: holder,
     verifiableCredential: vcs,
+    presentation_submission
   }
 }
 
