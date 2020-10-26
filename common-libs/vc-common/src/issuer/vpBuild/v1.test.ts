@@ -223,6 +223,36 @@ describe('buildVPV1Unsigned', () => {
     })
   })
 
+  it('builds a VPV1Unsigned with a presentation submission', () => {
+    const unsigned = buildVPV1Unsigned({
+      id: vpId,
+      vcs,
+      holder,
+      context: ['https://example.com', 'https://example2.com'],
+      presentation_submission: {
+        descriptor_map: [
+          {
+            id: 'vc_input_descriptor_id_1',
+            path: '$.verifiableCredential[0]',
+            format: 'ldp_vc'
+          }
+        ]
+      }
+    })
+
+    expectUnsigned(unsigned).toStrictEqual({
+      'presentation_submission': {
+        descriptor_map: [
+          {
+            id: 'vc_input_descriptor_id_1',
+            path: '$.verifiableCredential[0]',
+            format: 'ldp_vc'
+          }
+        ]
+      },
+    })
+  })
+
   it('warns when id is not provided', () => {
     buildVPV1Unsigned({
       vcs,
