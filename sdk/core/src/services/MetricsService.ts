@@ -2,52 +2,7 @@ import { profile } from '@affinidi/common'
 import { metrics, EventComponent, VcMetadata } from '@affinidi/affinity-metrics-lib'
 
 import { MetricsEvent, MetricsServiceOptions, SignedCredential } from '../dto/shared.dto'
-
-type CommonVcMetadata = Omit<VcMetadata, 'data'> // anything to data will be overwritten by SpecificVcMetadada.data
-type SpecificVcMetadada = { data: any }
-
-class VcMetadataParser {
-  // parse vcType-agnostic metadata
-  private parseCommon(credential: SignedCredential): CommonVcMetadata {
-    const metadata = { vcType: credential.type }
-    return metadata
-  }
-
-  // parse vcType-specific metadata
-  /* eslint-disable-next-line no-unused-vars */
-  parseSpecific(credential: SignedCredential): SpecificVcMetadada {
-    return { data: {} }
-  }
-
-  parse(credential: SignedCredential): VcMetadata {
-    const baseMetadata = this.parseCommon(credential)
-    const addOnMetadata = this.parseSpecific(credential)
-    return { ...baseMetadata, ...addOnMetadata }
-  }
-}
-
-// TODO: move to a single file for all vcType-specific parsers?
-class HealthPassportParser extends VcMetadataParser {
-  parseSpecific(credential: any): SpecificVcMetadada {
-    const targetResources = ['Specimen', 'Observation', 'Organization']
-    const entriesIn = credential.credentialSubject.data.fhirBundle.entry
-    const entriesOut = entriesIn.filter(function (entry: any) {
-      return targetResources.includes(entry.resource.resourceType)
-    })
-    return { data: entriesOut }
-  }
-}
-
-class VcMetadataParserFactory {
-  createParser(vcType: string): VcMetadataParser {
-    switch (vcType) {
-      case 'HealthPassportBundleCredentialV1': // TODO: can we import this value from vc-data in a modular way?
-        return new HealthPassportParser()
-      default:
-        return new VcMetadataParser()
-    }
-  }
-}
+import { VcMetadataParserFactory } from './parsers'
 
 @profile()
 export default class MetricsService {
