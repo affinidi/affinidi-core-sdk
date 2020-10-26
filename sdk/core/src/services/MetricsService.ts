@@ -3,11 +3,10 @@ import { metrics, EventComponent, VcMetadata } from '@affinidi/affinity-metrics-
 
 import { MetricsEvent, MetricsServiceOptions, SignedCredential } from '../dto/shared.dto'
 
-type CommonVcMetadata = Omit<VcMetadata, 'data'>  // anything to data will be overwritten by SpecificVcMetadada.data
+type CommonVcMetadata = Omit<VcMetadata, 'data'> // anything to data will be overwritten by SpecificVcMetadada.data
 type SpecificVcMetadada = { data: any }
 
 class VcMetadataParser {
-
   // parse vcType-agnostic metadata
   private parseCommon(credential: SignedCredential): CommonVcMetadata {
     const metadata = { vcType: credential.type }
@@ -15,6 +14,7 @@ class VcMetadataParser {
   }
 
   // parse vcType-specific metadata
+  /* eslint-disable-next-line no-unused-vars */
   parseSpecific(credential: SignedCredential): SpecificVcMetadada {
     return { data: {} }
   }
@@ -22,7 +22,7 @@ class VcMetadataParser {
   parse(credential: SignedCredential): VcMetadata {
     const baseMetadata = this.parseCommon(credential)
     const addOnMetadata = this.parseSpecific(credential)
-    return {...baseMetadata, ...addOnMetadata}
+    return { ...baseMetadata, ...addOnMetadata }
   }
 }
 
