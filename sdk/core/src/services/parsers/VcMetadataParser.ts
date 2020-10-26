@@ -27,12 +27,16 @@ class VcMetadataParser {
 
 class HealthPassportParser extends VcMetadataParser {
   parseSpecific(credential: any): SpecificVcMetadada {
-    const targetResources = ['Specimen', 'Observation', 'Organization']
-    const entriesIn = credential.credentialSubject.data.fhirBundle.entry
-    const entriesOut = entriesIn.filter(function (entry: any) {
-      return targetResources.includes(entry.resource.resourceType)
-    })
-    return { data: entriesOut }
+    try {
+      const targetResources = ['Specimen', 'Observation', 'Organization']
+      const entriesIn = credential.credentialSubject.data.fhirBundle.entry
+      const entriesOut = entriesIn.filter(function (entry: any) {
+        return targetResources.includes(entry.resource.resourceType)
+      })
+      return { data: entriesOut }
+    } catch (error) {
+      console.log('Error:', error)
+    }
   }
 }
 
