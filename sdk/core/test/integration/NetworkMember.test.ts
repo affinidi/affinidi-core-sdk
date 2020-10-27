@@ -7,6 +7,9 @@ import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
 import CognitoService from '../../src/services/CognitoService'
+import WalletStorageService from '../../src/services/WalletStorageService'
+
+import { normalizeUsername } from '../../src/shared/normalizeUsername'
 
 const { TEST_SECRETS } = process.env
 const {
@@ -49,7 +52,7 @@ const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 import { SdkOptions } from '../../src/dto/shared.dto'
 
 import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
-import { generateUsername } from '../helpers/generateUsername'
+import { generateUsername, generateEmail } from '../helpers/generateUsername'
 
 // test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
@@ -69,7 +72,30 @@ describe('CommonNetworkMember', () => {
     },
   ]
 
-  it('#throws `COR-4 / 400` when UNCONFIRMED user signs in', async () => {
+  it('removes user if it is "UNCONFIMRED" before sign up', async () => {
+    const options: SdkOptions = getOptionsForEnvironment('dev')
+
+    const email = generateEmail()
+    const username = normalizeUsername(email)
+
+    await CommonNetworkMember.signUp(email, cognitoPassword, options)
+
+    let token
+    let responseError
+
+    try {
+      token = await CommonNetworkMember.signUp(email, cognitoPassword, options)
+    } catch (error) {
+      responseError = error
+    }
+
+    await WalletStorageService.adminDeleteUnconfirmedUser(username, options)
+
+    expect(token).to.exist
+    expect(responseError).to.not.exist
+  })
+
+  it('#throws `COR-4 / 400` when UNCONFIRMED user login', async () => {
     const username = emailUnconfirmed
 
     await CommonNetworkMember.signUp(username, cognitoPassword, options)

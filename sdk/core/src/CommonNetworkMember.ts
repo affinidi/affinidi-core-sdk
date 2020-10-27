@@ -847,10 +847,10 @@ export class CommonNetworkMember {
 
     password = normalizeShortPassword(password, username)
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { keyStorageUrl, userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.signUp(username, password, messageParameters, { userPoolId, clientId })
+    await cognitoService.signUp(username, password, messageParameters, { keyStorageUrl, userPoolId, clientId })
 
     const token = `${username}::${password}`
 
