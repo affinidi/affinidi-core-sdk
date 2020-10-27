@@ -1,5 +1,6 @@
 import { L, O } from 'ts-toolbelt'
 import { VCV1, VCV1Type, SimpleThing } from '@affinidi/vc-common'
+export { MaybeArray } from '@affinidi/vc-common'
 
 type SimpleThingString = { '@type': string }
 
@@ -18,8 +19,6 @@ export type ExpandType<Obj extends SimpleThing> = {
     ? L.Concat<Obj['@type'], string[]>
     : Obj['@type'] | L.Concat<[Obj['@type']], string[]>
 } & OmitType<Obj>
-
-export type MaybeArray<T> = T | Array<T>
 
 export type Type<T extends string> = [VCV1Type[0], T, ...string[]]
 
