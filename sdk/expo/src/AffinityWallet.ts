@@ -17,7 +17,7 @@ export class AffinityWallet extends CoreNetwork {
   constructor(password: string, encryptedSeed: string, options: __dangerous.SdkOptions = {}) {
     super(password, encryptedSeed, options)
 
-    const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
+    const sdkOptions = CoreNetwork.setEnvironmentVariables(options)
 
     this.skipBackupCredentials = options.skipBackupCredentials
 
@@ -48,7 +48,7 @@ export class AffinityWallet extends CoreNetwork {
       { isArray: false, type: __dangerous.SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVarialbles(options)
+    const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVariables(options)
     const { accessToken } = __dangerous.readUserTokensFromSessionStorage(userPoolId)
 
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
