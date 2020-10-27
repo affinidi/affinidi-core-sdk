@@ -1,7 +1,7 @@
 import { VCV1Subject, VCV1, VPV1Unsigned, VPV1 } from '../../'
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 
-import { buildVPV1Unsigned, buildVPV1 } from './v1'
+import { buildVPV1Unsigned, buildVPV1, PresentationSubmissionContext } from './v1'
 import { buildVCV1Skeleton, buildVCV1Unsigned, buildVCV1 } from '../vcBuild/v1'
 import { GetSignSuiteFn } from '../common'
 
@@ -228,7 +228,6 @@ describe('buildVPV1Unsigned', () => {
       id: vpId,
       vcs,
       holder,
-      context: ['https://example.com', 'https://example2.com'],
       presentation_submission: {
         descriptor_map: [
           {
@@ -241,6 +240,7 @@ describe('buildVPV1Unsigned', () => {
     })
 
     expectUnsigned(unsigned).toStrictEqual({
+      '@context': ['https://www.w3.org/2018/credentials/v1', PresentationSubmissionContext],
       'presentation_submission': {
         descriptor_map: [
           {
