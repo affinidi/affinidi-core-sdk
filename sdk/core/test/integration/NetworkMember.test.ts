@@ -55,7 +55,7 @@ import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
 import { generateUsername, generateEmail } from '../helpers/generateUsername'
 
 // test agains `dev | prod` // if nothing specified, staging is used by default
-const options: SdkOptions = getOptionsForEnvironment()
+const options: SdkOptions = getOptionsForEnvironment('dev')
 
 describe('CommonNetworkMember', () => {
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
@@ -220,6 +220,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.updateDidDocument (jolo did method)', async () => {
+    const options: SdkOptions = getOptionsForEnvironment('dev')
+
     const updatingEncryoptedSeed = UPDATING_ENCRYPTED_SEED
     const updatingDid = UPDATING_DID
 
@@ -229,7 +231,7 @@ describe('CommonNetworkMember', () => {
     expect(didMethod).to.be.equal(joloDidMethod)
 
     // TODO: when registry with conuntTransaction ednpoiont will be at staging - change to default env
-    const commonNetworkMember = new CommonNetworkMember(password, updatingEncryoptedSeed, { env: 'dev' })
+    const commonNetworkMember = new CommonNetworkMember(password, updatingEncryoptedSeed, options)
     const didDocument = await commonNetworkMember.resolveDid(updatingDid)
 
     const { authentication } = didDocument
@@ -263,7 +265,7 @@ describe('CommonNetworkMember', () => {
       expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
     })
 
-    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem)
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
     const revokableUnsignedCredential = await commonNetworkMember.buildRevocationListStatus(
       unsignedCredential,
       accessToken,

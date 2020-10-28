@@ -15,7 +15,7 @@ export default class RevocationService {
     this._revocationUrl = options.revocationUrl || REVOCATION_URL
 
     const { registryUrl, issuerUrl, verifierUrl } = options
-    this._api = new API(registryUrl, issuerUrl, verifierUrl)
+    this._api = new API(registryUrl, issuerUrl, verifierUrl, options)
   }
 
   async buildRevocationListStatus(

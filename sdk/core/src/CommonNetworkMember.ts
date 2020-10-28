@@ -137,7 +137,8 @@ export class CommonNetworkMember {
       emailIssuerBasePath,
     } = this._sdkOptions
 
-    this._accessApiKey = CommonNetworkMember._setAccessApiKey(this._sdkOptions)
+    this._accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+    this._sdkOptions.accessApiKey = this._accessApiKey
 
     this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey })
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._accessApiKey })
@@ -617,7 +618,9 @@ export class CommonNetworkMember {
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { apiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -764,7 +767,9 @@ export class CommonNetworkMember {
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { apiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -849,8 +854,10 @@ export class CommonNetworkMember {
 
     const { keyStorageUrl, userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.signUp(username, password, messageParameters, { keyStorageUrl, userPoolId, clientId })
+    await cognitoService.signUp(username, password, messageParameters, { keyStorageUrl, userPoolId, clientId, apiKey })
 
     const token = `${username}::${password}`
 
@@ -932,10 +939,12 @@ export class CommonNetworkMember {
 
     const { userPoolId, clientId, keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
     if (isUsername) {
-      await WalletStorageService.adminConfirmUser(username, { keyStorageUrl })
+      await WalletStorageService.adminConfirmUser(username, { keyStorageUrl, apiKey })
     } else {
       await cognitoService.confirmSignUp(username, confirmationCode)
     }
