@@ -399,6 +399,8 @@ export default class WalletStorageService {
       delete options.issueSignupCredential // not required
       delete options.metricsUrl // not required
       delete options.apiKey // not required
+      delete options.clientId // not required
+      delete options.userPoolId // not required
 
       params.options = options
     }

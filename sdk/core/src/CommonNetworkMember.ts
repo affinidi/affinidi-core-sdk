@@ -55,6 +55,9 @@ import { normalizeShortPassword } from './shared/normalizeShortPassword'
 import { clearUserTokensFromSessionStorage, readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
 
 import {
+  DEV_REVOCATION_URL,
+  PROD_REVOCATION_URL,
+  STAGING_REVOCATION_URL,
   DEFAULT_DID_METHOD,
   DEV_COGNITO_CLIENT_ID,
   DEV_COGNITO_USER_POOL_ID,
@@ -193,6 +196,7 @@ export class CommonNetworkMember {
     let keyStorageUrl
     let clientId
     let userPoolId
+    let revocationUrl
     let phoneIssuerBasePath
     let emailIssuerBasePath
     let metricsUrl
@@ -212,6 +216,7 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || DEV_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || DEV_EMAIL_ISSUER_BASE_PATH
         metricsUrl = DEV_METRICS_URL
+        revocationUrl = options.revocationUrl || DEV_REVOCATION_URL
 
         break
 
@@ -227,6 +232,7 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || PROD_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || PROD_EMAIL_ISSUER_BASE_PATH
         metricsUrl = PROD_METRICS_URL
+        revocationUrl = options.revocationUrl || PROD_REVOCATION_URL
 
         break
 
@@ -241,6 +247,7 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || STAGING_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || STAGING_EMAIL_ISSUER_BASE_PATH
         metricsUrl = STAGING_METRICS_URL
+        revocationUrl = options.revocationUrl || STAGING_REVOCATION_URL
 
         break
     }
@@ -256,6 +263,7 @@ export class CommonNetworkMember {
       phoneIssuerBasePath,
       emailIssuerBasePath,
       metricsUrl,
+      revocationUrl,
     }
   }
 

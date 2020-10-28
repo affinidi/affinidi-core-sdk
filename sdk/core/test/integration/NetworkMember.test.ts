@@ -1,12 +1,12 @@
 'use strict'
 
 import { expect } from 'chai'
-import * as jwt from 'jsonwebtoken'
+// import * as jwt from 'jsonwebtoken'
 import { Affinity } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
-import CognitoService from '../../src/services/CognitoService'
+// import CognitoService from '../../src/services/CognitoService'
 import WalletStorageService from '../../src/services/WalletStorageService'
 
 import { normalizeUsername } from '../../src/shared/normalizeUsername'
@@ -55,7 +55,7 @@ import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
 import { generateUsername, generateEmail } from '../helpers/generateUsername'
 
 // test agains `dev | prod` // if nothing specified, staging is used by default
-const options: SdkOptions = getOptionsForEnvironment('dev')
+const options: SdkOptions = getOptionsForEnvironment()
 
 describe('CommonNetworkMember', () => {
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
@@ -73,8 +73,6 @@ describe('CommonNetworkMember', () => {
   ]
 
   it('removes user if it is "UNCONFIMRED" before sign up', async () => {
-    const options: SdkOptions = getOptionsForEnvironment('dev')
-
     const email = generateEmail()
     const username = normalizeUsername(email)
 
@@ -120,22 +118,24 @@ describe('CommonNetworkMember', () => {
   it('resends OTP when UNCONFIRMED user signs up (for the Nth time)', async () => {
     const username = emailUnconfirmed
 
-    await CommonNetworkMember.signUp(username, cognitoPassword)
+    await CommonNetworkMember.signUp(username, cognitoPassword, options)
 
-    const token = await CommonNetworkMember.signUp(username, cognitoPassword)
+    const token = await CommonNetworkMember.signUp(username, cognitoPassword, options)
 
     expect(token).to.equal(`${username}::${cognitoPassword}`)
   })
 
   it('.register (default did method)', async () => {
-    const { did, encryptedSeed } = await CommonNetworkMember.register(password)
+    const { did, encryptedSeed } = await CommonNetworkMember.register(password, options)
 
     expect(did).to.exist
     expect(encryptedSeed).to.exist
   })
 
   it('.register (elem did method)', async () => {
-    const { did, encryptedSeed } = await CommonNetworkMember.register(password, { didMethod: elemDidMethod })
+    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod })
+
+    const { did, encryptedSeed } = await CommonNetworkMember.register(password, optionsWithElemDid)
 
     expect(did).to.exist
     expect(encryptedSeed).to.exist
@@ -144,7 +144,9 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.register (jolo did method)', async () => {
-    const { did, encryptedSeed } = await CommonNetworkMember.register(password, { didMethod: joloDidMethod })
+    const optionsWithJoloDid = Object.assign({}, options, { didMethod: joloDidMethod })
+
+    const { did, encryptedSeed } = await CommonNetworkMember.register(password, optionsWithJoloDid)
 
     expect(did).to.exist
     expect(encryptedSeed).to.exist
@@ -162,7 +164,9 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#resolveDid (elem)', async () => {
-    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, { didMethod: elemDidMethod })
+    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod })
+
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, optionsWithElemDid)
     const didDocument = await commonNetworkMember.resolveDid(didElem)
 
     expect(didDocument).to.exist
@@ -220,8 +224,6 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.updateDidDocument (jolo did method)', async () => {
-    const options: SdkOptions = getOptionsForEnvironment('dev')
-
     const updatingEncryoptedSeed = UPDATING_ENCRYPTED_SEED
     const updatingDid = UPDATING_DID
 
@@ -230,7 +232,7 @@ describe('CommonNetworkMember', () => {
     const [, didMethod] = updatingDid.split(':')
     expect(didMethod).to.be.equal(joloDidMethod)
 
-    // TODO: when registry with conuntTransaction ednpoiont will be at staging - change to default env
+    // TODO: when registry with conuntTransaction endpoint will be at staging - change to default env
     const commonNetworkMember = new CommonNetworkMember(password, updatingEncryoptedSeed, options)
     const didDocument = await commonNetworkMember.resolveDid(updatingDid)
 
@@ -849,14 +851,14 @@ describe('CommonNetworkMember', () => {
     const cognitoUsername = generateUsername()
 
     let networkMember
-    networkMember = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword)
+    networkMember = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
 
     expect(networkMember.did).to.exist
     expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
 
     await networkMember.signOut()
 
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(cognitoUsername, cognitoPassword)
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
     expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
   })
@@ -902,7 +904,7 @@ describe('CommonNetworkMember', () => {
   it('#changeUsername throws `COR-7 / 409` when new username exists', async () => {
     const newCognitoUsername = COGNITO_USERNAME_EXISTS
 
-    const networkMember = await CommonNetworkMember.fromLoginAndPassword(cognitoUsername, cognitoPassword)
+    const networkMember = await CommonNetworkMember.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
     let responseError
 
@@ -971,30 +973,29 @@ describe('CommonNetworkMember', () => {
     expect(httpStatusCode).to.eql(400)
   })
 
-  it('#getSignupCredentials', async () => {
-    // prettier-ignore
-    const options = {
-    //   issuerUrl:     'http://localhost:3001',
-      // keyStorageUrl: 'http://localhost:3000',
-    //   didMethod:     'elem'
-    }
+  // TO UNCOMMENT WHEN WALLET_BACKEND IS UPATED TO LATEST SDK
+  // it('#getSignupCredentials', async () => {
+  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //   // @ts-ignore
+  //   const { clientId, userPoolId } = options
 
-    const cognitoService = new CognitoService()
-    const { idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
+  //   const cognitoService = new CognitoService({ clientId, userPoolId })
 
-    const decoded = jwt.decode(idToken)
+  //   const { idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
-    if (typeof decoded === 'string') {
-      throw Error
-    }
+  //   const decoded = jwt.decode(idToken)
 
-    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+  //   if (typeof decoded === 'string') {
+  //     throw Error
+  //   }
 
-    const signedCredentials = await commonNetworkMember.getSignupCredentials(idToken, options)
+  //   const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
-    expect(signedCredentials).to.exist
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    expect(signedCredentials[0].credentialSubject.data.email).to.eq(decoded.email)
-  })
+  //   const signedCredentials = await commonNetworkMember.getSignupCredentials(idToken, options)
+
+  //   expect(signedCredentials).to.exist
+  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //   // @ts-ignore
+  //   expect(signedCredentials[0].credentialSubject.data.email).to.eq(decoded.email)
+  // })
 })
