@@ -140,8 +140,7 @@ export class CommonNetworkMember {
       emailIssuerBasePath,
     } = this._sdkOptions
 
-    this._accessApiKey = CommonNetworkMember._setAccessApiKey(options)
-    this._sdkOptions.accessApiKey = this._accessApiKey
+    this._accessApiKey = this._sdkOptions.accessApiKey
 
     this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey })
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._accessApiKey })
@@ -252,7 +251,10 @@ export class CommonNetworkMember {
         break
     }
 
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+
     return {
+      accessApiKey,
       issuerUrl,
       registryUrl,
       verifierUrl,
@@ -775,9 +777,9 @@ export class CommonNetworkMember {
 
     const { accessToken } = options.cognitoUserTokens
 
-    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { apiKey })
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
