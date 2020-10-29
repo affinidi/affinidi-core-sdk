@@ -55,6 +55,9 @@ import { normalizeShortPassword } from './shared/normalizeShortPassword'
 import { clearUserTokensFromSessionStorage, readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
 
 import {
+  DEV_REVOCATION_URL,
+  PROD_REVOCATION_URL,
+  STAGING_REVOCATION_URL,
   DEFAULT_DID_METHOD,
   DEV_COGNITO_CLIENT_ID,
   DEV_COGNITO_USER_POOL_ID,
@@ -137,7 +140,7 @@ export class CommonNetworkMember {
       emailIssuerBasePath,
     } = this._sdkOptions
 
-    this._accessApiKey = CommonNetworkMember._setAccessApiKey(this._sdkOptions)
+    this._accessApiKey = this._sdkOptions.accessApiKey
 
     this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey })
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._accessApiKey })
@@ -192,6 +195,7 @@ export class CommonNetworkMember {
     let keyStorageUrl
     let clientId
     let userPoolId
+    let revocationUrl
     let phoneIssuerBasePath
     let emailIssuerBasePath
     let metricsUrl
@@ -211,6 +215,7 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || DEV_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || DEV_EMAIL_ISSUER_BASE_PATH
         metricsUrl = DEV_METRICS_URL
+        revocationUrl = options.revocationUrl || DEV_REVOCATION_URL
 
         break
 
@@ -226,6 +231,7 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || PROD_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || PROD_EMAIL_ISSUER_BASE_PATH
         metricsUrl = PROD_METRICS_URL
+        revocationUrl = options.revocationUrl || PROD_REVOCATION_URL
 
         break
 
@@ -240,11 +246,15 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || STAGING_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || STAGING_EMAIL_ISSUER_BASE_PATH
         metricsUrl = STAGING_METRICS_URL
+        revocationUrl = options.revocationUrl || STAGING_REVOCATION_URL
 
         break
     }
 
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+
     return {
+      accessApiKey,
       issuerUrl,
       registryUrl,
       verifierUrl,
@@ -255,6 +265,7 @@ export class CommonNetworkMember {
       phoneIssuerBasePath,
       emailIssuerBasePath,
       metricsUrl,
+      revocationUrl,
     }
   }
 
@@ -617,7 +628,9 @@ export class CommonNetworkMember {
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { apiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -648,7 +661,7 @@ export class CommonNetworkMember {
 
     const { keyStorageUrl, registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl)
+    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
     const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferToken)
 
@@ -764,7 +777,9 @@ export class CommonNetworkMember {
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -849,8 +864,10 @@ export class CommonNetworkMember {
 
     const { keyStorageUrl, userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.signUp(username, password, messageParameters, { keyStorageUrl, userPoolId, clientId })
+    await cognitoService.signUp(username, password, messageParameters, { keyStorageUrl, userPoolId, clientId, apiKey })
 
     const token = `${username}::${password}`
 
@@ -932,10 +949,12 @@ export class CommonNetworkMember {
 
     const { userPoolId, clientId, keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
     if (isUsername) {
-      await WalletStorageService.adminConfirmUser(username, { keyStorageUrl })
+      await WalletStorageService.adminConfirmUser(username, { keyStorageUrl, apiKey })
     } else {
       await cognitoService.confirmSignUp(username, confirmationCode)
     }

@@ -29,9 +29,9 @@ export default class ApiService {
     this._issuerUrl = issuerUrl || STAGING_ISSUER_URL
     this._registryUrl = registryUrl || STAGING_REGISTRY_URL
     this._verifierUrl = verifierUrl || STAGING_VERIFIER_URL
-    this._apiKey = options.apiKey
+    this._apiKey = options.apiKey || options.accessApiKey
 
-    if (!options.apiKey) {
+    if (!this._apiKey) {
       const apiKeyBuffer = KeysService.sha256(Buffer.from('testApiKey'))
       this._apiKey = apiKeyBuffer.toString('hex')
     }

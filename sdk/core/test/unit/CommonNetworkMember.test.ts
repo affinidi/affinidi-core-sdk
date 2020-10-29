@@ -727,7 +727,7 @@ describe('CommonNetworkMember', () => {
     let errorCode
 
     try {
-      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode)
+      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
     } catch (error) {
       errorCode = error.code
       // catching error so the test doesn't throw
@@ -746,7 +746,7 @@ describe('CommonNetworkMember', () => {
     walletStub.onCall(1).throws('UNKNOWN')
     walletStub.onCall(2).throws('UNKNOWN')
 
-    await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode)
+    await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
 
     expect(walletStub.callCount).to.eql(4)
   })
@@ -765,7 +765,7 @@ describe('CommonNetworkMember', () => {
     let errorCode
 
     try {
-      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode)
+      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
     } catch (error) {
       errorCode = error.code
     }
@@ -1400,7 +1400,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#generatePresentationChallenge returns a jwt', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     const presentationChallenge = await commonNetworkMember.generatePresentationChallenge([
       { type: ['PhoneCredentialPersonV1'] },
@@ -1411,8 +1411,8 @@ describe('CommonNetworkMember', () => {
 
   it('#createPresentationFromChallenge returns a signed VPV1', async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1448,8 +1448,8 @@ describe('CommonNetworkMember', () => {
 
   it('#createPresentationFromChallenge filters VCs based on the challenge', async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
 
     const emailVC = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1510,8 +1510,8 @@ describe('CommonNetworkMember', () => {
   it('#verifyPresentation', async () => {
     // TODO resolve why this is failing
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElemAlt)
+    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElemAlt, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1553,8 +1553,8 @@ describe('CommonNetworkMember', () => {
 
   it("#verifyPresentation fails when the challenge wasn't signed by the correct party", async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1589,8 +1589,8 @@ describe('CommonNetworkMember', () => {
 
   it('#verifyPresentation fails when the challenge is tampered with', async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({

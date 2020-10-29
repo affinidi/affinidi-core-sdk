@@ -1,9 +1,8 @@
 import API from './ApiService'
-// import SdkError from '../shared/SdkError'
 
 import { RevocationListOutput, RevocationListParamsInput } from '../dto/revocation.dto'
 
-import { REVOCATION_URL } from '../_defaultConfig'
+import { STAGING_REVOCATION_URL } from '../_defaultConfig'
 import { profile } from '@affinidi/common'
 
 @profile()
@@ -12,10 +11,10 @@ export default class RevocationService {
   _api: API
 
   constructor(options: any = {}) {
-    this._revocationUrl = options.revocationUrl || REVOCATION_URL
+    this._revocationUrl = options.revocationUrl || STAGING_REVOCATION_URL
 
     const { registryUrl, issuerUrl, verifierUrl } = options
-    this._api = new API(registryUrl, issuerUrl, verifierUrl)
+    this._api = new API(registryUrl, issuerUrl, verifierUrl, options)
   }
 
   async buildRevocationListStatus(
