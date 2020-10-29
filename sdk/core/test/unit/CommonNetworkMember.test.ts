@@ -108,7 +108,7 @@ const idToken =
 let walletStub: sinon.SinonStub
 
 // test agains `dev | prod` // if nothing specified, staging is used by default
-const options: SdkOptions = getOptionsForEnvironment('dev')
+const options: SdkOptions = getOptionsForEnvironment()
 
 const { registryUrl } = options
 
