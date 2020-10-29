@@ -1,23 +1,24 @@
-import {
-  VCEmploymentPersonV1,
-  VCSEmploymentPersonV1,
-  getVCEmploymentPersonV1Context,
-  VCEmploymentOrganizationV1,
-  VCSEmploymentOrganizationV1,
-  getVCEmploymentOrganizationV1Context,
-} from './v1'
+import { VCEmploymentOfferPersonV1, VCSEmploymentOfferPersonV1, getVCEmploymentOfferPersonV1Context } from './v1'
 import { expandVC } from '../../testUtil.test'
 
-describe('VCEmploymentPersonV1', () => {
+describe('VCEmploymentOfferPersonV1', () => {
   it('expands correctly', async () => {
     expect.assertions(1)
 
-    const expanded = await expandVC<VCEmploymentPersonV1, VCSEmploymentPersonV1>({
-      type: 'EmploymentCredentialPersonV1',
+    const expanded = await expandVC<VCEmploymentOfferPersonV1, VCSEmploymentOfferPersonV1>({
+      type: 'EmploymentOfferCredentialPersonV1',
       data: {
-        '@type': ['Person', 'PersonE', 'EmploymentPerson'],
+        '@type': ['Person', 'PersonE', 'EmploymentOfferPerson'],
         worksFor: {
-          '@type': ['EmployeeRole', 'PersonEmployeeRoleE'],
+          '@type': ['EmployeeRole', 'PersonEmployeeCandidateRoleE'],
+          expectedStartDate: '2022-04-21T20:00',
+          interview: {
+            interviewer: {
+              '@type': 'ContactPoint',
+              name: 'Tina Belcher',
+              email: 'tinabelcher@gmail.com',
+            },
+          },
           reference: {
             '@type': 'ContactPoint',
             name: 'Linda Belcher',
@@ -31,7 +32,7 @@ describe('VCEmploymentPersonV1', () => {
         },
         name: 'Bob Belcher',
       },
-      context: getVCEmploymentPersonV1Context(),
+      context: getVCEmploymentOfferPersonV1Context(),
     })
 
     expect(expanded).toMatchInlineSnapshot(`
@@ -39,7 +40,7 @@ describe('VCEmploymentPersonV1', () => {
         "@id": "urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
         "@type": Array [
           "https://www.w3.org/2018/credentials#VerifiableCredential",
-          "https://schema.affinity-project.org/EmploymentCredentialPersonV1",
+          "https://schema.affinity-project.org/EmploymentOfferCredentialPersonV1",
         ],
         "https://www.w3.org/2018/credentials#credentialSubject": Array [
           Object {
@@ -48,7 +49,7 @@ describe('VCEmploymentPersonV1', () => {
                 "@type": Array [
                   "https://schema.org/Person",
                   "https://schema.affinity-project.org/PersonE",
-                  "https://schema.affinity-project.org/EmploymentPerson",
+                  "https://schema.affinity-project.org/EmploymentOfferPerson",
                 ],
                 "https://schema.org/name": Array [
                   Object {
@@ -59,9 +60,35 @@ describe('VCEmploymentPersonV1', () => {
                   Object {
                     "@type": Array [
                       "https://schema.org/EmployeeRole",
-                      "https://schema.affinity-project.org/PersonEmployeeRoleE",
+                      "https://schema.affinity-project.org/PersonEmployeeCandidateRoleE",
                     ],
-                    "https://schema.affinity-project.org/reference": Array [
+                    "https://schema.affinity-project.org/expectedStartDate": Array [
+                      Object {
+                        "@value": "2022-04-21T20:00",
+                      },
+                    ],
+                    "https://schema.affinity-project.org/interview": Array [
+                      Object {
+                        "https://schema.org/interviewer": Array [
+                          Object {
+                            "@type": Array [
+                              "https://schema.org/ContactPoint",
+                            ],
+                            "https://schema.org/email": Array [
+                              Object {
+                                "@value": "tinabelcher@gmail.com",
+                              },
+                            ],
+                            "https://schema.org/name": Array [
+                              Object {
+                                "@value": "Tina Belcher",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                    "https://schema.org/reference": Array [
                       Object {
                         "@type": Array [
                           "https://schema.org/ContactPoint",
@@ -78,7 +105,7 @@ describe('VCEmploymentPersonV1', () => {
                         ],
                       },
                     ],
-                    "https://schema.affinity-project.org/skills": Array [
+                    "https://schema.org/skills": Array [
                       Object {
                         "@value": "burger",
                       },
@@ -99,82 +126,6 @@ describe('VCEmploymentPersonV1', () => {
                         ],
                       },
                     ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-        "https://www.w3.org/2018/credentials#holder": Array [
-          Object {
-            "@id": "did:elem:123",
-          },
-        ],
-      }
-    `)
-  })
-})
-
-describe('VCEmploymentOrganizationV1', () => {
-  it('expands correctly', async () => {
-    expect.assertions(1)
-
-    const expanded = await expandVC<VCEmploymentOrganizationV1, VCSEmploymentOrganizationV1>({
-      type: 'EmploymentCredentialOrganizationV1',
-      data: {
-        '@type': ['Organization', 'OrganizationE', 'EmploymentOrganization'],
-        member: {
-          '@type': ['EmployeeRole', 'OrganizationEmployeeRole'],
-          member: {
-            '@type': ['Person', 'PersonE'],
-            name: 'Bob Belcher',
-          },
-        },
-        name: "Bob's Burgers",
-      },
-      context: getVCEmploymentOrganizationV1Context(),
-    })
-
-    expect(expanded).toMatchInlineSnapshot(`
-      Object {
-        "@id": "urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-        "@type": Array [
-          "https://www.w3.org/2018/credentials#VerifiableCredential",
-          "https://schema.affinity-project.org/EmploymentCredentialOrganizationV1",
-        ],
-        "https://www.w3.org/2018/credentials#credentialSubject": Array [
-          Object {
-            "https://schema.affinity-project.org/data": Array [
-              Object {
-                "@type": Array [
-                  "https://schema.org/Organization",
-                  "https://schema.affinity-project.org/OrganizationE",
-                  "https://schema.affinity-project.org/EmploymentOrganization",
-                ],
-                "https://schema.org/member": Array [
-                  Object {
-                    "@type": Array [
-                      "https://schema.org/EmployeeRole",
-                      "https://schema.affinity-project.org/OrganizationEmployeeRole",
-                    ],
-                    "https://schema.org/member": Array [
-                      Object {
-                        "@type": Array [
-                          "https://schema.org/Person",
-                          "https://schema.affinity-project.org/PersonE",
-                        ],
-                        "https://schema.org/name": Array [
-                          Object {
-                            "@value": "Bob Belcher",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-                "https://schema.org/name": Array [
-                  Object {
-                    "@value": "Bob's Burgers",
                   },
                 ],
               },
