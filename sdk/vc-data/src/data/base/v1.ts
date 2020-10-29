@@ -1,6 +1,7 @@
 import { CreateThing, ExtendThing, MaybeArray, createContextEntry, ExpandThing } from '../util'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
+import { CreateExpandedThing } from '../../../dist'
 
 export type GovernmentOrgV1 =
   | CreateThing<'Country'>
@@ -16,15 +17,6 @@ export type MonetaryAmountRV1 = CreateThing<
   {
     currency: string
     value: number | string
-  }
->
-
-export type SalaryV1 = CreateThing<
-  'Salary',
-  {
-    gross: ExpandThing<MonetaryAmountRV1>
-    net: ExpandThing<MonetaryAmountRV1>
-    type: 'Daily' | 'Weekly' | 'Monthly' | 'Hourly' | 'Annual'
   }
 >
 
@@ -62,7 +54,7 @@ type OrganizationEV1Mixin = CreateThing<
   {
     hasCredential?: MaybeArray<ExpandThing<CredentialUV1>>
     industry?: MaybeArray<string>
-    identifiers: MaybeArray<'PropertyValue'>
+    identifiers: MaybeArray<CreateExpandedThing<'PropertyValue'> | string | number>
   }
 >
 
@@ -127,24 +119,7 @@ export const getBaseV1ContextEntries = () => {
     vocab: 'schema',
   })
 
-  const salaryEntry = createContextEntry<SalaryV1>({
-    type: 'Salary',
-    typeIdBase: 'affSchema',
-    fields: {
-      gross: 'affSchema',
-      net: 'affSchema',
-      type: 'affSchema',
-    },
-    vocab: 'schema',
-  })
-
-  return [
-    personEV1ContextEntry,
-    organizationEV1ContextEntry,
-    credentialEntry,
-    organizationalCredentialEntry,
-    salaryEntry,
-  ]
+  return [personEV1ContextEntry, organizationEV1ContextEntry, credentialEntry, organizationalCredentialEntry]
 }
 
 export const getFHIRV1ContextEntries = () => {

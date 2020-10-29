@@ -1,6 +1,7 @@
 import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { MonetaryAmountRV1 } from '../../../dist'
 
-import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries, SalaryV1 } from '../base'
+import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries } from '../base'
 import {
   CreateThing,
   ExpandThing,
@@ -14,14 +15,23 @@ import {
 
 // Person Related
 
+export type SalaryV1 = CreateThing<
+  'Salary',
+  {
+    gross: ExpandThing<MonetaryAmountRV1>
+    net: ExpandThing<MonetaryAmountRV1>
+    frequency: 'Daily' | 'Weekly' | 'Monthly' | 'Hourly' | 'Annual'
+  }
+>
+
 type PersonEmployeeRoleEV1Mixin = CreateThing<
   'PersonEmployeeRoleE',
   {
     reference?: CreateExpandedThing<'ContactPoint'>
     skills?: MaybeArray<CreateExpandedThing<'DefinedTerm'> | string>
     worksFor: ExpandThing<OrganizationEV1>
-    offerLetter?: CreateThing<'Url'>
-    salary: ExpandThing<SalaryV1>
+    offerLetter?: CreateThing<'URL'>
+    salary?: SalaryV1
   }
 >
 
@@ -63,10 +73,20 @@ export const getVCEmploymentPersonV1Context = () => {
     vocab: 'schema',
   })
 
+  const salary = createContextEntry<SalaryV1>({
+    type: 'Salary',
+    typeIdBase: 'affSchema',
+    fields: {
+      gross: 'affSchema',
+      net: 'affSchema',
+      frequency: 'affSchema',
+    },
+  })
+
   return createVCContextEntry<VCEmploymentPersonV1>({
     type: 'EmploymentCredentialPersonV1',
     typeIdBase: 'affSchema',
-    entries: [employmentPersonEntry, personEmployeeRole, ...getBaseV1ContextEntries()],
+    entries: [employmentPersonEntry, personEmployeeRole, salary, ...getBaseV1ContextEntries()],
     vocab: 'schema',
   })
 }

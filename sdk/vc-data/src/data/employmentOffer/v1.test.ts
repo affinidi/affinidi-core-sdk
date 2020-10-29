@@ -13,10 +13,19 @@ describe('VCEmploymentOfferPersonV1', () => {
           '@type': ['EmployeeRole', 'PersonEmployeeCandidateRoleE'],
           expectedStartDate: '2022-04-21T20:00',
           interview: {
+            '@type': 'EmploymentInterview',
             interviewer: {
               '@type': 'ContactPoint',
               name: 'Tina Belcher',
               email: 'tinabelcher@gmail.com',
+            },
+            date: '2022-01-21T20:00',
+            location: {
+              '@type': 'PostalAddress',
+              addressLocality: 'Denver',
+              addressRegion: 'CO',
+              postalCode: '80209',
+              streetAddress: '7 S. Broadway',
             },
           },
           reference: {
@@ -69,7 +78,10 @@ describe('VCEmploymentOfferPersonV1', () => {
                     ],
                     "https://schema.affinity-project.org/interview": Array [
                       Object {
-                        "https://schema.org/interviewer": Array [
+                        "@type": Array [
+                          "https://schema.affinity-project.org/EmploymentInterview",
+                        ],
+                        "https://schema.affinity-project.org/interviewer": Array [
                           Object {
                             "@type": Array [
                               "https://schema.org/ContactPoint",
@@ -82,6 +94,38 @@ describe('VCEmploymentOfferPersonV1', () => {
                             "https://schema.org/name": Array [
                               Object {
                                 "@value": "Tina Belcher",
+                              },
+                            ],
+                          },
+                        ],
+                        "https://schema.org/date": Array [
+                          Object {
+                            "@value": "2022-01-21T20:00",
+                          },
+                        ],
+                        "https://schema.org/location": Array [
+                          Object {
+                            "@type": Array [
+                              "https://schema.org/PostalAddress",
+                            ],
+                            "https://schema.org/addressLocality": Array [
+                              Object {
+                                "@value": "Denver",
+                              },
+                            ],
+                            "https://schema.org/addressRegion": Array [
+                              Object {
+                                "@value": "CO",
+                              },
+                            ],
+                            "https://schema.org/postalCode": Array [
+                              Object {
+                                "@value": "80209",
+                              },
+                            ],
+                            "https://schema.org/streetAddress": Array [
+                              Object {
+                                "@value": "7 S. Broadway",
                               },
                             ],
                           },

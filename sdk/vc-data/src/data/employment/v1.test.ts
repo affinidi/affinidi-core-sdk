@@ -40,7 +40,7 @@ describe('VCEmploymentPersonV1', () => {
               value: 8000,
               currency: 'INR',
             },
-            type: 'Monthly',
+            frequency: 'Monthly',
           },
         },
         name: 'Bob Belcher',
@@ -97,6 +97,11 @@ describe('VCEmploymentPersonV1', () => {
                         "@type": Array [
                           "https://schema.affinity-project.org/Salary",
                         ],
+                        "https://schema.affinity-project.org/frequency": Array [
+                          Object {
+                            "@value": "Monthly",
+                          },
+                        ],
                         "https://schema.affinity-project.org/gross": Array [
                           Object {
                             "@type": Array [
@@ -129,11 +134,6 @@ describe('VCEmploymentPersonV1', () => {
                                 "@value": 8000,
                               },
                             ],
-                          },
-                        ],
-                        "https://schema.affinity-project.org/type": Array [
-                          Object {
-                            "@value": "Monthly",
                           },
                         ],
                       },

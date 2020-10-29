@@ -13,10 +13,10 @@ import {
   CreateExpandedThing,
 } from '../util'
 
-type EmploymentInterview = CreateThing<
+type EmploymentInterviewV1 = CreateThing<
   'EmploymentInterview', // becomes @type
   {
-    interviewer: MaybeArray<CreateThing<'ContactPoint'>>
+    interviewer: MaybeArray<CreateExpandedThing<'ContactPoint'>>
     date: string
     location: CreateExpandedThing<'PostalAddress'>
   }
@@ -27,7 +27,7 @@ type PersonEmployeeCandidateRoleEV1Mixin = CreateThing<
   {
     expectedStartDate?: string
     offerDate: string
-    interview: MaybeArray<EmploymentInterview>
+    interview: MaybeArray<EmploymentInterviewV1>
   }
 >
 
@@ -67,10 +67,25 @@ export const getVCEmploymentOfferPersonV1Context = () => {
     vocab: 'schema',
   })
 
+  const employmentInterviewV1 = createContextEntry<EmploymentInterviewV1>({
+    type: 'EmploymentInterview',
+    typeIdBase: 'affSchema',
+    fields: {
+      interviewer: 'affSchema',
+      date: 'schema',
+      location: 'schema',
+    },
+  })
+
   return createVCContextEntry<VCEmploymentOfferPersonV1>({
     type: 'EmploymentOfferCredentialPersonV1',
     typeIdBase: 'affSchema',
-    entries: [employmentOfferPersonEntry, personEmployeeCandidateRole, ...getBaseV1ContextEntries()],
+    entries: [
+      employmentOfferPersonEntry,
+      personEmployeeCandidateRole,
+      employmentInterviewV1,
+      ...getBaseV1ContextEntries(),
+    ],
     vocab: 'schema',
   })
 }
