@@ -52,7 +52,8 @@ type OrganizationEV1Mixin = CreateThing<
   'OrganizationE',
   {
     hasCredential?: MaybeArray<ExpandThing<CredentialUV1>>
-    industry?: MaybeArray<string>
+    industry?: MaybeArray<string>,
+    identifiers: MaybeArray<'PropertyValue'>
   }
 >
 
@@ -88,6 +89,7 @@ export const getBaseV1ContextEntries = () => {
     fields: {
       hasCredential: 'schema',
       industry: 'affSchema',
+      identifiers: 'affSchema',
     },
     vocab: 'schema',
   })
