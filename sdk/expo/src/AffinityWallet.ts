@@ -1,4 +1,4 @@
-import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
+import { CommonNetworkMember as CoreNetwork, __dangerous, EventComponent } from '@affinidi/wallet-core-sdk'
 
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
@@ -23,6 +23,7 @@ export class AffinityWallet extends CoreNetwork {
 
     this.keysService = new KeysService(encryptedSeed, password)
     this.walletStorageService = new WalletStorageService(encryptedSeed, password, sdkOptions)
+    this._component = EventComponent.AffinidiExpoSDK
   }
 
   set skipBackupCredentials(value: boolean) {

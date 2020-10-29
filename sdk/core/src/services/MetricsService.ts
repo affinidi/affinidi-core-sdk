@@ -13,8 +13,7 @@ export default class MetricsService {
     this._metricsUrl = options.metricsUrl
   }
 
-  send(event: MetricsEvent): void {
-    const component = EventComponent.AffinityBrowserExpoSDK
+  send(event: MetricsEvent, component: EventComponent): void {
 
     const metricsEvent = Object.assign({}, event, { component })
 

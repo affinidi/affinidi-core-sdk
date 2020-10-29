@@ -4,7 +4,7 @@ import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affini
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
-import { EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
+import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 
 import API from './services/ApiService'
 import CognitoService from './services/CognitoService'
@@ -110,6 +110,7 @@ export class CommonNetworkMember {
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
   private _didDocumentKeyId: string
+  protected _component: EventComponent
   protected cognitoUserTokens: CognitoUserTokens
 
   constructor(password: string, encryptedSeed: string, options: SdkOptions = {}) {
@@ -1850,7 +1851,7 @@ export class CommonNetworkMember {
       metadata: metadata,
     }
 
-    this._metricsService.send(event)
+    this._metricsService.send(event, this._component)
   }
 
   /* istanbul ignore next: private method */
@@ -1864,7 +1865,7 @@ export class CommonNetworkMember {
       metadata: metadata,
     }
 
-    this._metricsService.send(event)
+    this._metricsService.send(event, this._component)
   }
 
   private _sendVCSavedMetric(vcId: string, issuerId: string, metadata: EventMetadata) {
@@ -1877,7 +1878,7 @@ export class CommonNetworkMember {
       metadata: metadata,
     }
 
-    this._metricsService.send(event)
+    this._metricsService.send(event, this._component)
   }
 
   protected _sendVCSavedMetrics(credentials: SignedCredential[]) {
