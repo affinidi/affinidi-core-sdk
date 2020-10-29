@@ -54,6 +54,7 @@ export default class WalletStorageService {
   _storageRegion: string
   _keysService: KeysService
   _api: API
+  _apiKey: string
 
   constructor(encryptedSeed: string, password: string, options: any = {}) {
     this._keysService = new KeysService(encryptedSeed, password)
@@ -67,7 +68,9 @@ export default class WalletStorageService {
 
     this._storageRegion = storageRegion
 
-    this._api = new API(registryUrl, issuerUrl, verifierUrl)
+    this._apiKey = options.apiKey || options.accessApiKey
+
+    this._api = new API(registryUrl, issuerUrl, verifierUrl, options)
   }
 
   async pullEncryptedSeed(username: string, password: string, token: string = undefined): Promise<string> {
@@ -81,13 +84,15 @@ export default class WalletStorageService {
       accessToken = response.accessToken
     }
 
+    const apiKey = this._apiKey
+
     const keyStorageUrl = this._keyStorageUrl
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { apiKey })
 
     return encryptedSeed
   }
 
-  static async pullEncryptedSeed(accessToken: string, keyStorageUrl?: string): Promise<string> {
+  static async pullEncryptedSeed(accessToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
     keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
 
     const url = `${keyStorageUrl}/api/v1/keys/readMyKey`
@@ -96,7 +101,7 @@ export default class WalletStorageService {
       authorization: accessToken,
     }
 
-    const api = new API()
+    const api = new API(null, null, null, options)
 
     const { body } = await api.execute(null, {
       url,
@@ -350,7 +355,7 @@ export default class WalletStorageService {
 
     const url = `${keyStorageUrl}/api/v1/userManagement/adminConfirmUser`
 
-    const api = new API()
+    const api = new API(null, null, null, options)
 
     await api.execute(null, {
       url,
@@ -364,7 +369,7 @@ export default class WalletStorageService {
 
     const url = `${keyStorageUrl}/api/v1/userManagement/adminDeleteUnconfirmedUser`
 
-    const api = new API()
+    const api = new API(null, null, null, options)
 
     await api.execute(null, {
       url,
@@ -373,7 +378,7 @@ export default class WalletStorageService {
     })
   }
 
-  static async getCredentialOffer(idToken: string, keyStorageUrl?: string): Promise<string> {
+  static async getCredentialOffer(idToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
     keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
 
     const url = `${keyStorageUrl}/api/v1/issuer/getCredentialOffer`
@@ -381,7 +386,7 @@ export default class WalletStorageService {
       authorization: idToken,
     }
 
-    const api = new API()
+    const api = new API(null, null, null, options)
     const { body } = await api.execute(null, {
       url,
       headers,
@@ -417,11 +422,13 @@ export default class WalletStorageService {
       delete options.metricsUrl // not required
       delete options.apiKey // not required
       delete options.storageRegion // not required
+      delete options.clientId // not required
+      delete options.userPoolId // not required
 
       params.options = options
     }
 
-    const api = new API()
+    const api = new API(null, null, null, options)
     const { body } = await api.execute(null, { url, headers, params, method })
 
     const { signedCredentials } = body

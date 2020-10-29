@@ -51,7 +51,7 @@ export class AffinityWallet extends CoreNetwork {
     const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVarialbles(options)
     const { accessToken } = __dangerous.readUserTokensFromSessionStorage(userPoolId)
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new AffinityWallet(encryptionKey, encryptedSeed, options)
