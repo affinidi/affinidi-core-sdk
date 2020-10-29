@@ -4,9 +4,15 @@ import { expect } from 'chai'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import CognitoService from '../../../src/services/CognitoService'
 import * as jwt from 'jsonwebtoken'
-import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
+// import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 
 import { DEV_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
+
+import { SdkOptions } from '../../../src/dto/shared.dto'
+import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
+
+// test agains `dev | prod` // if nothing specified, staging is used by default
+const options: SdkOptions = getOptionsForEnvironment()
 
 const { TEST_SECRETS } = process.env
 const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, SEED_JOLO, ENCRYPTED_SEED_JOLO } = JSON.parse(TEST_SECRETS)
@@ -14,32 +20,37 @@ const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, SEED_JOLO, ENCRYPTED_SEED_
 const seed = SEED_JOLO
 const password = PASSWORD
 const encryptedSeed = ENCRYPTED_SEED_JOLO
-const options = {}
 
 const cognitoUsernameStaging = COGNITO_USERNAME
 const nonExistingUser = 'non_existing@email.com'
 const cognitoPassword = COGNITO_PASSWORD
 const cognitoUsername = cognitoUsernameStaging
 
+const { keyStorageUrl } = options
+let cognitoService: CognitoService
+
 describe('WalletStorageService', () => {
-  // })
+  beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const { clientId, userPoolId } = options
 
-  it.skip('#storeEncryptedSeed', async () => {
-    const cognitoService = new CognitoService()
-
-    const accessToken = await cognitoService.signIn(cognitoUsername, cognitoPassword)
-
-    const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
-
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
-    const result = await walletStorageService.storeEncryptedSeed(accessToken, seed, encryptionKey)
-    expect(result).to.exist
+    cognitoService = new CognitoService({ clientId, userPoolId })
   })
 
+  // this should be a new user
+  // it.skip('#storeEncryptedSeed', async () => {
+  //   const { accessToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
+  //   const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
+
+  //   const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+
+  //   const result = await walletStorageService.storeEncryptedSeed(accessToken, seed, encryptionKey)
+  //   expect(result).to.exist
+  // })
+
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {
-    const cognitoService = new CognitoService()
-    const accessToken = await cognitoService.signIn(cognitoUsername, cognitoPassword)
+    const { accessToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
     const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
 
@@ -100,8 +111,7 @@ describe('WalletStorageService', () => {
   })
 
   it.skip('#storeEncryptedSeed throws exception WHEN userId does not exists', async () => {
-    const cognitoService = new CognitoService()
-    const accessToken = await cognitoService.signIn(nonExistingUser, cognitoPassword)
+    const { accessToken } = await cognitoService.signIn(nonExistingUser, cognitoPassword)
 
     const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
 
@@ -119,10 +129,9 @@ describe('WalletStorageService', () => {
   it('#adminDeleteUnconfirmedUser', async () => {
     const username = 'different_test_user_to_delete'
 
-    const cognitoService = new CognitoService()
     await cognitoService.signUp(username, password)
 
-    await WalletStorageService.adminDeleteUnconfirmedUser(username)
+    await WalletStorageService.adminDeleteUnconfirmedUser(username, options)
 
     let responseError
 
@@ -175,10 +184,9 @@ describe('WalletStorageService', () => {
   })
 
   it('#getCredentialOffer', async () => {
-    const cognitoService = new CognitoService()
     const { idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
-    const offerToken = await WalletStorageService.getCredentialOffer(idToken)
+    const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
     const decoded = jwt.decode(offerToken, { complete: true })
 
@@ -191,31 +199,24 @@ describe('WalletStorageService', () => {
     expect(decoded.payload.interactionToken.offeredCredentials[0].type).to.equal('EmailCredentialPersonV1')
   })
 
-  it('#getSignedCredential', async () => {
-    // prettier-ignore
-    const options = {
-    //   issuerUrl:     'http://localhost:3001',
-    //   keyStorageUrl: 'http://localhost:3000',
-    //   didMethod:     'elem'
-    }
+  // TO UNCOMMENT WHEN WALLET_BACKEND IS UPATED TO LATEST SDK
+  // it('#getSignedCredential', async () => {
+  //   const { accessToken, idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
-    const cognitoService = new CognitoService()
-    const { accessToken, idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
+  //   const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
-    const offerToken = await WalletStorageService.getCredentialOffer(idToken)
+  //   const returnedEncryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
 
-    const returnedEncryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken)
+  //   const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //   // @ts-ignore
+  //   const networkMember = new CommonNetworkMember(encryptionKey, returnedEncryptedSeed, options)
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const networkMember = new CommonNetworkMember(encryptionKey, returnedEncryptedSeed, options)
+  //   const offerResponse = await networkMember.createCredentialOfferResponseToken(offerToken)
 
-    const offerResponse = await networkMember.createCredentialOfferResponseToken(offerToken)
+  //   const signedCredentials = await WalletStorageService.getSignedCredentials(idToken, offerResponse, options)
 
-    const signedCredentials = await WalletStorageService.getSignedCredentials(idToken, offerResponse, options)
-
-    expect(signedCredentials).to.exist
-  })
+  //   expect(signedCredentials).to.exist
+  // })
 })
