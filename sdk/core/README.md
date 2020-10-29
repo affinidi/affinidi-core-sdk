@@ -706,11 +706,12 @@ if response is valid returns also `{ did, nonce }`
 #### Initialize region for storing credentials
 
 You can specify AWS region where user credentials will be stored using optional
-`storageRegion` parameter.
+`storageRegion` parameter (region should be a 3 character string correlating to
+an Alpha-3 country code).
 
 ```ts
 const options = {
-  storageRegion: 'ap-southeast-1'
+  storageRegion: 'SGP'
 }
 
 const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)

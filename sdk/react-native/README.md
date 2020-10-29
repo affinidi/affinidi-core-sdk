@@ -60,11 +60,12 @@ import * as encoding from 'text-encoding'
 ### Initialize region for storing credentials
 
 You can specify AWS region where user credentials will be stored using optional
-`storageRegion` parameter.
+`storageRegion` parameter (region should be a 3 character string correlating to
+an Alpha-3 country code).
 
 ```ts
 const options = {
-  storageRegion: 'ap-southeast-1'
+  storageRegion: 'SGP'
 }
 
 const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
@@ -105,13 +106,14 @@ const message = await commonNetworkMember.readEncryptedMessage(encryptedMessage)
 
 ```ts
 const credentials = [ signedCredential ]
-const storageRegion = 'ap-southeast-1'
+const storageRegion = 'SGP'
 
 await affinityWallet.saveCredentials(credentials, storageRegion)
 ```
 
 `credentials` - array of credentials to store in the vault.
 `storageRegion` - (optional) AWS region where user's credentials will be stored.
+Region should be a 3 character string correlating to an Alpha-3 country code.
 
 ### Pull credential from VC vault
 
