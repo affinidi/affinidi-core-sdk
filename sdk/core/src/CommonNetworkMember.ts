@@ -113,7 +113,7 @@ export class CommonNetworkMember {
   protected _component: EventComponent
   protected cognitoUserTokens: CognitoUserTokens
 
-  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}) {
+  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}, component?: EventComponent) {
     // await ParametersValidator.validateSync(
     //   [
     //     { isArray: false, type: 'string', isRequired: true, value: password },
@@ -140,7 +140,8 @@ export class CommonNetworkMember {
 
     this._accessApiKey = CommonNetworkMember._setAccessApiKey(this._sdkOptions)
 
-    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey })
+    this._component = component
+    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey }, this._component)
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
@@ -1851,7 +1852,7 @@ export class CommonNetworkMember {
       metadata: metadata,
     }
 
-    this._metricsService.send(event, this._component)
+    this._metricsService.send(event)
   }
 
   /* istanbul ignore next: private method */
@@ -1865,7 +1866,7 @@ export class CommonNetworkMember {
       metadata: metadata,
     }
 
-    this._metricsService.send(event, this._component)
+    this._metricsService.send(event)
   }
 
   private _sendVCSavedMetric(vcId: string, issuerId: string, metadata: EventMetadata) {
@@ -1878,7 +1879,7 @@ export class CommonNetworkMember {
       metadata: metadata,
     }
 
-    this._metricsService.send(event, this._component)
+    this._metricsService.send(event)
   }
 
   protected _sendVCSavedMetrics(credentials: SignedCredential[]) {

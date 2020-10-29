@@ -7,14 +7,16 @@ import { MetricsEvent, MetricsServiceOptions } from '../dto/shared.dto'
 export default class MetricsService {
   _apiKey: string
   _metricsUrl: string
+  _component: EventComponent
 
-  constructor(options: MetricsServiceOptions) {
+  constructor(options: MetricsServiceOptions, component?: EventComponent) {
     this._apiKey = options.apiKey
     this._metricsUrl = options.metricsUrl
+    this._component = component
   }
 
-  send(event: MetricsEvent, component: EventComponent): void {
-    const metricsEvent = Object.assign({}, event, { component })
+  send(event: MetricsEvent): void {
+    const metricsEvent = Object.assign({}, event, { component: this._component })
 
     metrics.send(metricsEvent, this._apiKey, this._metricsUrl)
   }

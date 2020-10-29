@@ -8,6 +8,9 @@ import { profile } from '@affinidi/common'
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
 }
+
+const COMPONENT = EventComponent.AffinidiExpoSDK
+
 @profile()
 export class AffinityWallet extends CoreNetwork {
   _skipBackupCredentials: boolean = false
@@ -15,8 +18,13 @@ export class AffinityWallet extends CoreNetwork {
   keysService: KeysService
   walletStorageService: WalletStorageService
 
-  constructor(password: string, encryptedSeed: string, options: __dangerous.SdkOptions = {}) {
-    super(password, encryptedSeed, options)
+  constructor(
+    password: string,
+    encryptedSeed: string,
+    options: __dangerous.SdkOptions = {},
+    component: EventComponent = COMPONENT,
+  ) {
+    super(password, encryptedSeed, options, component)
 
     const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
 
@@ -24,7 +32,6 @@ export class AffinityWallet extends CoreNetwork {
 
     this.keysService = new KeysService(encryptedSeed, password)
     this.walletStorageService = new WalletStorageService(encryptedSeed, password, sdkOptions)
-    this._component = EventComponent.AffinidiExpoSDK
   }
 
   set skipBackupCredentials(value: boolean) {
