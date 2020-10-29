@@ -1,4 +1,5 @@
 import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
@@ -7,6 +8,9 @@ import { profile } from '@affinidi/common'
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
 }
+
+const COMPONENT = EventComponent.AffinidiExpoSDK
+
 @profile()
 export class AffinityWallet extends CoreNetwork {
   _skipBackupCredentials: boolean = false
@@ -14,8 +18,13 @@ export class AffinityWallet extends CoreNetwork {
   keysService: KeysService
   walletStorageService: WalletStorageService
 
-  constructor(password: string, encryptedSeed: string, options: __dangerous.SdkOptions = {}) {
-    super(password, encryptedSeed, options)
+  constructor(
+    password: string,
+    encryptedSeed: string,
+    options: __dangerous.SdkOptions = {},
+    component: EventComponent = COMPONENT,
+  ) {
+    super(password, encryptedSeed, options, component)
 
     const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
 

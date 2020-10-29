@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-expo-sdk",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "SDK monorepo for affinity DID solution for Expo",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -41,7 +41,8 @@
   "license": "ISC",
   "dependencies": {
     "@affinidi/common": "1.1.2",
-    "@affinidi/wallet-core-sdk": "2.2.0",
+    "@affinidi/wallet-core-sdk": "2.2.1",
+    "@affinidi/affinity-metrics-lib": "0.0.18",
     "@react-native-community/netinfo": "^5.5.1",
     "@types/text-encoding": "0.0.35",
     "assert": "^2.0.0",

@@ -4,7 +4,7 @@ import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affini
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
-import { EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
+import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 
 import API from './services/ApiService'
 import CognitoService from './services/CognitoService'
@@ -113,9 +113,10 @@ export class CommonNetworkMember {
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
   private _didDocumentKeyId: string
+  protected _component: EventComponent
   protected cognitoUserTokens: CognitoUserTokens
 
-  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}) {
+  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}, component?: EventComponent) {
     // await ParametersValidator.validateSync(
     //   [
     //     { isArray: false, type: 'string', isRequired: true, value: password },
@@ -142,7 +143,8 @@ export class CommonNetworkMember {
 
     this._accessApiKey = this._sdkOptions.accessApiKey
 
-    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey })
+    this._component = component
+    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey }, this._component)
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
