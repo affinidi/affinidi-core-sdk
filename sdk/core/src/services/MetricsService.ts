@@ -14,7 +14,6 @@ export default class MetricsService {
   }
 
   send(event: MetricsEvent, component: EventComponent): void {
-
     const metricsEvent = Object.assign({}, event, { component })
 
     metrics.send(metricsEvent, this._apiKey, this._metricsUrl)
