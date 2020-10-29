@@ -20,6 +20,7 @@ type PersonEmployeeRoleEV1Mixin = CreateThing<
     reference?: CreateExpandedThing<'ContactPoint'>
     skills?: MaybeArray<CreateExpandedThing<'DefinedTerm'> | string>
     worksFor: ExpandThing<OrganizationEV1>
+    offerLetter?: CreateThing<'Url'>
   }
 >
 
@@ -55,6 +56,7 @@ export const getVCEmploymentPersonV1Context = () => {
       reference: 'affSchema',
       skills: 'affSchema',
       worksFor: 'schema',
+      offerLetter: 'affSchema',
     },
     vocab: 'schema',
   })
