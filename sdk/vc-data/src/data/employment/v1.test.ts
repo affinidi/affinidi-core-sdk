@@ -28,6 +28,20 @@ describe('VCEmploymentPersonV1', () => {
             '@type': ['Organization', 'OrganizationE'],
             name: "Bob's Burgers",
           },
+          salary: {
+            '@type': ['Salary'],
+            gross: {
+              '@type': 'MonetaryAmount',
+              value: 10000,
+              currency: 'INR',
+            },
+            net: {
+              '@type': 'MonetaryAmount',
+              value: 8000,
+              currency: 'INR',
+            },
+            type: 'Monthly',
+          },
         },
         name: 'Bob Belcher',
       },
@@ -74,6 +88,52 @@ describe('VCEmploymentPersonV1', () => {
                         "https://schema.org/name": Array [
                           Object {
                             "@value": "Linda Belcher",
+                          },
+                        ],
+                      },
+                    ],
+                    "https://schema.affinity-project.org/salary": Array [
+                      Object {
+                        "@type": Array [
+                          "https://schema.affinity-project.org/Salary",
+                        ],
+                        "https://schema.affinity-project.org/gross": Array [
+                          Object {
+                            "@type": Array [
+                              "https://schema.org/MonetaryAmount",
+                            ],
+                            "https://schema.org/currency": Array [
+                              Object {
+                                "@value": "INR",
+                              },
+                            ],
+                            "https://schema.org/value": Array [
+                              Object {
+                                "@value": 10000,
+                              },
+                            ],
+                          },
+                        ],
+                        "https://schema.affinity-project.org/net": Array [
+                          Object {
+                            "@type": Array [
+                              "https://schema.org/MonetaryAmount",
+                            ],
+                            "https://schema.org/currency": Array [
+                              Object {
+                                "@value": "INR",
+                              },
+                            ],
+                            "https://schema.org/value": Array [
+                              Object {
+                                "@value": 8000,
+                              },
+                            ],
+                          },
+                        ],
+                        "https://schema.affinity-project.org/type": Array [
+                          Object {
+                            "@value": "Monthly",
                           },
                         ],
                       },

@@ -1,6 +1,6 @@
 import { VCV1, VCV1Subject } from '@affinidi/vc-common'
 
-import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries } from '../base'
+import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries, SalaryV1 } from '../base'
 import {
   CreateThing,
   ExpandThing,
@@ -21,6 +21,7 @@ type PersonEmployeeRoleEV1Mixin = CreateThing<
     skills?: MaybeArray<CreateExpandedThing<'DefinedTerm'> | string>
     worksFor: ExpandThing<OrganizationEV1>
     offerLetter?: CreateThing<'Url'>
+    salary: ExpandThing<SalaryV1>
   }
 >
 
@@ -57,6 +58,7 @@ export const getVCEmploymentPersonV1Context = () => {
       skills: 'affSchema',
       worksFor: 'schema',
       offerLetter: 'affSchema',
+      salary: 'affSchema',
     },
     vocab: 'schema',
   })

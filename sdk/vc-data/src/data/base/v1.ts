@@ -19,6 +19,15 @@ export type MonetaryAmountRV1 = CreateThing<
   }
 >
 
+export type SalaryV1 = CreateThing<
+  'Salary',
+  {
+    gross: ExpandThing<MonetaryAmountRV1>
+    net: ExpandThing<MonetaryAmountRV1>
+    type: 'Daily' | 'Weekly' | 'Monthly' | 'Hourly' | 'Annual'
+  }
+>
+
 type PersonEV1Mixin = CreateThing<'PersonE'>
 
 export type PersonEV1 = ExtendThing<PersonEV1Mixin, CreateThing<'Person'>>
@@ -52,7 +61,7 @@ type OrganizationEV1Mixin = CreateThing<
   'OrganizationE',
   {
     hasCredential?: MaybeArray<ExpandThing<CredentialUV1>>
-    industry?: MaybeArray<string>,
+    industry?: MaybeArray<string>
     identifiers: MaybeArray<'PropertyValue'>
   }
 >
@@ -118,7 +127,24 @@ export const getBaseV1ContextEntries = () => {
     vocab: 'schema',
   })
 
-  return [personEV1ContextEntry, organizationEV1ContextEntry, credentialEntry, organizationalCredentialEntry]
+  const salaryEntry = createContextEntry<SalaryV1>({
+    type: 'Salary',
+    typeIdBase: 'affSchema',
+    fields: {
+      gross: 'affSchema',
+      net: 'affSchema',
+      type: 'affSchema',
+    },
+    vocab: 'schema',
+  })
+
+  return [
+    personEV1ContextEntry,
+    organizationEV1ContextEntry,
+    credentialEntry,
+    organizationalCredentialEntry,
+    salaryEntry,
+  ]
 }
 
 export const getFHIRV1ContextEntries = () => {

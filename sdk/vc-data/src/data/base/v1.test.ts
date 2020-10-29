@@ -1,7 +1,14 @@
 import { SimpleThing } from '@affinidi/vc-common'
 
 import { combineContextEntries, ExpandThing } from '../util'
-import { getBaseV1ContextEntries, PersonEV1, OrganizationEV1, CredentialV1, OrganizationalCredentialV1 } from './v1'
+import {
+  getBaseV1ContextEntries,
+  PersonEV1,
+  OrganizationEV1,
+  CredentialV1,
+  OrganizationalCredentialV1,
+  SalaryV1,
+} from './v1'
 
 const jsonld = require('jsonld')
 
@@ -193,6 +200,52 @@ describe('The base context entries', () => {
           ],
         },
       ]
+    `)
+  })
+
+  it('expand a Salary', async () => {
+    const expanded = await expand<SalaryV1>({
+      '@type': ['Salary'],
+      gross: {
+        '@type': 'MonetaryAmount',
+        value: 10000,
+        currency: 'INR',
+      },
+      net: {
+        '@type': 'MonetaryAmount',
+        value: 8000,
+        currency: 'INR',
+      },
+      type: 'Monthly',
+    })
+
+    expect(expanded).toMatchInlineSnapshot(`
+     Array [
+       Object {
+         "@type": Array [
+           "https://schema.affinity-project.org/Salary",
+         ],
+         "https://schema.affinity-project.org/gross": Array [
+           Object {
+             "@type": Array [
+               "/MonetaryAmount",
+             ],
+           },
+         ],
+         "https://schema.affinity-project.org/net": Array [
+           Object {
+             "@type": Array [
+               "/MonetaryAmount",
+             ],
+           },
+         ],
+         "https://schema.affinity-project.org/type": Array [
+           Object {
+             "@value": "Monthly",
+           },
+         ],
+       },
+     ]
     `)
   })
 })
