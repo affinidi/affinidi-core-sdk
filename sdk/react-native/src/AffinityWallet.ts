@@ -148,16 +148,17 @@ export class AffinityWallet extends CoreNetwork {
    * 1. encrypt VCs
    * 2. store encrypted VCs in Affinity Guardian Wallet
    * @param data - array of VCs
+   * @param storageRegion - (optional) specify AWS region where credentials will be stored
    * @returns array of ids for corelated records
    */
-  async saveCredentials(data: any): Promise<any> {
+  async saveCredentials(data: any, storageRegion?: string): Promise<any> {
     const encryptedCredentials = await this.walletStorageService.encryptCredentials(data)
-    const result = await this.saveEncryptedCredentials(encryptedCredentials)
-    this._sendVCSavedMetrics(data)
-    // NOTE:
-    // what if creds actually were not saved in the vault?
-    // follow up with Isaak/Dustin on this - should we parse the response to define if we need to send the metrics
+    const result = await this.saveEncryptedCredentials(encryptedCredentials, storageRegion)
 
+    this._sendVCSavedMetrics(data)
+    // NOTE: what if creds actually were not saved in the vault?
+    //       follow up with Isaak/Dustin on this - should we parse the response
+    //       to define if we need to send the metrics
     return result
   }
 
