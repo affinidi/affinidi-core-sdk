@@ -62,6 +62,13 @@ describe('The base context entries', () => {
             "/Organization",
             "https://schema.affinity-project.org/OrganizationE",
           ],
+          "https://schema.affinity-project.org/identifiers": Array [
+            Object {
+              "@type": Array [
+                "/PropertyValue",
+              ],
+            },
+          ],
           "https://schema.org/name": Array [
             Object {
               "@value": "Bob's Burgers",
