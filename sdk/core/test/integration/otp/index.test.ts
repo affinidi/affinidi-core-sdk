@@ -14,8 +14,6 @@ const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 // test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
 
-const { keyStorageUrl } = options
-
 const DELAY = 1000
 // prettier-ignore
 const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
@@ -39,7 +37,11 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     const optionsWithSkippedBackupEncryptedSeed = Object.assign({}, options, { skipBackupEncryptedSeed: true })
 
-    const { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, otp, optionsWithSkippedBackupEncryptedSeed)
+    const { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
+      signInToken,
+      otp,
+      optionsWithSkippedBackupEncryptedSeed,
+    )
 
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 

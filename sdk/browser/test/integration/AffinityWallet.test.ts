@@ -52,14 +52,13 @@ const credentialShareRequestToken =
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
 // test against `dev | prod` // if nothing specified, staging is used by default
-const options: __dangerous.SdkOptions = getOptionsForEnvironment('dev')
+const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 describe('AffinityWallet', () => {
   it('.init returns SDK instance, initialize with default environment', async () => {
-    const wallet = await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword)
-    const { accessToken } = wallet.cognitoUserTokens
+    await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
-    const affinityWallet = await AffinityWallet.init(accessToken)
+    const affinityWallet = await AffinityWallet.init(options)
 
     expect(affinityWallet.encryptedSeed).to.exist
   })

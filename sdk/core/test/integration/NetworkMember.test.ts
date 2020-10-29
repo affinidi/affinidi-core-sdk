@@ -72,6 +72,89 @@ describe('CommonNetworkMember', () => {
     },
   ]
 
+  it('#generateCredentialOfferRequestToken, #verifyCredentialOfferResponseToken, #signCredentials, #validateCredential', async () => {
+    const issuerPassword = password
+    const issuerEncryptedSeed = ISSUER_ENCRYPTED_SEED
+
+    const holderPassword = HOLDER_PASSWORD
+    const holderEncryptedSeed = HOLDER_ENCRYPTED_SEED
+
+    const renderInfo = {}
+    const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/receive/testerBadge'
+
+    const offeredCredentials = [
+      {
+        type: 'EntityCredential',
+        renderInfo,
+      },
+      {
+        type: 'PhoneCredentialPersonV1',
+        renderInfo,
+      },
+    ]
+
+    const commonNetworkMemberIssuer = new CommonNetworkMember(issuerPassword, issuerEncryptedSeed, options)
+    const commonNetworkMemberHolder = new CommonNetworkMember(holderPassword, holderEncryptedSeed, options)
+    const credentialOfferRequestToken = await commonNetworkMemberIssuer.generateCredentialOfferRequestToken(
+      offeredCredentials,
+      {
+        callbackUrl,
+      },
+    )
+
+    const credentialOfferResponseToken = await commonNetworkMemberHolder.createCredentialOfferResponseToken(
+      credentialOfferRequestToken,
+    )
+
+    const {
+      isValid,
+      did: requesterDid,
+      nonce,
+      selectedCredentials,
+    } = await commonNetworkMemberIssuer.verifyCredentialOfferResponseToken(
+      credentialOfferResponseToken,
+      credentialOfferRequestToken,
+    )
+
+    expect(requesterDid).to.exist
+    expect(selectedCredentials).to.deep.equal(offeredCredentials)
+    expect(nonce).to.exist
+    expect(isValid).to.equal(true)
+    expect(selectedCredentials).to.exist
+
+    const unsignedCredentials = [
+      buildVCV1Unsigned({
+        skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+          credentialSubject: {
+            data: {
+              '@type': ['Person', 'PersonE', 'PhonePerson'],
+              telephone: '+1 555 555 5555',
+            },
+          },
+          holder: { id: 'placeholder' },
+          type: 'PhoneCredentialPersonV1',
+          context: getVCPhonePersonV1Context(),
+        }),
+        issuanceDate: new Date().toISOString(),
+        expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
+      }),
+    ]
+
+    const signedCredentials = await commonNetworkMemberIssuer.signCredentials(
+      credentialOfferResponseToken,
+      unsignedCredentials,
+    )
+
+    expect(signedCredentials).to.exist
+    expect(signedCredentials).have.lengthOf(1)
+
+    const affinity = new Affinity()
+    const validateCredentialsResponse = await affinity.validateCredential(signedCredentials[0])
+
+    expect(validateCredentialsResponse).to.deep.equal({ result: true, error: '' })
+  })
+
   it('removes user if it is "UNCONFIMRED" before sign up', async () => {
     const email = generateEmail()
     const username = normalizeUsername(email)
@@ -661,89 +744,6 @@ describe('CommonNetworkMember', () => {
     expect(code).to.equal('COM-0')
     expect(message).to.equal("Cannot read property 'selectedCredentials' of undefined")
     expect(httpStatusCode).to.equal(500)
-  })
-
-  it('#generateCredentialOfferRequestToken, #verifyCredentialOfferResponseToken, #signCredentials, #validateCredential', async () => {
-    const issuerPassword = password
-    const issuerEncryptedSeed = ISSUER_ENCRYPTED_SEED
-
-    const holderPassword = HOLDER_PASSWORD
-    const holderEncryptedSeed = HOLDER_ENCRYPTED_SEED
-
-    const renderInfo = {}
-    const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/receive/testerBadge'
-
-    const offeredCredentials = [
-      {
-        type: 'EntityCredential',
-        renderInfo,
-      },
-      {
-        type: 'PhoneCredentialPersonV1',
-        renderInfo,
-      },
-    ]
-
-    const commonNetworkMemberIssuer = new CommonNetworkMember(issuerPassword, issuerEncryptedSeed, options)
-    const commonNetworkMemberHolder = new CommonNetworkMember(holderPassword, holderEncryptedSeed, options)
-    const credentialOfferRequestToken = await commonNetworkMemberIssuer.generateCredentialOfferRequestToken(
-      offeredCredentials,
-      {
-        callbackUrl,
-      },
-    )
-
-    const credentialOfferResponseToken = await commonNetworkMemberHolder.createCredentialOfferResponseToken(
-      credentialOfferRequestToken,
-    )
-
-    const {
-      isValid,
-      did: requesterDid,
-      nonce,
-      selectedCredentials,
-    } = await commonNetworkMemberIssuer.verifyCredentialOfferResponseToken(
-      credentialOfferResponseToken,
-      credentialOfferRequestToken,
-    )
-
-    expect(requesterDid).to.exist
-    expect(selectedCredentials).to.deep.equal(offeredCredentials)
-    expect(nonce).to.exist
-    expect(isValid).to.equal(true)
-    expect(selectedCredentials).to.exist
-
-    const unsignedCredentials = [
-      buildVCV1Unsigned({
-        skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
-          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
-          credentialSubject: {
-            data: {
-              '@type': ['Person', 'PersonE', 'PhonePerson'],
-              telephone: '+1 555 555 5555',
-            },
-          },
-          holder: { id: 'placeholder' },
-          type: 'PhoneCredentialPersonV1',
-          context: getVCPhonePersonV1Context(),
-        }),
-        issuanceDate: new Date().toISOString(),
-        expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
-      }),
-    ]
-
-    const signedCredentials = await commonNetworkMemberIssuer.signCredentials(
-      credentialOfferResponseToken,
-      unsignedCredentials,
-    )
-
-    expect(signedCredentials).to.exist
-    expect(signedCredentials).have.lengthOf(1)
-
-    const affinity = new Affinity()
-    const validateCredentialsResponse = await affinity.validateCredential(signedCredentials[0])
-
-    expect(validateCredentialsResponse).to.deep.equal({ result: true, error: '' })
   })
 
   it('#storeEncryptedSeed throws `WAL-2 / 409` WHEN key for userId already exists', async () => {

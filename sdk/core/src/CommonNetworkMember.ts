@@ -661,7 +661,7 @@ export class CommonNetworkMember {
 
     const { keyStorageUrl, registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl)
+    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
     const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferToken)
 
