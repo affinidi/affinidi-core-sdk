@@ -1,4 +1,5 @@
-import { CommonNetworkMember as CoreNetwork, __dangerous, EventComponent } from '@affinidi/wallet-core-sdk'
+import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
