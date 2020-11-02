@@ -27,10 +27,11 @@ export type SalaryV1 = CreateThing<
 type PersonEmployeeRoleEV1Mixin = CreateThing<
   'PersonEmployeeRoleE',
   {
-    reference?: CreateExpandedThing<'ContactPoint'>
+    reference?: MaybeArray<CreateExpandedThing<'ContactPoint'>>
     skills?: MaybeArray<CreateExpandedThing<'DefinedTerm'> | string>
     worksFor: ExpandThing<OrganizationEV1>
     offerLetter?: CreateThing<'URL'>
+    experienceLetter?: CreateThing<'URL'>
     salary?: SalaryV1
   }
 >
@@ -68,6 +69,7 @@ export const getVCEmploymentPersonV1Context = () => {
       skills: 'affSchema',
       worksFor: 'schema',
       offerLetter: 'affSchema',
+      experienceLetter: 'affSchema',
       salary: 'affSchema',
     },
     vocab: 'schema',
