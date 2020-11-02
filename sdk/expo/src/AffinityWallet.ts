@@ -1,4 +1,5 @@
 import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
@@ -7,6 +8,9 @@ import { profile } from '@affinidi/common'
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
 }
+
+const COMPONENT = EventComponent.AffinidiExpoSDK
+
 @profile()
 export class AffinityWallet extends CoreNetwork {
   _skipBackupCredentials: boolean = false
@@ -14,8 +18,13 @@ export class AffinityWallet extends CoreNetwork {
   keysService: KeysService
   walletStorageService: WalletStorageService
 
-  constructor(password: string, encryptedSeed: string, options: __dangerous.SdkOptions = {}) {
-    super(password, encryptedSeed, options)
+  constructor(
+    password: string,
+    encryptedSeed: string,
+    options: __dangerous.SdkOptions = {},
+    component: EventComponent = COMPONENT,
+  ) {
+    super(password, encryptedSeed, options, component)
 
     const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
 
@@ -51,7 +60,7 @@ export class AffinityWallet extends CoreNetwork {
     const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVarialbles(options)
     const { accessToken } = __dangerous.readUserTokensFromSessionStorage(userPoolId)
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new AffinityWallet(encryptionKey, encryptedSeed, options)
@@ -173,14 +182,18 @@ export class AffinityWallet extends CoreNetwork {
    * 1. encrypt VCs
    * 2. store encrypted VCs in Affinity Guardian Wallet
    * @param data - array of VCs
+   * @param storageRegion - (optional) specify AWS region where credentials will be stored
    * @returns array of ids for corelated records
    */
-  async saveCredentials(data: any): Promise<any> {
+  async saveCredentials(data: any, storageRegion?: string): Promise<any> {
     const encryptedCredentials = await this.walletStorageService.encryptCredentials(data)
+    const result = await this.saveEncryptedCredentials(encryptedCredentials, storageRegion)
 
-    this._credentials = this._credentials.concat(data)
-
-    return this.saveEncryptedCredentials(encryptedCredentials)
+    this._sendVCSavedMetrics(data)
+    // NOTE: what if creds actually were not saved in the vault?
+    //       follow up with Isaak/Dustin on this - should we parse the response
+    //       to define if we need to send the metrics
+    return result
   }
 
   /**

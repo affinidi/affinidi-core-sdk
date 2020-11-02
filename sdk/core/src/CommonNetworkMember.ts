@@ -4,7 +4,7 @@ import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affini
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
-import { EventCategory, EventName } from '@affinityproject/affinity-metrics-lib'
+import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 
 import API from './services/ApiService'
 import CognitoService from './services/CognitoService'
@@ -55,6 +55,9 @@ import { normalizeShortPassword } from './shared/normalizeShortPassword'
 import { clearUserTokensFromSessionStorage, readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
 
 import {
+  DEV_REVOCATION_URL,
+  PROD_REVOCATION_URL,
+  STAGING_REVOCATION_URL,
   DEFAULT_DID_METHOD,
   DEV_COGNITO_CLIENT_ID,
   DEV_COGNITO_USER_POOL_ID,
@@ -95,6 +98,7 @@ export class CommonNetworkMember {
   private readonly _api: API
   private _did: string
   private _apiKey: string
+  private _accessApiKey: string
   private readonly _encryptedSeed: string
   private _password: string
   private readonly _walletStorageService: WalletStorageService
@@ -109,9 +113,10 @@ export class CommonNetworkMember {
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
   private _didDocumentKeyId: string
+  protected _component: EventComponent
   protected cognitoUserTokens: CognitoUserTokens
 
-  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}) {
+  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}, component?: EventComponent) {
     // await ParametersValidator.validateSync(
     //   [
     //     { isArray: false, type: 'string', isRequired: true, value: password },
@@ -136,19 +141,18 @@ export class CommonNetworkMember {
       emailIssuerBasePath,
     } = this._sdkOptions
 
-    const apiKey = this._sdkOptions.apiKey || 'testApiKey'
-    const apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
-    this._apiKey = apiKeyBuffer.toString('hex')
+    this._accessApiKey = this._sdkOptions.accessApiKey
 
-    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._apiKey })
-    this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._apiKey })
+    this._component = component
+    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey }, this._component)
+    this._api = new API(registryUrl, issuerUrl, verifierUrl, { apiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions)
     this._didDocumentService = new DidDocumentService(this._keysService)
-    this._affinity = new Affinity({ registryUrl, apiKey: this._apiKey })
+    this._affinity = new Affinity({ registryUrl, apiKey: this._accessApiKey })
     this._encryptedSeed = encryptedSeed
     this._password = password
     this.cognitoUserTokens = options && options.cognitoUserTokens ? options.cognitoUserTokens : undefined
@@ -156,6 +160,31 @@ export class CommonNetworkMember {
     this._didDocumentKeyId = null
     this._phoneIssuer = new PhoneIssuerService({ basePath: phoneIssuerBasePath })
     this._emailIssuer = new EmailIssuerService({ basePath: emailIssuerBasePath })
+  }
+
+  private static _setAccessApiKey(options: SdkOptions) {
+    let apiKey
+    let accessApiKey
+    let apiKeyBuffer
+
+    accessApiKey = options.accessApiKey
+
+    const useTestApiKey = !options.apiKey && !options.accessApiKey
+
+    if (useTestApiKey) {
+      apiKey = 'testApiKey'
+
+      apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
+      accessApiKey = apiKeyBuffer.toString('hex')
+    }
+
+    if (options.apiKey) {
+      apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
+
+      accessApiKey = apiKeyBuffer.toString('hex')
+    }
+
+    return accessApiKey
   }
 
   protected static setEnvironmentVarialbles(options: SdkOptions) {
@@ -168,6 +197,7 @@ export class CommonNetworkMember {
     let keyStorageUrl
     let clientId
     let userPoolId
+    let revocationUrl
     let phoneIssuerBasePath
     let emailIssuerBasePath
     let metricsUrl
@@ -187,6 +217,7 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || DEV_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || DEV_EMAIL_ISSUER_BASE_PATH
         metricsUrl = DEV_METRICS_URL
+        revocationUrl = options.revocationUrl || DEV_REVOCATION_URL
 
         break
 
@@ -202,6 +233,7 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || PROD_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || PROD_EMAIL_ISSUER_BASE_PATH
         metricsUrl = PROD_METRICS_URL
+        revocationUrl = options.revocationUrl || PROD_REVOCATION_URL
 
         break
 
@@ -216,11 +248,15 @@ export class CommonNetworkMember {
         phoneIssuerBasePath = options.phoneIssuerBasePath || STAGING_PHONE_ISSUER_BASE_PATH
         emailIssuerBasePath = options.emailIssuerBasePath || STAGING_EMAIL_ISSUER_BASE_PATH
         metricsUrl = STAGING_METRICS_URL
+        revocationUrl = options.revocationUrl || STAGING_REVOCATION_URL
 
         break
     }
 
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+
     return {
+      accessApiKey,
       issuerUrl,
       registryUrl,
       verifierUrl,
@@ -231,6 +267,7 @@ export class CommonNetworkMember {
       phoneIssuerBasePath,
       emailIssuerBasePath,
       metricsUrl,
+      revocationUrl,
     }
   }
 
@@ -371,11 +408,9 @@ export class CommonNetworkMember {
   ) {
     const { registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const apiKey = options.apiKey || 'testApiKey'
-    const apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
-    const apiKeyHash = apiKeyBuffer.toString('hex')
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
 
-    const api = new API(registryUrl, null, null, { apiKey: apiKeyHash })
+    const api = new API(registryUrl, null, null, { apiKey: accessApiKey })
 
     const did = didDocument.id
 
@@ -595,7 +630,9 @@ export class CommonNetworkMember {
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { apiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -626,7 +663,7 @@ export class CommonNetworkMember {
 
     const { keyStorageUrl, registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl)
+    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
     const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferToken)
 
@@ -675,7 +712,11 @@ export class CommonNetworkMember {
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
    */
-  static async forgotPassword(username: string, options: SdkOptions = {}): Promise<void> {
+  static async forgotPassword(
+    username: string,
+    options: SdkOptions = {},
+    messageParameters?: MessageParameters,
+  ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -685,7 +726,7 @@ export class CommonNetworkMember {
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
-    await cognitoService.forgotPassword(username)
+    await cognitoService.forgotPassword(username, messageParameters)
   }
 
   /**
@@ -738,7 +779,9 @@ export class CommonNetworkMember {
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -821,10 +864,12 @@ export class CommonNetworkMember {
 
     password = normalizeShortPassword(password, username)
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { keyStorageUrl, userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.signUp(username, password, messageParameters, { userPoolId, clientId })
+    await cognitoService.signUp(username, password, messageParameters, { keyStorageUrl, userPoolId, clientId, apiKey })
 
     const token = `${username}::${password}`
 
@@ -906,10 +951,12 @@ export class CommonNetworkMember {
 
     const { userPoolId, clientId, keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
+    const apiKey = CommonNetworkMember._setAccessApiKey(options)
+
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
     if (isUsername) {
-      await WalletStorageService.adminConfirmUser(username, { keyStorageUrl })
+      await WalletStorageService.adminConfirmUser(username, { keyStorageUrl, apiKey })
     } else {
       await cognitoService.confirmSignUp(username, confirmationCode)
     }
@@ -1019,7 +1066,11 @@ export class CommonNetworkMember {
    * @param username - email/phoneNumber, registered and unconfirmed in Cognito
    * @param options - optional parameters with specified environment
    */
-  static async resendSignUpConfirmationCode(username: string, options: SdkOptions = {}): Promise<void> {
+  static async resendSignUpConfirmationCode(
+    username: string,
+    options: SdkOptions = {},
+    messageParameters?: MessageParameters,
+  ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -1029,7 +1080,7 @@ export class CommonNetworkMember {
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
-    await cognitoService.resendSignUp(username)
+    await cognitoService.resendSignUp(username, messageParameters)
   }
 
   /**
@@ -1176,8 +1227,8 @@ export class CommonNetworkMember {
   }
 
   /* istanbul ignore next: protected method */
-  protected async saveEncryptedCredentials(data: any): Promise<any> {
-    return this._walletStorageService.saveCredentials(data)
+  protected async saveEncryptedCredentials(data: any, storageRegion?: string): Promise<any> {
+    return this._walletStorageService.saveCredentials(data, storageRegion)
   }
 
   /**
@@ -1803,35 +1854,70 @@ export class CommonNetworkMember {
     const verifierDid = this.did
 
     for (const credential of credentials) {
-      this._sendVCVerifiedMetric(holderDid)
+      const metadata = { vcType: credential.type }
+      this._sendVCVerifiedMetric(holderDid, metadata)
 
-      this._sendVCVerifiedPerPartyMetric(credential.id, verifierDid)
+      this._sendVCVerifiedPerPartyMetric(credential.id, verifierDid, metadata)
     }
   }
 
   /* istanbul ignore next: private method */
-  private _sendVCVerifiedMetric(holderDid: string) {
+  private _sendVCVerifiedMetric(holderDid: string, metadata: EventMetadata) {
     const event = {
       link: holderDid,
       name: EventName.VC_VERIFIED,
       category: EventCategory.VC,
       subCategory: 'verify',
+      metadata: metadata,
     }
 
     this._metricsService.send(event)
   }
 
   /* istanbul ignore next: private method */
-  private _sendVCVerifiedPerPartyMetric(vcId: string, verifierDid: string) {
+  private _sendVCVerifiedPerPartyMetric(vcId: string, verifierDid: string, metadata: EventMetadata) {
     const event = {
       link: vcId,
       secondaryLink: verifierDid,
       name: EventName.VC_VERIFIED_PER_PARTY,
       category: EventCategory.VC,
       subCategory: 'verify',
+      metadata: metadata,
     }
 
     this._metricsService.send(event)
+  }
+
+  private _sendVCSavedMetric(vcId: string, issuerId: string, metadata: EventMetadata) {
+    const event = {
+      link: vcId,
+      secondaryLink: issuerId,
+      name: EventName.VC_SAVED,
+      category: EventCategory.VC,
+      subCategory: 'save',
+      metadata: metadata,
+    }
+
+    this._metricsService.send(event)
+  }
+
+  protected _sendVCSavedMetrics(credentials: SignedCredential[]) {
+    for (const credential of credentials) {
+      const metadata = this._metricsService.parseVcMetadata(credential)
+      const vcId = credential.id
+      // the issuer property could be either an URI string or an object with id propoerty
+      // https://www.w3.org/TR/vc-data-model/#issuer
+      let issuerId: string
+      const issuer = credential.issuer
+
+      if (typeof issuer === 'string') {
+        issuerId = issuer
+      } else {
+        issuerId = issuer.id
+      }
+
+      this._sendVCSavedMetric(vcId, issuerId, metadata)
+    }
   }
 
   /**

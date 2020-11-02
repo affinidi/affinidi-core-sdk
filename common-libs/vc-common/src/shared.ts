@@ -20,3 +20,5 @@ export type DocumentLoaderResult = {
 }
 
 export type DocumentLoader = (url: string) => Promise<DocumentLoaderResult> | DocumentLoaderResult
+
+export const absoluteURIRegex = /^([A-Za-z][A-Za-z0-9+-.]*|_):/

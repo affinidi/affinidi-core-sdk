@@ -5,6 +5,8 @@ import { __dangerous } from '@affinidi/wallet-core-sdk'
 import { AffinityWallet } from '../../src/AffinityWallet'
 import { waitConfirmationCodeInput } from '../helpers/waitConfirmationCodeInput'
 
+import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
+
 const signedCredential = require('../factory/signedCredential')
 
 const { TEST_SECRETS } = process.env
@@ -49,21 +51,19 @@ const credentialShareRequestToken =
   'y0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9c44eac73f3' +
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
-// test agains `staging | dev | prod` // staging by default
-const ENVIRONMENT = 'staging'
-const options: __dangerous.SdkOptions = { env: ENVIRONMENT }
+// test against `dev | prod` // if nothing specified, staging is used by default
+const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 describe('AffinityWallet', () => {
   it('.init returns SDK instance, initialize with default environment', async () => {
-    const wallet = await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword)
-    const { accessToken } = wallet.cognitoUserTokens
+    await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
-    const affinityWallet = await AffinityWallet.init(accessToken)
+    const affinityWallet = await AffinityWallet.init(options)
 
     expect(affinityWallet.encryptedSeed).to.exist
   })
 
-  it('#createEncryptedMessage and #readEncryptedMessage (jolo)', async () => {
+  it.skip('#createEncryptedMessage and #readEncryptedMessage (jolo)', async () => {
     const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, options)
     const encryptedMessage = await affinityWallet.createEncryptedMessage(did, data)
 
@@ -97,6 +97,7 @@ describe('AffinityWallet', () => {
     expect(message).to.eql(data)
   })
 
+  // NOTE: bloom vault is not working for dev
   it('#getCredentials', async () => {
     const affinityWallet = await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
@@ -114,6 +115,7 @@ describe('AffinityWallet', () => {
     expect(results[0].id).to.exist
   })
 
+  // NOTE: bloom vault is not working for dev
   it('#getCredentials returns [] if COR-14 was thrown', async () => {
     const cognitoUsername = COGNITO_USERNAME_NO_CREDENTIALS
 
@@ -142,7 +144,9 @@ describe('AffinityWallet', () => {
 
     const confirmationCode = await waitConfirmationCodeInput()
 
-    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, { issueSignupCredential: true })
+    const confirmSignUpOptions = Object.assign({}, options, { issueSignupCredential: true })
+
+    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, confirmSignUpOptions)
 
     const credentialRequirements = [
       {

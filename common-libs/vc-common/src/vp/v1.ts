@@ -23,6 +23,7 @@ export type VPV1Unsigned<
   Holder extends VPV1Holder = VPV1Holder
 > = {
   '@context': TContext
+  id?: string
   type: Type
   verifiableCredential: VC[]
   holder: Holder

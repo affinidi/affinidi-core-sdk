@@ -1,3 +1,12 @@
+## 1.1.1
+
+### Improvements
+
+- Protect against malleable VCs and VPs
+  - `buildVCV1`, `validateVCV1`, and `validateVPV1` now _throws_ when the VC's id is not an absolute URI
+  - `buildVCV1Skeleton` and `buildVCV1Unsigned` now _warns_ when VC's id is not an absolute URI
+  - `buildVPV1` and `buildVPV1Unsigned` now _warns_ if an id is not provided and _throws_ if an id is provided but not an absolute URI
+
 ## 1.0.0
 
 - Initial release

@@ -14,7 +14,7 @@ import {
   IsIn,
 } from 'class-validator'
 
-import { EventName, EventCategory } from '@affinityproject/affinity-metrics-lib'
+import { EventName, EventCategory } from '@affinidi/affinity-metrics-lib'
 
 import { FreeFormObject } from '../shared/interfaces'
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
@@ -90,6 +90,9 @@ export class SdkOptions {
   @IsOptional()
   apiKey?: string
 
+  @IsOptional()
+  accessApiKey?: string
+
   @IsBoolean()
   @IsOptional()
   isProfilerActive?: boolean
@@ -98,6 +101,9 @@ export class SdkOptions {
   @IsUrl({ require_tld: false })
   @IsOptional()
   metricsUrl?: string
+
+  @IsOptional()
+  storageRegion?: string
 }
 
 export class MessageParameters {

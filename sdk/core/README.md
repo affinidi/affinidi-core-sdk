@@ -40,6 +40,7 @@
     - [Validate Holder Response on Share Request](#validate-holder-response-on-share-request)
     - [Validate Holder Response on Did auth Request](#validate-holder-response-on-did-auth-request)
   - [Wallet](#wallet)
+    - [Initialize region for storing credentials](#initialize-region-for-storing-credentials)
     - [Create Response on credential share request](#create-response-on-credential-share-request)
     - [Create Response on credential offer request](#create-response-on-credential-offer-request)
     - [Create Response on DID auth request](#create-response-on-did-auth-request)
@@ -63,7 +64,8 @@ You should register your entity at Affinity for appropriate environment
 [staging](https://affinity-onboarding-frontend.staging.affinity-project.org/),
 [production](https://affinity-onboarding-frontend.prod.affinity-project.org/) or
 [dev](https://affinity-onboarding-frontend.dev.affinity-project.org/),
-to obtain the `apiKey` value which should be passed at `options` as a required parameter.
+to obtain the `apiKey` and `apiKeyHash` values, one of which should be passed
+via `options` as a required parameter.
 
 If you want to specify issuer's URL, pass it in the options.
 
@@ -74,9 +76,20 @@ You can also specify the stack environment to be used in `env` variable.
 ```ts
 const options = {
   issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
-  apiKey: '....'
+  apiKey: 'YOUR API KEY'
 }
+```
 
+OR
+
+```ts
+const options = {
+  issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
+  accessApiKey: 'YOUR API KEY HASH VALUE'
+}
+```
+
+```ts
 const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
 ```
 
@@ -275,12 +288,13 @@ username is an arbitrary username.
 To re-send sign up confirmation code (in case when username is email/phoneNumber):
 
 ```ts
-await CommonNetworkMember.resendSignUpConfirmationCode(username, options)
+await CommonNetworkMember.resendSignUpConfirmationCode(username, options, messageParameters)
 ```
 
 `username` - email/phoneNumber.
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
+`messageParameters` - (optional) used to specify message, htmlMessage, subject, see signup method.
 
 ##### Sign up with email/phoneNumber (example)
 
@@ -427,12 +441,13 @@ await CommonNetworkMember.completeLoginChallenge(token, confirmationCode, option
 NOTE: Password recovery is not possible with arbitrary username.
 
 ```ts
-await CommonNetworkMember.forgotPassword(username, options)
+await CommonNetworkMember.forgotPassword(username, options, messageParameters)
 ```
 
 `username` - email or phone number, at which confirmation code will be sent.
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
+`messageParameters` - (optional) used to specify message, htmlMessage, subject, see signup method.
 
 Complete change password challenge:
 
@@ -687,6 +702,20 @@ Its validate response token, if verification not passed response `{ isValid: fal
 if response is valid returns also `{ did, nonce }`
 
 ### Wallet
+
+#### Initialize region for storing credentials
+
+You can specify AWS region where user credentials will be stored using optional
+`storageRegion` parameter (region should be a 3 character string correlating to
+an Alpha-3 country code).
+
+```ts
+const options = {
+  storageRegion: 'SGP'
+}
+
+const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
+```
 
 #### Create Response on credential share request
 
