@@ -30,8 +30,8 @@ type PersonEmployeeRoleEV1Mixin = CreateThing<
     reference?: MaybeArray<CreateExpandedThing<'ContactPoint'>>
     skills?: MaybeArray<CreateExpandedThing<'DefinedTerm'> | string>
     worksFor: ExpandThing<OrganizationEV1>
-    offerLetter?: CreateThing<'URL'>
-    experienceLetter?: CreateThing<'URL'>
+    offerLetter?: CreateExpandedThing<'URL'> | string
+    experienceLetter?: CreateExpandedThing<'URL'> | string
     salary?: SalaryV1
   }
 >
