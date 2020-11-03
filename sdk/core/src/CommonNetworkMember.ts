@@ -946,12 +946,13 @@ export class CommonNetworkMember {
 
     const { isUsername } = validateUsername(username)
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const fullOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = fullOptions
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
     if (isUsername) {
-      await WalletStorageService.adminConfirmUser(username, options)
+      await WalletStorageService.adminConfirmUser(username, fullOptions)
     } else {
       await cognitoService.confirmSignUp(username, confirmationCode)
     }
