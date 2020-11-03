@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import CognitoService from '../../../src/services/CognitoService'
 import * as jwt from 'jsonwebtoken'
-// import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
+import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 
 import { DEV_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
@@ -199,24 +199,23 @@ describe('WalletStorageService', () => {
     expect(decoded.payload.interactionToken.offeredCredentials[0].type).to.equal('EmailCredentialPersonV1')
   })
 
-  // TO UNCOMMENT WHEN WALLET_BACKEND IS UPATED TO LATEST SDK
-  // it('#getSignedCredential', async () => {
-  //   const { accessToken, idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
+  it('#getSignedCredential', async () => {
+    const { accessToken, idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
-  //   const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
+    const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
-  //   const returnedEncryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const returnedEncryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
 
-  //   const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
-  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //   // @ts-ignore
-  //   const networkMember = new CommonNetworkMember(encryptionKey, returnedEncryptedSeed, options)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const networkMember = new CommonNetworkMember(encryptionKey, returnedEncryptedSeed, options)
 
-  //   const offerResponse = await networkMember.createCredentialOfferResponseToken(offerToken)
+    const offerResponse = await networkMember.createCredentialOfferResponseToken(offerToken)
 
-  //   const signedCredentials = await WalletStorageService.getSignedCredentials(idToken, offerResponse, options)
+    const signedCredentials = await WalletStorageService.getSignedCredentials(idToken, offerResponse, options)
 
-  //   expect(signedCredentials).to.exist
-  // })
+    expect(signedCredentials).to.exist
+  })
 })

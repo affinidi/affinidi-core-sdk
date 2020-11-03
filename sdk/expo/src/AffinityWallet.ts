@@ -106,6 +106,7 @@ export class AffinityWallet extends CoreNetwork {
     const { password, encryptedSeed } = parentWallet
     const cognitoUserTokens = parentWallet.cognitoUserTokens
     options.cognitoUserTokens = cognitoUserTokens
+
     affinityWallet = new AffinityWallet(password, encryptedSeed, options)
 
     return { isNew: false, commonNetworkMember: affinityWallet }

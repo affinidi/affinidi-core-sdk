@@ -137,13 +137,6 @@ describe('AffinityWallet', () => {
   })
 
   it.skip('#signUp, #confirmSignUp', async () => {
-    // prettier-ignore
-    const options = {
-    //   issuerUrl:     'http://localhost:3001',
-    //   keyStorageUrl: 'http://localhost:3000',
-    //   didMethod:     'elem'
-    }
-
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const emailDev = 'PLACEHOLDER'

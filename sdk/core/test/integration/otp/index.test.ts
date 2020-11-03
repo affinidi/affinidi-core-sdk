@@ -297,21 +297,6 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     expect(responseError.name).to.eql('COR-13')
   })
 
-  // DIFFERENT API-KEYS
-  // it('#signUp, #confirmSignUp to staging env (when options has `dev` as environment)', async () => {
-  //   const cognitoUsername = generateEmail()
-  //   const optionsEnvDev = Object.assign({}, options, { env: 'dev' })
-
-  //   const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, optionsEnvDev)
-
-  //   await wait(DELAY)
-  //   const otp = await getOtp()
-
-  //   const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otp, optionsEnvDev)
-
-  //   expect(commonNetworkMember).to.exist
-  // })
-
   it.skip('Throws `COR-17 / 400` when OTP is expired (answer provided > 3 minutes)', async () => {
     const cognitoUsername = generateEmail()
 

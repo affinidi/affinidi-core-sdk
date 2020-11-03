@@ -1,12 +1,12 @@
 'use strict'
 
 import { expect } from 'chai'
-// import * as jwt from 'jsonwebtoken'
+import * as jwt from 'jsonwebtoken'
 import { Affinity } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
-// import CognitoService from '../../src/services/CognitoService'
+import CognitoService from '../../src/services/CognitoService'
 import WalletStorageService from '../../src/services/WalletStorageService'
 
 import { normalizeUsername } from '../../src/shared/normalizeUsername'
@@ -973,29 +973,28 @@ describe('CommonNetworkMember', () => {
     expect(httpStatusCode).to.eql(400)
   })
 
-  // TO UNCOMMENT WHEN WALLET_BACKEND IS UPATED TO LATEST SDK
-  // it('#getSignupCredentials', async () => {
-  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //   // @ts-ignore
-  //   const { clientId, userPoolId } = options
+  it('#getSignupCredentials', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const { clientId, userPoolId } = options
 
-  //   const cognitoService = new CognitoService({ clientId, userPoolId })
+    const cognitoService = new CognitoService({ clientId, userPoolId })
 
-  //   const { idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
+    const { idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
-  //   const decoded = jwt.decode(idToken)
+    const decoded = jwt.decode(idToken)
 
-  //   if (typeof decoded === 'string') {
-  //     throw Error
-  //   }
+    if (typeof decoded === 'string') {
+      throw Error
+    }
 
-  //   const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
-  //   const signedCredentials = await commonNetworkMember.getSignupCredentials(idToken, options)
+    const signedCredentials = await commonNetworkMember.getSignupCredentials(idToken, options)
 
-  //   expect(signedCredentials).to.exist
-  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //   // @ts-ignore
-  //   expect(signedCredentials[0].credentialSubject.data.email).to.eq(decoded.email)
-  // })
+    expect(signedCredentials).to.exist
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    expect(signedCredentials[0].credentialSubject.data.email).to.eq(decoded.email)
+  })
 })
