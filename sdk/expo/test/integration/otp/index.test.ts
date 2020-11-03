@@ -14,6 +14,7 @@ const signedCredentials = require('../../factory/signedCredentials')
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
+// test against `dev | prod` // if nothing specified, staging is used by default
 const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 const { keyStorageUrl } = options
@@ -66,48 +67,48 @@ describe('AffinityWallet (flows that require OTP)', () => {
     expect(credentials).to.have.length(0)
   })
 
-  // UNCOMMENT after SDK is updated for WALLET-BACKEND
-  // it('#signIn with skipBackupEncryptedSeed and skipBackupCredentials, #storeEncryptedSeed, #signIn', async () => {
-  //   const cognitoUsername = generateEmail()
+  it('#signIn with skipBackupEncryptedSeed and skipBackupCredentials, #storeEncryptedSeed, #signIn', async () => {
+    const cognitoUsername = generateEmail()
 
-  //   const signInToken = await AffinityWallet.signIn(cognitoUsername, options)
+    const signInToken = await AffinityWallet.signIn(cognitoUsername, options)
 
-  //   await wait(DELAY)
-  //   let otp = await getOtp()
+    await wait(DELAY)
+    let otp = await getOtp()
 
-  //   const confirmSignInOptions = Object.assign({}, options, {
-  //     skipBackupEncryptedSeed: true,
-  //     skipBackupCredentials: true,
-  //     issueSignupCredential: true,
-  //   })
+    const confirmSignInOptions = Object.assign({}, options, {
+      skipBackupEncryptedSeed: true,
+      skipBackupCredentials: true,
+      issueSignupCredential: true,
+    })
 
-  //   const { commonNetworkMember } = await AffinityWallet.confirmSignIn(signInToken, otp, confirmSignInOptions)
-  //   expect(commonNetworkMember.credentials).not.to.be.empty
+    const { commonNetworkMember } = await AffinityWallet.confirmSignIn(signInToken, otp, confirmSignInOptions)
 
-  //   expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
+    expect(commonNetworkMember.credentials).not.to.be.empty
 
-  //   const { password, accessToken, encryptedSeed } = commonNetworkMember
+    expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
 
-  //   await commonNetworkMember.signOut(options)
+    const { password, accessToken, encryptedSeed } = commonNetworkMember
 
-  //   const networkMember = new AffinityWallet(password, encryptedSeed, options)
+    await commonNetworkMember.signOut(options)
 
-  //   expect(networkMember).to.be.an.instanceof(AffinityWallet)
+    const networkMember = new AffinityWallet(password, encryptedSeed, options)
 
-  //   await networkMember.storeEncryptedSeed('', '', accessToken)
+    expect(networkMember).to.be.an.instanceof(AffinityWallet)
 
-  //   await networkMember.signOut(options)
+    await networkMember.storeEncryptedSeed('', '', accessToken)
 
-  //   const token = await AffinityWallet.signIn(cognitoUsername, options)
+    await networkMember.signOut(options)
 
-  //   await wait(DELAY)
-  //   otp = await getOtp()
+    const token = await AffinityWallet.signIn(cognitoUsername, options)
 
-  //   const result = await AffinityWallet.confirmSignIn(token, otp, options)
+    await wait(DELAY)
+    otp = await getOtp()
 
-  //   expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
-  //   expect(result.commonNetworkMember.credentials).to.be.empty
-  // })
+    const result = await AffinityWallet.confirmSignIn(token, otp, options)
+
+    expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
+    expect(result.commonNetworkMember.credentials).to.be.empty
+  })
 
   it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
     const cognitoUsername = generateEmail()
