@@ -14,6 +14,7 @@ const signedCredentials = require('../../factory/signedCredentials')
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
+// test against `dev | prod` // if nothing specified, staging is used by default
 const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 const { keyStorageUrl } = options
