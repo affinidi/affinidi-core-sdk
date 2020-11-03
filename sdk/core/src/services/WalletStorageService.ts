@@ -6,6 +6,8 @@ import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
 
+import { Env } from '../dto/shared.dto'
+
 import { FreeFormObject } from '../shared/interfaces'
 
 const keccak256 = require('keccak256')
@@ -389,7 +391,10 @@ export default class WalletStorageService {
   static async getCredentialOffer(idToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
     keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
 
-    const url = `${keyStorageUrl}/api/v1/issuer/getCredentialOffer`
+    const env: Env = options.env
+
+    const url = `${keyStorageUrl}/api/v1/issuer/getCredentialOffer?env=${env}`
+
     const headers = {
       authorization: idToken,
     }
