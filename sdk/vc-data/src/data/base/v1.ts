@@ -1,4 +1,4 @@
-import { CreateThing, ExtendThing, MaybeArray, createContextEntry, ExpandThing } from '../util'
+import { CreateThing, ExtendThing, MaybeArray, createContextEntry, ExpandThing, CreateExpandedThing } from '../util'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
 
@@ -53,6 +53,7 @@ type OrganizationEV1Mixin = CreateThing<
   {
     hasCredential?: MaybeArray<ExpandThing<CredentialUV1>>
     industry?: MaybeArray<string>
+    identifiers: MaybeArray<CreateExpandedThing<'PropertyValue'> | string | number>
   }
 >
 
@@ -88,6 +89,7 @@ export const getBaseV1ContextEntries = () => {
     fields: {
       hasCredential: 'schema',
       industry: 'affSchema',
+      identifiers: 'affSchema',
     },
     vocab: 'schema',
   })
