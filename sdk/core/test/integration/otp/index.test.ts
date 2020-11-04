@@ -14,8 +14,6 @@ const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 // test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
 
-const { keyStorageUrl } = options
-
 const DELAY = 1000
 // prettier-ignore
 const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
@@ -32,20 +30,24 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signIn with skipBackupEncryptedSeed, #storeEncryptedSeed, #signIn', async () => {
     const cognitoUsername = generateEmail()
 
-    const signInToken = await CommonNetworkMember.signIn(cognitoUsername)
+    const signInToken = await CommonNetworkMember.signIn(cognitoUsername, options)
 
     await wait(DELAY)
     let otp = await getOtp()
 
-    const options = { skipBackupEncryptedSeed: true }
+    const optionsWithSkippedBackupEncryptedSeed = Object.assign({}, options, { skipBackupEncryptedSeed: true })
 
-    const { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, otp, options)
+    const { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
+      signInToken,
+      otp,
+      optionsWithSkippedBackupEncryptedSeed,
+    )
 
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
     const { password, accessToken, encryptedSeed } = commonNetworkMember
 
-    const networkMember = new CommonNetworkMember(password, encryptedSeed)
+    const networkMember = new CommonNetworkMember(password, encryptedSeed, options)
 
     expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
 
@@ -53,12 +55,12 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     await networkMember.signOut()
 
-    const token = await CommonNetworkMember.signIn(cognitoUsername)
+    const token = await CommonNetworkMember.signIn(cognitoUsername, options)
 
     await wait(DELAY)
     otp = await getOtp()
 
-    const result = await CommonNetworkMember.confirmSignIn(token, otp)
+    const result = await CommonNetworkMember.confirmSignIn(token, otp, options)
 
     expect(result.commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
@@ -66,14 +68,14 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
     const cognitoUsername = generateEmail()
 
-    await CommonNetworkMember.signUp(cognitoUsername)
+    await CommonNetworkMember.signUp(cognitoUsername, null, options)
 
-    const token = await CommonNetworkMember.signIn(cognitoUsername)
+    const token = await CommonNetworkMember.signIn(cognitoUsername, options)
 
     await wait(DELAY)
     const otp = await getOtp()
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(token, otp)
+    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(token, otp, options)
 
     expect(isNew).to.eql(true)
     expect(commonNetworkMember).to.exist
@@ -82,21 +84,21 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signIn and #confirmSignIn WHEN user exists', async () => {
     const cognitoUsername = generateEmail()
 
-    const signUptoken = await CommonNetworkMember.signIn(cognitoUsername)
+    const signUptoken = await CommonNetworkMember.signIn(cognitoUsername, options)
 
     await wait(DELAY)
     const sighUpOtp = await getOtp()
 
-    const networkMember = await CommonNetworkMember.confirmSignUp(signUptoken, sighUpOtp)
+    const networkMember = await CommonNetworkMember.confirmSignUp(signUptoken, sighUpOtp, options)
 
     await networkMember.signOut()
 
-    const signInToken = await CommonNetworkMember.signIn(cognitoUsername)
+    const signInToken = await CommonNetworkMember.signIn(cognitoUsername, options)
 
     await wait(DELAY)
     const signInOtp = await getOtp()
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, signInOtp)
+    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, signInOtp, options)
 
     expect(isNew).to.eql(false)
     expect(commonNetworkMember).to.exist
@@ -105,7 +107,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signUp, change email, change password, login', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword)
+    const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
@@ -125,13 +127,13 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     await networkMember.signOut()
 
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, cognitoPassword)
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, cognitoPassword, options)
 
     expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
 
     await networkMember.signOut()
 
-    const forgotPasswordResponse = await CommonNetworkMember.forgotPassword(newCognitoUsername)
+    const forgotPasswordResponse = await CommonNetworkMember.forgotPassword(newCognitoUsername, options)
 
     expect(forgotPasswordResponse).to.be.undefined
 
@@ -144,11 +146,12 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
       newCognitoUsername,
       forgotPasswordOtp,
       newPassword,
+      options,
     )
 
     expect(forgotPasswordSubmitResponse).to.be.undefined
 
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, newPassword)
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, newPassword, options)
 
     expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
   })
@@ -156,7 +159,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signUp (without password), change password, change username', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await CommonNetworkMember.signUp(cognitoUsername)
+    const token = await CommonNetworkMember.signUp(cognitoUsername, null, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
@@ -167,7 +170,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     await networkMember.signOut()
 
-    const forgotPasswordResponse = await CommonNetworkMember.forgotPassword(cognitoUsername)
+    const forgotPasswordResponse = await CommonNetworkMember.forgotPassword(cognitoUsername, options)
 
     expect(forgotPasswordResponse).to.be.undefined
 
@@ -180,11 +183,12 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
       cognitoUsername,
       forgotPasswordOtp,
       newPassword,
+      options,
     )
 
     expect(forgotPasswordSubmitResponse).to.be.undefined
 
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(cognitoUsername, newPassword)
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(cognitoUsername, newPassword, options)
 
     expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
 
@@ -199,7 +203,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     await networkMember.signOut()
 
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, cognitoPassword)
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, cognitoPassword, options)
 
     expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
   })
@@ -207,9 +211,9 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signUp, #resendSignUpConfirmationCode, then #signIn (with 1 wrong OTP)', async () => {
     const cognitoUsername = generateEmail()
 
-    const signUpToken = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword)
+    const signUpToken = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
 
-    await CommonNetworkMember.resendSignUpConfirmationCode(cognitoUsername)
+    await CommonNetworkMember.resendSignUpConfirmationCode(cognitoUsername, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
@@ -221,11 +225,11 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     await commonNetworkMember.signOut()
 
     // signIn with wrong OTP
-    const loginToken = await CommonNetworkMember.signIn(cognitoUsername)
+    const loginToken = await CommonNetworkMember.signIn(cognitoUsername, options)
 
     let responseError
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456', { keyStorageUrl })
+      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
     } catch (error) {
       responseError = error
     }
@@ -239,7 +243,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     let secondError
 
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, loginOtp, { keyStorageUrl })
+      await CommonNetworkMember.confirmSignIn(loginToken, loginOtp, options)
     } catch (error) {
       secondError = error
     }
@@ -250,7 +254,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signIn throws `COR-13 / 400` when OTP is wrong 3 times', async () => {
     const cognitoUsername = generateEmail()
 
-    const signUpToken = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword)
+    const signUpToken = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
@@ -262,11 +266,11 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     await commonNetworkMember.signOut()
 
     // signIn with wrong OTP
-    const loginToken = await CommonNetworkMember.signIn(cognitoUsername)
+    const loginToken = await CommonNetworkMember.signIn(cognitoUsername, options)
 
     let responseError
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456')
+      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
     } catch (error) {
       responseError = error
     }
@@ -275,7 +279,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     expect(responseError.name).to.eql('COR-5')
 
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456')
+      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
     } catch (error) {
       responseError = error
     }
@@ -284,7 +288,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     expect(responseError.name).to.eql('COR-5')
 
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456')
+      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
     } catch (error) {
       responseError = error
     }
@@ -293,23 +297,10 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     expect(responseError.name).to.eql('COR-13')
   })
 
-  it('#signUp, #confirmSignUp to staging env (when options has `dev` as environment)', async () => {
-    const cognitoUsername = generateEmail()
-
-    const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, { env: 'dev' })
-
-    await wait(DELAY)
-    const otp = await getOtp()
-
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otp, { env: 'dev' })
-
-    expect(commonNetworkMember).to.exist
-  })
-
   it.skip('Throws `COR-17 / 400` when OTP is expired (answer provided > 3 minutes)', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await CommonNetworkMember.passwordlessLogin(cognitoUsername)
+    const token = await CommonNetworkMember.passwordlessLogin(cognitoUsername, options)
 
     // NOTE: wait for 180s before providing the answer
     await wait(DELAY)
@@ -318,7 +309,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     let responseError
 
     try {
-      await CommonNetworkMember.completeLoginChallenge(token, otp)
+      await CommonNetworkMember.completeLoginChallenge(token, otp, options)
     } catch (error) {
       responseError = error
     }
@@ -330,19 +321,19 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signUp or change user attribute is not possible for existing email', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword)
+    const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
 
     await wait(DELAY)
     const otp = await getOtp()
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otp)
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otp, options)
 
     expect(commonNetworkMember).to.exist
 
     let responseError
 
     try {
-      await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword)
+      await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
     } catch (error) {
       responseError = error
     }
@@ -353,19 +344,19 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     // creating new user
     const cognitoUsernameNew = generateEmail()
 
-    const tokenNew = await CommonNetworkMember.signUp(cognitoUsernameNew, cognitoPassword)
+    const tokenNew = await CommonNetworkMember.signUp(cognitoUsernameNew, cognitoPassword, options)
 
     await wait(DELAY)
     const otpNew = await getOtp()
 
-    const commonNetworkMemberNew = await CommonNetworkMember.confirmSignUp(tokenNew, otpNew)
+    const commonNetworkMemberNew = await CommonNetworkMember.confirmSignUp(tokenNew, otpNew, options)
 
     expect(commonNetworkMemberNew).to.exist
 
     let responseErrorNew
 
     try {
-      await commonNetworkMemberNew.changeUsername(cognitoUsername)
+      await commonNetworkMemberNew.changeUsername(cognitoUsername, options)
     } catch (error) {
       responseErrorNew = error
     }

@@ -57,6 +57,20 @@ import * as encoding from 'text-encoding'
 
 ## Initialize
 
+### Initialize region for storing credentials
+
+You can specify AWS region where user credentials will be stored using optional
+`storageRegion` parameter (region should be a 3 character string correlating to
+an Alpha-3 country code).
+
+```ts
+const options = {
+  storageRegion: 'SGP'
+}
+
+const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
+```
+
 ### Initialize from user access token
 
 Returns SDK instance when user is logged in, and throws
@@ -91,10 +105,15 @@ const message = await commonNetworkMember.readEncryptedMessage(encryptedMessage)
 ### Put credential to VC vault
 
 ```ts
-await wallet.saveCredentials([signedCredential])
+const credentials = [ signedCredential ]
+const storageRegion = 'SGP'
+
+await affinityWallet.saveCredentials(credentials, storageRegion)
 ```
 
-accepts array of credentials to store in the vault.
+`credentials` - array of credentials to store in the vault.
+`storageRegion` - (optional) AWS region where user's credentials will be stored.
+Region should be a 3 character string correlating to an Alpha-3 country code.
 
 ### Pull credential from VC vault
 

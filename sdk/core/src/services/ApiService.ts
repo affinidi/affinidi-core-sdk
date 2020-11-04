@@ -1,8 +1,9 @@
 import keyBy from 'lodash.keyby'
-import { STAGING_REGISTRY_URL, STAGING_ISSUER_URL, STAGING_VERIFIER_URL } from '../_defaultConfig'
+import { validate as uuidValidate } from 'uuid'
 
 import { KeysService } from '@affinidi/common'
 
+import { STAGING_REGISTRY_URL, STAGING_ISSUER_URL, STAGING_VERIFIER_URL } from '../_defaultConfig'
 import SdkError from '../shared/SdkError'
 
 let fetch: any
@@ -22,18 +23,26 @@ export default class ApiService {
   _registryUrl: string
   _issuerUrl: string
   _verifierUrl: string
-  _apiKey: string
+  _accessApiKey: string
   _specGroupByOperationId: any
 
   constructor(registryUrl?: string, issuerUrl?: string, verifierUrl?: string, options: any = {}) {
     this._issuerUrl = issuerUrl || STAGING_ISSUER_URL
     this._registryUrl = registryUrl || STAGING_REGISTRY_URL
     this._verifierUrl = verifierUrl || STAGING_VERIFIER_URL
-    this._apiKey = options.apiKey
 
-    if (!options.apiKey) {
+    this._accessApiKey = options.accessApiKey
+
+    const isApiKeyAValidUuid = options.apiKey && uuidValidate(options.apiKey)
+
+    if (isApiKeyAValidUuid) {
+      const apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
+      this._accessApiKey = apiKeyBuffer.toString('hex')
+    }
+
+    if (!this._accessApiKey) {
       const apiKeyBuffer = KeysService.sha256(Buffer.from('testApiKey'))
-      this._apiKey = apiKeyBuffer.toString('hex')
+      this._accessApiKey = apiKeyBuffer.toString('hex')
     }
 
     this._specGroupByOperationId = {}
@@ -101,7 +110,7 @@ export default class ApiService {
     options.headers = options.headers || {}
     options.headers['Accept'] = 'application/json'
     options.headers['Content-Type'] = 'application/json'
-    options.headers['Api-Key'] = this._apiKey
+    options.headers['Api-Key'] = this._accessApiKey
 
     if (options.params) {
       let { params: body } = options

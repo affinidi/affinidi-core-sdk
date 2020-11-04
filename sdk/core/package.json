@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-core-sdk",
-  "version": "2.0.2",
+  "version": "3.0.2",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -43,12 +43,12 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinityproject/issuer-phone-twilio-client": "^0.1.0",
-    "@affinityproject/issuer-email-ses-client": "^0.1.0",
+    "@affinidi/affinity-metrics-lib": "0.0.18",
     "@affinidi/common": "1.1.2",
     "@affinidi/vc-common": "1.1.1",
     "@affinidi/vc-data": "1.1.2",
-    "@affinidi/affinity-metrics-lib": "0.0.12",
+    "@affinityproject/issuer-email-ses-client": "^0.1.0",
+    "@affinityproject/issuer-phone-twilio-client": "^0.1.0",
     "@types/async-retry": "^1.4.2",
     "@types/create-hash": "^1.2.2",
     "@types/jsonld": "^1.5.1",
@@ -75,7 +75,8 @@
     "node-fetch": "^2.6.0",
     "randombytes": "^2.1.0",
     "secp256k1": "^4.0.0",
-    "tslib": "^2.0.0"
+    "tslib": "^2.0.0",
+    "uuid": "^8.3.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
@@ -91,12 +92,13 @@
     "@types/node": "13.13.15",
     "@types/randombytes": "2.0.0",
     "@types/sinon": "9.0.4",
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "3.8.0",
     "@typescript-eslint/parser": "3.8.0",
     "aws-sdk-mock": "5.1.0",
-    "crypto-random-string": "3.3.0",
     "chai": "4.2.0",
     "chai-spies": "1.0.0",
+    "crypto-random-string": "3.3.0",
     "dotenv": "^8.2.0",
     "eslint": "7.6.0",
     "eslint-config-prettier": "6.11.0",

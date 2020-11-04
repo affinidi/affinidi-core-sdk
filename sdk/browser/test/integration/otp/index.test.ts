@@ -32,7 +32,7 @@ describe('AffinityWallet (flows that require OTP)', () => {
   it('#deleteCredentials scenario', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword)
+    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
@@ -65,24 +65,26 @@ describe('AffinityWallet (flows that require OTP)', () => {
   it('#confirmSignIn logIn scenario', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword)
+    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
 
     const networkMember = await AffinityWallet.confirmSignUp(token, signUpOtp, options)
 
-    await networkMember.signOut()
+    await networkMember.signOut(options)
 
-    const signInResponseToken = await AffinityWallet.signIn(cognitoUsername)
+    const signInResponseToken = await AffinityWallet.signIn(cognitoUsername, options)
 
     await wait(DELAY)
     const confirmationCode = await getOtp()
 
+    const confirmSignInOptions = Object.assign({}, options, { issueSignupCredential: false })
+
     const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
       signInResponseToken,
       confirmationCode,
-      { issueSignupCredential: false },
+      confirmSignInOptions,
     )
 
     expect(isNew).to.be.false
@@ -93,24 +95,26 @@ describe('AffinityWallet (flows that require OTP)', () => {
   it('#confirmSignIn logIn scenario with issueVC flag set', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword)
+    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
 
     const networkMember = await AffinityWallet.confirmSignUp(token, signUpOtp, options)
 
-    await networkMember.signOut()
+    await networkMember.signOut(options)
 
-    const signInResponseToken = await AffinityWallet.signIn(cognitoUsername)
+    const signInResponseToken = await AffinityWallet.signIn(cognitoUsername, options)
 
     await wait(DELAY)
     const confirmationCode = await getOtp()
 
+    const confirmSignInOptions = Object.assign({}, options, { issueSignupCredential: true })
+
     const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
       signInResponseToken,
       confirmationCode,
-      { issueSignupCredential: true },
+      confirmSignInOptions,
     )
 
     expect(isNew).to.be.false
@@ -121,7 +125,7 @@ describe('AffinityWallet (flows that require OTP)', () => {
   it('#signUp, #init, #changeUsername', async () => {
     const cognitoUsername = generateEmail()
 
-    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword)
+    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
 
     await wait(DELAY)
     const signUpOtp = await getOtp()
@@ -130,26 +134,22 @@ describe('AffinityWallet (flows that require OTP)', () => {
 
     const { cognitoUserTokens } = networkMember
 
-    expect(networkMember).to.exist
-
-    networkMember = await AffinityWallet.init()
-
     networkMember.cognitoUserTokens = cognitoUserTokens
 
     expect(networkMember).to.be.an.instanceof(AffinityWallet)
 
     const newCognitoUsername = generateEmail()
 
-    await networkMember.changeUsername(newCognitoUsername)
+    await networkMember.changeUsername(newCognitoUsername, options)
 
     await wait(DELAY)
     const changeUsernameOtp = await getOtp()
 
-    await networkMember.confirmChangeUsername(newCognitoUsername, changeUsernameOtp)
+    await networkMember.confirmChangeUsername(newCognitoUsername, changeUsernameOtp, options)
 
-    await networkMember.signOut()
+    await networkMember.signOut(options)
 
-    networkMember = await AffinityWallet.fromLoginAndPassword(newCognitoUsername, cognitoPassword)
+    networkMember = await AffinityWallet.fromLoginAndPassword(newCognitoUsername, cognitoPassword, options)
 
     expect(networkMember).to.be.an.instanceof(AffinityWallet)
   })
