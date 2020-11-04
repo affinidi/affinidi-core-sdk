@@ -1,7 +1,6 @@
 import { VCV1, VCV1Subject } from '@affinidi/vc-common'
-import { MonetaryAmountRV1 } from '../../../dist'
 
-import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries } from '../base'
+import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries, MonetaryAmountRV1 } from '../base'
 import {
   CreateThing,
   ExpandThing,

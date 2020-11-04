@@ -1,7 +1,6 @@
-import { CreateThing, ExtendThing, MaybeArray, createContextEntry, ExpandThing } from '../util'
+import { CreateThing, ExtendThing, MaybeArray, createContextEntry, ExpandThing, CreateExpandedThing } from '../util'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
-import { CreateExpandedThing } from '../../../dist'
 
 export type GovernmentOrgV1 =
   | CreateThing<'Country'>
