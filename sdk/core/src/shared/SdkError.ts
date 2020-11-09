@@ -14,6 +14,9 @@ export default class SdkError extends Error {
       throw new Error(`Invalid operation error code: ${code}`)
     }
 
+    const message = SdkError.renderMessage(error.message, context)
+    error.message = message
+
     super(error.message)
 
     this._code = code
@@ -81,7 +84,7 @@ export default class SdkError extends Error {
       },
       'COR-7': {
         type: 'OperationError',
-        message: 'User with the given username already exists.',
+        message: `User {{username}} already exists.`,
         httpStatusCode: 409,
       },
       'COR-8': {
@@ -178,5 +181,26 @@ export default class SdkError extends Error {
         httpStatusCode: 409,
       },
     }
+  }
+
+  static renderMessage(message: string, context: any) {
+    const templateVariables = (message.match(/{{(.*?)}}/g) || []).map((x) => x.replace('{{', '').replace('}}', ''))
+
+    for (const templateVariable of templateVariables) {
+      const isIncluded = context[templateVariable]
+      const regex = new RegExp(`{{${templateVariable}}}`, 'g')
+
+      if (isIncluded) {
+        message = message.replace(regex, context[templateVariable])
+      } else {
+        message = message.replace(regex, SdkError.undefinedContextVariable)
+      }
+    }
+
+    return message
+  }
+
+  static get undefinedContextVariable() {
+    return 'UNDEFINED'
   }
 }
