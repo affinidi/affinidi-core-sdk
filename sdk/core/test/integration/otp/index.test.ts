@@ -358,4 +358,37 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     expect(responseErrorNew).to.exist
     expect(responseErrorNew.name).to.eql('COR-7')
   })
+
+  it('#signUp with username, add email, signIn with email, change password', async () => {
+    const cognitoUsername = generateUsername()
+
+    let networkMember = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+
+    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+
+    const email = generateEmail()
+
+    await networkMember.changeUsername(email, options)
+
+    await wait(DELAY)
+    const otp = await getOtp()
+
+    await networkMember.confirmChangeUsername(email, otp, options)
+
+    await networkMember.signOut()
+
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(email, cognitoPassword, options)
+
+    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+
+    const newPassword = generateUsername() // test.user-175AB... - is OKAY
+
+    await networkMember.changePassword(cognitoPassword, newPassword, options)
+
+    await networkMember.signOut()
+
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(email, newPassword, options)
+
+    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+  })
 })

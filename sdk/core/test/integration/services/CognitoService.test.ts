@@ -3,8 +3,6 @@ import { expect } from 'chai'
 import { randomBytes } from '../../../src/shared/randomBytes'
 import CognitoService from '../../../src/services/CognitoService'
 
-import { DEV_COGNITO_CLIENT_ID, DEV_COGNITO_USER_POOL_ID } from '../../../src/_defaultConfig'
-
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = JSON.parse(TEST_SECRETS)
 
