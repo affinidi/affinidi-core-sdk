@@ -1163,6 +1163,27 @@ export class CommonNetworkMember {
   }
 
   /**
+   * @description Initiates change user password
+   * @param oldPassword
+   * @param newPassword
+   * @param options - optional parameters with specified environment
+   */
+  async changePassword(oldPassword: string, newPassword: string, options: SdkOptions = {}): Promise<void> {
+    await ParametersValidator.validate([
+      { isArray: false, type: 'string', isRequired: true, value: oldPassword },
+      { isArray: false, type: 'string', isRequired: true, value: newPassword },
+      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+    ])
+
+    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    const { accessToken } = await this._getCognitoUserTokensForUser()
+
+    const cognitoService = new CognitoService({ userPoolId, clientId })
+    await cognitoService.changePassword(accessToken, oldPassword, newPassword)
+  }
+
+  /**
    * @description Initiates change user attribute (email/phoneNumber) flow
    * @param newUsername - new email/phoneNumber
    * @param options - optional parameters with specified environment
