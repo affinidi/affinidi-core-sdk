@@ -146,7 +146,7 @@ describe('WalletStorageService', () => {
   it('#fetchEncryptedCredentials throws `COR-14 / 404` when no credentials found', async () => {
     await authorizeVault()
 
-    nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(404, {})
+    nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(404, { message: 'error' })
 
     const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
 
@@ -167,7 +167,7 @@ describe('WalletStorageService', () => {
   it('#fetchEncryptedCredentials throws error returned from vault', async () => {
     await authorizeVault()
 
-    nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(500, {})
+    nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(500, { message: 'error' })
 
     const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
 

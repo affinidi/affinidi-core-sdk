@@ -912,10 +912,9 @@ describe('CommonNetworkMember', () => {
       responseError = error
     }
 
-    const { code, message, httpStatusCode } = responseError
+    const { code, httpStatusCode } = responseError
 
     expect(code).to.equal('COR-7')
-    expect(message).to.equal('User with the given username already exists.')
     expect(httpStatusCode).to.equal(409)
   })
 
