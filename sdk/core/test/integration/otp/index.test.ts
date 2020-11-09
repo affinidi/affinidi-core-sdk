@@ -4,9 +4,9 @@ import '../env'
 
 import { expect } from 'chai'
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
-import { getOtp } from '../../helpers/getOtp'
 import { SdkOptions } from '../../../src/dto/shared.dto'
-import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
+
+import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } from '../../helpers'
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -17,12 +17,6 @@ const options: SdkOptions = getOptionsForEnvironment()
 const DELAY = 1000
 // prettier-ignore
 const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
-
-const generateEmail = () => {
-  const TIMESTAMP = Date.now().toString(16).toUpperCase()
-
-  return `test.user-${TIMESTAMP}@gdwk.in`
-}
 
 const cognitoPassword = COGNITO_PASSWORD
 

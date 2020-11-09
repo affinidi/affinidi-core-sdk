@@ -5,7 +5,7 @@ import sinon from 'sinon'
 import { expect } from 'chai'
 
 import { JwtService } from '@affinidi/common'
-import { authorizeVault } from './../../helpers/authorizeVault'
+import { authorizeVault } from './../../helpers'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
