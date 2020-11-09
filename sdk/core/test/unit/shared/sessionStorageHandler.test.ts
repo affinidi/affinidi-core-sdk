@@ -5,7 +5,7 @@ import {
   clearUserTokensFromSessionStorage,
 } from '../../../src/shared/sessionStorageHandler'
 
-import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
+import { getOptionsForEnvironment } from '../../helpers'
 
 const cognitoUserTokens = require('../../factory/cognitoUserTokens')
 

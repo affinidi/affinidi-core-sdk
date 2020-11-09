@@ -3,10 +3,6 @@ import { expect } from 'chai'
 import { randomBytes } from '../../../src/shared/randomBytes'
 import CognitoService from '../../../src/services/CognitoService'
 
-import { DEV_COGNITO_CLIENT_ID, DEV_COGNITO_USER_POOL_ID } from '../../../src/_defaultConfig'
-
-import { waitConfirmationCodeInput } from '../../helpers/waitConfirmationCodeInput'
-
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = JSON.parse(TEST_SECRETS)
 
@@ -54,23 +50,6 @@ describe('CognitoService', () => {
 
     expect(name).to.eql('COR-4')
     expect(message).to.eql('User not found.')
-  })
-
-  it.skip('#signUp for dev', async () => {
-    username = email
-
-    let result
-
-    const cognitoService = new CognitoService({ clientId: DEV_COGNITO_CLIENT_ID, userPoolID: DEV_COGNITO_USER_POOL_ID })
-    result = await cognitoService.signUp(username, password)
-
-    expect(result).to.be.undefined
-
-    const confirmationCode = await waitConfirmationCodeInput()
-
-    result = await cognitoService.confirmSignUp(username, confirmationCode)
-
-    expect(result).to.eql('SUCCESS')
   })
 
   it.skip('#signUp throws `COR-7 / 409` if called twice', async () => {

@@ -4,9 +4,9 @@ import '../env'
 
 import { expect } from 'chai'
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
-import { getOtp } from '../../helpers/getOtp'
 import { SdkOptions } from '../../../src/dto/shared.dto'
-import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
+
+import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } from '../../helpers'
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -17,12 +17,6 @@ const options: SdkOptions = getOptionsForEnvironment()
 const DELAY = 1000
 // prettier-ignore
 const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
-
-const generateEmail = () => {
-  const TIMESTAMP = Date.now().toString(16).toUpperCase()
-
-  return `test.user-${TIMESTAMP}@gdwk.in`
-}
 
 const cognitoPassword = COGNITO_PASSWORD
 
@@ -363,5 +357,38 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     expect(responseErrorNew).to.exist
     expect(responseErrorNew.name).to.eql('COR-7')
+  })
+
+  it('#signUp with username, add email, signIn with email, change password', async () => {
+    const cognitoUsername = generateUsername()
+
+    let networkMember = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+
+    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+
+    const email = generateEmail()
+
+    await networkMember.changeUsername(email, options)
+
+    await wait(DELAY)
+    const otp = await getOtp()
+
+    await networkMember.confirmChangeUsername(email, otp, options)
+
+    await networkMember.signOut()
+
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(email, cognitoPassword, options)
+
+    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+
+    const newPassword = generateUsername() // test.user-175AB... - is OKAY
+
+    await networkMember.changePassword(cognitoPassword, newPassword, options)
+
+    await networkMember.signOut()
+
+    networkMember = await CommonNetworkMember.fromLoginAndPassword(email, newPassword, options)
+
+    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 })

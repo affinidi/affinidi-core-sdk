@@ -13,9 +13,11 @@ describe('MetricsService', () => {
 
   describe('parseVcMetadata', () => {
     const vcType = 'HealthPassportBundleCredentialV1'
+
     it(`#parse ${vcType}`, async () => {
       const metadata = metricsService.parseVcMetadata(medicalCredential)
       const resourceNames = []
+
       for (const entry of metadata.data) {
         const name = entry.resource.resourceType
         resourceNames.push(name)
@@ -26,6 +28,7 @@ describe('MetricsService', () => {
     })
 
     const otherType = 'ProofOfNameCredential'
+
     it(`#parse ${otherType}`, async () => {
       const metadata = metricsService.parseVcMetadata(otherCredential)
 

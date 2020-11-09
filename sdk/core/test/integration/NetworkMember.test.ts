@@ -10,6 +10,9 @@ import CognitoService from '../../src/services/CognitoService'
 import WalletStorageService from '../../src/services/WalletStorageService'
 
 import { normalizeUsername } from '../../src/shared/normalizeUsername'
+import { SdkOptions } from '../../src/dto/shared.dto'
+
+import { generateUsername, generateEmail, getOptionsForEnvironment } from '../helpers'
 
 const { TEST_SECRETS } = process.env
 const {
@@ -48,11 +51,6 @@ const cognitoPassword = COGNITO_PASSWORD
 
 const userWithoutKey = COGNITO_USERNAME_NO_KEY
 const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
-
-import { SdkOptions } from '../../src/dto/shared.dto'
-
-import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
-import { generateUsername, generateEmail } from '../helpers/generateUsername'
 
 // test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()

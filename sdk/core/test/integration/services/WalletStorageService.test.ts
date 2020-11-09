@@ -9,7 +9,7 @@ import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { DEV_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
 import { SdkOptions } from '../../../src/dto/shared.dto'
-import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
+import { getOptionsForEnvironment } from '../../helpers'
 
 // test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
