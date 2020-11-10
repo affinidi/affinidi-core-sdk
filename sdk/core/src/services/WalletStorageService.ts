@@ -208,6 +208,7 @@ export default class WalletStorageService {
       url: tokenChallengeValidationUrl,
       params: { accessToken: token, signature, did: didEth },
       method: 'POST',
+      headers,
     })
 
     return token

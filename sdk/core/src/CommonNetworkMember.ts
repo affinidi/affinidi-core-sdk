@@ -254,8 +254,10 @@ export class CommonNetworkMember {
     }
 
     const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+    const { storageRegion } = options
 
     return {
+      storageRegion,
       accessApiKey,
       issuerUrl,
       registryUrl,
@@ -1177,7 +1179,7 @@ export class CommonNetworkMember {
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const { accessToken } = await this._getCognitoUserTokensForUser()
+    const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
     await cognitoService.changePassword(accessToken, oldPassword, newPassword)
@@ -1198,7 +1200,7 @@ export class CommonNetworkMember {
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const { accessToken } = await this._getCognitoUserTokensForUser()
+    const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
     await cognitoService.changeUsername(accessToken, newUsername, { userPoolId, clientId })
@@ -1219,7 +1221,7 @@ export class CommonNetworkMember {
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
-    const { accessToken } = await this._getCognitoUserTokensForUser()
+    const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
     await cognitoService.confirmChangeUsername(accessToken, newUsername, confirmationCode)
