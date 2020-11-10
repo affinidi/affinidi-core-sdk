@@ -340,7 +340,7 @@ describe('CommonNetworkMember', () => {
             telephone: '+1 555 555 5555',
           },
         },
-        holder: { id: 'placeholder' },
+        holder: { id: 'did:elem:placeholder' },
         type: 'PhoneCredentialPersonV1',
         context: getVCPhonePersonV1Context(),
       }),
@@ -354,7 +354,12 @@ describe('CommonNetworkMember', () => {
       accessToken,
     )
 
+    const affinity = new Affinity(options)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
+    const createdCredential = await affinity.signCredential(revokableUnsignedCredential, encryptedSeedElem, password)
+
+    const sucessResult = await affinity.validateCredential(createdCredential)
+    expect(sucessResult.result).to.equal(true)
 
     let revocationError
     try {
@@ -364,6 +369,8 @@ describe('CommonNetworkMember', () => {
     }
 
     expect(revocationError).to.not.exist
+    const failResult = await affinity.validateCredential(createdCredential)
+    expect(failResult.result).to.equal(false)
   })
 
   it('#register and #signUpWithExistsEntity (userName is arbitrary) and #fromLoginAndPassword', async () => {
