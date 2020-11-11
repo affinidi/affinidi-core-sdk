@@ -341,27 +341,3 @@ export class SignCredentialOptionalInput {
   @IsJWT()
   credentialOfferResponseToken?: string
 }
-
-export class MetricsServiceOptions {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  @IsUrl({ require_tld: false })
-  @IsString()
-  metricsUrl: string
-
-  @IsString()
-  apiKey: string
-}
-
-export class MetricsEvent {
-  @IsString()
-  link: string
-
-  @IsString()
-  name: EventName
-
-  @IsString()
-  category: EventCategory
-
-  @IsString()
-  subCategory: string
-}
