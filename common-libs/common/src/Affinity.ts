@@ -2,10 +2,11 @@ import { buildVCV1, buildVPV1 } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
+import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 
 import { AffinityOptions } from './dto/shared.dto'
-import { DEFAULT_REGISTRY_URL } from './_defaultConfig'
-import { DidDocumentService, KeysService, DigestService, JwtService } from './services'
+import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
+import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 
 const revocationList = require('vc-revocation-list') // eslint-disable-line
@@ -18,12 +19,46 @@ if (!fetch) {
 export class Affinity {
   private readonly _apiKey: string
   private readonly _registryUrl: string
+  private readonly _metricsUrl: string
+  private readonly _metricsService: any
   private readonly _digestService: any
+  protected _component: EventComponent
 
   constructor(options: AffinityOptions = {}) {
     this._apiKey = options.apiKey
     this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
+    this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
+    this._component = options.component
     this._digestService = new DigestService()
+    this._metricsService = new MetricsService({ metricsUrl: this._metricsUrl, apiKey: this._apiKey }, this._component)
+  }
+
+  private _sendVCVerifiedMetric(credential: any, holderDid: string) {
+    const metadata: EventMetadata = this._metricsService.parseVcMetadata(credential)
+    const event = {
+      link: holderDid,
+      name: EventName.VC_VERIFIED,
+      category: EventCategory.VC,
+      subCategory: 'verify',
+      metadata: metadata,
+    }
+
+    this._metricsService.send(event)
+  }
+
+  private _sendVCVerifiedPerPartyMetric(credential: any, verifierDid: string) {
+    const metadata: EventMetadata = this._metricsService.parseVcMetadata(credential)
+    const vcId = credential.id
+    const event = {
+      link: vcId,
+      secondaryLink: verifierDid,
+      name: EventName.VC_VERIFIED_PER_PARTY,
+      category: EventCategory.VC,
+      subCategory: 'verify',
+      metadata: metadata,
+    }
+
+    this._metricsService.send(event)
   }
 
   private async _resolveDidIfNoDidDocument(did: string, didDocument?: any): Promise<any> {
@@ -237,6 +272,13 @@ export class Affinity {
       if (!verified) {
         return { result: false, error }
       }
+
+      // send VC_VERIFIED* metrics when verification is successful
+      // TODO: also record failed verification?
+      this._sendVCVerifiedMetric(credential, parse(result.data.holder.id).did)
+
+      // TODO: how to get the verifier did?
+      this._sendVCVerifiedPerPartyMetric(credential, verifierDid)
 
       return { result: true, error: '' }
     }
