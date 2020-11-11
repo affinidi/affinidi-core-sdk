@@ -5,11 +5,11 @@ import MetricsService from '../../../src/services/MetricsService'
 import { medicalCredential } from '../../factory/medicalCredential'
 import { signedCredential as otherCredential } from '../../factory/signedCredential'
 
-const accessApiKeyHash = 'dummyHash'
+const accessApiKey = 'dummyHash'
 const metricsUrl = 'https://dummy'
 
 describe('MetricsService', () => {
-  const metricsService = new MetricsService({ metricsUrl, accessApiKey: accessApiKeyHash })
+  const metricsService = new MetricsService({ metricsUrl, accessApiKey: accessApiKey })
 
   describe('parseVcMetadata', () => {
     const vcType = 'HealthPassportBundleCredentialV1'
