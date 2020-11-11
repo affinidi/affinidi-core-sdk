@@ -354,7 +354,9 @@ describe('CommonNetworkMember', () => {
       accessToken,
     )
 
-    const affinity = new Affinity(options)
+    const affinityOptions = Object.assign({}, options, { apiKey: options.accessApiKey })
+
+    const affinity = new Affinity(affinityOptions)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
     const createdCredential = await affinity.signCredential(revokableUnsignedCredential, encryptedSeedElem, password)
 
