@@ -1861,7 +1861,7 @@ export class CommonNetworkMember {
     const isTestEnvironment = process.env.NODE_ENV === 'test'
 
     if (isValid && !isTestEnvironment) {
-      this._sendVCVerifiedPerPartyMetrics(suppliedCredentials, did)
+      this._sendVCVerifiedPerPartyMetrics(suppliedCredentials)
     }
 
     return { isValid, did, nonce: jti, suppliedCredentials, errors }
