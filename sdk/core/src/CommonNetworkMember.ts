@@ -155,7 +155,12 @@ export class CommonNetworkMember {
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions)
     this._didDocumentService = new DidDocumentService(this._keysService)
-    this._affinity = new Affinity({ registryUrl, apiKey: this._accessApiKey })
+    this._affinity = new Affinity({
+      apiKey: this._accessApiKey,
+      registryUrl: registryUrl,
+      metricsUrl: metricsUrl,
+      component: this._component,
+    })
     this._encryptedSeed = encryptedSeed
     this._password = password
     this.cognitoUserTokens = options && options.cognitoUserTokens ? options.cognitoUserTokens : undefined
