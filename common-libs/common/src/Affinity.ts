@@ -2,7 +2,7 @@ import { buildVCV1, buildVPV1 } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
-import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
+import { EventComponent, EventCategory, EventName, EventMetadata, EventInput } from '@affinidi/affinity-metrics-lib'
 
 import { AffinityOptions } from './dto/shared.dto'
 import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
@@ -28,7 +28,7 @@ export class Affinity {
     this._apiKey = options.apiKey
     this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
     this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
-    this._component = options.component // || EventComponent.NotImplemented // need to update metrics-lib first
+    this._component = options.component // || EventComponent.NotImplemented // TODO: need to update metrics-lib first
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
       metricsUrl: this._metricsUrl,
@@ -39,11 +39,27 @@ export class Affinity {
 
   private _sendVCVerifiedMetric(credential: any, holderDid: string) {
     const metadata: EventMetadata = this._metricsService.parseVcMetadata(credential)
-    const event = {
+    const event: EventInput = {
       link: holderDid,
       name: EventName.VC_VERIFIED,
       category: EventCategory.VC,
       subCategory: 'verify',
+      component: this._component,
+      metadata: metadata,
+    }
+
+    this._metricsService.send(event)
+  }
+
+  private _sendVCSignedMetric(credential: any, holderDid: string, vcId: string) {
+    const metadata: EventMetadata = this._metricsService.parseCommonVcMetadata(credential)
+    const event: EventInput = {
+      link: holderDid,
+      secondaryLink: vcId,
+      name: EventName.VC_VERIFIED, // TODO: should be EventName.VC_SIGNED; need to update metrics-lib first
+      category: EventCategory.VC,
+      subCategory: 'verify',
+      component: this._component,
       metadata: metadata,
     }
 
@@ -281,7 +297,7 @@ export class Affinity {
     const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
-    return buildVCV1({
+    const builtVc = buildVCV1({
       unsigned: unsignedCredential,
       issuer: {
         did,
@@ -302,6 +318,13 @@ export class Affinity {
         controller: await didDocumentService.buildDidDocument(),
       }),
     })
+
+    // send VC_SIGNED event
+    const holderDid = parse(unsignedCredential.holder.id).did
+    const vcId = unsignedCredential.id
+    this._sendVCSignedMetric(unsignedCredential, holderDid, vcId)
+
+    return builtVc
   }
 
   async validatePresentation(

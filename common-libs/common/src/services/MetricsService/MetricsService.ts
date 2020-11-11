@@ -34,4 +34,11 @@ export default class MetricsService {
     const metadata = vcMetadataParser.parse(credential)
     return metadata
   }
+
+  // use this method to explicitly parse only common metadata
+  parseCommonVcMetadata(credential: any): VcMetadata {
+    const vcMetadataParser = this._vcMetadataParserFactory.createParser('default')
+    const metadata = vcMetadataParser.parse(credential)
+    return metadata
+  }
 }
