@@ -14,8 +14,6 @@ import {
   IsIn,
 } from 'class-validator'
 
-import { EventName, EventCategory } from '@affinidi/affinity-metrics-lib'
-
 import { FreeFormObject } from '../shared/interfaces'
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
 
