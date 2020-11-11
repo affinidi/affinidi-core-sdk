@@ -143,7 +143,11 @@ export class CommonNetworkMember {
     this._accessApiKey = this._sdkOptions.accessApiKey
 
     this._component = component
-    this._metricsService = new MetricsService({ metricsUrl, accessApiKey: this._accessApiKey, component: this._component })
+    this._metricsService = new MetricsService({
+      metricsUrl,
+      accessApiKey: this._accessApiKey,
+      component: this._component,
+    })
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
