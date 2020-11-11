@@ -28,7 +28,7 @@ export class Affinity {
     this._apiKey = options.apiKey
     this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
     this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
-    this._component = options.component // || EventComponent.NotImplemented // TODO: need to update metrics-lib first
+    this._component = options.component || EventComponent.NotImplemented
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
       metricsUrl: this._metricsUrl,
@@ -56,7 +56,7 @@ export class Affinity {
     const event: EventInput = {
       link: holderDid,
       secondaryLink: vcId,
-      name: EventName.VC_VERIFIED, // TODO: should be EventName.VC_SIGNED; need to update metrics-lib first
+      name: EventName.VC_SIGNED,
       category: EventCategory.VC,
       subCategory: 'verify',
       component: this._component,
@@ -297,7 +297,7 @@ export class Affinity {
     const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
-    const builtVc = buildVCV1({
+    const vc = buildVCV1({
       unsigned: unsignedCredential,
       issuer: {
         did,
@@ -324,7 +324,7 @@ export class Affinity {
     const vcId = unsignedCredential.id
     this._sendVCSignedMetric(unsignedCredential, holderDid, vcId)
 
-    return builtVc
+    return vc
   }
 
   async validatePresentation(
