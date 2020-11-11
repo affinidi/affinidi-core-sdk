@@ -17,7 +17,7 @@ if (!fetch) {
 }
 
 export class Affinity {
-  private readonly _apiKey: string
+  private readonly _apiKey: string // TODO: this should be _accessApiKey
   private readonly _registryUrl: string
   private readonly _metricsUrl: string
   private readonly _metricsService: any
@@ -28,9 +28,13 @@ export class Affinity {
     this._apiKey = options.apiKey
     this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
     this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
-    this._component = options.component
+    this._component = options.component // || EventComponent.NotImplemented // need to update metrics-lib first
     this._digestService = new DigestService()
-    this._metricsService = new MetricsService({ metricsUrl: this._metricsUrl, apiKey: this._apiKey }, this._component)
+    this._metricsService = new MetricsService({
+      metricsUrl: this._metricsUrl,
+      accessApiKey: this._apiKey,
+      component: this._component,
+    })
   }
 
   private _sendVCVerifiedMetric(credential: any, holderDid: string) {
@@ -38,21 +42,6 @@ export class Affinity {
     const event = {
       link: holderDid,
       name: EventName.VC_VERIFIED,
-      category: EventCategory.VC,
-      subCategory: 'verify',
-      metadata: metadata,
-    }
-
-    this._metricsService.send(event)
-  }
-
-  private _sendVCVerifiedPerPartyMetric(credential: any, verifierDid: string) {
-    const metadata: EventMetadata = this._metricsService.parseVcMetadata(credential)
-    const vcId = credential.id
-    const event = {
-      link: vcId,
-      secondaryLink: verifierDid,
-      name: EventName.VC_VERIFIED_PER_PARTY,
       category: EventCategory.VC,
       subCategory: 'verify',
       metadata: metadata,
@@ -273,12 +262,9 @@ export class Affinity {
         return { result: false, error }
       }
 
-      // send VC_VERIFIED* metrics when verification is successful
+      // send VC_VERIFIED metrics when verification is successful
       // TODO: also record failed verification?
       this._sendVCVerifiedMetric(credential, parse(result.data.holder.id).did)
-
-      // TODO: how to get the verifier did?
-      this._sendVCVerifiedPerPartyMetric(credential, verifierDid)
 
       return { result: true, error: '' }
     }
