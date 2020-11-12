@@ -58,7 +58,7 @@ export class Affinity {
       secondaryLink: vcId,
       name: EventName.VC_SIGNED,
       category: EventCategory.VC,
-      subCategory: 'verify',
+      subCategory: 'sign',
       component: this._component,
       metadata: metadata,
     }
