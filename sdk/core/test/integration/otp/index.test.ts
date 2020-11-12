@@ -8,16 +8,10 @@ import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } from '../../helpers'
 
-const { TEST_SECRETS, TEST_AGAINST } = process.env
+const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
-let env = 'staging'
-
-if (TEST_AGAINST === 'dev') {
-  env = TEST_AGAINST
-}
-
-const options: SdkOptions = getOptionsForEnvironment(env)
+const options: SdkOptions = getOptionsForEnvironment()
 
 const DELAY = 1000
 // prettier-ignore
@@ -25,7 +19,7 @@ const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
 
 const cognitoPassword = COGNITO_PASSWORD
 
-describe(`CommonNetworkMember (flows that require OTP), testing against ${env}`, () => {
+describe('CommonNetworkMember (flows that require OTP)', () => {
   it('#signIn with skipBackupEncryptedSeed, #storeEncryptedSeed, #signIn', async () => {
     const cognitoUsername = generateEmail()
 

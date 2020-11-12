@@ -12,7 +12,7 @@ import { SdkOptions } from '../../src/dto/shared.dto'
 
 import { generateUsername, generateEmail, getOptionsForEnvironment } from '../helpers'
 
-const { TEST_SECRETS, TEST_AGAINST } = process.env
+const { TEST_SECRETS } = process.env
 const {
   PASSWORD,
   COGNITO_PASSWORD,
@@ -50,15 +50,9 @@ const cognitoPassword = COGNITO_PASSWORD
 const userWithoutKey = COGNITO_USERNAME_NO_KEY
 const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 
-let env = 'staging'
+const options: SdkOptions = getOptionsForEnvironment()
 
-if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
-  env = TEST_AGAINST
-}
-
-const options: SdkOptions = getOptionsForEnvironment(env)
-
-describe(`CommonNetworkMember, testing against ${env}`, () => {
+describe('CommonNetworkMember', () => {
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
 
   const offeredCredentials = [

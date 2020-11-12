@@ -3,8 +3,6 @@
 import { expect } from 'chai'
 import * as jwt from 'jsonwebtoken'
 
-import '../env'
-
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import CognitoService from '../../../src/services/CognitoService'
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
@@ -12,16 +10,10 @@ import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import { getOptionsForEnvironment } from '../../helpers'
 
-const { TEST_SECRETS, TEST_AGAINST } = process.env
-
-let env = 'staging'
-
-if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
-  env = TEST_AGAINST
-}
+const { TEST_SECRETS } = process.env
 
 const returnAllOptionsForEnvironment = true
-const options: SdkOptions = getOptionsForEnvironment(env, returnAllOptionsForEnvironment)
+const options: SdkOptions = getOptionsForEnvironment(returnAllOptionsForEnvironment)
 
 const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, SEED_JOLO, ENCRYPTED_SEED_JOLO } = JSON.parse(TEST_SECRETS)
 

@@ -19,7 +19,7 @@ import {
   STAGING_COGNITO_USER_POOL_ID,
 } from '../../src/_defaultConfig'
 
-const { TEST_SECRETS } = process.env
+const { TEST_SECRETS, TEST_AGAINST } = process.env
 const { DEV_API_KEY_HASH, PROD_API_KEY_HASH, STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
 
 let clientId
@@ -30,8 +30,14 @@ let accessApiKey
 let keyStorageUrl
 let revocationUrl // NOTE: ISSUER_URL is used
 
-export const getOptionsForEnvironment = (environment = '', returnAllOptionsForEnvironment = false): any => {
-  const env = environment || 'staging'
+let environment = 'staging'
+
+if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
+  environment = TEST_AGAINST
+}
+
+export const getOptionsForEnvironment = (returnAllOptionsForEnvironment = false): any => {
+  const env = environment
 
   switch (environment) {
     case 'dev':

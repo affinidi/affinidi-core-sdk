@@ -21,19 +21,13 @@ const generateEmail = () => {
   return `test.user-${TIMESTAMP}@gdwk.in`
 }
 
-const { TEST_SECRETS, TEST_AGAINST } = process.env
+const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 const cognitoPassword = COGNITO_PASSWORD
 
-let env = 'staging'
+const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
-if (TEST_AGAINST === 'dev') {
-  env = TEST_AGAINST
-}
-
-const options: __dangerous.SdkOptions = getOptionsForEnvironment(env)
-
-describe(`AffinityWallet (flows that require OTP), testing against ${env}`, () => {
+describe('AffinityWallet (flows that require OTP)', () => {
   it('#deleteCredentials scenario', async () => {
     const cognitoUsername = generateEmail()
 

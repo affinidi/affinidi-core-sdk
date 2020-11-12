@@ -51,15 +51,9 @@ const credentialShareRequestToken =
   'y0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9c44eac73f3' +
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
-let env = 'staging'
+const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
-if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
-  env = TEST_AGAINST
-}
-
-const options: __dangerous.SdkOptions = getOptionsForEnvironment(env)
-
-describe(`AffinityWallet, testing against ${env}`, () => {
+describe('AffinityWallet', () => {
   it('.init returns SDK instance, initialize with default environment', async () => {
     await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
