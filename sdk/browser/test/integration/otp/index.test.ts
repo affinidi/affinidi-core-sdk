@@ -27,8 +27,8 @@ const cognitoPassword = COGNITO_PASSWORD
 
 let env = 'staging'
 
-if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
-    env = TEST_AGAINST
+if (TEST_AGAINST === 'dev') {
+  env = TEST_AGAINST
 }
 
 const options: __dangerous.SdkOptions = getOptionsForEnvironment(env)

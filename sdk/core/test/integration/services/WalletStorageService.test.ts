@@ -20,7 +20,7 @@ const { TEST_SECRETS, TEST_AGAINST } = process.env
 let env = 'staging'
 
 if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
-    env = TEST_AGAINST
+  env = TEST_AGAINST
 }
 const returnAllOptionsForEnvironment = true
 const options: SdkOptions = getOptionsForEnvironment(env, returnAllOptionsForEnvironment)

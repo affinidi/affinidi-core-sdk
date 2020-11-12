@@ -54,7 +54,7 @@ const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 let env = 'staging'
 
 if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
-    env = TEST_AGAINST
+  env = TEST_AGAINST
 }
 
 const options: SdkOptions = getOptionsForEnvironment(env)
