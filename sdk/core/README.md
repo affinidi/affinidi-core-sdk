@@ -27,6 +27,7 @@
     - [Initiate instance of SDK with login and pasword](#initiate-instance-of-sdk-with-login-and-pasword)
     - [Passwordless login](#passwordless-login)
     - [Password recovery](#password-recovery)
+    - [Change password](#change-password)
     - [Change username](#change-username)
     - [Sign Out](#sign-out)
   - [Issuer](#issuer)
@@ -40,6 +41,7 @@
     - [Validate Holder Response on Share Request](#validate-holder-response-on-share-request)
     - [Validate Holder Response on Did auth Request](#validate-holder-response-on-did-auth-request)
   - [Wallet](#wallet)
+    - [Initialize region for storing credentials](#initialize-region-for-storing-credentials)
     - [Create Response on credential share request](#create-response-on-credential-share-request)
     - [Create Response on credential offer request](#create-response-on-credential-offer-request)
     - [Create Response on DID auth request](#create-response-on-did-auth-request)
@@ -61,7 +63,7 @@ Test credentials should be added to the top level `.env` file. These contain use
 
 You should register your entity at Affinity for appropriate environment
 [staging](https://affinity-onboarding-frontend.staging.affinity-project.org/),
-[production](https://affinity-onboarding-frontend.prod.affinity-project.org/) or
+[production](https://apikey.affinidi.com/) or
 [dev](https://affinity-onboarding-frontend.dev.affinity-project.org/),
 to obtain the `apiKey` and `apiKeyHash` values, one of which should be passed
 via `options` as a required parameter.
@@ -462,6 +464,19 @@ await CommonNetworkMember.forgotPasswordSubmit(username, confirmationCode, newPa
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
 
+#### Change password
+
+User have to be logged in to change password. Otherwise use [password recovery](#password-recovery).
+
+```ts
+await commonNetworkMember.changePassword(oldPassword, newPassword, options)
+```
+
+`oldPassword` - old password.
+`newPassword` - new password.
+
+`options` - (optional) used to specify environment stack (dev | staging | prod).
+
 #### Change username
 
 ```ts
@@ -701,6 +716,20 @@ Its validate response token, if verification not passed response `{ isValid: fal
 if response is valid returns also `{ did, nonce }`
 
 ### Wallet
+
+#### Initialize region for storing credentials
+
+You can specify AWS region where user credentials will be stored using optional
+`storageRegion` parameter (region should be a 3 character string correlating to
+an Alpha-3 country code).
+
+```ts
+const options = {
+  storageRegion: 'SGP'
+}
+
+const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
+```
 
 #### Create Response on credential share request
 

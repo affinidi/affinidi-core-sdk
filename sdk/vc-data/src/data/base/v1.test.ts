@@ -46,6 +46,13 @@ describe('The base context entries', () => {
     const expanded = await expand<OrganizationEV1>({
       '@type': ['Organization', 'OrganizationE'],
       name: "Bob's Burgers",
+      identifiers: [
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'PAN',
+          value: 'ASDF0017F',
+        },
+      ],
     })
 
     expect(expanded).toMatchInlineSnapshot(`
@@ -54,6 +61,13 @@ describe('The base context entries', () => {
           "@type": Array [
             "/Organization",
             "https://schema.affinity-project.org/OrganizationE",
+          ],
+          "https://schema.affinity-project.org/identifiers": Array [
+            Object {
+              "@type": Array [
+                "/PropertyValue",
+              ],
+            },
           ],
           "https://schema.org/name": Array [
             Object {

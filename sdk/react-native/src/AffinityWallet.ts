@@ -1,23 +1,49 @@
 import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
+import { profile } from '@affinidi/common'
 
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
 }
 
+const COMPONENT = EventComponent.AffinidiExpoSDK
+
+@profile()
 export class AffinityWallet extends CoreNetwork {
+  _skipBackupCredentials: boolean = false
+  _credentials: any = []
   keysService: KeysService
   walletStorageService: WalletStorageService
 
-  constructor(password: string, encryptedSeed: string, options: __dangerous.SdkOptions = {}) {
-    super(password, encryptedSeed, options)
+  constructor(
+    password: string,
+    encryptedSeed: string,
+    options: __dangerous.SdkOptions = {},
+    component: EventComponent = COMPONENT,
+  ) {
+    super(password, encryptedSeed, options, component)
 
     const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
 
+    this.skipBackupCredentials = options.skipBackupCredentials
+
     this.keysService = new KeysService(encryptedSeed, password)
     this.walletStorageService = new WalletStorageService(encryptedSeed, password, sdkOptions)
+  }
+
+  set skipBackupCredentials(value: boolean) {
+    this._skipBackupCredentials = value
+  }
+
+  get skipBackupCredentials() {
+    return this._skipBackupCredentials
+  }
+
+  get credentials() {
+    return this._credentials
   }
 
   /**
@@ -34,7 +60,7 @@ export class AffinityWallet extends CoreNetwork {
     const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVarialbles(options)
     const { accessToken } = __dangerous.readUserTokensFromSessionStorage(userPoolId)
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl)
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new AffinityWallet(encryptionKey, encryptedSeed, options)
@@ -74,9 +100,13 @@ export class AffinityWallet extends CoreNetwork {
       return { isNew: true, commonNetworkMember: affinityWallet }
     }
 
-    await this.completeLoginChallenge(token, confirmationCode, options)
+    const parentWallet = await this.completeLoginChallenge(token, confirmationCode, options)
 
-    affinityWallet = await AffinityWallet.init(options)
+    const { password, encryptedSeed } = parentWallet
+    const cognitoUserTokens = parentWallet.cognitoUserTokens
+    options.cognitoUserTokens = cognitoUserTokens
+
+    affinityWallet = new AffinityWallet(password, encryptedSeed, options)
 
     return { isNew: false, commonNetworkMember: affinityWallet }
   }
@@ -105,7 +135,11 @@ export class AffinityWallet extends CoreNetwork {
     if (options.issueSignupCredential) {
       const signedCredentials = await affinityWallet.getSignupCredentials(idToken, options)
 
-      await affinityWallet.saveCredentials(signedCredentials)
+      if (affinityWallet.skipBackupCredentials) {
+        affinityWallet._credentials = signedCredentials
+      } else {
+        await affinityWallet.saveCredentials(signedCredentials)
+      }
     }
 
     return affinityWallet
@@ -148,16 +182,17 @@ export class AffinityWallet extends CoreNetwork {
    * 1. encrypt VCs
    * 2. store encrypted VCs in Affinity Guardian Wallet
    * @param data - array of VCs
+   * @param storageRegion - (optional) specify AWS region where credentials will be stored
    * @returns array of ids for corelated records
    */
-  async saveCredentials(data: any): Promise<any> {
+  async saveCredentials(data: any, storageRegion?: string): Promise<any> {
     const encryptedCredentials = await this.walletStorageService.encryptCredentials(data)
-    const result = await this.saveEncryptedCredentials(encryptedCredentials)
-    this._sendVCSavedMetrics(data)
-    // NOTE:
-    // what if creds actually were not saved in the vault?
-    // follow up with Isaak/Dustin on this - should we parse the response to define if we need to send the metrics
+    const result = await this.saveEncryptedCredentials(encryptedCredentials, storageRegion)
 
+    this._sendVCSavedMetrics(data)
+    // NOTE: what if creds actually were not saved in the vault?
+    //       follow up with Isaak/Dustin on this - should we parse the response
+    //       to define if we need to send the metrics
     return result
   }
 
@@ -168,30 +203,38 @@ export class AffinityWallet extends CoreNetwork {
    * 2. decrypt encrypted VCs
    * 3. filter VCs by type
    * @param credentialShareRequestToken - JWT received from verifier
+   * @param fetchBackupCredentials - optional, if false - return credentials from instance
    * @returns array of VCs
    */
-  async getCredentials(credentialShareRequestToken: string = null): Promise<any> {
+  async getCredentials(
+    credentialShareRequestToken: string = null,
+    fetchBackupCredentials: boolean = true,
+  ): Promise<any> {
     let blobs
 
-    try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials()
-    } catch (error) {
-      if (error.code === 'COR-14') {
-        return []
-      } else {
-        throw error
+    let credentials = this._credentials
+
+    if (fetchBackupCredentials) {
+      try {
+        blobs = await this.walletStorageService.fetchEncryptedCredentials()
+      } catch (error) {
+        if (error.code === 'COR-14') {
+          return []
+        } else {
+          throw error
+        }
       }
+
+      if (blobs.length === 0) {
+        return []
+      }
+
+      credentials = await this.walletStorageService.decryptCredentials(blobs)
+
+      this._credentials = credentials
     }
 
-    if (blobs.length === 0) {
-      return []
-    }
-
-    const credentials = await this.walletStorageService.decryptCredentials(blobs)
-
-    const encryptedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
-
-    return encryptedCredentials
+    return this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
   }
 
   /**

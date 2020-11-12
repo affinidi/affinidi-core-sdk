@@ -5,6 +5,8 @@ import { __dangerous } from '@affinidi/wallet-core-sdk'
 import { AffinityWallet } from '../../src/AffinityWallet'
 import { waitConfirmationCodeInput } from '../helpers/waitConfirmationCodeInput'
 
+import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
+
 const signedCredential = require('../factory/signedCredential')
 
 const { TEST_SECRETS } = process.env
@@ -49,16 +51,14 @@ const credentialShareRequestToken =
   'y0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9c44eac73f3' +
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
-// test agains `staging | dev | prod` // staging by default
-const ENVIRONMENT = 'staging'
-const options: __dangerous.SdkOptions = { env: ENVIRONMENT }
+// test against `dev | prod` // if nothing specified, staging is used by default
+const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 describe('AffinityWallet', () => {
   it('.init returns SDK instance, initialize with default environment', async () => {
-    const wallet = await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword)
-    const { accessToken } = wallet.cognitoUserTokens
+    await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
-    const affinityWallet = await AffinityWallet.init(accessToken)
+    const affinityWallet = await AffinityWallet.init(options)
 
     expect(affinityWallet.encryptedSeed).to.exist
   })
@@ -137,13 +137,6 @@ describe('AffinityWallet', () => {
   })
 
   it.skip('#signUp, #confirmSignUp', async () => {
-    // prettier-ignore
-    const options = {
-    //   issuerUrl:     'http://localhost:3001',
-    //   keyStorageUrl: 'http://localhost:3000',
-    //   didMethod:     'elem'
-    }
-
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const emailDev = 'PLACEHOLDER'

@@ -253,10 +253,8 @@ export default class CognitoService {
           const isUserUnconfirmed = await this.isUserUnconfirmed(normalizedUsername, options)
 
           if (isUserUnconfirmed) {
-            const { keyStorageUrl } = options
-
             // NOTE: this will remove unconfirmed user so we won't get here 2nd time
-            await WalletStorageService.adminDeleteUnconfirmedUser(normalizedUsername, { keyStorageUrl })
+            await WalletStorageService.adminDeleteUnconfirmedUser(normalizedUsername, options)
 
             await this.signUp(Username, Password, messageParameters, options)
 
@@ -330,6 +328,12 @@ export default class CognitoService {
           throw error
       }
     }
+  }
+
+  async changePassword(AccessToken: string, PreviousPassword: string, ProposedPassword: string): Promise<any> {
+    const params = { AccessToken, PreviousPassword, ProposedPassword }
+
+    return this.cognitoidentityserviceprovider.changePassword(params).promise()
   }
 
   async changeUsername(AccessToken: string, attribute: string, options: any = {}): Promise<any> {
