@@ -280,7 +280,11 @@ export class Affinity {
 
       // send VC_VERIFIED metrics when verification is successful
       // TODO: also record failed verification?
-      const isTestEnvironment = process.env.NODE_ENV === 'test'
+      let isTestEnvironment = false
+
+      if (process && process.env) {
+        isTestEnvironment = process.env.NODE_ENV === 'test'
+      }
 
       if (!isTestEnvironment) {
         this._sendVCVerifiedMetric(credential, parse(result.data.holder.id).did)
@@ -324,7 +328,11 @@ export class Affinity {
     })
 
     // send VC_SIGNED event
-    const isTestEnvironment = process.env.NODE_ENV === 'test'
+    let isTestEnvironment = false
+
+    if (process && process.env) {
+      isTestEnvironment = process.env.NODE_ENV === 'test'
+    }
 
     if (!isTestEnvironment) {
       const holderDid = parse(unsignedCredential.holder.id).did
