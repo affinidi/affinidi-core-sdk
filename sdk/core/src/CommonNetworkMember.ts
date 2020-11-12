@@ -1,5 +1,5 @@
 import retry from 'async-retry'
-import { profile, DidDocumentService, JwtService, KeysService, Affinity } from '@affinidi/common'
+import { profile, DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affinidi/vc-common'
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
@@ -8,7 +8,6 @@ import { EventComponent, EventCategory, EventName, EventMetadata } from '@affini
 
 import API from './services/ApiService'
 import CognitoService from './services/CognitoService'
-import MetricsService from './services/MetricsService'
 import SdkError from './shared/SdkError'
 
 import WalletStorageService from './services/WalletStorageService'
@@ -144,7 +143,11 @@ export class CommonNetworkMember {
     this._accessApiKey = this._sdkOptions.accessApiKey
 
     this._component = component
-    this._metricsService = new MetricsService({ metricsUrl, apiKey: this._accessApiKey }, this._component)
+    this._metricsService = new MetricsService({
+      metricsUrl,
+      accessApiKey: this._accessApiKey,
+      component: this._component,
+    })
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
@@ -152,7 +155,12 @@ export class CommonNetworkMember {
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions)
     this._didDocumentService = new DidDocumentService(this._keysService)
-    this._affinity = new Affinity({ registryUrl, apiKey: this._accessApiKey })
+    this._affinity = new Affinity({
+      apiKey: this._accessApiKey,
+      registryUrl: registryUrl,
+      metricsUrl: metricsUrl,
+      component: this._component,
+    })
     this._encryptedSeed = encryptedSeed
     this._password = password
     this.cognitoUserTokens = options && options.cognitoUserTokens ? options.cognitoUserTokens : undefined
@@ -1862,35 +1870,20 @@ export class CommonNetworkMember {
     const isTestEnvironment = process.env.NODE_ENV === 'test'
 
     if (isValid && !isTestEnvironment) {
-      this._sendVCVerifiedMetrics(suppliedCredentials, did)
+      this._sendVCVerifiedPerPartyMetrics(suppliedCredentials)
     }
 
     return { isValid, did, nonce: jti, suppliedCredentials, errors }
   }
 
   /* istanbul ignore next: private method */
-  private _sendVCVerifiedMetrics(credentials: any, holderDid: string) {
+  private _sendVCVerifiedPerPartyMetrics(credentials: any) {
     const verifierDid = this.did
 
     for (const credential of credentials) {
-      const metadata = { vcType: credential.type }
-      this._sendVCVerifiedMetric(holderDid, metadata)
-
+      const metadata = this._metricsService.parseVcMetadata(credential)
       this._sendVCVerifiedPerPartyMetric(credential.id, verifierDid, metadata)
     }
-  }
-
-  /* istanbul ignore next: private method */
-  private _sendVCVerifiedMetric(holderDid: string, metadata: EventMetadata) {
-    const event = {
-      link: holderDid,
-      name: EventName.VC_VERIFIED,
-      category: EventCategory.VC,
-      subCategory: 'verify',
-      metadata: metadata,
-    }
-
-    this._metricsService.send(event)
   }
 
   /* istanbul ignore next: private method */

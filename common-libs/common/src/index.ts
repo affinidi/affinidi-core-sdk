@@ -15,4 +15,4 @@ if (typeof process.version === 'undefined') {
 export { Affinity, Affinity as Affinidi } from './Affinity'
 export { profile, ProfileAction } from './shared/profiler/ProfilerDecorator'
 
-export { DidDocumentService, DigestService, JwtService, KeysService } from './services'
+export { DidDocumentService, DigestService, JwtService, KeysService, MetricsService } from './services'

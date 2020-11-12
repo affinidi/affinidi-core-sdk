@@ -2,6 +2,7 @@ import uniq from 'lodash.uniq'
 import { validate as uuidValidate } from 'uuid'
 
 import { Affinity, JwtService, DidDocumentService, DigestService, KeysService } from '@affinidi/common'
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
@@ -14,8 +15,8 @@ export default class HolderService {
   private readonly _affinityService: Affinity
   private readonly _digestService: DigestService
 
-  constructor(options: any) {
-    const { registryUrl } = options
+  constructor(options: any, component?: EventComponent) {
+    const { registryUrl, metricsUrl } = options
 
     this._accessApiKey = options.accessApiKey
 
@@ -26,7 +27,12 @@ export default class HolderService {
       this._accessApiKey = apiKeyBuffer.toString('hex')
     }
 
-    this._affinityService = new Affinity({ registryUrl, apiKey: this._accessApiKey })
+    this._affinityService = new Affinity({
+      apiKey: this._accessApiKey,
+      registryUrl: registryUrl,
+      metricsUrl: metricsUrl,
+      component: component,
+    })
     this._digestService = new DigestService()
   }
 

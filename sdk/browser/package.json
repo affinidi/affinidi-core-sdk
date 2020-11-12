@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-browser-sdk",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "SDK monorepo for affinity DID solution for browser",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -39,9 +39,9 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@affinidi/common": "1.1.2",
-    "@affinidi/wallet-core-sdk": "3.1.1",
-    "@affinidi/affinity-metrics-lib": "0.0.18",
+    "@affinidi/common": "1.2.0",
+    "@affinidi/wallet-core-sdk": "3.2.0",
+    "@affinidi/affinity-metrics-lib": "0.0.20",
     "@sentry/browser": "^5.18.0",
     "bip32": "^2.0.5",
     "eccrypto-js": "^5.0.0"
