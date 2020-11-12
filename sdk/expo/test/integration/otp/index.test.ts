@@ -3,13 +3,11 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
-import { __dangerous } from '@affinidi/wallet-core-sdk'
-
+import { __dangerous, testHelpers } from '@affinidi/wallet-core-sdk'
 import { AffinityWallet } from '../../../src/AffinityWallet'
-import { getOtp } from '../../helpers/getOtp'
-import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
 
 const signedCredentials = require('../../factory/signedCredentials')
+const { getOtp, getOptionsForEnvironment } = testHelpers
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
