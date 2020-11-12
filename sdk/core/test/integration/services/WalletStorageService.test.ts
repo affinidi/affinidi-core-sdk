@@ -9,11 +9,8 @@ import WalletStorageService from '../../../src/services/WalletStorageService'
 import CognitoService from '../../../src/services/CognitoService'
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 
-import { DEV_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
-
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import { getOptionsForEnvironment } from '../../helpers'
-
 
 const { TEST_SECRETS, TEST_AGAINST } = process.env
 
@@ -22,6 +19,7 @@ let env = 'staging'
 if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
   env = TEST_AGAINST
 }
+
 const returnAllOptionsForEnvironment = true
 const options: SdkOptions = getOptionsForEnvironment(env, returnAllOptionsForEnvironment)
 

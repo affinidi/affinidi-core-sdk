@@ -8,7 +8,6 @@ import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
 import CognitoService from '../../src/services/CognitoService'
 
-import { normalizeUsername } from '../../src/shared/normalizeUsername'
 import { SdkOptions } from '../../src/dto/shared.dto'
 
 import { generateUsername, generateEmail, getOptionsForEnvironment } from '../helpers'
@@ -159,7 +158,6 @@ describe(`CommonNetworkMember, testing against ${env}`, () => {
 
   it('removes user if it is "UNCONFIMRED" before sign up', async () => {
     const email = generateEmail()
-    const username = normalizeUsername(email)
 
     await CommonNetworkMember.signUp(email, cognitoPassword, options)
 
