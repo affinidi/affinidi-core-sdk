@@ -52,7 +52,7 @@
     "typescript": "3.9.7"
   },
   "dependencies": {
-    "@affinidi/vc-common": "1.1.1",
+    "@affinidi/vc-common": "1.2.0",
     "crypto": "^1.0.1",
     "fast-json-stringify": "1.21.0",
     "fastify": "^2.15.1",

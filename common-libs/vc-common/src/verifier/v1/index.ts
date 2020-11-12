@@ -2,6 +2,8 @@ import { parse } from 'did-resolver'
 
 import {
   VPV1,
+  // PresentationSubmissionV1,
+  // PresentationSubmissionDescriptorV1,
   VCV1,
   VCV1Holder,
   VPV1Proof,
@@ -22,6 +24,7 @@ import {
   isUndefinedOr,
   isArrayOf,
   isOneOf,
+  // isEnum,
 } from '../util'
 
 const jsigs = require('jsonld-signatures')
@@ -56,6 +59,19 @@ const isValidContext: Validator = (value) => {
 const validateHolder = genValidateFn<VCV1Holder>({
   id: [isNonEmptyString, isValidDID],
 })
+
+// TODO: Figure out this cirular call
+// const validatePresentationSubmissionDescriptor = genValidateFn<PresentationSubmissionDescriptorV1>({
+//   id: isNonEmptyString,
+//   path: isNonEmptyString,
+//   path_nested: isUndefinedOr(isValid(validatePresentationSubmissionDescriptor)),
+//   format: isEnum(['jwt', 'jwt_vc', 'jwt_vp', 'ldp', 'ldp_vc', 'ldp_vp']),
+// })
+
+// const validatePresentationSubmission = genValidateFn<PresentationSubmissionV1>({
+//   locale: isUndefinedOr(isNonEmptyString),
+//   descriptor_map: isArrayOf(validatePresentationSubmissionDescriptor),
+// })
 
 const validateVPProofStructure = genValidateFn<VPV1Proof>({
   type: isNonEmptyString,
@@ -254,6 +270,7 @@ export const validateVPV1 = ({
     '@context': isValidContext,
     id: [isUndefinedOr(isNonEmptyString), isUndefinedOr(isAbsoluteURI)],
     type: [isArrayOfNonEmptyStrings, isArrayIncluding('VerifiablePresentation')],
+    // presentation_submission: isUndefinedOr(isValid(validatePresentationSubmission)),
     verifiableCredential: [
       isArrayOf(isValid(validateVCV1({ documentLoader, getVerifySuite, getProofPurposeOptions }))),
       isArrayOf((value, data) =>

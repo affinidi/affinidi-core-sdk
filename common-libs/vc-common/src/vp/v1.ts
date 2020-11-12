@@ -32,14 +32,14 @@ export type VPV1Unsigned<
   VC extends VCV1 = VCV1,
   Type extends VPV1Type = VPV1Type,
   Holder extends VPV1Holder = VPV1Holder
-  > = {
-    '@context': TContext
-    id?: string
-    type: Type
-    verifiableCredential: VC[]
-    holder: Holder
-    presentation_submission?: PresentationSubmissionV1
-  }
+> = {
+  '@context': TContext
+  id?: string
+  type: Type
+  verifiableCredential: VC[]
+  holder: Holder
+  presentation_submission?: PresentationSubmissionV1
+}
 
 // TODO: This is missing the `signature` and `packedData` fields. How should those translate over?
 export type VPV1<
@@ -47,6 +47,6 @@ export type VPV1<
   Type extends VPV1Type = VPV1Type,
   Holder extends VPV1Holder = VPV1Holder,
   Proof extends VPV1Proof = VPV1Proof
-  > = VPV1Unsigned<VC, Type, Holder> & {
-    proof: Proof
-  }
+> = VPV1Unsigned<VC, Type, Holder> & {
+  proof: Proof
+}

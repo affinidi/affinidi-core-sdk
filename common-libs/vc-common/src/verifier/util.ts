@@ -138,6 +138,10 @@ export const isNonEmptyString: Validator = async (value, data) => {
   return createValidatorResponse(value.trim().length > 0, 'Expected non empty string')
 }
 
+export const isEnum = <T>(values: T[]): Validator => async (value) => {
+  return createValidatorResponse(values.includes(value), 'Expected non empty string')
+}
+
 export const isArrayOfNonEmptyStrings = isArrayOf(isNonEmptyString)
 
 export const isArrayIncluding = <T>(item: T): Validator<any[]> => (value) => {

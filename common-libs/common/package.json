@@ -40,7 +40,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
-    "@affinidi/vc-common": "1.1.1",
+    "@affinidi/vc-common": "1.2.0",
     "@affinidi/affinity-metrics-lib": "0.0.20",
     "@types/create-hash": "^1.2.2",
     "@types/jsonld": "^1.5.1",
@@ -72,7 +72,7 @@
     "@affinidi/vc-data": "^1.1.1",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/wallet-core-sdk": "2.0.0",
+    "@affinidi/wallet-core-sdk": "3.1.1",
     "@types/chai": "4.2.12",
     "@types/ethereumjs-util": "5.2.0",
     "@types/express": "4.17.7",

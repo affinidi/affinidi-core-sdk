@@ -32,7 +32,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@affinidi/vc-common": "^1.1.1",
+    "@affinidi/vc-common": "^1.2.0",
     "@ahryman40k/ts-fhir-types": "^4.0.29",
     "ts-toolbelt": "^6.4.2",
     "tslib": "^2.0.0"
