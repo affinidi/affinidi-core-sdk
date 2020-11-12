@@ -29,7 +29,7 @@ const cognitoUsername = cognitoUsernameStaging
 const { keyStorageUrl } = options
 let cognitoService: CognitoService
 
-describe(`WalletStorageService, testing against ${env}`, () => {
+describe('WalletStorageService', () => {
   beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

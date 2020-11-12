@@ -11,7 +11,7 @@ import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment
 
 const signedCredentials = require('../../factory/signedCredentials')
 
-const { TEST_SECRETS, TEST_AGAINST } = process.env
+const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
 const options: __dangerous.SdkOptions = getOptionsForEnvironment()

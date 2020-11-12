@@ -9,7 +9,7 @@ import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
 
 const signedCredential = require('../factory/signedCredential')
 
-const { TEST_SECRETS, TEST_AGAINST } = process.env
+const { TEST_SECRETS } = process.env
 const {
   PASSWORD,
   COGNITO_PASSWORD,
