@@ -7,14 +7,13 @@ import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
 import CognitoService from '../../src/services/CognitoService'
-import WalletStorageService from '../../src/services/WalletStorageService'
 
 import { normalizeUsername } from '../../src/shared/normalizeUsername'
 import { SdkOptions } from '../../src/dto/shared.dto'
 
 import { generateUsername, generateEmail, getOptionsForEnvironment } from '../helpers'
 
-const { TEST_SECRETS } = process.env
+const { TEST_SECRETS, TEST_AGAINST } = process.env
 const {
   PASSWORD,
   COGNITO_PASSWORD,
@@ -52,10 +51,15 @@ const cognitoPassword = COGNITO_PASSWORD
 const userWithoutKey = COGNITO_USERNAME_NO_KEY
 const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 
-// test agains `dev | prod` // if nothing specified, staging is used by default
-const options: SdkOptions = getOptionsForEnvironment()
+let env = 'staging'
 
-describe('CommonNetworkMember', () => {
+if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
+    env = TEST_AGAINST
+}
+
+const options: SdkOptions = getOptionsForEnvironment(env)
+
+describe(`CommonNetworkMember, testing against ${env}`, () => {
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
 
   const offeredCredentials = [
@@ -167,8 +171,6 @@ describe('CommonNetworkMember', () => {
     } catch (error) {
       responseError = error
     }
-
-    await WalletStorageService.adminDeleteUnconfirmedUser(username, options)
 
     expect(token).to.exist
     expect(responseError).to.not.exist

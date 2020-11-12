@@ -11,11 +11,16 @@ import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment
 
 const signedCredentials = require('../../factory/signedCredentials')
 
-const { TEST_SECRETS } = process.env
+const { TEST_SECRETS, TEST_AGAINST } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
-// test against `dev | prod` // if nothing specified, staging is used by default
-const options: __dangerous.SdkOptions = getOptionsForEnvironment()
+let env = 'staging'
+
+if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
+    env = TEST_AGAINST
+}
+
+const options: __dangerous.SdkOptions = getOptionsForEnvironment(env)
 
 const { keyStorageUrl } = options
 
@@ -31,7 +36,7 @@ const generateEmail = () => {
 
 const cognitoPassword = COGNITO_PASSWORD
 
-describe('AffinityWallet (flows that require OTP)', () => {
+describe(`AffinityWallet (flows that require OTP), testing against ${env}`, () => {
   // To double check with Dion, it seems that bloom vault is not working properly for dev
   // FetchError: invalid json response body at https://bloom-vault.dev.affinity-project.org/auth/request-token?did=did:ethr:0xe2c00f290e7ce500d7dcaea7108b2eb5e44c2caf reason: Unexpected end of JSON input
   it('#deleteCredentials scenario', async () => {

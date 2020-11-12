@@ -11,9 +11,6 @@ import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment
 
 const signedCredentials = require('../../factory/signedCredentials')
 
-// test agains `dev | prod` // if nothing specified, staging is used by default
-const options: __dangerous.SdkOptions = getOptionsForEnvironment()
-
 const DELAY = 1000
 // prettier-ignore
 const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
@@ -24,11 +21,19 @@ const generateEmail = () => {
   return `test.user-${TIMESTAMP}@gdwk.in`
 }
 
-const { TEST_SECRETS } = process.env
+const { TEST_SECRETS, TEST_AGAINST } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 const cognitoPassword = COGNITO_PASSWORD
 
-describe('AffinityWallet (flows that require OTP)', () => {
+let env = 'staging'
+
+if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
+    env = TEST_AGAINST
+}
+
+const options: __dangerous.SdkOptions = getOptionsForEnvironment(env)
+
+describe(`AffinityWallet (flows that require OTP), testing against ${env}`, () => {
   it('#deleteCredentials scenario', async () => {
     const cognitoUsername = generateEmail()
 

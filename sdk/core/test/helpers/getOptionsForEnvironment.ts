@@ -30,7 +30,7 @@ let accessApiKey
 let keyStorageUrl
 let revocationUrl // NOTE: ISSUER_URL is used
 
-export const getOptionsForEnvironment = (environment = ''): any => {
+export const getOptionsForEnvironment = (environment = '', returnAllOptionsForEnvironment = false): any => {
   const env = environment || 'staging'
 
   switch (environment) {
@@ -65,5 +65,9 @@ export const getOptionsForEnvironment = (environment = ''): any => {
       break
   }
 
-  return { env, revocationUrl, vaultUrl, clientId, accessApiKey, userPoolId, registryUrl, keyStorageUrl }
+  if (returnAllOptionsForEnvironment) {
+    return { env, revocationUrl, vaultUrl, clientId, accessApiKey, userPoolId, registryUrl, keyStorageUrl }
+  }
+
+  return { env, accessApiKey }
 }

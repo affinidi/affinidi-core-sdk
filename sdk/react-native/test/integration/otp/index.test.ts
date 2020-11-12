@@ -11,10 +11,16 @@ import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment
 
 const signedCredentials = require('../../factory/signedCredentials')
 
-const { TEST_SECRETS } = process.env
+const { TEST_SECRETS, TEST_AGAINST } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
-const options: __dangerous.SdkOptions = getOptionsForEnvironment()
+let env = 'staging'
+
+if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
+    env = TEST_AGAINST
+}
+
+const options: __dangerous.SdkOptions = getOptionsForEnvironment(env)
 
 const DELAY = 1000
 // prettier-ignore
@@ -28,7 +34,7 @@ const generateEmail = () => {
 
 const cognitoPassword = COGNITO_PASSWORD
 
-describe('AffinityWallet (flows that require OTP)', () => {
+describe(`AffinityWallet (flows that require OTP), testing against ${env}`, () => {
   it('#deleteCredentials scenario', async () => {
     const cognitoUsername = generateEmail()
 

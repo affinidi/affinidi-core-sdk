@@ -1,9 +1,12 @@
 'use strict'
 
 import { expect } from 'chai'
+import * as jwt from 'jsonwebtoken'
+
+import '../env'
+
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import CognitoService from '../../../src/services/CognitoService'
-import * as jwt from 'jsonwebtoken'
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 
 import { DEV_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
@@ -11,10 +14,17 @@ import { DEV_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import { getOptionsForEnvironment } from '../../helpers'
 
-// test agains `dev | prod` // if nothing specified, staging is used by default
-const options: SdkOptions = getOptionsForEnvironment()
 
-const { TEST_SECRETS } = process.env
+const { TEST_SECRETS, TEST_AGAINST } = process.env
+
+let env = 'staging'
+
+if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
+    env = TEST_AGAINST
+}
+const returnAllOptionsForEnvironment = true
+const options: SdkOptions = getOptionsForEnvironment(env, returnAllOptionsForEnvironment)
+
 const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, SEED_JOLO, ENCRYPTED_SEED_JOLO } = JSON.parse(TEST_SECRETS)
 
 const seed = SEED_JOLO
@@ -29,7 +39,7 @@ const cognitoUsername = cognitoUsernameStaging
 const { keyStorageUrl } = options
 let cognitoService: CognitoService
 
-describe('WalletStorageService', () => {
+describe(`WalletStorageService, testing against ${env}`, () => {
   beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -37,17 +47,6 @@ describe('WalletStorageService', () => {
 
     cognitoService = new CognitoService({ clientId, userPoolId })
   })
-
-  // this should be a new user
-  // it.skip('#storeEncryptedSeed', async () => {
-  //   const { accessToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
-  //   const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
-
-  //   const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
-  //   const result = await walletStorageService.storeEncryptedSeed(accessToken, seed, encryptionKey)
-  //   expect(result).to.exist
-  // })
 
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {
     const { accessToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
@@ -71,29 +70,6 @@ describe('WalletStorageService', () => {
     const pulledEncryptedSeed = await walletStorageService.pullEncryptedSeed(cognitoUsername, cognitoPassword)
 
     expect(pulledEncryptedSeed).to.exist
-  })
-
-  // uncomment when wallet-backend is working on DEV
-  it.skip('#pullEncryptedSeed throws `WAL-9 / 401` when reading key from wrong vault', async () => {
-    const walletStorageService = new WalletStorageService(encryptedSeed, password, {
-      keyStorageUrl: DEV_KEY_STORAGE_URL,
-    })
-
-    let responseError
-
-    try {
-      await walletStorageService.pullEncryptedSeed(cognitoUsername, cognitoPassword)
-    } catch (error) {
-      responseError = error
-    }
-
-    const {
-      code,
-      originalError: { httpStatusCode },
-    } = responseError
-
-    expect(code).to.equal('WAL-9')
-    expect(httpStatusCode).to.eql(401)
   })
 
   it('#pullEncryptedSeed throws exception WHEN key for userId does not exist', async () => {
@@ -129,7 +105,7 @@ describe('WalletStorageService', () => {
   it('#adminDeleteUnconfirmedUser', async () => {
     const username = 'different_test_user_to_delete'
 
-    await cognitoService.signUp(username, password)
+    await cognitoService.signUp(username, password, null, options)
 
     await WalletStorageService.adminDeleteUnconfirmedUser(username, options)
 
