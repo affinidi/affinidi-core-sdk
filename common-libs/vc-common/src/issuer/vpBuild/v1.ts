@@ -12,26 +12,33 @@ type BuildVPV1Unsigned = (opts: {
   vcs: VCV1[]
   holder: VPV1Holder
   type?: string | string[]
-  context?: TContext,
+  context?: TContext
   presentation_submission?: PresentationSubmissionV1
 }) => VPV1Unsigned
 
 export const PresentationSubmissionContext = {
   '@version': 1.1,
-  'PresentationSubmission': {
+  PresentationSubmission: {
     '@id': 'https://www.w3.org/2018/credentials/#VerifiablePresentation',
     '@context': {
       '@version': 1.1,
-      'presentation_submission': {
+      presentation_submission: {
         '@id': 'https://identity.foundation/presentation-exchange/#presentation-submissions',
-        '@type': '@json'
-      }
+        '@type': '@json',
+      },
     },
-    '@type': '@json'
-  }
+    '@type': '@json',
+  },
 }
 
-export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, context, presentation_submission }): VPV1Unsigned => {
+export const buildVPV1Unsigned: BuildVPV1Unsigned = ({
+  id,
+  vcs,
+  holder,
+  type,
+  context,
+  presentation_submission,
+}): VPV1Unsigned => {
   if (id) {
     validateId(id)
   } else {
@@ -40,18 +47,19 @@ export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, co
       'An id should be supplied for the VP. Otherwise top-level, non-object properties (like "type") will be malleable.',
     )
   }
+
   const includePresentationSubmission = typeof presentation_submission !== 'undefined'
   return {
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
       ...removeIfExists(context, 'https://www.w3.org/2018/credentials/v1'),
-      ...(includePresentationSubmission ? [PresentationSubmissionContext] : [])
+      ...(includePresentationSubmission ? [PresentationSubmissionContext] : []),
     ],
     ...(id ? { id } : {}),
     type: ['VerifiablePresentation', ...removeIfExists(type, 'VerifiablePresentation')],
     holder: holder,
     verifiableCredential: vcs,
-    ...(includePresentationSubmission ? { presentation_submission } : {})
+    ...(includePresentationSubmission ? { presentation_submission } : {}),
   }
 }
 

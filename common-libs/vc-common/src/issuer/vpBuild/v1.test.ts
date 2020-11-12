@@ -233,22 +233,22 @@ describe('buildVPV1Unsigned', () => {
           {
             id: 'vc_input_descriptor_id_1',
             path: '$.verifiableCredential[0]',
-            format: 'ldp_vc'
-          }
-        ]
-      }
+            format: 'ldp_vc',
+          },
+        ],
+      },
     })
 
     expectUnsigned(unsigned).toStrictEqual({
       '@context': ['https://www.w3.org/2018/credentials/v1', PresentationSubmissionContext],
-      'presentation_submission': {
+      presentation_submission: {
         descriptor_map: [
           {
             id: 'vc_input_descriptor_id_1',
             path: '$.verifiableCredential[0]',
-            format: 'ldp_vc'
-          }
-        ]
+            format: 'ldp_vc',
+          },
+        ],
       },
     })
   })
