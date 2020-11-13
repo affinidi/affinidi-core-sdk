@@ -1,4 +1,3 @@
-import { profile } from '@affinidi/common'
 import { metrics, EventComponent, VcMetadata } from '@affinidi/affinity-metrics-lib'
 
 import { VcMetadataParserFactory } from './parsers'
@@ -9,7 +8,6 @@ class MetricsServiceOptions {
   component?: EventComponent
 }
 
-@profile()
 export default class MetricsService {
   _accessApiKey: string
   _metricsUrl: string
