@@ -158,8 +158,8 @@ describe('CommonNetworkMember', () => {
 
   it('removes user if it is "UNCONFIMRED" before sign up', async () => {
     const email = generateEmail()
-
     const username = normalizeUsername(email)
+
     await CommonNetworkMember.signUp(email, cognitoPassword, options)
 
     let token
@@ -171,9 +171,9 @@ describe('CommonNetworkMember', () => {
       responseError = error
     }
 
-    expect(token).to.exist
     await WalletStorageService.adminDeleteUnconfirmedUser(username, options)
 
+    expect(token).to.exist
     expect(responseError).to.not.exist
   })
 
@@ -239,7 +239,7 @@ describe('CommonNetworkMember', () => {
   })
 
   // NOTE: skipping due to often errors related to resolving JOLO DID
-  it.skip('#resolveDid', async () => {
+  it.skip('#resolveDid (jolo)', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
     const didDocument = await commonNetworkMember.resolveDid(seedDid)
 
