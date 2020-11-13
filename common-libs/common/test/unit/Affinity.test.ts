@@ -480,7 +480,7 @@ describe('Affinity', () => {
 })
 
 describe('Validation Snapshots', () => {
-  // TODO: to resolve: expected false to be true
+  // NOTE: skipping due to often errors related to resolving JOLO DID
   it.skip('#validateCredential (already created/legacy creds)', async () => {
     const result = await affinity.validateCredential(legacySignedCredential)
 
