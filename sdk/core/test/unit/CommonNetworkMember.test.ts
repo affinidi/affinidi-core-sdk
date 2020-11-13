@@ -20,7 +20,11 @@ import { CommonNetworkMember } from '../../src/CommonNetworkMember'
 
 import { SdkOptions } from '../../src/dto/shared.dto'
 
-import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
+import { getOptionsForEnvironment } from '../helpers'
+
+import { generateTestDIDs } from '../factory/didFactory'
+import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
+import SdkError from '../../src/shared/SdkError'
 
 const signedCredential = require('../factory/signedCredential')
 const didDocument = require('../factory/didDocument')
@@ -28,9 +32,6 @@ const credentialShareRequestToken = require('../factory/credentialShareRequestTo
 const parsedCredentialShareRequestToken = require('../factory/parsedCredentialShareRequestToken')
 const parsedCredentialShareResponseToken = require('../factory/parsedCredentialShareResponseToken')
 const cognitoAuthSuccessResponse = require('../factory/cognitoAuthSuccessResponse')
-import { generateTestDIDs } from '../factory/didFactory'
-import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
-import SdkError from '../../src/shared/SdkError'
 
 let walletPassword: string
 

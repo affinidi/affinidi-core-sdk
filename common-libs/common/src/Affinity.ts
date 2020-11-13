@@ -2,10 +2,11 @@ import { buildVCV1, buildVPV1 } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
+import { EventComponent, EventCategory, EventName, EventMetadata, EventInput } from '@affinidi/affinity-metrics-lib'
 
 import { AffinityOptions } from './dto/shared.dto'
-import { DEFAULT_REGISTRY_URL } from './_defaultConfig'
-import { DidDocumentService, KeysService, DigestService, JwtService } from './services'
+import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
+import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 
 const revocationList = require('vc-revocation-list') // eslint-disable-line
@@ -16,14 +17,53 @@ if (!fetch) {
 }
 
 export class Affinity {
-  private readonly _apiKey: string
+  private readonly _apiKey: string // TODO: this should be _accessApiKey
   private readonly _registryUrl: string
+  private readonly _metricsUrl: string
+  private readonly _metricsService: any
   private readonly _digestService: any
+  protected _component: EventComponent
 
   constructor(options: AffinityOptions = {}) {
     this._apiKey = options.apiKey
     this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
+    this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
+    this._component = options.component || EventComponent.NotImplemented
     this._digestService = new DigestService()
+    this._metricsService = new MetricsService({
+      metricsUrl: this._metricsUrl,
+      accessApiKey: this._apiKey,
+      component: this._component,
+    })
+  }
+
+  private _sendVCVerifiedMetric(credential: any, holderDid: string) {
+    const metadata: EventMetadata = this._metricsService.parseVcMetadata(credential)
+    const event: EventInput = {
+      link: holderDid,
+      name: EventName.VC_VERIFIED,
+      category: EventCategory.VC,
+      subCategory: 'verify',
+      component: this._component,
+      metadata: metadata,
+    }
+
+    this._metricsService.send(event)
+  }
+
+  private _sendVCSignedMetric(credential: any, holderDid: string, vcId: string) {
+    const metadata: EventMetadata = this._metricsService.parseCommonVcMetadata(credential)
+    const event: EventInput = {
+      link: holderDid,
+      secondaryLink: vcId,
+      name: EventName.VC_SIGNED,
+      category: EventCategory.VC,
+      subCategory: 'sign',
+      component: this._component,
+      metadata: metadata,
+    }
+
+    this._metricsService.send(event)
   }
 
   private async _resolveDidIfNoDidDocument(did: string, didDocument?: any): Promise<any> {
@@ -238,6 +278,18 @@ export class Affinity {
         return { result: false, error }
       }
 
+      // send VC_VERIFIED metrics when verification is successful
+      // TODO: also record failed verification?
+      let isTestEnvironment = false
+
+      if (process && process.env) {
+        isTestEnvironment = process.env.NODE_ENV === 'test'
+      }
+
+      if (!isTestEnvironment) {
+        this._sendVCVerifiedMetric(credential, parse(result.data.holder.id).did)
+      }
+
       return { result: true, error: '' }
     }
   }
@@ -253,7 +305,7 @@ export class Affinity {
     const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
-    return buildVCV1({
+    const vc = buildVCV1({
       unsigned: unsignedCredential,
       issuer: {
         did,
@@ -274,6 +326,21 @@ export class Affinity {
         controller: await didDocumentService.buildDidDocument(),
       }),
     })
+
+    // send VC_SIGNED event
+    let isTestEnvironment = false
+
+    if (process && process.env) {
+      isTestEnvironment = process.env.NODE_ENV === 'test'
+    }
+
+    if (!isTestEnvironment) {
+      const holderDid = parse(unsignedCredential.holder.id).did
+      const vcId = unsignedCredential.id
+      this._sendVCSignedMetric(unsignedCredential, holderDid, vcId)
+    }
+
+    return vc
   }
 
   async validatePresentation(

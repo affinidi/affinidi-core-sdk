@@ -3,14 +3,18 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
+import { profile } from '@affinidi/common'
 
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
 }
 
-const COMPONENT = EventComponent.AffinidiReactNativeSDK
+const COMPONENT = EventComponent.AffinidiExpoSDK
 
+@profile()
 export class AffinityWallet extends CoreNetwork {
+  _skipBackupCredentials: boolean = false
+  _credentials: any = []
   keysService: KeysService
   walletStorageService: WalletStorageService
 
@@ -24,8 +28,22 @@ export class AffinityWallet extends CoreNetwork {
 
     const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
 
+    this.skipBackupCredentials = options.skipBackupCredentials
+
     this.keysService = new KeysService(encryptedSeed, password)
     this.walletStorageService = new WalletStorageService(encryptedSeed, password, sdkOptions)
+  }
+
+  set skipBackupCredentials(value: boolean) {
+    this._skipBackupCredentials = value
+  }
+
+  get skipBackupCredentials() {
+    return this._skipBackupCredentials
+  }
+
+  get credentials() {
+    return this._credentials
   }
 
   /**
@@ -82,9 +100,13 @@ export class AffinityWallet extends CoreNetwork {
       return { isNew: true, commonNetworkMember: affinityWallet }
     }
 
-    await this.completeLoginChallenge(token, confirmationCode, options)
+    const parentWallet = await this.completeLoginChallenge(token, confirmationCode, options)
 
-    affinityWallet = await AffinityWallet.init(options)
+    const { password, encryptedSeed } = parentWallet
+    const cognitoUserTokens = parentWallet.cognitoUserTokens
+    options.cognitoUserTokens = cognitoUserTokens
+
+    affinityWallet = new AffinityWallet(password, encryptedSeed, options)
 
     return { isNew: false, commonNetworkMember: affinityWallet }
   }
@@ -113,7 +135,11 @@ export class AffinityWallet extends CoreNetwork {
     if (options.issueSignupCredential) {
       const signedCredentials = await affinityWallet.getSignupCredentials(idToken, options)
 
-      await affinityWallet.saveCredentials(signedCredentials)
+      if (affinityWallet.skipBackupCredentials) {
+        affinityWallet._credentials = signedCredentials
+      } else {
+        await affinityWallet.saveCredentials(signedCredentials)
+      }
     }
 
     return affinityWallet
@@ -177,30 +203,38 @@ export class AffinityWallet extends CoreNetwork {
    * 2. decrypt encrypted VCs
    * 3. filter VCs by type
    * @param credentialShareRequestToken - JWT received from verifier
+   * @param fetchBackupCredentials - optional, if false - return credentials from instance
    * @returns array of VCs
    */
-  async getCredentials(credentialShareRequestToken: string = null): Promise<any> {
+  async getCredentials(
+    credentialShareRequestToken: string = null,
+    fetchBackupCredentials: boolean = true,
+  ): Promise<any> {
     let blobs
 
-    try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials()
-    } catch (error) {
-      if (error.code === 'COR-14') {
-        return []
-      } else {
-        throw error
+    let credentials = this._credentials
+
+    if (fetchBackupCredentials) {
+      try {
+        blobs = await this.walletStorageService.fetchEncryptedCredentials()
+      } catch (error) {
+        if (error.code === 'COR-14') {
+          return []
+        } else {
+          throw error
+        }
       }
+
+      if (blobs.length === 0) {
+        return []
+      }
+
+      credentials = await this.walletStorageService.decryptCredentials(blobs)
+
+      this._credentials = credentials
     }
 
-    if (blobs.length === 0) {
-      return []
-    }
-
-    const credentials = await this.walletStorageService.decryptCredentials(blobs)
-
-    const encryptedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
-
-    return encryptedCredentials
+    return this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
   }
 
   /**

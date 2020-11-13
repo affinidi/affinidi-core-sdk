@@ -14,8 +14,6 @@ import {
   IsIn,
 } from 'class-validator'
 
-import { EventName, EventCategory } from '@affinidi/affinity-metrics-lib'
-
 import { FreeFormObject } from '../shared/interfaces'
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
 
@@ -340,28 +338,4 @@ export class SignCredentialOptionalInput {
   @IsOptional()
   @IsJWT()
   credentialOfferResponseToken?: string
-}
-
-export class MetricsServiceOptions {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  @IsUrl({ require_tld: false })
-  @IsString()
-  metricsUrl: string
-
-  @IsString()
-  apiKey: string
-}
-
-export class MetricsEvent {
-  @IsString()
-  link: string
-
-  @IsString()
-  name: EventName
-
-  @IsString()
-  category: EventCategory
-
-  @IsString()
-  subCategory: string
 }

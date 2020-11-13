@@ -330,6 +330,12 @@ export default class CognitoService {
     }
   }
 
+  async changePassword(AccessToken: string, PreviousPassword: string, ProposedPassword: string): Promise<any> {
+    const params = { AccessToken, PreviousPassword, ProposedPassword }
+
+    return this.cognitoidentityserviceprovider.changePassword(params).promise()
+  }
+
   async changeUsername(AccessToken: string, attribute: string, options: any = {}): Promise<any> {
     const userExists = await this._userExists(attribute, options)
 

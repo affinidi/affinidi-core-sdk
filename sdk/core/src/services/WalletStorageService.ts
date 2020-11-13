@@ -1,9 +1,12 @@
 import { toRpcSig, ecsign } from 'ethereumjs-util'
+import { validate as uuidValidate } from 'uuid'
 import CognitoService from './CognitoService'
 import API from './ApiService'
 import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
+
+import { Env } from '../dto/shared.dto'
 
 import { FreeFormObject } from '../shared/interfaces'
 
@@ -54,7 +57,7 @@ export default class WalletStorageService {
   _storageRegion: string
   _keysService: KeysService
   _api: API
-  _apiKey: string
+  _accessApiKey: string
 
   constructor(encryptedSeed: string, password: string, options: any = {}) {
     this._keysService = new KeysService(encryptedSeed, password)
@@ -68,7 +71,14 @@ export default class WalletStorageService {
 
     this._storageRegion = storageRegion
 
-    this._apiKey = options.apiKey || options.accessApiKey
+    this._accessApiKey = options.accessApiKey
+
+    const isApiKeyAValidUuid = options.apiKey && uuidValidate(options.apiKey)
+
+    if (isApiKeyAValidUuid) {
+      const apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
+      this._accessApiKey = apiKeyBuffer.toString('hex')
+    }
 
     this._api = new API(registryUrl, issuerUrl, verifierUrl, options)
   }
@@ -84,10 +94,10 @@ export default class WalletStorageService {
       accessToken = response.accessToken
     }
 
-    const apiKey = this._apiKey
+    const accessApiKey = this._accessApiKey
 
     const keyStorageUrl = this._keyStorageUrl
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { apiKey })
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
 
     return encryptedSeed
   }
@@ -198,6 +208,7 @@ export default class WalletStorageService {
       url: tokenChallengeValidationUrl,
       params: { accessToken: token, signature, did: didEth },
       method: 'POST',
+      headers,
     })
 
     return token
@@ -381,7 +392,10 @@ export default class WalletStorageService {
   static async getCredentialOffer(idToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
     keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
 
-    const url = `${keyStorageUrl}/api/v1/issuer/getCredentialOffer`
+    const env: Env = options.env
+
+    const url = `${keyStorageUrl}/api/v1/issuer/getCredentialOffer?env=${env}`
+
     const headers = {
       authorization: idToken,
     }

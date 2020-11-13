@@ -27,6 +27,7 @@
     - [Initiate instance of SDK with login and pasword](#initiate-instance-of-sdk-with-login-and-pasword)
     - [Passwordless login](#passwordless-login)
     - [Password recovery](#password-recovery)
+    - [Change password](#change-password)
     - [Change username](#change-username)
     - [Sign Out](#sign-out)
   - [Issuer](#issuer)
@@ -62,7 +63,7 @@ Test credentials should be added to the top level `.env` file. These contain use
 
 You should register your entity at Affinity for appropriate environment
 [staging](https://affinity-onboarding-frontend.staging.affinity-project.org/),
-[production](https://affinity-onboarding-frontend.prod.affinity-project.org/) or
+[production](https://apikey.affinidi.com/) or
 [dev](https://affinity-onboarding-frontend.dev.affinity-project.org/),
 to obtain the `apiKey` and `apiKeyHash` values, one of which should be passed
 via `options` as a required parameter.
@@ -460,6 +461,19 @@ await CommonNetworkMember.forgotPasswordSubmit(username, confirmationCode, newPa
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
 
 `newPassword` - new password for Cognito user.
+
+`options` - (optional) used to specify environment stack (dev | staging | prod).
+
+#### Change password
+
+User have to be logged in to change password. Otherwise use [password recovery](#password-recovery).
+
+```ts
+await commonNetworkMember.changePassword(oldPassword, newPassword, options)
+```
+
+`oldPassword` - old password.
+`newPassword` - new password.
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
 

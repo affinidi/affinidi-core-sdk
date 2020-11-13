@@ -1,6 +1,8 @@
 import uniq from 'lodash.uniq'
+import { validate as uuidValidate } from 'uuid'
 
 import { Affinity, JwtService, DidDocumentService, DigestService, KeysService } from '@affinidi/common'
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
@@ -9,18 +11,28 @@ import { stripParamsFromDidUrl } from '../_helpers'
 @profile()
 export default class HolderService {
   private _didMap: any = {}
-  private _apiKey: string
+  private _accessApiKey: string
   private readonly _affinityService: Affinity
   private readonly _digestService: DigestService
 
-  constructor(options: any) {
-    const { registryUrl } = options
+  constructor(options: any, component?: EventComponent) {
+    const { registryUrl, metricsUrl } = options
 
-    const apiKey = options.apiKey || 'testApiKey'
-    const apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
-    this._apiKey = apiKeyBuffer.toString('hex')
+    this._accessApiKey = options.accessApiKey
 
-    this._affinityService = new Affinity({ registryUrl, apiKey: this._apiKey })
+    const isApiKeyAValidUuid = options.apiKey && uuidValidate(options.apiKey)
+
+    if (isApiKeyAValidUuid) {
+      const apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
+      this._accessApiKey = apiKeyBuffer.toString('hex')
+    }
+
+    this._affinityService = new Affinity({
+      apiKey: this._accessApiKey,
+      registryUrl: registryUrl,
+      metricsUrl: metricsUrl,
+      component: component,
+    })
     this._digestService = new DigestService()
   }
 

@@ -2,20 +2,22 @@ import { expect } from 'chai'
 
 import MetricsService from '../../../src/services/MetricsService'
 
-const medicalCredential = require('../../factory/medicalCredential')
-const otherCredential = require('../../factory/signedCredential') // this is a legacy format
+import { medicalCredential } from '../../factory/medicalCredential'
+import { signedCredential as otherCredential } from '../../factory/signedCredential'
 
-const apiKeyHash = 'dummyHash'
+const accessApiKey = 'dummyHash'
 const metricsUrl = 'https://dummy'
 
 describe('MetricsService', () => {
-  const metricsService = new MetricsService({ metricsUrl, apiKey: apiKeyHash })
+  const metricsService = new MetricsService({ metricsUrl, accessApiKey: accessApiKey })
 
   describe('parseVcMetadata', () => {
     const vcType = 'HealthPassportBundleCredentialV1'
+
     it(`#parse ${vcType}`, async () => {
       const metadata = metricsService.parseVcMetadata(medicalCredential)
       const resourceNames = []
+
       for (const entry of metadata.data) {
         const name = entry.resource.resourceType
         resourceNames.push(name)
@@ -25,7 +27,8 @@ describe('MetricsService', () => {
       expect(metadata.vcType[1]).to.equal(vcType)
     })
 
-    const otherType = 'ProofOfNameCredential'
+    const otherType = 'NameCredentialPersonV1'
+
     it(`#parse ${otherType}`, async () => {
       const metadata = metricsService.parseVcMetadata(otherCredential)
 
