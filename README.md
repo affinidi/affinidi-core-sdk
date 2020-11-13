@@ -1,4 +1,4 @@
-# Affinity SDK Monorepo
+# Affinity SDK Monorepo - test fork
 
 The open-source [Affinidi Library](https://github.com/affinityproject/affinidi-core-sdk) provides easy-to-use Typescript packages that enable developers to create and manage true certificate-enabled Digital Identities (DID) on the Affinidi Network.
 
