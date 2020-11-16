@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 
 import { __dangerous } from '@affinidi/wallet-core-sdk'
-import { getOptionsForEnvironment } from '../helpers'
+import { getOptionsForEnvironment, waitForConfirmationCodeInput } from '../helpers'
 
 import { AffinityWallet } from '../../src/AffinityWallet'
 
@@ -139,7 +139,7 @@ describe('AffinityWallet', () => {
     const emailDev = 'PLACEHOLDER'
     const token = await AffinityWallet.signUp(emailDev, cognitoPassword, options)
 
-    const confirmationCode = await waitConfirmationCodeInput()
+    const confirmationCode = await waitForConfirmationCodeInput()
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

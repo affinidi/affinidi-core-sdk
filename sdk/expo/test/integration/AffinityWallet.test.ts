@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 
 import { __dangerous } from '@affinidi/wallet-core-sdk'
-import { getOptionsForEnvironment, waitConfirmationCodeInput } from '../helpers'
+import { getOptionsForEnvironment, waitForConfirmationCodeInput } from '../helpers'
 
 import { AffinityWallet } from '../../src/AffinityWallet'
 
@@ -139,7 +139,7 @@ describe('AffinityWallet', () => {
     const emailDev = 'PLACEHOLDER'
     const token = await AffinityWallet.signUp(emailDev, cognitoPassword)
 
-    const confirmationCode = await waitConfirmationCodeInput()
+    const confirmationCode = await waitForConfirmationCodeInput()
 
     const confirmSignUpOptions = Object.assign({}, options, { issueSignupCredential: true })
 
