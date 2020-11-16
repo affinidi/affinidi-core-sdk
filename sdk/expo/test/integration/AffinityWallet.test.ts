@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 
-import { __dangerous, testHelpers } from '@affinidi/wallet-core-sdk'
+import { __dangerous } from '@affinidi/wallet-core-sdk'
+import { getOptionsForEnvironment, waitConfirmationCodeInput } from '../test/helpers'
 
 import { AffinityWallet } from '../../src/AffinityWallet'
 
-const { getOptionsForEnvironment, waitConfirmationCodeInput } = testHelpers
 const signedCredential = require('../factory/signedCredential')
 
 const { TEST_SECRETS } = process.env

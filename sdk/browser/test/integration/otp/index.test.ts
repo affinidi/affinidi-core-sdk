@@ -3,12 +3,12 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
-import { __dangerous, testHelpers } from '@affinidi/wallet-core-sdk'
+import { __dangerous } from '@affinidi/wallet-core-sdk'
+import { getOtp, getOptionsForEnvironment } from '../../test/helpers'
+
 import { AffinityWallet } from '../../../src/AffinityWallet'
 
 const signedCredentials = require('../../factory/signedCredentials')
-
-const { getOtp, getOptionsForEnvironment } = testHelpers
 
 const DELAY = 1000
 // prettier-ignore
