@@ -1,5 +1,3 @@
-'use strict'
-
 import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
@@ -108,9 +106,8 @@ const idToken =
 
 let walletStub: sinon.SinonStub
 
-// test agains `dev | prod` // if nothing specified, staging is used by default
-const options: SdkOptions = getOptionsForEnvironment()
-
+const returnAllOptionsForEnvironment = true
+const options: SdkOptions = getOptionsForEnvironment(returnAllOptionsForEnvironment)
 const { registryUrl } = options
 
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {

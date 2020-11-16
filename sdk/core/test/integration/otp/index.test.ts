@@ -11,7 +11,6 @@ import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } fro
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
-// test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
 
 const DELAY = 1000

@@ -250,7 +250,7 @@ export default class CognitoService {
     } catch (error) {
       switch (error.code) {
         case 'UsernameExistsException': {
-          const isUserUnconfirmed = await this.isUserUnconfirmed(normalizedUsername, options)
+          const isUserUnconfirmed = await this.isUserUnconfirmed(normalizedUsername)
 
           if (isUserUnconfirmed) {
             // NOTE: this will remove unconfirmed user so we won't get here 2nd time
@@ -336,8 +336,8 @@ export default class CognitoService {
     return this.cognitoidentityserviceprovider.changePassword(params).promise()
   }
 
-  async changeUsername(AccessToken: string, attribute: string, options: any = {}): Promise<any> {
-    const userExists = await this._userExists(attribute, options)
+  async changeUsername(AccessToken: string, attribute: string): Promise<any> {
+    const userExists = await this._userExists(attribute)
 
     if (userExists) {
       throw new SdkError('COR-7', { username: attribute })
@@ -381,8 +381,8 @@ export default class CognitoService {
     }
   }
 
-  async isUserUnconfirmed(username: string, options: any = {}): Promise<boolean> {
-    const { isUnconfirmed } = await this._signInWithInvalidPassword(username, options)
+  async isUserUnconfirmed(username: string): Promise<boolean> {
+    const { isUnconfirmed } = await this._signInWithInvalidPassword(username)
 
     return isUnconfirmed
   }
@@ -537,12 +537,12 @@ export default class CognitoService {
   }
 
   /* istanbul ignore next: private function */
-  private async _signInWithInvalidPassword(username: string, options: any = {}): Promise<any> {
+  private async _signInWithInvalidPassword(username: string): Promise<any> {
     let errorCode
     let userExists = true
     let isUnconfirmed = false
 
-    const { userPoolId, clientId } = options
+    const { userPoolId, clientId } = this.cognitoOptions
 
     const invalidPassword = '1'
     const cognitoService = new CognitoService({ userPoolId, clientId })
@@ -565,8 +565,8 @@ export default class CognitoService {
   }
 
   /* istanbul ignore next: private function */
-  private async _userExists(username: string, options: any = {}): Promise<boolean> {
-    const { userExists } = await this._signInWithInvalidPassword(username, options)
+  private async _userExists(username: string): Promise<boolean> {
+    const { userExists } = await this._signInWithInvalidPassword(username)
 
     return userExists
   }

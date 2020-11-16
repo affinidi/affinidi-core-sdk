@@ -1,4 +1,4 @@
-export const waitConfirmationCodeInput = async (): Promise<string> => {
+export const waitForConfirmationCodeInput = async (): Promise<string> => {
   const systemInput = process.stdin
 
   return new Promise((resolve) => {
