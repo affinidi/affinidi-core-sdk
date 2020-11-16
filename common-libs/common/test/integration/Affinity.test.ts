@@ -10,7 +10,7 @@ const options = {
 
 const affinity = new Affinity(options)
 
-describe.skip('Validation Snapshots', () => {
+describe('Validation Snapshots', () => {
   // TODO: to resolve: expected false to be true
   it.skip('#validateCredential (already created/legacy creds)', async () => {
     const result = await affinity.validateCredential(legacySignedCredential)
