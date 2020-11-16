@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 
 import { __dangerous } from '@affinidi/wallet-core-sdk'
-import { getOptionsForEnvironment } from '../test/helpers'
+import { getOptionsForEnvironment } from '../helpers'
 
 import { AffinityWallet } from '../../src/AffinityWallet'
 
