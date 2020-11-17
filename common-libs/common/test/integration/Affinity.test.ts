@@ -4,8 +4,12 @@ import { signedCredential, signedCredentialWithLongFormVerificationMethod } from
 import { signedPresentation } from '../factory/signedPresentation'
 import { Affinity } from '../../src'
 
+const { TEST_SECRETS } = process.env
+const { STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
+
 const options = {
   registryUrl: 'https://affinity-registry.staging.affinity-project.org',
+  apiKey: STAGING_API_KEY_HASH,
 }
 
 const affinity = new Affinity(options)
