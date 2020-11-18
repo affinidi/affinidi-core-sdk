@@ -7,16 +7,7 @@ import { PresentationSubmissionV1 } from '../../vp'
 const jsigs = require('jsonld-signatures')
 const { AuthenticationProofPurpose } = jsigs.purposes
 
-type BuildVPV1Unsigned = (opts: {
-  id?: string
-  vcs: VCV1[]
-  holder: VPV1Holder
-  type?: string | string[]
-  context?: TContext
-  presentation_submission?: PresentationSubmissionV1
-}) => VPV1Unsigned
-
-export const PresentationSubmissionContext = {
+export const presentationSubmissionContext = {
   '@version': 1.1,
   PresentationSubmission: {
     '@id': 'https://www.w3.org/2018/credentials/#VerifiablePresentation',
@@ -30,6 +21,15 @@ export const PresentationSubmissionContext = {
     '@type': '@json',
   },
 }
+
+type BuildVPV1Unsigned = (opts: {
+  id?: string
+  vcs: VCV1[]
+  holder: VPV1Holder
+  type?: string | string[]
+  context?: TContext
+  presentation_submission?: PresentationSubmissionV1
+}) => VPV1Unsigned
 
 export const buildVPV1Unsigned: BuildVPV1Unsigned = ({
   id,
@@ -53,10 +53,20 @@ export const buildVPV1Unsigned: BuildVPV1Unsigned = ({
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
       ...removeIfExists(context, 'https://www.w3.org/2018/credentials/v1'),
-      ...(includePresentationSubmission ? [PresentationSubmissionContext] : []),
+      ...(includePresentationSubmission ? [presentationSubmissionContext] : []),
     ],
     ...(id ? { id } : {}),
-    type: ['VerifiablePresentation', ...removeIfExists(type, 'VerifiablePresentation')],
+    type: [
+      'VerifiablePresentation',
+      ...[
+        ...(includePresentationSubmission ? ['PresentationSubmission'] : []),
+        ...removeIfExists(
+          type,
+          'VerifiablePresentation',
+          includePresentationSubmission ? 'PresentationSubmission' : undefined,
+        ),
+      ],
+    ],
     holder: holder,
     verifiableCredential: vcs,
     ...(includePresentationSubmission ? { presentation_submission } : {}),

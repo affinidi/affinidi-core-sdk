@@ -24,13 +24,15 @@ export type GetProofPurposeOptionsFn<T extends Record<string, any>> = (
   options: GetProofPurposeOptionsOptions,
 ) => T | Promise<T>
 
-export const removeIfExists = <T>(input: T | T[] | undefined, ...items: T[]) => {
+export const removeIfExists = <T>(input: T | T[] | undefined, ...items: (T | undefined)[]) => {
   if (typeof input === 'undefined') {
     return []
   }
 
   const array = (Array.isArray(input) ? input : [input]).slice()
   for (const item of items) {
+    if (typeof item === 'undefined') continue
+
     const foundIndex = array.indexOf(item)
     if (foundIndex >= 0) {
       array.splice(foundIndex, 1)
