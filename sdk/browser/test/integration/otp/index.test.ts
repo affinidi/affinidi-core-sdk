@@ -4,15 +4,11 @@ import '../env'
 
 import { expect } from 'chai'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
+import { getOtp, getOptionsForEnvironment } from '../../helpers'
 
-import { getOtp } from '../../helpers/getOtp'
 import { AffinityWallet } from '../../../src/AffinityWallet'
-import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
 
 const signedCredentials = require('../../factory/signedCredentials')
-
-// test agains `dev | prod` // if nothing specified, staging is used by default
-const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 const DELAY = 1000
 // prettier-ignore
@@ -27,6 +23,8 @@ const generateEmail = () => {
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 const cognitoPassword = COGNITO_PASSWORD
+
+const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 describe('AffinityWallet (flows that require OTP)', () => {
   it('#deleteCredentials scenario', async () => {

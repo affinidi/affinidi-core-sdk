@@ -1,11 +1,9 @@
 import { expect } from 'chai'
 
 import { __dangerous } from '@affinidi/wallet-core-sdk'
+import { getOptionsForEnvironment, waitForConfirmationCodeInput } from '../helpers'
 
 import { AffinityWallet } from '../../src/AffinityWallet'
-import { waitConfirmationCodeInput } from '../helpers/waitConfirmationCodeInput'
-
-import { getOptionsForEnvironment } from '../helpers/getOptionsForEnvironment'
 
 const signedCredential = require('../factory/signedCredential')
 
@@ -51,7 +49,6 @@ const credentialShareRequestToken =
   'y0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9c44eac73f3' +
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
-// test against `dev | prod` // if nothing specified, staging is used by default
 const options: __dangerous.SdkOptions = getOptionsForEnvironment()
 
 describe('AffinityWallet', () => {
@@ -142,7 +139,7 @@ describe('AffinityWallet', () => {
     const emailDev = 'PLACEHOLDER'
     const token = await AffinityWallet.signUp(emailDev, cognitoPassword, options)
 
-    const confirmationCode = await waitConfirmationCodeInput()
+    const confirmationCode = await waitForConfirmationCodeInput()
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

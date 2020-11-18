@@ -57,6 +57,12 @@ npm i --save @affinidi/wallet-core-sdk
 
 Test credentials should be added to the top level `.env` file. These contain usernames and passwords of pre-populated accounts on the staging environment. Reach out to a team member for instructions on how to set up this file, or to obtain a copy.
 
+You can also run integration tests against `dev`:
+
+```sh
+TEST_AGAINST=dev npm run test:integration
+```
+
 ## Initialize
 
 ### Create API-KEY
