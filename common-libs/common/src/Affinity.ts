@@ -28,7 +28,7 @@ export class Affinity {
     this._apiKey = options.apiKey
     this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
     this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
-    this._component = options.component || EventComponent.NotImplemented
+    this._component = options.component || EventComponent.AffinidiCommon
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
       metricsUrl: this._metricsUrl,
