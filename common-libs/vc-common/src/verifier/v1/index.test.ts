@@ -323,6 +323,101 @@ const createVP = async (sharer: Signer, ...vcs: VCV1<any>[]): Promise<VPV1> => {
       id: 'urn:uuid:11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000',
       vcs,
       holder: { id: sharer.did },
+      presentation_submission: {
+        locale: 'locale',
+        descriptor_map: [
+          {
+            id: 'id',
+            path: 'path',
+            format: 'jwt',
+          },
+          {
+            id: 'id',
+            path: 'path',
+            format: 'jwt_vc',
+          },
+          {
+            id: 'id',
+            path: 'path',
+            format: 'jwt_vp',
+          },
+          {
+            id: 'id',
+            path: 'path',
+            format: 'ldp',
+          },
+          {
+            id: 'id',
+            path: 'path',
+            format: 'ldp_vc',
+          },
+          {
+            id: 'id',
+            path: 'path',
+            format: 'ldp_vp',
+          },
+          {
+            id: 'id',
+            path_nested: {
+              id: 'id',
+              path: 'path',
+              format: 'jwt',
+            },
+            path: 'path',
+            format: 'jwt',
+          },
+          {
+            id: 'id',
+            path_nested: {
+              id: 'id',
+              path: 'path',
+              format: 'jwt_vc',
+            },
+            path: 'path',
+            format: 'jwt',
+          },
+          {
+            id: 'id',
+            path_nested: {
+              id: 'id',
+              path: 'path',
+              format: 'jwt_vp',
+            },
+            path: 'path',
+            format: 'jwt',
+          },
+          {
+            id: 'id',
+            path_nested: {
+              id: 'id',
+              path: 'path',
+              format: 'ldp',
+            },
+            path: 'path',
+            format: 'jwt',
+          },
+          {
+            id: 'id',
+            path_nested: {
+              id: 'id',
+              path: 'path',
+              format: 'ldp_vc',
+            },
+            path: 'path',
+            format: 'jwt',
+          },
+          {
+            id: 'id',
+            path_nested: {
+              id: 'id',
+              path: 'path',
+              format: 'ldp_vp',
+            },
+            path: 'path',
+            format: 'jwt',
+          },
+        ],
+      },
     }),
     documentLoader,
     getSignSuite,
@@ -1389,6 +1484,273 @@ describe('validateVPV1', () => {
         kind: 'invalid_param',
         message:
           'Invalid value for field "holder": The following errors have occurred:\ninvalid_param: Invalid value for field "id": Expected to start with "did:"',
+      })
+    })
+  })
+
+  describe('fails when presentation_submission is invalid', () => {
+    it('with an empty locale', async () => {
+      expect.assertions(1)
+
+      const { issuer, bob } = didConfigs
+      // Issue a VC to bob
+      const vc = await createVC(
+        {
+          did: issuer.did,
+          keyId: `${issuer.did}#primary`,
+          privateKey: issuer.primaryKey.privateKey,
+        },
+        { did: bob.did },
+      )
+
+      // Bob creates a VP containing his VC
+      const vp = await createVP(
+        {
+          did: bob.did,
+          keyId: `${bob.did}#primary`,
+          privateKey: bob.primaryKey.privateKey,
+        },
+        vc,
+      )
+
+      vp.presentation_submission = {
+        locale: '',
+        descriptor_map: [...(vp.presentation_submission?.descriptor_map || [])],
+      }
+
+      // Verify the VP
+      const res = await validateVPV1({ documentLoader, getVerifySuite })(vp)
+
+      expectToBeInvalidWith(res, {
+        kind: 'invalid_param',
+        message:
+          'Invalid value for field "presentation_submission": The following errors have occurred:\ninvalid_param: Invalid value for field "locale": Expected non empty string',
+      })
+    })
+
+    describe('with an invalid descriptor_map', () => {
+      it("when it's not an array", async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Bob creates a VP containing his VC
+        const vp = await createVP(
+          {
+            did: bob.did,
+            keyId: `${bob.did}#primary`,
+            privateKey: bob.primaryKey.privateKey,
+          },
+          vc,
+        )
+
+        vp.presentation_submission = {
+          locale: vp.presentation_submission?.locale || 'locale',
+          descriptor_map: 'descriptor_map' as any,
+        }
+
+        // Verify the VP
+        const res = await validateVPV1({ documentLoader, getVerifySuite })(vp)
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message:
+            'Invalid value for field "presentation_submission": The following errors have occurred:\ninvalid_param: Invalid value for field "descriptor_map": Expected to be an array',
+        })
+      })
+
+      it('when id is empty', async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Bob creates a VP containing his VC
+        const vp = await createVP(
+          {
+            did: bob.did,
+            keyId: `${bob.did}#primary`,
+            privateKey: bob.primaryKey.privateKey,
+          },
+          vc,
+        )
+
+        vp.presentation_submission = {
+          locale: vp.presentation_submission?.locale || 'locale',
+          descriptor_map: [
+            {
+              id: '',
+              path: 'path',
+              format: 'jwt',
+            },
+          ],
+        }
+
+        // Verify the VP
+        const res = await validateVPV1({ documentLoader, getVerifySuite })(vp)
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message:
+            'Invalid value for field "presentation_submission": The following errors have occurred:\ninvalid_param: Invalid value for field "descriptor_map": One or more items failed validation: The following errors have occurred:\ninvalid_param: Invalid value for field "id": Expected non empty string',
+        })
+      })
+
+      it('when path is empty', async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Bob creates a VP containing his VC
+        const vp = await createVP(
+          {
+            did: bob.did,
+            keyId: `${bob.did}#primary`,
+            privateKey: bob.primaryKey.privateKey,
+          },
+          vc,
+        )
+
+        vp.presentation_submission = {
+          locale: vp.presentation_submission?.locale || 'locale',
+          descriptor_map: [
+            {
+              id: 'id',
+              path: '',
+              format: 'jwt',
+            },
+          ],
+        }
+
+        // Verify the VP
+        const res = await validateVPV1({ documentLoader, getVerifySuite })(vp)
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message:
+            'Invalid value for field "presentation_submission": The following errors have occurred:\ninvalid_param: Invalid value for field "descriptor_map": One or more items failed validation: The following errors have occurred:\ninvalid_param: Invalid value for field "path": Expected non empty string',
+        })
+      })
+
+      it('when format is invalid', async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Bob creates a VP containing his VC
+        const vp = await createVP(
+          {
+            did: bob.did,
+            keyId: `${bob.did}#primary`,
+            privateKey: bob.primaryKey.privateKey,
+          },
+          vc,
+        )
+
+        vp.presentation_submission = {
+          locale: vp.presentation_submission?.locale || 'locale',
+          descriptor_map: [
+            {
+              id: 'id',
+              path: 'path',
+              format: 'invalid' as any,
+            },
+          ],
+        }
+
+        // Verify the VP
+        const res = await validateVPV1({ documentLoader, getVerifySuite })(vp)
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message:
+            'Invalid value for field "presentation_submission": The following errors have occurred:\ninvalid_param: Invalid value for field "descriptor_map": One or more items failed validation: The following errors have occurred:\ninvalid_param: Invalid value for field "format": Expected a value to be one of: jwt, jwt_vc, jwt_vp, ldp, ldp_vc, ldp_vp',
+        })
+      })
+
+      it('when path_nested is invalid', async () => {
+        expect.assertions(1)
+
+        const { issuer, bob } = didConfigs
+        // Issue a VC to bob
+        const vc = await createVC(
+          {
+            did: issuer.did,
+            keyId: `${issuer.did}#primary`,
+            privateKey: issuer.primaryKey.privateKey,
+          },
+          { did: bob.did },
+        )
+
+        // Bob creates a VP containing his VC
+        const vp = await createVP(
+          {
+            did: bob.did,
+            keyId: `${bob.did}#primary`,
+            privateKey: bob.primaryKey.privateKey,
+          },
+          vc,
+        )
+
+        vp.presentation_submission = {
+          locale: vp.presentation_submission?.locale || 'locale',
+          descriptor_map: [
+            {
+              id: 'id',
+              path: 'path',
+              format: 'jwt',
+              path_nested: {
+                id: '',
+                path: 'path',
+                format: 'jwt',
+              },
+            },
+          ],
+        }
+
+        // Verify the VP
+        const res = await validateVPV1({ documentLoader, getVerifySuite })(vp)
+
+        expectToBeInvalidWith(res, {
+          kind: 'invalid_param',
+          message:
+            'Invalid value for field "presentation_submission": The following errors have occurred:\ninvalid_param: Invalid value for field "descriptor_map": One or more items failed validation: The following errors have occurred:\ninvalid_param: Invalid value for field "path_nested": The following errors have occurred:\ninvalid_param: Invalid value for field "id": Expected non empty string',
+        })
       })
     })
   })

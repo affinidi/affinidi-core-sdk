@@ -17,6 +17,17 @@ export type VPV1Holder = {
   id: string
 }
 
+export type PresentationSubmissionDescriptorV1 = {
+  id: string
+  path: string
+  path_nested?: PresentationSubmissionDescriptorV1
+  format: 'jwt' | 'jwt_vc' | 'jwt_vp' | 'ldp' | 'ldp_vc' | 'ldp_vp'
+}
+export type PresentationSubmissionV1 = {
+  locale?: string
+  descriptor_map: PresentationSubmissionDescriptorV1[]
+}
+
 export type VPV1Unsigned<
   VC extends VCV1 = VCV1,
   Type extends VPV1Type = VPV1Type,
@@ -27,6 +38,7 @@ export type VPV1Unsigned<
   type: Type
   verifiableCredential: VC[]
   holder: Holder
+  presentation_submission?: PresentationSubmissionV1
 }
 
 // TODO: This is missing the `signature` and `packedData` fields. How should those translate over?
