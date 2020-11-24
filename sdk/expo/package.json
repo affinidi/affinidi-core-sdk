@@ -42,7 +42,7 @@
   "dependencies": {
     "@affinidi/common": "1.2.2",
     "@affinidi/wallet-core-sdk": "3.2.3",
-    "@affinidi/affinity-metrics-lib": "0.0.21",
+    "@affinidi/affinity-metrics-lib": "0.0.22",
     "@react-native-community/netinfo": "^5.5.1",
     "@types/text-encoding": "0.0.35",
     "assert": "^2.0.0",

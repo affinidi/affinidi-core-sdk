@@ -41,7 +41,7 @@
   "dependencies": {
     "@affinidi/common": "1.2.2",
     "@affinidi/wallet-core-sdk": "3.2.3",
-    "@affinidi/affinity-metrics-lib": "0.0.21",
+    "@affinidi/affinity-metrics-lib": "0.0.22",
     "@sentry/browser": "^5.18.0",
     "bip32": "^2.0.5",
     "eccrypto-js": "^5.0.0"
