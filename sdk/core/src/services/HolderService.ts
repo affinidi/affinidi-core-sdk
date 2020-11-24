@@ -208,7 +208,7 @@ export default class HolderService {
 
     const did = DidDocumentService.keyIdToDid(expectedIssuer)
     const didDocument = await this._affinityService.resolveDid(did)
-    const publicKey = DidDocumentService.getPublicKey(strippedExpectedIssuer, didDocument)
+    const publicKey = DidDocumentService.getPublicKey(strippedExpectedIssuer, didDocument, payload.kid)
 
     const { digest: tokenDigest, signature } = this._digestService.getTokenDigest(token)
     const isSignatureVerified = KeysService.verify(tokenDigest, publicKey, signature)

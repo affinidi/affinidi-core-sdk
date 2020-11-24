@@ -2069,7 +2069,7 @@ export class CommonNetworkMember {
       // After validating the VP we need to validate the VP's challenge token
       // to ensure that it was issued from the correct DID and that it hasn't expired.
       try {
-        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.didDocumentKeyId)
+        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.did)
       } catch (error) {
         return {
           isValid: false,
