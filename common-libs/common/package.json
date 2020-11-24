@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/common",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Common utilities and types for Affinidi SDKs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -41,7 +41,7 @@
   "dependencies": {
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
     "@affinidi/vc-common": "1.1.1",
-    "@affinidi/affinity-metrics-lib": "0.0.20",
+    "@affinidi/affinity-metrics-lib": "0.0.21",
     "@types/create-hash": "^1.2.2",
     "@types/jsonld": "^1.5.1",
     "@types/lodash.keyby": "^4.6.6",
