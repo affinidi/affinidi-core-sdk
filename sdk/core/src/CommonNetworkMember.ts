@@ -975,7 +975,6 @@ export class CommonNetworkMember {
     confirmationCode: string,
     keyParams: KeyParams = {},
     options: SdkOptions = {},
-    component?: EventComponent,
   ): Promise<any> {
     const parts = token.split('::')
     const username = parts[0]
@@ -1006,7 +1005,7 @@ export class CommonNetworkMember {
       encryptionKey,
     )
 
-    const commonNetworkMember = new this(encryptionKey, updatedEncryptedSeed, options, component)
+    const commonNetworkMember = new this(encryptionKey, updatedEncryptedSeed, options)
 
     const skipBackupEncryptedSeed = options && options.skipBackupEncryptedSeed
 
