@@ -142,7 +142,7 @@ export class CommonNetworkMember {
 
     this._accessApiKey = this._sdkOptions.accessApiKey
 
-    this._component = component
+    this._component = component || EventComponent.AffinidiCore
     this._metricsService = new MetricsService({
       metricsUrl,
       accessApiKey: this._accessApiKey,
@@ -153,7 +153,7 @@ export class CommonNetworkMember {
     this._revocationService = new RevocationService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
     this._jwtService = new JwtService()
-    this._holderService = new HolderService(this._sdkOptions)
+    this._holderService = new HolderService(this._sdkOptions, this._component)
     this._didDocumentService = new DidDocumentService(this._keysService)
     this._affinity = new Affinity({
       apiKey: this._accessApiKey,
@@ -310,15 +310,9 @@ export class CommonNetworkMember {
    * @param seedHexWithMethod - seed for derive keys in string hex format
    * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
    * @param password - optional password, will be generated, if not provided
-   * @param component - metrics event component, should be one of the wallet implementation
    * @returns initialized instance of SDK
    */
-  static async fromSeed(
-    seedHexWithMethod: string,
-    options: SdkOptions = {},
-    password: string = null,
-    component?: EventComponent,
-  ) {
+  static async fromSeed(seedHexWithMethod: string, options: SdkOptions = {}, password: string = null) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: seedHexWithMethod },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -336,7 +330,7 @@ export class CommonNetworkMember {
 
     const encryptedSeedWithInitializationVector = await KeysService.encryptSeed(seedHexWithMethod, passwordBuffer)
 
-    return new this(password, encryptedSeedWithInitializationVector, options, component)
+    return new this(password, encryptedSeedWithInitializationVector, options)
   }
 
   /**
@@ -627,15 +621,9 @@ export class CommonNetworkMember {
    * @param token - received from #passwordlessLogin method
    * @param confirmationCode - OTP sent by AWS Cognito/SES
    * @param options - optional parameters for CommonNetworkMember initialization
-   * @param component - metrics event component, should be one of the wallet implementation
    * @returns initialized instance of SDK
    */
-  static async completeLoginChallenge(
-    token: string,
-    confirmationCode: string,
-    options: SdkOptions = {},
-    component?: EventComponent,
-  ): Promise<any> {
+  static async completeLoginChallenge(token: string, confirmationCode: string, options: SdkOptions = {}): Promise<any> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
@@ -655,7 +643,7 @@ export class CommonNetworkMember {
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
-    return new this(encryptionKey, encryptedSeed, options, component)
+    return new this(encryptionKey, encryptedSeed, options)
   }
 
   getShareCredential(credentialShareRequestToken: string, options: FreeFormObject): SignedCredential[] {
@@ -782,15 +770,9 @@ export class CommonNetworkMember {
    * @param username - email/phoneNumber, registered in Cognito
    * @param password - password for Cognito user
    * @param options - optional parameters for CommonNetworkMember initialization
-   * @param component - metrics event component, should be one of the wallet implementation
    * @returns initialized instance of SDK
    */
-  static async fromLoginAndPassword(
-    username: string,
-    password: string,
-    options: SdkOptions = {},
-    component?: EventComponent,
-  ): Promise<any> {
+  static async fromLoginAndPassword(username: string, password: string, options: SdkOptions = {}): Promise<any> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
@@ -811,7 +793,7 @@ export class CommonNetworkMember {
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
-    return new this(encryptionKey, encryptedSeed, options, component)
+    return new this(encryptionKey, encryptedSeed, options)
   }
 
   private static _validateKeys(keyParams: KeyParams) {
@@ -1148,14 +1130,12 @@ export class CommonNetworkMember {
    * @param token - received from #signIn method
    * @param confirmationCode - OTP sent by AWS Cognito/SES
    * @param options - optional parameters for CommonNetworkMember initialization
-   * @param component - metrics event component, should be one of the wallet implementation
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
   static async confirmSignIn(
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-    component?: EventComponent,
   ): Promise<{ isNew: boolean; commonNetworkMember: any }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -1175,7 +1155,7 @@ export class CommonNetworkMember {
       return { isNew: true, commonNetworkMember }
     }
 
-    commonNetworkMember = await this.completeLoginChallenge(token, confirmationCode, options, component)
+    commonNetworkMember = await this.completeLoginChallenge(token, confirmationCode, options)
 
     return { isNew: false, commonNetworkMember }
   }
