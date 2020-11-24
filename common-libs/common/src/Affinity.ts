@@ -88,7 +88,13 @@ export class Affinity {
     if (response.status.toString().startsWith('2')) {
       return result.didDocument
     } else {
-      throw new Error(result)
+      let error = new Error(result)
+
+      if (result.message) {
+        error = new Error(result.message)
+      }
+
+      throw error
     }
   }
 
@@ -100,7 +106,7 @@ export class Affinity {
 
     didDocument = await this._resolveDidIfNoDidDocument(did, didDocument)
 
-    const publicKey = DidDocumentService.getPublicKey(payload.iss, didDocument)
+    const publicKey = DidDocumentService.getPublicKey(payload.iss, didDocument, payload.kid)
 
     const { digest: tokenDigest, signature } = this._digestService.getTokenDigest(token)
     const isSignatureVerified = KeysService.verify(tokenDigest, publicKey, signature)
