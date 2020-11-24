@@ -2,6 +2,8 @@ import { parse } from 'did-resolver'
 
 import {
   VPV1,
+  PresentationSubmissionV1,
+  PresentationSubmissionDescriptorV1,
   VCV1,
   VCV1Holder,
   VPV1Proof,
@@ -13,6 +15,7 @@ import {
 } from '../../'
 import {
   genValidateFn,
+  ValidateFn,
   Validator,
   createValidatorResponse,
   isArrayOfNonEmptyStrings,
@@ -22,6 +25,8 @@ import {
   isUndefinedOr,
   isArrayOf,
   isOneOf,
+  isEnum,
+  ErrorConfig,
 } from '../util'
 
 const jsigs = require('jsonld-signatures')
@@ -55,6 +60,63 @@ const isValidContext: Validator = (value) => {
 
 const validateHolder = genValidateFn<VCV1Holder>({
   id: [isNonEmptyString, isValidDID],
+})
+
+const validatePresentationSubmissionDescriptor: ValidateFn<PresentationSubmissionDescriptorV1> = async (data) => {
+  const idIsValid = await isNonEmptyString(data['id'], data)
+  const pathIsValid = await isNonEmptyString(data['path'], data)
+  const pathNestedIsValid = await isUndefinedOr(isValid(validatePresentationSubmissionDescriptor))(
+    data['path_nested'],
+    data,
+  )
+  const formatIsValid = await isEnum(['jwt', 'jwt_vc', 'jwt_vp', 'ldp', 'ldp_vc', 'ldp_vp'])(data['format'], data)
+
+  const errors: ErrorConfig[] = []
+
+  if (idIsValid !== true) {
+    errors.push({
+      kind: 'invalid_param',
+      message: `Invalid value for field "id": ${idIsValid.message}`,
+    })
+  }
+
+  if (pathIsValid !== true) {
+    errors.push({
+      kind: 'invalid_param',
+      message: `Invalid value for field "path": ${pathIsValid.message}`,
+    })
+  }
+
+  if (pathNestedIsValid !== true) {
+    errors.push({
+      kind: 'invalid_param',
+      message: `Invalid value for field "path_nested": ${pathNestedIsValid.message}`,
+    })
+  }
+
+  if (formatIsValid !== true) {
+    errors.push({
+      kind: 'invalid_param',
+      message: `Invalid value for field "format": ${formatIsValid.message}`,
+    })
+  }
+
+  if (errors.length > 0) {
+    return {
+      kind: 'invalid',
+      errors,
+    }
+  }
+
+  return {
+    kind: 'valid',
+    data: data as PresentationSubmissionDescriptorV1,
+  }
+}
+
+const validatePresentationSubmission = genValidateFn<PresentationSubmissionV1>({
+  locale: isUndefinedOr(isNonEmptyString),
+  descriptor_map: isArrayOf(isValid(validatePresentationSubmissionDescriptor)),
 })
 
 const validateVPProofStructure = genValidateFn<VPV1Proof>({
@@ -254,6 +316,7 @@ export const validateVPV1 = ({
     '@context': isValidContext,
     id: [isUndefinedOr(isNonEmptyString), isUndefinedOr(isAbsoluteURI)],
     type: [isArrayOfNonEmptyStrings, isArrayIncluding('VerifiablePresentation')],
+    presentation_submission: isUndefinedOr(isValid(validatePresentationSubmission)),
     verifiableCredential: [
       isArrayOf(isValid(validateVCV1({ documentLoader, getVerifySuite, getProofPurposeOptions }))),
       isArrayOf((value, data) =>

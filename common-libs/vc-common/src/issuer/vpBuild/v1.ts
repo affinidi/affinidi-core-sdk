@@ -2,9 +2,25 @@ import warning from 'tiny-warning'
 
 import { VCV1, TContext, VPV1, VPV1Unsigned, VPV1Holder, DocumentLoader } from '../../'
 import { Signer, GetSignSuiteFn, GetProofPurposeOptionsFn, removeIfExists, validateId } from '../common'
+import { PresentationSubmissionV1 } from '../../vp'
 
 const jsigs = require('jsonld-signatures')
 const { AuthenticationProofPurpose } = jsigs.purposes
+
+export const presentationSubmissionContext = {
+  '@version': 1.1,
+  PresentationSubmission: {
+    '@id': 'https://www.w3.org/2018/credentials/#VerifiablePresentation',
+    '@context': {
+      '@version': 1.1,
+      presentation_submission: {
+        '@id': 'https://identity.foundation/presentation-exchange/#presentation-submissions',
+        '@type': '@json',
+      },
+    },
+    '@type': '@json',
+  },
+}
 
 type BuildVPV1Unsigned = (opts: {
   id?: string
@@ -12,9 +28,17 @@ type BuildVPV1Unsigned = (opts: {
   holder: VPV1Holder
   type?: string | string[]
   context?: TContext
+  presentation_submission?: PresentationSubmissionV1
 }) => VPV1Unsigned
 
-export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, context }): VPV1Unsigned => {
+export const buildVPV1Unsigned: BuildVPV1Unsigned = ({
+  id,
+  vcs,
+  holder,
+  type,
+  context,
+  presentation_submission,
+}): VPV1Unsigned => {
   if (id) {
     validateId(id)
   } else {
@@ -24,15 +48,28 @@ export const buildVPV1Unsigned: BuildVPV1Unsigned = ({ id, vcs, holder, type, co
     )
   }
 
+  const includePresentationSubmission = typeof presentation_submission !== 'undefined'
   return {
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
       ...removeIfExists(context, 'https://www.w3.org/2018/credentials/v1'),
+      ...(includePresentationSubmission ? [presentationSubmissionContext] : []),
     ],
     ...(id ? { id } : {}),
-    type: ['VerifiablePresentation', ...removeIfExists(type, 'VerifiablePresentation')],
+    type: [
+      'VerifiablePresentation',
+      ...[
+        ...(includePresentationSubmission ? ['PresentationSubmission'] : []),
+        ...removeIfExists(
+          type,
+          'VerifiablePresentation',
+          includePresentationSubmission ? 'PresentationSubmission' : undefined,
+        ),
+      ],
+    ],
     holder: holder,
     verifiableCredential: vcs,
+    ...(includePresentationSubmission ? { presentation_submission } : {}),
   }
 }
 

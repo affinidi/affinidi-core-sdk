@@ -1,3 +1,9 @@
+## 1.2.0
+
+### Improvements
+
+- Adds the concept of a presentation submission to the `VPV1Unsigned` type and its correlated `buildVPV1Unsigned` function. This is in support of the [presentation-exchange spec presentation submissions](https://identity.foundation/presentation-exchange/#presentation-submissions).
+
 ## 1.1.1
 
 ### Improvements
