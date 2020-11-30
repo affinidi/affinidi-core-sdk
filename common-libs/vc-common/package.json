@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/vc-common",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "main": "dist/index.js",
   "module": "dist/vc-common.esm.js",
   "typings": "dist/index.d.ts",
@@ -29,7 +29,7 @@
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
   },
   "dependencies": {
-    "did-resolver": "2.0.1",
+    "did-resolver": "^2.0.1",
     "jsonld": "^2.0.2",
     "jsonld-signatures": "^5.1.0",
     "tiny-warning": "^1.0.3",
