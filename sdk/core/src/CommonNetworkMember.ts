@@ -51,6 +51,7 @@ import {
 
 import { randomBytes } from './shared/randomBytes'
 import { normalizeShortPassword } from './shared/normalizeShortPassword'
+import { normalizeUsername } from './shared/normalizeUsername'
 import { clearUserTokensFromSessionStorage, readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
 
 import {
@@ -303,6 +304,26 @@ export class CommonNetworkMember {
    */
   get password(): string {
     return this._password
+  }
+
+  /**
+   * @description Checks if registration for the user was completed
+   * @param username - a valid email, phone number or arbitrary username
+   * @param options - object with environment, staging is default { env: 'staging' }
+   * @returns `true` if user is uncofirmed in Cognito, and `false` otherwise.
+   */
+  static async isUserUnconfirmed(username: string, options: SdkOptions) {
+    await ParametersValidator.validate([
+      { isArray: false, type: 'string', isRequired: true, value: username },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+    ])
+
+    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const normalizedUsername = normalizeUsername(username)
+
+    return cognitoService.isUserUnconfirmed(normalizedUsername)
   }
 
   /**
