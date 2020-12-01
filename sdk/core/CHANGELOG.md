@@ -1,3 +1,9 @@
+# release 3.4.0 (2020-12-01)
+
+## New interface
+
+Add `isUserUnconfirmed` to check if user completed registration in Affinidi.
+
 # release 3.0.0 (2020-11-03)
 
 Drop the support of the test Api Key, thus it is crucial to make the update due to all earlier versions would be affected by that change.

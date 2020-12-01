@@ -1,7 +1,7 @@
 import { VCV1Subject, VCV1, VPV1Unsigned, VPV1 } from '../../'
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 
-import { buildVPV1Unsigned, buildVPV1 } from './v1'
+import { buildVPV1Unsigned, buildVPV1, presentationSubmissionContext } from './v1'
 import { buildVCV1Skeleton, buildVCV1Unsigned, buildVCV1 } from '../vcBuild/v1'
 import { GetSignSuiteFn } from '../common'
 
@@ -223,6 +223,37 @@ describe('buildVPV1Unsigned', () => {
     })
   })
 
+  it('builds a VPV1Unsigned with a presentation submission', () => {
+    const unsigned = buildVPV1Unsigned({
+      id: vpId,
+      vcs,
+      holder,
+      presentation_submission: {
+        descriptor_map: [
+          {
+            id: 'vc_input_descriptor_id_1',
+            path: '$.verifiableCredential[0]',
+            format: 'ldp_vc',
+          },
+        ],
+      },
+    })
+
+    expectUnsigned(unsigned).toStrictEqual({
+      '@context': ['https://www.w3.org/2018/credentials/v1', presentationSubmissionContext],
+      type: ['VerifiablePresentation', 'PresentationSubmission'],
+      presentation_submission: {
+        descriptor_map: [
+          {
+            id: 'vc_input_descriptor_id_1',
+            path: '$.verifiableCredential[0]',
+            format: 'ldp_vc',
+          },
+        ],
+      },
+    })
+  })
+
   it('warns when id is not provided', () => {
     buildVPV1Unsigned({
       vcs,
@@ -293,6 +324,20 @@ describe('buildVPV1', () => {
       id: vpId,
       vcs,
       holder,
+      presentation_submission: {
+        descriptor_map: [
+          {
+            id: 'vc_input_descriptor_id_1',
+            path: '$.verifiableCredential[0]',
+            format: 'ldp_vc',
+            path_nested: {
+              id: 'vc_input_descriptor_id_2',
+              path: '$.verifiableCredential[0]',
+              format: 'ldp_vc',
+            },
+          },
+        ],
+      },
     })
   })
 
@@ -300,10 +345,24 @@ describe('buildVPV1', () => {
     toStrictEqual: (expected: Record<string, any>) => {
       expect(vp).toStrictEqual({
         ...expected,
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        '@context': ['https://www.w3.org/2018/credentials/v1', presentationSubmissionContext],
         id: vpId,
-        type: ['VerifiablePresentation'],
+        type: ['VerifiablePresentation', 'PresentationSubmission'],
         holder,
+        presentation_submission: {
+          descriptor_map: [
+            {
+              id: 'vc_input_descriptor_id_1',
+              path: '$.verifiableCredential[0]',
+              format: 'ldp_vc',
+              path_nested: {
+                id: 'vc_input_descriptor_id_2',
+                path: '$.verifiableCredential[0]',
+                format: 'ldp_vc',
+              },
+            },
+          ],
+        },
         verifiableCredential: vcs,
       })
     },
