@@ -16,7 +16,7 @@ import {
 export type CourtRecordSearchQueryV1 = CreateThing<
   'CourtRecordSearchQuery',
   {
-    parent: PersonEV1
+    parent?: PersonEV1
     spouse?: PersonEV1
     address: CreateExpandedThing<'PostalAddress'>
     addressStatus: 'current' | 'permanent' | 'past'
