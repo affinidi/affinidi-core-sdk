@@ -22,6 +22,7 @@
     - [Get DID](#get-did)
     - [Passwordless sign in or sign up if user does not exist + DID creation](#passwordless-sign-in-or-sign-up-if-user-does-not-exist--did-creation)
     - [Confirm sign in](#confirm-sign-in)
+    - [Is user unconfirmed](#is-user-unconfirmed)
     - [Sign up](#sign-up)
     - [Get Signup VC](#get-signup-vc)
     - [Initiate instance of SDK with login and pasword](#initiate-instance-of-sdk-with-login-and-pasword)
@@ -222,6 +223,25 @@ const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(t
 
 Returns `isNew` flag, identifying whether new account was created, and
 initialized instance of SDK - `commonNetworkMember`.
+
+#### Is User Unconfirmed
+
+You can check if user is did not complete registration in Affinidi
+(is `UNCONFIRMED` in Cognito) with
+
+```ts
+const options = { env: 'staging' }
+
+const isUnconfirmed = await CommonNetworkMember.isUserUnconfirmed(username, options)
+```
+
+`username` - a valid email, phone number or arbitrary username
+
+`options` - used to specify:
+
+`env` - environment stack `dev | staging | prod`,
+
+Returns `true` if user is `UNCONFIRMED`, and `false` otherwise.
 
 #### Sign up
 
