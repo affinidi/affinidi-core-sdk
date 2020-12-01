@@ -7,9 +7,7 @@ import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
 import CognitoService from '../../src/services/CognitoService'
-import WalletStorageService from '../../src/services/WalletStorageService'
 
-import { normalizeUsername } from '../../src/shared/normalizeUsername'
 import { SdkOptions } from '../../src/dto/shared.dto'
 
 import { generateUsername, generateEmail, getOptionsForEnvironment } from '../helpers'
@@ -34,6 +32,7 @@ const {
   UPDATING_ENCRYPTED_SEED,
   UPDATING_DID,
 } = JSON.parse(TEST_SECRETS)
+
 const password = PASSWORD
 const encryptedSeed = ENCRYPTED_SEED_JOLO
 const encryptedSeedElem = ENCRYPTED_SEED_ELEM
@@ -52,7 +51,6 @@ const cognitoPassword = COGNITO_PASSWORD
 const userWithoutKey = COGNITO_USERNAME_NO_KEY
 const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 
-// test agains `dev | prod` // if nothing specified, staging is used by default
 const options: SdkOptions = getOptionsForEnvironment()
 
 describe('CommonNetworkMember', () => {
@@ -69,6 +67,14 @@ describe('CommonNetworkMember', () => {
       type: ['Credential', 'TestDenisCred'],
     },
   ]
+
+  it('returns true when user is UNCONFIRMED', async () => {
+    const username = emailUnconfirmed
+
+    const isUnconfirmed = await CommonNetworkMember.isUserUnconfirmed(username, options)
+
+    expect(isUnconfirmed).to.equal(true)
+  })
 
   // NOTE random failing issue, might be related to resolving JOLO DID
   it.skip('#generateCredentialOfferRequestToken, #verifyCredentialOfferResponseToken, #signCredentials, #validateCredential', async () => {
@@ -158,7 +164,6 @@ describe('CommonNetworkMember', () => {
 
   it('removes user if it is "UNCONFIMRED" before sign up', async () => {
     const email = generateEmail()
-    const username = normalizeUsername(email)
 
     await CommonNetworkMember.signUp(email, cognitoPassword, options)
 
@@ -170,8 +175,6 @@ describe('CommonNetworkMember', () => {
     } catch (error) {
       responseError = error
     }
-
-    await WalletStorageService.adminDeleteUnconfirmedUser(username, options)
 
     expect(token).to.exist
     expect(responseError).to.not.exist

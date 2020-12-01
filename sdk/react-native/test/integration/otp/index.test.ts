@@ -4,10 +4,9 @@ import '../env'
 
 import { expect } from 'chai'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
+import { getOtp, getOptionsForEnvironment } from '../../helpers'
 
 import { AffinityWallet } from '../../../src/AffinityWallet'
-import { getOtp } from '../../helpers/getOtp'
-import { getOptionsForEnvironment } from '../../helpers/getOptionsForEnvironment'
 
 const signedCredentials = require('../../factory/signedCredentials')
 

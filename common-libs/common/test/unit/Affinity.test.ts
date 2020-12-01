@@ -13,10 +13,8 @@ import {
 } from '../factory/credential'
 import { generateTestDIDs } from '../factory/didFactory'
 
-import { signedCredential, signedCredentialWithLongFormVerificationMethod } from '../factory/signedCredential'
-import { legacySignedCredential } from '../factory/legacySignedCredential'
 import { buildPresentation } from '../factory/presentation'
-import { signedPresentation } from '../factory/signedPresentation'
+import { credentialsV1, revocationList2020V1 } from '../factory/w3'
 
 const options = {
   registryUrl: 'https://affinity-registry.staging.affinity-project.org',
@@ -90,14 +88,26 @@ describe('Affinity', () => {
   after(() => {
     nock.cleanAll()
   })
+
   beforeEach(() => {
     nock('https://affinity-registry.staging.affinity-project.org')
       .post('/api/v1/did/resolve-did', /jolo/gi)
+      .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: joloDidDocument })
+
     nock('https://affinity-registry.staging.affinity-project.org')
       .post('/api/v1/did/resolve-did', /elem/gi)
+      .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: elemDidDocument })
+
+    nock('https://www.w3.org').get('/2018/credentials/v1').times(Number.MAX_SAFE_INTEGER).reply(200, credentialsV1)
+
+    nock('https://w3id.org')
+      .get('/vc-revocation-list-2020/v1')
+      .times(Number.MAX_SAFE_INTEGER)
+      .reply(200, revocationList2020V1)
   })
+
   it('#resolveDid', async () => {
     const didDocument = await affinity.resolveDid(didJolo)
 
@@ -375,8 +385,7 @@ describe('Affinity', () => {
     expect(result.result).to.be.true
   })
 
-  // Will not pass until affinity-registry is updated
-  it.skip('#validateCredential when credential is revokable (when not revoked)', async () => {
+  it('#validateCredential when credential is revokable (when not revoked)', async () => {
     nock('https://affinity-revocation.staging.affinity-project.org')
       .get('/api/v1/revocation/revocation-list-2020-credentials/1')
       .reply(200, revocationListCredential)
@@ -476,35 +485,5 @@ describe('Affinity', () => {
     expect(encryptedSeed).to.be.exist
     const { seed: decryptedSeed } = KeysService.decryptSeed(encryptedSeed, password)
     expect(decryptedSeed.toString('hex')).to.be.equal(joloSeed)
-  })
-})
-
-describe('Validation Snapshots', () => {
-  // TODO: to resolve: expected false to be true
-  it.skip('#validateCredential (already created/legacy creds)', async () => {
-    const result = await affinity.validateCredential(legacySignedCredential)
-
-    expect(result.result).to.be.true
-  })
-
-  it('#validateCredential (already created creds with longform DID)', async () => {
-    const result = await affinity.validateCredential(signedCredentialWithLongFormVerificationMethod)
-
-    expect(result.result).to.be.false
-  })
-
-  it('#validateCredential (already created/new creds)', async () => {
-    const result = await affinity.validateCredential(signedCredential)
-
-    expect(result.result).to.be.true
-  })
-  it('#validatePresentation (existing presentations)', async () => {
-    const result = await affinity.validatePresentation(signedPresentation)
-
-    if (result.result === false) {
-      console.log(result.error)
-    }
-
-    expect(result.result).to.be.true
   })
 })

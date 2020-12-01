@@ -51,6 +51,7 @@ import {
 
 import { randomBytes } from './shared/randomBytes'
 import { normalizeShortPassword } from './shared/normalizeShortPassword'
+import { normalizeUsername } from './shared/normalizeUsername'
 import { clearUserTokensFromSessionStorage, readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
 
 import {
@@ -142,7 +143,7 @@ export class CommonNetworkMember {
 
     this._accessApiKey = this._sdkOptions.accessApiKey
 
-    this._component = component
+    this._component = component || EventComponent.AffinidiCore
     this._metricsService = new MetricsService({
       metricsUrl,
       accessApiKey: this._accessApiKey,
@@ -153,7 +154,7 @@ export class CommonNetworkMember {
     this._revocationService = new RevocationService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
     this._jwtService = new JwtService()
-    this._holderService = new HolderService(this._sdkOptions)
+    this._holderService = new HolderService(this._sdkOptions, this._component)
     this._didDocumentService = new DidDocumentService(this._keysService)
     this._affinity = new Affinity({
       apiKey: this._accessApiKey,
@@ -303,6 +304,26 @@ export class CommonNetworkMember {
    */
   get password(): string {
     return this._password
+  }
+
+  /**
+   * @description Checks if registration for the user was completed
+   * @param username - a valid email, phone number or arbitrary username
+   * @param options - object with environment, staging is default { env: 'staging' }
+   * @returns `true` if user is uncofirmed in Cognito, and `false` otherwise.
+   */
+  static async isUserUnconfirmed(username: string, options: SdkOptions) {
+    await ParametersValidator.validate([
+      { isArray: false, type: 'string', isRequired: true, value: username },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+    ])
+
+    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const normalizedUsername = normalizeUsername(username)
+
+    return cognitoService.isUserUnconfirmed(normalizedUsername)
   }
 
   /**
@@ -873,10 +894,10 @@ export class CommonNetworkMember {
 
     password = normalizeShortPassword(password, username)
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId, keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.signUp(username, password, messageParameters, options)
+    await cognitoService.signUp(username, password, messageParameters, { ...options, keyStorageUrl })
 
     const token = `${username}::${password}`
 
@@ -1211,7 +1232,7 @@ export class CommonNetworkMember {
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.changeUsername(accessToken, newUsername, { userPoolId, clientId })
+    await cognitoService.changeUsername(accessToken, newUsername)
   }
 
   /**
@@ -2069,7 +2090,7 @@ export class CommonNetworkMember {
       // After validating the VP we need to validate the VP's challenge token
       // to ensure that it was issued from the correct DID and that it hasn't expired.
       try {
-        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.didDocumentKeyId)
+        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.did)
       } catch (error) {
         return {
           isValid: false,

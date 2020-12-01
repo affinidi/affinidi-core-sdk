@@ -22,6 +22,7 @@
     - [Get DID](#get-did)
     - [Passwordless sign in or sign up if user does not exist + DID creation](#passwordless-sign-in-or-sign-up-if-user-does-not-exist--did-creation)
     - [Confirm sign in](#confirm-sign-in)
+    - [Is user unconfirmed](#is-user-unconfirmed)
     - [Sign up](#sign-up)
     - [Get Signup VC](#get-signup-vc)
     - [Initiate instance of SDK with login and pasword](#initiate-instance-of-sdk-with-login-and-pasword)
@@ -56,6 +57,12 @@ npm i --save @affinidi/wallet-core-sdk
 ## Setup Integration Tests
 
 Test credentials should be added to the top level `.env` file. These contain usernames and passwords of pre-populated accounts on the staging environment. Reach out to a team member for instructions on how to set up this file, or to obtain a copy.
+
+You can also run integration tests against `dev`:
+
+```sh
+TEST_AGAINST=dev npm run test:integration
+```
 
 ## Initialize
 
@@ -216,6 +223,25 @@ const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(t
 
 Returns `isNew` flag, identifying whether new account was created, and
 initialized instance of SDK - `commonNetworkMember`.
+
+#### Is User Unconfirmed
+
+You can check if user is did not complete registration in Affinidi
+(is `UNCONFIRMED` in Cognito) with
+
+```ts
+const options = { env: 'staging' }
+
+const isUnconfirmed = await CommonNetworkMember.isUserUnconfirmed(username, options)
+```
+
+`username` - a valid email, phone number or arbitrary username
+
+`options` - used to specify:
+
+`env` - environment stack `dev | staging | prod`,
+
+Returns `true` if user is `UNCONFIRMED`, and `false` otherwise.
 
 #### Sign up
 

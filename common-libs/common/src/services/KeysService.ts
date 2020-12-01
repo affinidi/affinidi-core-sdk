@@ -257,10 +257,14 @@ export default class KeysService {
   signJWT(jwtObject: any, keyId: string = null) {
     if (!keyId) {
       const didDocumentService = new DidDocumentService(this)
+      const did = didDocumentService.getMyDid()
       keyId = didDocumentService.getKeyId()
-    }
 
-    jwtObject.payload.iss = keyId
+      jwtObject.payload.kid = keyId
+      jwtObject.payload.iss = did
+    } else {
+      jwtObject.payload.iss = keyId
+    }
 
     const toSign = [encode(JSON.stringify(jwtObject.header)), encode(JSON.stringify(jwtObject.payload))].join('.')
 

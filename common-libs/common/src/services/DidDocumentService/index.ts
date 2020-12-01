@@ -38,11 +38,14 @@ export default class DidDocumentService {
     return { id: 'did:...' }
   }
 
-  static getPublicKey(keyId: string, didDocument: any): Buffer {
+  static getPublicKey(fulleKeyId: string, didDocument: any, keyId?: string): Buffer {
     // Support finding the publicKey with the short form DID + fragment or full keyId
-    const { did, fragment } = parse(keyId)
-    const parsedKeyId = `${did}#${fragment}`
-    const keySection = didDocument.publicKey.find((section: any) => section.id === parsedKeyId || section.id === keyId)
+    if (!keyId) {
+      const { did, fragment } = parse(fulleKeyId)
+      keyId = `${did}#${fragment}`
+    }
+
+    const keySection = didDocument.publicKey.find((section: any) => section.id === keyId || section.id === fulleKeyId)
 
     if (!keySection) {
       throw new Error('Key not found.')

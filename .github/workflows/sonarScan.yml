@@ -1,0 +1,29 @@
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 */4 * * *'
+name: Sonarqube Workflow
+jobs:
+  sonarQubeTrigger:
+    name: SonarQube Trigger
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://npm.pkg.github.com/
+          scope: '@affinityproject'
+      - name: Install dependencies
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
+      - name: Docker PS
+        run: docker ps -a
+      - uses: mathrix-education/sonar-scanner@master
+        with:
+          version: 4.3.0.2102 # required
+          scan: true
+          args: --debug -Dsonar.login=${{ secrets.OSS_SONARQUBE_TOKEN }} -Dsonar.scm.provider=git -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} -Dsonar.projectKey=affinidi-core-sdk
