@@ -126,8 +126,18 @@ export class Affinity {
         throw new Error('The token nonce does not match the request')
       }
 
+      if (payload.aud && sendToken.payload.iss) {
+        const responseAudienceDid = parse(payload.aud).did
+        const requestIssuerDid = parse(sendToken.payload.iss)
+        if (requestIssuerDid !== responseAudienceDid) {
+          throw new Error('The request token issuer does not match audience of the response token')
+        }
+      }
+
       if (sendToken.payload.aud) {
-        if (sendToken.payload.aud !== did) {
+        const requestAudienceDid = parse(sendToken.payload.aud).did
+        const responseIssuerDid = parse(did).did
+        if (requestAudienceDid !== responseIssuerDid) {
           throw new Error('The token issuer does not match audience of the request token')
         }
       }
