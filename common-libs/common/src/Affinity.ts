@@ -428,6 +428,7 @@ export class Affinity {
     // send VP_SIGNED event
     const eventOptions = {
       link: did,
+      secondaryLink: opts.vp.id,
       name: EventName.VP_SIGNED,
     }
     this._metricsService.sendVpEvent(eventOptions)
@@ -454,6 +455,7 @@ export class Affinity {
     if (jwtObject.payload.typ === 'credentialResponse') {
       const eventOptions = {
         link: jwtObject.payload.iss,
+        secondaryLink: jwtObject.payload.jti,
         name: EventName.VP_SIGNED_JWT,
       }
       this._metricsService.sendVpEvent(eventOptions)
