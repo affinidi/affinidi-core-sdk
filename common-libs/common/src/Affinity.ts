@@ -437,28 +437,25 @@ export class Affinity {
     return JwtService.fromJWT(jwt)
   }
 
-  static signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
-    const keyService = new KeysService(encryptedSeed, encryptionKey)
-    const signedJwtObject = keyService.signJWT(jwtObject)
+  async signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
+    const signedJwtObject = Affinity.signJWTObject(jwtObject, encryptedSeed, encryptionKey)
 
     // send VP_SIGNED_JWT event
-    // TODO:
-    // this is a static method, no access to MetricsService (url, apikey, and component)
-    // not able to send the event without a breaking change
     if (jwtObject.payload.typ === 'credentialResponse') {
-      const metricsService = new MetricsService({
-        metricsUrl: DEFAULT_METRICS_URL,  // need to get this from AffinityOptions
-        accessApiKey: 'XXX',  // need to get this from AffinityOptions
-        component: EventComponent.AffinidiCommon,
-      })
       const eventOptions = {
         link: jwtObject.payload.iss,
         name: EventName.VP_SIGNED_JWT,
       }
-      metricsService.sendVpEvent(eventOptions)
+      this._metricsService.sendVpEvent(eventOptions)
     }
 
     return signedJwtObject
+  }
+
+  // to be deprecated and replaced with instance method
+  static signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
+    const keyService = new KeysService(encryptedSeed, encryptionKey)
+    return keyService.signJWT(jwtObject)
   }
 
   static encodeObjectToJWT(jwtObject: any) {
