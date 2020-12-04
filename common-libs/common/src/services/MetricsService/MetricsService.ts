@@ -8,7 +8,7 @@ import {
 } from '@affinidi/affinity-metrics-lib'
 
 import { VcMetadataParserFactory } from './parsers'
-import { EventOptions } from './dto/shared.dto'
+import { EventOptions } from '../../dto/shared.dto'
 
 class MetricsServiceOptions {
   accessApiKey: string
@@ -30,9 +30,7 @@ export default class MetricsService {
   }
 
   send(event: any): void {
-    const metricsEvent = Object.assign({}, event, { component: this._component })
-
-    metrics.send(metricsEvent, this._accessApiKey, this._metricsUrl)
+    metrics.send(event, this._accessApiKey, this._metricsUrl)
   }
 
   parseVcMetadata(credential: any, name: EventName): VcMetadata {
@@ -71,8 +69,9 @@ export default class MetricsService {
 
     const metadata = this.parseVcMetadata(credential, options.name)
     const event: EventInput = {
+      component: this._component,
       link: options.link,
-      secondary: options.secondaryLink,
+      secondaryLink: options.secondaryLink,
       name: options.name,
       category: EventCategory.VC,
       subCategory: options.subcategory,
@@ -89,8 +88,9 @@ export default class MetricsService {
     }
 
     const event: EventInput = {
+      component: this._component,
       link: options.link,
-      secondary: options.secondaryLink,
+      secondaryLink: options.secondaryLink,
       name: options.name,
       category: EventCategory.VP,
       subCategory: options.subcategory,
