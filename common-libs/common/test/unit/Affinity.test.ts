@@ -18,6 +18,8 @@ import { credentialsV1, revocationList2020V1 } from '../factory/w3'
 
 const options = {
   registryUrl: 'https://affinity-registry.staging.affinity-project.org',
+  metricsUrl: 'http://127.0.0.1:4000',
+  apiKey: '99239f630c70575350db4f2b2a693edce15762781778c99b403876308da83ac4',
 }
 
 const jwtObject = {
@@ -28,7 +30,7 @@ const jwtObject = {
   payload: {
     data: 'data',
     exp: Date.now(),
-    typ: 'type',
+    typ: 'credentialResponse', //'type',
     jti: '',
     aud: '',
   },
@@ -131,10 +133,18 @@ describe('Affinity', () => {
     expect(object.payload.typ).to.be.equal('credentialOfferResponse')
   })
 
-  it('#signJWTObject', async () => {
+  it('#signJWTObject (static method to be deprecated)', async () => {
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp: Date.now() + 1000 })
     jwtObject.payload = extendedPayload
     const signedJwtObject = await Affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
+
+    expect(signedJwtObject.signature).to.be.exist
+  })
+
+  it('#signJWTObject', async () => {
+    const extendedPayload = Object.assign({}, jwtObject.payload, { exp: Date.now() + 1000 })
+    jwtObject.payload = extendedPayload
+    const signedJwtObject = await affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
 
     expect(signedJwtObject.signature).to.be.exist
   })
