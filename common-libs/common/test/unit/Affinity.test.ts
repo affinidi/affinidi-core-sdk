@@ -30,7 +30,7 @@ const jwtObject = {
   payload: {
     data: 'data',
     exp: Date.now(),
-    typ: 'credentialResponse', //'type',
+    typ: 'type',
     jti: '',
     aud: '',
   },
