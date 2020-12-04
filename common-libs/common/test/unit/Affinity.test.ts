@@ -17,9 +17,7 @@ import { buildPresentation } from '../factory/presentation'
 import { credentialsV1, revocationList2020V1 } from '../factory/w3'
 
 const options = {
-  registryUrl: 'https://affinity-registry.staging.affinity-project.org',
-  metricsUrl: 'http://127.0.0.1:4000',
-  apiKey: '99239f630c70575350db4f2b2a693edce15762781778c99b403876308da83ac4',
+  registryUrl: 'https://affinity-registry.staging.affinity-project.org'
 }
 
 const jwtObject = {
