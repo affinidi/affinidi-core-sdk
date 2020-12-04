@@ -1,4 +1,4 @@
-import { EventName, EventCategory, EventComponent } from '@affinidi/affinity-metrics-lib'
+import { EventName, EventComponent } from '@affinidi/affinity-metrics-lib'
 
 export class AffinityOptions {
   apiKey?: string

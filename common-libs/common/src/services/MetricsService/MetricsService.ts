@@ -36,17 +36,18 @@ export default class MetricsService {
   parseVcMetadata(credential: any, name: EventName): VcMetadata {
     let vcMetadataParser
     switch (name) {
-
       // parse common + type-specific metadata for the following events
       case EventName.VC_SAVED:
       case EventName.VC_VERIFIED:
       case EventName.VC_VERIFIED_PER_PARTY:
         vcMetadataParser = this._vcMetadataParserFactory.createParser(credential.type[1])
+        break
 
       // parse only common metadata otherwise
       default:
         vcMetadataParser = this._vcMetadataParserFactory.createParser('default')
     }
+
     const metadata = vcMetadataParser.parse(credential)
     return metadata
   }
@@ -62,7 +63,6 @@ export default class MetricsService {
   }
 
   sendVcEvent(credential: any, options: EventOptions): void {
-
     if (this._isTestEnvironment()) {
       return
     }
@@ -82,7 +82,6 @@ export default class MetricsService {
   }
 
   sendVpEvent(options: EventOptions): void {
-
     if (this._isTestEnvironment()) {
       return
     }
