@@ -326,7 +326,7 @@ export class Affinity {
       secondaryLink: unsignedCredential.id,
       name: EventName.VC_SIGNED,
     }
-    this._metricsService.sendVcEvent(signedVc, eventOptions)
+    this._metricsService.sendVcEvent(unsignedCredential, eventOptions)
 
     return signedVc
   }
