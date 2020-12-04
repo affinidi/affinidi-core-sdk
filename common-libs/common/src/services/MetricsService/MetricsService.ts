@@ -74,7 +74,7 @@ export default class MetricsService {
       secondaryLink: options.secondaryLink,
       name: options.name,
       category: EventCategory.VC,
-      subCategory: options.subcategory,
+      subCategory: options.subcategory || '',
       metadata: metadata,
     }
 
@@ -92,7 +92,7 @@ export default class MetricsService {
       secondaryLink: options.secondaryLink,
       name: options.name,
       category: EventCategory.VP,
-      subCategory: options.subcategory,
+      subCategory: options.subcategory || '',
     }
 
     this.send(event)

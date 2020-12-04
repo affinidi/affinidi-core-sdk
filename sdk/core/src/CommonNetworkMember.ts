@@ -1915,6 +1915,7 @@ export class CommonNetworkMember {
       secondaryLink: verifierDid,
       name: EventName.VC_VERIFIED_PER_PARTY,
       category: EventCategory.VC,
+      subCategory: 'verify per party',
       metadata: metadata,
     }
 
