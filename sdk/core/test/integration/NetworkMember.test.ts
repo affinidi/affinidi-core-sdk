@@ -3,6 +3,7 @@
 import { expect } from 'chai'
 import * as jwt from 'jsonwebtoken'
 import { Affinity } from '@affinidi/common'
+import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
@@ -29,8 +30,10 @@ const {
   ISSUER_ENCRYPTED_SEED,
   HOLDER_PASSWORD,
   HOLDER_ENCRYPTED_SEED,
+  HOLDER_DID_SHORT,
   UPDATING_ENCRYPTED_SEED,
   UPDATING_DID,
+  VERIFIER_ENCRYPTED_SEED,
 } = JSON.parse(TEST_SECRETS)
 
 const password = PASSWORD
@@ -337,9 +340,34 @@ describe('CommonNetworkMember', () => {
     expect(updatedDidDocument.authentication).to.be.deep.equal(updatedAuthentication)
   })
 
-  // temp skip until revoke 2.0 impl
-  it.skip('#buildRevocationListStatus, #revokeCredential', async () => {
-    const accessToken = 'token'
+  it('#buildRevocationListStatus, #revokeCredential', async () => {
+    const verifierEncryptedSeed = VERIFIER_ENCRYPTED_SEED
+    const verifierPassword = password
+    const verifierDidAuthServiceOptions = {
+      encryptedSeed: verifierEncryptedSeed,
+      encryptionKey: verifierPassword,
+    }
+    const verifierAuthService = new DidAuthService(verifierDidAuthServiceOptions)
+    const holderDid = HOLDER_DID_SHORT
+    const didRequestToken = await verifierAuthService.createDidAuthRequestToken(holderDid)
+
+    const holderEncryptedSeed = HOLDER_ENCRYPTED_SEED
+    const holderPassword = password
+    const holderDidAuthServiceOptions = {
+      encryptedSeed: holderEncryptedSeed,
+      encryptionKey: holderPassword,
+    }
+    const holderDidAuthService = new DidAuthService(holderDidAuthServiceOptions)
+    const didResponseToken = await holderDidAuthService.createDidAuthResponseToken(didRequestToken)
+
+    const verifierOptions = {
+      environment: options.env,
+      accessApiKey: options.accessApiKey,
+    }
+    const isDidTokenValid = await verifierAuthService.verifyDidAuthResponseToken(didResponseToken, verifierOptions)
+    expect(isDidTokenValid).to.equal(true)
+
+    const accessToken = didResponseToken
     const credId = new Date().toISOString()
     const unsignedCredential = buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({

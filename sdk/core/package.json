@@ -79,6 +79,7 @@
     "uuid": "^8.3.1"
   },
   "devDependencies": {
+    "@affinidi/affinidi-did-auth-lib": "^1.0.1",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@kravc/request": "1.0.0",
