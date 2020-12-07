@@ -337,7 +337,8 @@ describe('CommonNetworkMember', () => {
     expect(updatedDidDocument.authentication).to.be.deep.equal(updatedAuthentication)
   })
 
-  it('#buildRevocationListStatus, #revokeCredential', async () => {
+  // temp skip until revoke 2.0 impl
+  it.skip('#buildRevocationListStatus, #revokeCredential', async () => {
     const accessToken = 'token'
     const credId = new Date().toISOString()
     const unsignedCredential = buildVCV1Unsigned({

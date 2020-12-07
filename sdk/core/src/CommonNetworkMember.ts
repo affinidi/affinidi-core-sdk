@@ -1902,7 +1902,7 @@ export class CommonNetworkMember {
     const verifierDid = this.did
 
     for (const credential of credentials) {
-      const metadata = this._metricsService.parseVcMetadata(credential)
+      const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_VERIFIED_PER_PARTY)
       this._sendVCVerifiedPerPartyMetric(credential.id, verifierDid, metadata)
     }
   }
@@ -1910,11 +1910,12 @@ export class CommonNetworkMember {
   /* istanbul ignore next: private method */
   private _sendVCVerifiedPerPartyMetric(vcId: string, verifierDid: string, metadata: EventMetadata) {
     const event = {
+      component: this._component,
       link: vcId,
       secondaryLink: verifierDid,
       name: EventName.VC_VERIFIED_PER_PARTY,
       category: EventCategory.VC,
-      subCategory: 'verify',
+      subCategory: 'verify per party',
       metadata: metadata,
     }
 
@@ -1923,6 +1924,7 @@ export class CommonNetworkMember {
 
   private _sendVCSavedMetric(vcId: string, issuerId: string, metadata: EventMetadata) {
     const event = {
+      component: this._component,
       link: vcId,
       secondaryLink: issuerId,
       name: EventName.VC_SAVED,
@@ -1936,7 +1938,7 @@ export class CommonNetworkMember {
 
   protected _sendVCSavedMetrics(credentials: SignedCredential[]) {
     for (const credential of credentials) {
-      const metadata = this._metricsService.parseVcMetadata(credential)
+      const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_SAVED)
       const vcId = credential.id
       // the issuer property could be either an URI string or an object with id propoerty
       // https://www.w3.org/TR/vc-data-model/#issuer
