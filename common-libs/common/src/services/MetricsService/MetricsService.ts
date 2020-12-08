@@ -68,6 +68,10 @@ export default class MetricsService {
     }
 
     const metadata = this.parseVcMetadata(credential, options.name)
+    if (options.verificationMetadata) {
+      metadata.verification = options.verificationMetadata
+    }
+
     const event: EventInput = {
       component: this._component,
       link: options.link,
