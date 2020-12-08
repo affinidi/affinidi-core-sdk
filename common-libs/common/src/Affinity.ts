@@ -267,7 +267,7 @@ export class Affinity {
           eventOptions.verificationMetadata = {
             isValid: false,
             invalidReason: VerificationInvalidReason.ERROR,
-            errorMessage: errors
+            errorMessage: errors,
           }
           this._metricsService.sendVcEvent(credential, eventOptions)
           return {
@@ -285,7 +285,7 @@ export class Affinity {
             verificationMetadata: {
               isValid: false,
               invalidReason: VerificationInvalidReason.HOLDER_MISMATCHED,
-            }
+            },
           }
           this._metricsService.sendVcEvent(credential, eventOptions)
           return { result: false, error: `${credential.id}: The provided holder is not holder of this credential.` }
@@ -299,7 +299,7 @@ export class Affinity {
         eventOptions = {
           link: parse(result.data.holder.id).did,
           name: EventName.VC_VERIFIED,
-          verificationMetadata: { isValid: false, invalidReason: VerificationInvalidReason.REVOKED}
+          verificationMetadata: { isValid: false, invalidReason: VerificationInvalidReason.REVOKED },
         }
         this._metricsService.sendVcEvent(credential, eventOptions)
         return { result: false, error }
@@ -309,7 +309,7 @@ export class Affinity {
       eventOptions = {
         link: parse(result.data.holder.id).did,
         name: EventName.VC_VERIFIED,
-        verificationMetadata: { isValid: true }
+        verificationMetadata: { isValid: true },
       }
       this._metricsService.sendVcEvent(credential, eventOptions)
 
@@ -412,8 +412,8 @@ export class Affinity {
         verificationMetadata: {
           isValid: false,
           invalidReason: VerificationInvalidReason.ERROR,
-          errorMessage: errors
-        }
+          errorMessage: errors,
+        },
       }
       this._metricsService.sendVpEvent(eventOptions)
 
@@ -427,7 +427,7 @@ export class Affinity {
     eventOptions = {
       link: parse(result.data.holder.id).did,
       name: EventName.VC_VERIFIED,
-      verificationMetadata: { isValid: true }
+      verificationMetadata: { isValid: true },
     }
     this._metricsService.sendVpEvent(eventOptions)
 
