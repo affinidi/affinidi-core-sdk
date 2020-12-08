@@ -340,16 +340,17 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#buildRevocationListStatus, #revokeCredential', async () => {
-    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+    const fullOptions: SdkOptions = getOptionsForEnvironment(true)
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, fullOptions)
     const holderDid = commonNetworkMember.did
     const didAuthRequestParams = {
       audienceDid: holderDid,
     }
-    const issuerServer = `https://affinity-issuer.${options.env}.affinity-project.org`
+    const issuerServer = `https://affinity-issuer.${fullOptions.env}.affinity-project.org`
     const didRequestTokenResponse = await request(issuerServer)
       .post('/api/v1/did-auth/create-did-auth-request')
       .send(didAuthRequestParams)
-      .set('Api-Key', options.accessApiKey)
+      .set('Api-Key', fullOptions.accessApiKey)
 
     expect(didRequestTokenResponse.status).to.equal(200)
     expect(didRequestTokenResponse.body).to.exist
@@ -392,8 +393,7 @@ describe('CommonNetworkMember', () => {
       accessToken,
     )
 
-    const affinityOptions = Object.assign({}, options, { apiKey: options.accessApiKey })
-
+    const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
     const affinity = new Affinity(affinityOptions)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
     const createdCredential = await affinity.signCredential(revokableUnsignedCredential, encryptedSeedElem, password)
