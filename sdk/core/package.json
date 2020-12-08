@@ -45,10 +45,10 @@
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "0.0.23",
     "@affinidi/common": "1.4.0",
+    "@affinidi/issuer-email-ses-client": "^0.1.0",
+    "@affinidi/issuer-phone-twilio-client": "^0.1.0",
     "@affinidi/vc-common": "1.2.0",
     "@affinidi/vc-data": "1.1.3",
-    "@affinityproject/issuer-email-ses-client": "^0.1.0",
-    "@affinityproject/issuer-phone-twilio-client": "^0.1.0",
     "@types/async-retry": "^1.4.2",
     "@types/create-hash": "^1.2.2",
     "@types/jsonld": "^1.5.1",
@@ -93,6 +93,7 @@
     "@types/node": "13.13.15",
     "@types/randombytes": "2.0.0",
     "@types/sinon": "9.0.4",
+    "@types/supertest": "^2.0.10",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "3.8.0",
     "@typescript-eslint/parser": "3.8.0",
@@ -111,6 +112,7 @@
     "nyc": "15.1.0",
     "prettier": "2.0.5",
     "sinon": "9.0.2",
+    "supertest": "^6.0.1",
     "ts-node": "8.10.2",
     "typedoc": "0.16.11",
     "typescript": "3.9.7"
