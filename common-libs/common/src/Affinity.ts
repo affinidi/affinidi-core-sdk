@@ -116,7 +116,7 @@ export class Affinity {
 
     // send successful VP_VERIFIED_JWT event
     if (payload.typ === 'credentialResponse') {
-      const eventOptions = {
+      const eventOptions: EventOptions = {
         link: did,
         name: EventName.VP_VERIFIED_JWT,
       }
@@ -242,10 +242,8 @@ export class Affinity {
           throw new Error(`Unsupported proofPurpose: ${proofPurpose}`)
         },
       })(credential)
-      const eventOptions: EventOptions = {
-        link: parse(result.data.holder.id).did,
-        name: EventName.VC_VERIFIED,
-      }
+
+      let eventOptions: EventOptions
 
       if (result.kind === 'invalid') {
         let legacyValidated
@@ -262,6 +260,10 @@ export class Affinity {
         } else {
           const errors = result.errors.map((error) => `${error.kind}: ${error.message}`).join('\n')
           // send failed VC_VERIFIED event due to generic error
+          const eventOptions: EventOptions = {
+            link: credential.holder.id, // no access to result.data in case of error
+            name: EventName.VC_VERIFIED,
+          }
           eventOptions.verificationMetadata = {
             isValid: false,
             invalidReason: VerificationInvalidReason.ERROR,
@@ -277,9 +279,13 @@ export class Affinity {
         const holderDid = DidDocumentService.keyIdToDid(holderKey)
         if (parse(result.data.holder.id).did !== parse(holderDid).did) {
           // send failed VC_VERIFIED event due to holder mismatch
-          eventOptions.verificationMetadata = {
-            isValid: false,
-            invalidReason: VerificationInvalidReason.HOLDER_MISMATCHED,
+          eventOptions = {
+            link: parse(result.data.holder.id).did,
+            name: EventName.VC_VERIFIED,
+            verificationMetadata: {
+              isValid: false,
+              invalidReason: VerificationInvalidReason.HOLDER_MISMATCHED,
+            }
           }
           this._metricsService.sendVcEvent(credential, eventOptions)
           return { result: false, error: `${credential.id}: The provided holder is not holder of this credential.` }
@@ -290,13 +296,21 @@ export class Affinity {
       const { verified, error } = await this._checkCredentialStatus(credential)
       if (!verified) {
         // send failed VC_VERIFIED event due to revocation
-        eventOptions.verificationMetadata = { isValid: false, invalidReason: VerificationInvalidReason.REVOKED}
+        eventOptions = {
+          link: parse(result.data.holder.id).did,
+          name: EventName.VC_VERIFIED,
+          verificationMetadata: { isValid: false, invalidReason: VerificationInvalidReason.REVOKED}
+        }
         this._metricsService.sendVcEvent(credential, eventOptions)
         return { result: false, error }
       }
 
       // send successful VC_VERIFIED event
-      eventOptions.verificationMetadata = { isValid: true }
+      eventOptions = {
+        link: parse(result.data.holder.id).did,
+        name: EventName.VC_VERIFIED,
+        verificationMetadata: { isValid: true }
+      }
       this._metricsService.sendVcEvent(credential, eventOptions)
 
       return { result: true, error: '' }
@@ -386,18 +400,20 @@ export class Affinity {
         }
       },
     })(vp)
-    const eventOptions: EventOptions = {
-      link: parse(result.data.holder.id).did,
-      name: EventName.VP_VERIFIED,
-    }
+
+    let eventOptions: EventOptions
 
     if (result.kind === 'invalid') {
       const errors = result.errors.map((error) => `${error.kind}: ${error.message}`).join('\n')
       // send failed VP_VERIFIED event due to generic error
-      eventOptions.verificationMetadata = {
-        isValid: false,
-        invalidReason: VerificationInvalidReason.ERROR,
-        errorMessage: errors
+      eventOptions = {
+        link: vp.holder.id, // no access to result.data in case of error
+        name: EventName.VP_VERIFIED,
+        verificationMetadata: {
+          isValid: false,
+          invalidReason: VerificationInvalidReason.ERROR,
+          errorMessage: errors
+        }
       }
       this._metricsService.sendVpEvent(eventOptions)
 
@@ -408,7 +424,11 @@ export class Affinity {
     }
 
     // send successful VP_VERIFIED event
-    eventOptions.verificationMetadata = { isValid: true }
+    eventOptions = {
+      link: parse(result.data.holder.id).did,
+      name: EventName.VC_VERIFIED,
+      verificationMetadata: { isValid: true }
+    }
     this._metricsService.sendVpEvent(eventOptions)
 
     return { result: true, data: result.data }
