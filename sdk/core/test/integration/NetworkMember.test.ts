@@ -33,6 +33,7 @@ const {
   HOLDER_ENCRYPTED_SEED,
   UPDATING_ENCRYPTED_SEED,
   UPDATING_DID,
+  ISSUER_ELEM_SEED
 } = JSON.parse(TEST_SECRETS)
 
 const password = PASSWORD
@@ -341,7 +342,7 @@ describe('CommonNetworkMember', () => {
 
   it('#buildRevocationListStatus, #revokeCredential', async () => {
     const fullOptions: SdkOptions = getOptionsForEnvironment(true)
-    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, fullOptions)
+    const commonNetworkMember = new CommonNetworkMember(password, ISSUER_ELEM_SEED, fullOptions)
     const holderDid = commonNetworkMember.did
     const didAuthRequestParams = {
       audienceDid: holderDid,
@@ -357,7 +358,7 @@ describe('CommonNetworkMember', () => {
 
     const didRequestToken = didRequestTokenResponse.body
 
-    const holderEncryptedSeed = encryptedSeedElem
+    const holderEncryptedSeed = ISSUER_ELEM_SEED
     const holderPassword = password
     const holderDidAuthServiceOptions = {
       encryptedSeed: holderEncryptedSeed,
@@ -396,7 +397,7 @@ describe('CommonNetworkMember', () => {
     const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
     const affinity = new Affinity(affinityOptions)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
-    const createdCredential = await affinity.signCredential(revokableUnsignedCredential, encryptedSeedElem, password)
+    const createdCredential = await affinity.signCredential(revokableUnsignedCredential, ISSUER_ELEM_SEED, password)
 
     const sucessResult = await affinity.validateCredential(createdCredential)
     expect(sucessResult.result).to.equal(true)
