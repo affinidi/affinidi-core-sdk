@@ -2,6 +2,7 @@ import {
   metrics,
   EventComponent,
   VcMetadata,
+  VpMetadata,
   EventCategory,
   EventName,
   EventInput,
@@ -68,6 +69,10 @@ export default class MetricsService {
     }
 
     const metadata = this.parseVcMetadata(credential, options.name)
+    if (options.verificationMetadata) {
+      metadata.verification = options.verificationMetadata
+    }
+
     const event: EventInput = {
       component: this._component,
       link: options.link,
@@ -86,6 +91,12 @@ export default class MetricsService {
       return
     }
 
+    let metadata: VpMetadata
+
+    if (options.verificationMetadata) {
+      metadata = { verification: options.verificationMetadata }
+    }
+
     const event: EventInput = {
       component: this._component,
       link: options.link,
@@ -93,6 +104,7 @@ export default class MetricsService {
       name: options.name,
       category: EventCategory.VP,
       subCategory: options.subcategory || '',
+      metadata: metadata,
     }
 
     this.send(event)
