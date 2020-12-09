@@ -2,7 +2,7 @@ import {
   DefaultApiFp as Api,
   InlineResponse200 as _InitiateResponse,
   InlineResponse2001 as _VerifyResponse,
-} from '@affinityproject/issuer-email-ses-client'
+} from '@affinidi/issuer-email-ses-client'
 import { VCEmailPersonV1 } from '@affinidi/vc-data'
 import { AxiosInstance } from 'axios'
 import { profile } from '@affinidi/common'

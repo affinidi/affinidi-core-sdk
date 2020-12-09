@@ -2,7 +2,7 @@ import {
   DefaultApiFp as Api,
   InlineResponse200 as _InitiateResponse,
   InlineResponse2001 as _VerifyResponse,
-} from '@affinityproject/issuer-phone-twilio-client'
+} from '@affinidi/issuer-phone-twilio-client'
 import { VCPhonePersonV1, VCAccountPersonV1 } from '@affinidi/vc-data'
 import { AxiosInstance } from 'axios'
 import { profile } from '@affinidi/common'
