@@ -351,7 +351,6 @@ export class Affinity {
       }
 
       // send VC_VERIFIED event when verification is successful
-      // TODO: also record failed verification?
       if (result.data.holder) {
         // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
         const eventOptions = {
