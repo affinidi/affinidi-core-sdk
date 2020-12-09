@@ -277,11 +277,14 @@ export class Affinity {
 
       // send VC_VERIFIED event when verification is successful
       // TODO: also record failed verification?
-      const eventOptions = {
-        link: parse(result.data.holder.id).did,
-        name: EventName.VC_VERIFIED,
+      if (result.data.holder) {
+        // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
+        const eventOptions = {
+          link: parse(result.data.holder.id).did,
+          name: EventName.VC_VERIFIED,
+        }
+        this._metricsService.sendVcEvent(credential, eventOptions)
       }
-      this._metricsService.sendVcEvent(credential, eventOptions)
 
       return { result: true, error: '' }
     }
@@ -321,12 +324,15 @@ export class Affinity {
     })
 
     // send VC_SIGNED event
-    const eventOptions = {
-      link: parse(unsignedCredential.holder.id).did,
-      secondaryLink: unsignedCredential.id,
-      name: EventName.VC_SIGNED,
+    if (unsignedCredential.holder) {
+      // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
+      const eventOptions = {
+        link: parse(unsignedCredential.holder.id).did,
+        secondaryLink: unsignedCredential.id,
+        name: EventName.VC_SIGNED,
+      }
+      this._metricsService.sendVcEvent(unsignedCredential, eventOptions)
     }
-    this._metricsService.sendVcEvent(unsignedCredential, eventOptions)
 
     return signedVc
   }
