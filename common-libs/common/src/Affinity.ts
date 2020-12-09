@@ -304,17 +304,22 @@ export class Affinity {
           return legacyValidated
         } else {
           const errors = result.errors.map((error) => `${error.kind}: ${error.message}`).join('\n')
+
           // send failed VC_VERIFIED event due to generic error
-          const eventOptions: EventOptions = {
-            link: credential.holder.id, // no access to result.data in case of error
-            name: EventName.VC_VERIFIED,
+          if (credential.holder) {
+            // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
+            const eventOptions: EventOptions = {
+              link: credential.holder.id, // no access to result.data in case of error
+              name: EventName.VC_VERIFIED,
+            }
+            eventOptions.verificationMetadata = {
+              isValid: false,
+              invalidReason: VerificationInvalidReason.ERROR,
+              errorMessage: errors,
+            }
+            this._metricsService.sendVcEvent(credential, eventOptions)
           }
-          eventOptions.verificationMetadata = {
-            isValid: false,
-            invalidReason: VerificationInvalidReason.ERROR,
-            errorMessage: errors,
-          }
-          this._metricsService.sendVcEvent(credential, eventOptions)
+
           return {
             result: false,
             error: `${credential.id}: The following errors have occurred:\n${errors}`,
