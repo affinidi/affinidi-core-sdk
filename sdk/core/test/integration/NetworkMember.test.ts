@@ -1,8 +1,10 @@
 'use strict'
 
 import { expect } from 'chai'
+import request from 'supertest'
 import * as jwt from 'jsonwebtoken'
 import { Affinity } from '@affinidi/common'
+import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../../src/CommonNetworkMember'
@@ -31,6 +33,7 @@ const {
   HOLDER_ENCRYPTED_SEED,
   UPDATING_ENCRYPTED_SEED,
   UPDATING_DID,
+  ISSUER_ELEM_SEED,
 } = JSON.parse(TEST_SECRETS)
 
 const password = PASSWORD
@@ -337,9 +340,37 @@ describe('CommonNetworkMember', () => {
     expect(updatedDidDocument.authentication).to.be.deep.equal(updatedAuthentication)
   })
 
-  // temp skip until revoke 2.0 impl
-  it.skip('#buildRevocationListStatus, #revokeCredential', async () => {
-    const accessToken = 'token'
+  it('#buildRevocationListStatus, #revokeCredential', async () => {
+    const fullOptions: SdkOptions = getOptionsForEnvironment(true)
+    const commonNetworkMember = new CommonNetworkMember(password, ISSUER_ELEM_SEED, fullOptions)
+    const holderDid = commonNetworkMember.did
+    const didAuthRequestParams = {
+      audienceDid: holderDid,
+    }
+    const issuerServer = `https://affinity-issuer.${fullOptions.env}.affinity-project.org`
+    const didRequestTokenResponse = await request(issuerServer)
+      .post('/api/v1/did-auth/create-did-auth-request')
+      .send(didAuthRequestParams)
+      .set('Api-Key', fullOptions.accessApiKey)
+
+    expect(didRequestTokenResponse.status).to.equal(200)
+    expect(didRequestTokenResponse.body).to.exist
+
+    const didRequestToken = didRequestTokenResponse.body
+
+    const holderEncryptedSeed = ISSUER_ELEM_SEED
+    const holderPassword = password
+    const holderDidAuthServiceOptions = {
+      encryptedSeed: holderEncryptedSeed,
+      encryptionKey: holderPassword,
+    }
+    const didAuthService = new DidAuthService(holderDidAuthServiceOptions)
+    const didResponseToken = await didAuthService.createDidAuthResponseToken(didRequestToken)
+
+    expect(didResponseToken).to.exist
+
+    const accessToken = didResponseToken
+
     const credId = new Date().toISOString()
     const unsignedCredential = buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
@@ -350,7 +381,7 @@ describe('CommonNetworkMember', () => {
             telephone: '+1 555 555 5555',
           },
         },
-        holder: { id: 'did:elem:placeholder' },
+        holder: { id: holderDid },
         type: 'PhoneCredentialPersonV1',
         context: getVCPhonePersonV1Context(),
       }),
@@ -358,17 +389,15 @@ describe('CommonNetworkMember', () => {
       expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
     })
 
-    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
     const revokableUnsignedCredential = await commonNetworkMember.buildRevocationListStatus(
       unsignedCredential,
       accessToken,
     )
 
-    const affinityOptions = Object.assign({}, options, { apiKey: options.accessApiKey })
-
+    const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
     const affinity = new Affinity(affinityOptions)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
-    const createdCredential = await affinity.signCredential(revokableUnsignedCredential, encryptedSeedElem, password)
+    const createdCredential = await affinity.signCredential(revokableUnsignedCredential, ISSUER_ELEM_SEED, password)
 
     const sucessResult = await affinity.validateCredential(createdCredential)
     expect(sucessResult.result).to.equal(true)

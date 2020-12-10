@@ -1,4 +1,4 @@
-import { EventName, EventComponent } from '@affinidi/affinity-metrics-lib'
+import { EventName, EventComponent, VerificationMetadata } from '@affinidi/affinity-metrics-lib'
 
 export class AffinityOptions {
   apiKey?: string
@@ -12,4 +12,5 @@ export class EventOptions {
   secondaryLink?: string
   name: EventName
   subcategory?: string
+  verificationMetadata?: VerificationMetadata
 }
