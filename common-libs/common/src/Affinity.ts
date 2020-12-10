@@ -120,14 +120,7 @@ export class Affinity {
     }
 
     try {
-      let issuerPublicKey
-      try {
-        issuerPublicKey = await this._getCredentialIssuerPublicKey(credential, didDocument)
-      } catch (e) {
-        console.log(e)
-        throw e
-      }
-
+      const issuerPublicKey = await this._getCredentialIssuerPublicKey(credential, didDocument)
       const { digest, signature } = await this._digestService.getJsonLdDigest(credential)
 
       result = KeysService.verify(digest, issuerPublicKey, signature)
@@ -136,7 +129,6 @@ export class Affinity {
         return { result, error: `${credential.id}: Signature is not valid.` }
       }
     } catch (error) {
-      console.log(JSON.stringify(error))
       return { result: false, error: `${credential.id}: ${error.message}` }
     }
 
