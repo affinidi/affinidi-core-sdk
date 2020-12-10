@@ -256,7 +256,7 @@ describe('Affinity', () => {
     expect(result.result).to.be.true
   })
 
-  it.only('#signPresentation (elem)', async () => {
+  it('#signPresentation (elem)', async () => {
     const unsignedCredential = buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
         id: 'claimId:63b5d11c0d1b5566',
