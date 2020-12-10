@@ -256,7 +256,7 @@ describe('Affinity', () => {
     expect(result.result).to.be.true
   })
 
-  it('#signPresentation (elem)', async () => {
+  it.only('#signPresentation (elem)', async () => {
     const unsignedCredential = buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
         id: 'claimId:63b5d11c0d1b5566',
@@ -482,6 +482,8 @@ describe('Affinity', () => {
 describe('Validation Snapshots', () => {
   it('#validateCredential (already created/legacy creds)', async () => {
     const result = await affinity.validateCredential(legacySignedCredential)
+
+    console.log(result.error)
 
     expect(result.result).to.be.true
   })

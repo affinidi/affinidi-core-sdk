@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/common",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Common utilities and types for Affinidi SDKs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -71,7 +71,7 @@
     "@affinidi/vc-data": "^1.1.1",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/wallet-core-sdk": "2.0.0",
+    "@affinidi/wallet-core-sdk": "2.1.0",
     "@types/chai": "4.2.12",
     "@types/ethereumjs-util": "5.2.0",
     "@types/express": "4.17.7",
