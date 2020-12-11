@@ -17,14 +17,14 @@ const {
   ENCRYPTED_SEED_ELEM,
   DID_ELEM_SHORT,
   DID_ELEM_PARAMS,
-  DID_JOLO,
+  DID_ELEM,
 } = JSON.parse(TEST_SECRETS)
 
 const cognitoUsername = COGNITO_USERNAME
 const cognitoPassword = COGNITO_PASSWORD
 
 const data = { firstName: 'Denis', lastName: 'Popov' }
-const did = DID_JOLO
+const did = DID_ELEM
 
 const walletPassword = PASSWORD
 
