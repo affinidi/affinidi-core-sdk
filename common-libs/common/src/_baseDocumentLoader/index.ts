@@ -42,6 +42,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { parseLinkHeader, LINK_HEADER_CONTEXT, prependBase } from './util'
+import { localContexts } from './localContexts'
 
 let fetch: any
 
@@ -53,6 +54,17 @@ export const baseDocumentLoader = async (url: string) => {
   const loader = async (url: string) => {
     if (url.indexOf('http:') !== 0 && url.indexOf('https:') !== 0) {
       throw new Error('URL could not be deferenced; only "http" and "https" URLs are supported')
+    }
+
+    // If we have a local copy of the context do no make a request
+    const localContext = localContexts[url]
+
+    if (typeof localContext !== 'undefined') {
+      return {
+        contextUrl: null,
+        document: localContext,
+        documentUrl: url,
+      }
     }
 
     let res: Response

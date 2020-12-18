@@ -2054,6 +2054,7 @@ export class CommonNetworkMember {
 
     return this._affinity.signPresentation({
       vp: buildVPV1Unsigned({
+        id: `presentationId:${randomBytes(8).toString('hex')}`,
         vcs: vcs.filter((vc) => requestedTypes.includes(vc.type[1])),
         holder: { id: this.did },
       }),
