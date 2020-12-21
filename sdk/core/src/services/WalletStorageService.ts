@@ -266,11 +266,15 @@ export default class WalletStorageService {
         credentialRequirements.map((credentialRequirement: any) => credentialRequirement.type)
 
       return credentials.filter((credential: any) => {
-        for (const requirementType of requirementTypes) {
-          const isTypeMatchRequirements = this.isTypeMatchRequirements(credential.type, requirementType)
+        const isW3cCredential = credential.type
 
-          if (isTypeMatchRequirements) {
-            return credential
+        if (isW3cCredential) {
+          for (const requirementType of requirementTypes) {
+            const isTypeMatchRequirements = this.isTypeMatchRequirements(credential.type, requirementType)
+
+            if (isTypeMatchRequirements) {
+              return credential
+            }
           }
         }
       })
