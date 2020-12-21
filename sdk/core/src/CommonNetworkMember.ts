@@ -53,6 +53,7 @@ import { randomBytes } from './shared/randomBytes'
 import { normalizeShortPassword } from './shared/normalizeShortPassword'
 import { normalizeUsername } from './shared/normalizeUsername'
 import { clearUserTokensFromSessionStorage, readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
+import { isW3cCredential } from './_helpers'
 
 import {
   DEV_REVOCATION_URL,
@@ -1522,9 +1523,7 @@ export class CommonNetworkMember {
     const credentialTypes = []
 
     for (const credential of credentialRequirements) {
-      const isW3cCredential = credential.type
-
-      if (isW3cCredential) {
+      if (isW3cCredential(credential)) {
         const type = credential.type[1] // seems its always next structure type: ['Credential', 'ProofOfEmailCredential|....']
         credentialTypes.push(type)
       }
@@ -1942,9 +1941,7 @@ export class CommonNetworkMember {
 
   protected _sendVCSavedMetrics(credentials: SignedCredential[]) {
     for (const credential of credentials) {
-      const isW3cCredential = credential.type
-
-      if (isW3cCredential) {
+      if (isW3cCredential(credential)) {
         const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_SAVED)
         const vcId = credential.id
         // the issuer property could be either an URI string or an object with id propoerty
