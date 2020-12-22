@@ -9,7 +9,7 @@ import { getOtp, getOptionsForEnvironment } from '../../helpers'
 import { AffinityWallet } from '../../../src/AffinityWallet'
 
 const signedCredentials = require('../../factory/signedCredentials')
-const openAttestationDocument = require('../../factory/openAttestationDocument')
+const { openAttestationDocument } = require('../../factory/openAttestationDocument')
 
 const DELAY = 1000
 // prettier-ignore
@@ -62,12 +62,22 @@ describe('AffinityWallet (flows that require OTP)', () => {
 
     expect(credentials).to.have.length(1)
 
-    const credentialIdToDelete = credentials[0].id
+    const firstCredential = credentials[0]
+
+    const isW3cCredential = __dangerous.isW3cCredential(firstCredential)
+
+    const credentialIdToDelete = isW3cCredential ? firstCredential.id : firstCredential.data.id
 
     await networkMember.deleteCredential(credentialIdToDelete)
     credentials = await networkMember.getCredentials()
 
-    const credentialIds = credentials.map((credential: any) => credential.id)
+    const credentialIds = credentials.map((credential: any) => {
+      if (__dangerous.isW3cCredential(credential)) {
+        return credential.id
+      }
+
+      return credential.data.id
+    })
 
     expect(credentialIds).to.not.include(credentialIdToDelete)
     expect(credentials).to.have.length(0)

@@ -43,7 +43,15 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
     if (blobs && blobs.length) {
       for (const blob of blobs) {
         const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
-        this._credentialsIdsAndIndexesMap[credential.id] = blob.id
+        const isW3cCredential = __dangerous.isW3cCredential(credential)
+
+        let key = credential.id
+
+        if (!isW3cCredential) {
+          key = credential.data.id
+        }
+
+        this._credentialsIdsAndIndexesMap[key] = blob.id
 
         decryptedCredentials.push(credential)
       }
