@@ -14,6 +14,6 @@ export const stripParamsFromDidUrl = (did: string): string =>
     // Strip out query params
     .replace(/([?][^#]*)?/g, '')
 
-export function isW3cCredential (credential: any): boolean {
+export function isW3cCredential(credential: any): boolean {
   return !!credential.type
 }
