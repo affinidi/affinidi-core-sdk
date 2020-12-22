@@ -7,6 +7,7 @@ import { __dangerous } from '@affinidi/wallet-core-sdk'
 import { getOtp, getOptionsForEnvironment } from '../../helpers'
 
 import { AffinityWallet } from '../../../src/AffinityWallet'
+const { openAttestationDocument } = require('../../factory/openAttestationDocument')
 
 const signedCredentials = require('../../factory/signedCredentials')
 
@@ -27,9 +28,64 @@ const generateEmail = () => {
   return `test.user-${TIMESTAMP}@gdwk.in`
 }
 
+const credentialShareRequestToken =
+  'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.e' +
+  'yJpbnRlcmFjdGlvblRva2VuIjp7ImNyZWRlbnRpYWxSZXF1aXJlbWVudHMiOlt7InR5cGUiOls' +
+  'iQ3JlZGVudGlhbCIsIlRlc3REZW5pc0NyZWQiXSwiY29uc3RyYWludHMiOlt7Ij09IjpbeyJ2Y' +
+  'XIiOiJpc3N1ZXIifSwiZGlkOmpvbG86ZjU1OTI2NWI2YzFiZWNkNTYxMDljNTYyMzQzNWZhNzk' +
+  '3YWQ0MzA4YTRhNjg2ZjhlZGE3MDlmMzM4N2QzMDNlNiJdfV19XSwiY2FsbGJhY2tVUkwiOiJod' +
+  'HRwczovL2t1ZG9zLWlzc3Vlci1iYWNrZW5kLmFmZmluaXR5LXByb2plY3Qub3JnL2t1ZG9zX29' +
+  'mZmVyaW5nLyJ9LCJleHAiOjE2MTI5NjE5NTY3NzAsInR5cCI6ImNyZWRlbnRpYWxSZXF1ZXN0I' +
+  'iwianRpIjoiNDkyNjU3MmU2MzU0ZmIxOCIsImlzcyI6ImRpZDpqb2xvOmY1NTkyNjViNmMxYmV' +
+  'jZDU2MTA5YzU2MjM0MzVmYTc5N2FkNDMwOGE0YTY4NmY4ZWRhNzA5ZjMzODdkMzAzZTYja2V5c' +
+  'y0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9c44eac73f3' +
+  '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
+
 const cognitoPassword = COGNITO_PASSWORD
 
 describe('AffinityWallet (flows that require OTP)', () => {
+  it('Save Open Attestation credential and #deleteCredential scenario', async () => {
+    const cognitoUsername = generateEmail()
+
+    const token = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
+
+    await wait(DELAY)
+    const signUpOtp = await getOtp()
+
+    const networkMember = await AffinityWallet.confirmSignUp(token, signUpOtp, options)
+
+    let credentials
+
+    await networkMember.saveCredentials([openAttestationDocument])
+    credentials = await networkMember.getCredentials(credentialShareRequestToken)
+
+    expect(credentials).to.have.length(0)
+
+    credentials = await networkMember.getCredentials()
+
+    expect(credentials).to.have.length(1)
+
+    const firstCredential = credentials[0]
+
+    const isW3cCredential = __dangerous.isW3cCredential(firstCredential)
+
+    const credentialIdToDelete = isW3cCredential ? firstCredential.id : firstCredential.data.id
+
+    await networkMember.deleteCredential(credentialIdToDelete)
+    credentials = await networkMember.getCredentials()
+
+    const credentialIds = credentials.map((credential: any) => {
+      if (__dangerous.isW3cCredential(credential)) {
+        return credential.id
+      }
+
+      return credential.data.id
+    })
+
+    expect(credentialIds).to.not.include(credentialIdToDelete)
+    expect(credentials).to.have.length(0)
+  })
+
   // To double check with Dion, it seems that bloom vault is not working properly for dev
   // FetchError: invalid json response body at https://bloom-vault.dev.affinity-project.org/auth/request-token?did=did:ethr:0xe2c00f290e7ce500d7dcaea7108b2eb5e44c2caf reason: Unexpected end of JSON input
   it('#deleteCredentials scenario', async () => {
