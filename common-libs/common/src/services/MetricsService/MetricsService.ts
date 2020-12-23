@@ -1,6 +1,15 @@
-import { metrics, EventComponent, VcMetadata } from '@affinidi/affinity-metrics-lib'
+import {
+  metrics,
+  EventComponent,
+  VcMetadata,
+  VpMetadata,
+  EventCategory,
+  EventName,
+  EventInput,
+} from '@affinidi/affinity-metrics-lib'
 
 import { VcMetadataParserFactory } from './parsers'
+import { EventOptions } from '../../dto/shared.dto'
 
 class MetricsServiceOptions {
   accessApiKey: string
@@ -22,21 +31,82 @@ export default class MetricsService {
   }
 
   send(event: any): void {
-    const metricsEvent = Object.assign({}, event, { component: this._component })
-
-    metrics.send(metricsEvent, this._accessApiKey, this._metricsUrl)
+    metrics.send(event, this._accessApiKey, this._metricsUrl)
   }
 
-  parseVcMetadata(credential: any): VcMetadata {
-    const vcMetadataParser = this._vcMetadataParserFactory.createParser(credential.type[1])
+  parseVcMetadata(credential: any, name: EventName): VcMetadata {
+    let vcMetadataParser
+    switch (name) {
+      // parse common + type-specific metadata for the following events
+      case EventName.VC_SAVED:
+      case EventName.VC_VERIFIED:
+      case EventName.VC_VERIFIED_PER_PARTY:
+        vcMetadataParser = this._vcMetadataParserFactory.createParser(credential.type[1])
+        break
+
+      // parse only common metadata otherwise
+      default:
+        vcMetadataParser = this._vcMetadataParserFactory.createParser('default')
+    }
+
     const metadata = vcMetadataParser.parse(credential)
     return metadata
   }
 
-  // use this method to explicitly parse only common metadata
-  parseCommonVcMetadata(credential: any): VcMetadata {
-    const vcMetadataParser = this._vcMetadataParserFactory.createParser('default')
-    const metadata = vcMetadataParser.parse(credential)
-    return metadata
+  private _isTestEnvironment(): boolean {
+    let isTestEnvironment = false
+
+    if (process && process.env) {
+      isTestEnvironment = process.env.NODE_ENV === 'test'
+    }
+
+    return isTestEnvironment
+  }
+
+  sendVcEvent(credential: any, options: EventOptions): void {
+    if (this._isTestEnvironment()) {
+      return
+    }
+
+    const metadata = this.parseVcMetadata(credential, options.name)
+    if (options.verificationMetadata) {
+      metadata.verification = options.verificationMetadata
+    }
+
+    const event: EventInput = {
+      component: this._component,
+      link: options.link,
+      secondaryLink: options.secondaryLink,
+      name: options.name,
+      category: EventCategory.VC,
+      subCategory: options.subcategory || '',
+      metadata: metadata,
+    }
+
+    this.send(event)
+  }
+
+  sendVpEvent(options: EventOptions): void {
+    if (this._isTestEnvironment()) {
+      return
+    }
+
+    let metadata: VpMetadata
+
+    if (options.verificationMetadata) {
+      metadata = { verification: options.verificationMetadata }
+    }
+
+    const event: EventInput = {
+      component: this._component,
+      link: options.link,
+      secondaryLink: options.secondaryLink,
+      name: options.name,
+      category: EventCategory.VP,
+      subCategory: options.subcategory || '',
+      metadata: metadata,
+    }
+
+    this.send(event)
   }
 }

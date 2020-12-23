@@ -2,9 +2,9 @@ import { buildVCV1, buildVPV1 } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
-import { EventComponent, EventCategory, EventName, EventMetadata, EventInput } from '@affinidi/affinity-metrics-lib'
+import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/affinity-metrics-lib'
 
-import { AffinityOptions } from './dto/shared.dto'
+import { AffinityOptions, EventOptions } from './dto/shared.dto'
 import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
 import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
@@ -35,35 +35,6 @@ export class Affinity {
       accessApiKey: this._apiKey,
       component: this._component,
     })
-  }
-
-  private _sendVCVerifiedMetric(credential: any, holderDid: string) {
-    const metadata: EventMetadata = this._metricsService.parseVcMetadata(credential)
-    const event: EventInput = {
-      link: holderDid,
-      name: EventName.VC_VERIFIED,
-      category: EventCategory.VC,
-      subCategory: 'verify',
-      component: this._component,
-      metadata: metadata,
-    }
-
-    this._metricsService.send(event)
-  }
-
-  private _sendVCSignedMetric(credential: any, holderDid: string, vcId: string) {
-    const metadata: EventMetadata = this._metricsService.parseCommonVcMetadata(credential)
-    const event: EventInput = {
-      link: holderDid,
-      secondaryLink: vcId,
-      name: EventName.VC_SIGNED,
-      category: EventCategory.VC,
-      subCategory: 'sign',
-      component: this._component,
-      metadata: metadata,
-    }
-
-    this._metricsService.send(event)
   }
 
   private async _resolveDidIfNoDidDocument(did: string, didDocument?: any): Promise<any> {
@@ -111,11 +82,31 @@ export class Affinity {
     const { digest: tokenDigest, signature } = this._digestService.getTokenDigest(token)
     const isSignatureVerified = KeysService.verify(tokenDigest, publicKey, signature)
 
+    const eventOptions: EventOptions = { link: did, name: EventName.VP_VERIFIED_JWT }
+
     if (!isSignatureVerified) {
+      if (payload.typ === 'credentialResponse') {
+        // send failed VP_VERIFIED_JWT event due to invalid signature
+        eventOptions.verificationMetadata = {
+          isValid: false,
+          invalidReason: VerificationInvalidReason.JWT_INVALID_SIGNATURE,
+        }
+        this._metricsService.sendVpEvent(eventOptions)
+      }
+
       throw new Error('Signature on token is invalid')
     }
 
     if (payload.exp < Date.now()) {
+      if (payload.typ === 'credentialResponse') {
+        // send failed VP_VERIFIED_JWT event due to token expired
+        eventOptions.verificationMetadata = {
+          isValid: false,
+          invalidReason: VerificationInvalidReason.JWT_EXPIRED,
+        }
+        this._metricsService.sendVpEvent(eventOptions)
+      }
+
       throw new Error('Token expired')
     }
 
@@ -123,14 +114,59 @@ export class Affinity {
       const sendToken = Affinity.fromJwt(initialEncryptedtoken)
 
       if (sendToken.payload.jti !== payload.jti) {
+        if (payload.typ === 'credentialResponse') {
+          // send failed VP_VERIFIED_JWT event due to token nonce mismatch
+          eventOptions.verificationMetadata = {
+            isValid: false,
+            invalidReason: VerificationInvalidReason.JWT_NONCE_MISMATCHED,
+          }
+          this._metricsService.sendVpEvent(eventOptions)
+        }
+
         throw new Error('The token nonce does not match the request')
       }
 
+      if (payload.aud && sendToken.payload.iss) {
+        const responseAudienceDid = parse(payload.aud).did // the one who received and verified the VP
+        const requestIssuerDid = parse(sendToken.payload.iss).did // the one who requested the VP to verify
+        if (requestIssuerDid !== responseAudienceDid) {
+          if (payload.typ === 'credentialResponse') {
+            // send failed VP_VERIFIED_JWT event due to audience mismatch:
+            // the verifier who verified the VP is not the one who requested for it
+            eventOptions.verificationMetadata = {
+              isValid: false,
+              invalidReason: VerificationInvalidReason.JWT_VERIFIER_MISMATCHED,
+            }
+            this._metricsService.sendVpEvent(eventOptions)
+          }
+
+          throw new Error('The request token issuer does not match audience of the response token')
+        }
+      }
+
       if (sendToken.payload.aud) {
-        if (sendToken.payload.aud !== did) {
+        const requestAudienceDid = parse(sendToken.payload.aud).did // the intended holder requested by the verifier
+        const responseIssuerDid = parse(did).did // the holder who sent the VP in response to the verifier
+        if (requestAudienceDid !== responseIssuerDid) {
+          if (payload.typ === 'credentialResponse') {
+            // send failed VP_VERIFIED_JWT event due to audience mismatch:
+            // the holder who sent the VP is not the one specified by verifier in the original request
+            eventOptions.verificationMetadata = {
+              isValid: false,
+              invalidReason: VerificationInvalidReason.JWT_HOLDER_MISMATCHED,
+            }
+            this._metricsService.sendVpEvent(eventOptions)
+          }
+
           throw new Error('The token issuer does not match audience of the request token')
         }
       }
+    }
+
+    // send successful VP_VERIFIED_JWT event
+    if (payload.typ === 'credentialResponse') {
+      eventOptions.verificationMetadata = { isValid: true }
+      this._metricsService.sendVpEvent(eventOptions)
     }
   }
 
@@ -252,6 +288,8 @@ export class Affinity {
         },
       })(credential)
 
+      let eventOptions: EventOptions
+
       if (result.kind === 'invalid') {
         let legacyValidated
 
@@ -267,6 +305,21 @@ export class Affinity {
         } else {
           const errors = result.errors.map((error) => `${error.kind}: ${error.message}`).join('\n')
 
+          // send failed VC_VERIFIED event due to generic error
+          if (credential.holder) {
+            // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
+            const eventOptions: EventOptions = {
+              link: credential.holder.id, // no access to result.data in case of error
+              name: EventName.VC_VERIFIED,
+            }
+            eventOptions.verificationMetadata = {
+              isValid: false,
+              invalidReason: VerificationInvalidReason.ERROR,
+              errorMessage: errors,
+            }
+            this._metricsService.sendVcEvent(credential, eventOptions)
+          }
+
           return {
             result: false,
             error: `${credential.id}: The following errors have occurred:\n${errors}`,
@@ -275,25 +328,41 @@ export class Affinity {
       } else if (holderKey) {
         const holderDid = DidDocumentService.keyIdToDid(holderKey)
         if (parse(result.data.holder.id).did !== parse(holderDid).did) {
+          // send failed VC_VERIFIED event due to holder mismatch
+          eventOptions = {
+            link: parse(result.data.holder.id).did,
+            name: EventName.VC_VERIFIED,
+            verificationMetadata: {
+              isValid: false,
+              invalidReason: VerificationInvalidReason.HOLDER_MISMATCHED,
+            },
+          }
+          this._metricsService.sendVcEvent(credential, eventOptions)
           return { result: false, error: `${credential.id}: The provided holder is not holder of this credential.` }
         }
       }
 
+      // check revocation status
       const { verified, error } = await this._checkCredentialStatus(credential)
       if (!verified) {
+        // send failed VC_VERIFIED event due to revocation
+        eventOptions = {
+          link: parse(result.data.holder.id).did,
+          name: EventName.VC_VERIFIED,
+          verificationMetadata: { isValid: false, invalidReason: VerificationInvalidReason.REVOKED },
+        }
+        this._metricsService.sendVcEvent(credential, eventOptions)
         return { result: false, error }
       }
 
-      // send VC_VERIFIED metrics when verification is successful
-      // TODO: also record failed verification?
-      let isTestEnvironment = false
-
-      if (process && process.env) {
-        isTestEnvironment = process.env.NODE_ENV === 'test'
-      }
-
-      if (!isTestEnvironment) {
-        this._sendVCVerifiedMetric(credential, parse(result.data.holder.id).did)
+      // send VC_VERIFIED event when verification is successful
+      if (result.data.holder) {
+        // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
+        const eventOptions = {
+          link: parse(result.data.holder.id).did,
+          name: EventName.VC_VERIFIED,
+        }
+        this._metricsService.sendVcEvent(credential, eventOptions)
       }
 
       return { result: true, error: '' }
@@ -311,7 +380,7 @@ export class Affinity {
     const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
-    const vc = buildVCV1({
+    const signedVc = buildVCV1({
       unsigned: unsignedCredential,
       issuer: {
         did,
@@ -334,19 +403,17 @@ export class Affinity {
     })
 
     // send VC_SIGNED event
-    let isTestEnvironment = false
-
-    if (process && process.env) {
-      isTestEnvironment = process.env.NODE_ENV === 'test'
+    if (unsignedCredential.holder) {
+      // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
+      const eventOptions = {
+        link: parse(unsignedCredential.holder.id).did,
+        secondaryLink: unsignedCredential.id,
+        name: EventName.VC_SIGNED,
+      }
+      this._metricsService.sendVcEvent(unsignedCredential, eventOptions)
     }
 
-    if (!isTestEnvironment) {
-      const holderDid = parse(unsignedCredential.holder.id).did
-      const vcId = unsignedCredential.id
-      this._sendVCSignedMetric(unsignedCredential, holderDid, vcId)
-    }
-
-    return vc
+    return signedVc
   }
 
   async validatePresentation(
@@ -389,14 +456,35 @@ export class Affinity {
       },
     })(vp)
 
+    let eventOptions: EventOptions
+
     if (result.kind === 'invalid') {
       const errors = result.errors.map((error) => `${error.kind}: ${error.message}`).join('\n')
+      // send failed VP_VERIFIED event due to generic error
+      eventOptions = {
+        link: vp.holder.id, // no access to result.data in case of error
+        name: EventName.VP_VERIFIED,
+        verificationMetadata: {
+          isValid: false,
+          invalidReason: VerificationInvalidReason.ERROR,
+          errorMessage: errors,
+        },
+      }
+      this._metricsService.sendVpEvent(eventOptions)
 
       return {
         result: false,
         error: `${vp.id}: The following errors have occurred:\n${errors}`,
       }
     }
+
+    // send successful VP_VERIFIED event
+    eventOptions = {
+      link: parse(result.data.holder.id).did,
+      name: EventName.VP_VERIFIED,
+      verificationMetadata: { isValid: true },
+    }
+    this._metricsService.sendVpEvent(eventOptions)
 
     return { result: true, data: result.data }
   }
@@ -412,7 +500,7 @@ export class Affinity {
     const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
-    return buildVPV1({
+    const signedVp = buildVPV1({
       unsigned: opts.vp,
       holder: {
         did,
@@ -434,6 +522,16 @@ export class Affinity {
         domain: opts.purpose.domain,
       }),
     })
+
+    // send VP_SIGNED event
+    const eventOptions = {
+      link: did,
+      secondaryLink: opts.vp.id,
+      name: EventName.VP_SIGNED,
+    }
+    this._metricsService.sendVpEvent(eventOptions)
+
+    return signedVp
   }
 
   private async _getCredentialIssuerPublicKey(credential: any, didDocument?: any): Promise<Buffer> {
@@ -448,9 +546,25 @@ export class Affinity {
     return JwtService.fromJWT(jwt)
   }
 
+  async signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
+    const signedJwtObject = Affinity.signJWTObject(jwtObject, encryptedSeed, encryptionKey)
+
+    // send VP_SIGNED_JWT event
+    if (jwtObject.payload.typ === 'credentialResponse') {
+      const eventOptions = {
+        link: jwtObject.payload.iss,
+        secondaryLink: jwtObject.payload.jti,
+        name: EventName.VP_SIGNED_JWT,
+      }
+      this._metricsService.sendVpEvent(eventOptions)
+    }
+
+    return signedJwtObject
+  }
+
+  // to be deprecated and replaced with instance method
   static signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
     const keyService = new KeysService(encryptedSeed, encryptionKey)
-
     return keyService.signJWT(jwtObject)
   }
 

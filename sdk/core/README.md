@@ -200,6 +200,15 @@ const token = await CommonNetworkMember.signIn(username, options, messageParamet
 `username` - email or phoneNumber, of existing Cognito user or if it
 does not exist, a new one will be created.
 
+```
+IMPORTANT: Username is case sensitive, so 2 separate accounts will be created
+on sign up for `Test@gmail.com` and `test@gmail.com`.
+
+In case you want to have a case-agnostic behaviour, please resolve this
+on the application layer by normalizing the input before passing it to the SDK
+(e.g. email.toLowerCase()).
+```
+
 `options` - (optional) used to specify environment stack `dev | staging | prod`.
 `messageParameters` - (optional) used to specify message, htmlMessage, subject, see signup method.
 
@@ -254,6 +263,15 @@ const token = await CommonNetworkMember.signUp(username, password, options, mess
 
 `username` - arbitrary username, email, phone number (+123456789). In case of
 arbitrary username, password recovery is not possible.
+
+```
+IMPORTANT: Username is case sensitive, so 2 separate accounts will be created
+on sign up for `Test@gmail.com` and `test@gmail.com`.
+
+In case you want to have a case-agnostic behaviour, please resolve this
+on the application layer by normalizing the input before passing it to the SDK
+(e.g. email.toLowerCase()).
+```
 
 `password` - optional.
 Requirements: min length 8, require number, upper and lowercase letter.
