@@ -18,7 +18,8 @@ export type CourtRecordSearchQueryV1 = CreateThing<
   {
     parent?: PersonEV1
     spouse?: PersonEV1
-    address: CreateExpandedThing<'PostalAddress'>
+    birthDate?: string
+    address: CreateExpandedThing<'PostalAddress'> | string
     addressStatus: 'current' | 'permanent' | 'past'
   }
 >
@@ -37,6 +38,7 @@ const getHelperContextEntries = () => {
     typeIdBase: 'affSchema',
     fields: {
       parent: 'schema',
+      birthDate: 'schema',
       spouse: 'schema',
       address: 'schema',
       addressStatus: 'affSchema',
