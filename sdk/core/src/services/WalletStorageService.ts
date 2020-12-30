@@ -7,6 +7,7 @@ import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
 
 import { Env } from '../dto/shared.dto'
+import { isW3cCredential } from '../_helpers'
 
 import { FreeFormObject } from '../shared/interfaces'
 
@@ -266,11 +267,13 @@ export default class WalletStorageService {
         credentialRequirements.map((credentialRequirement: any) => credentialRequirement.type)
 
       return credentials.filter((credential: any) => {
-        for (const requirementType of requirementTypes) {
-          const isTypeMatchRequirements = this.isTypeMatchRequirements(credential.type, requirementType)
+        if (isW3cCredential(credential)) {
+          for (const requirementType of requirementTypes) {
+            const isTypeMatchRequirements = this.isTypeMatchRequirements(credential.type, requirementType)
 
-          if (isTypeMatchRequirements) {
-            return credential
+            if (isTypeMatchRequirements) {
+              return credential
+            }
           }
         }
       })
