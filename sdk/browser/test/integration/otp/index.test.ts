@@ -95,10 +95,12 @@ describe('AffinityWallet (flows that require OTP)', () => {
 
     let credentials
 
+    signedCredentials.push({ anything: {} })
+
     await networkMember.saveCredentials(signedCredentials)
     credentials = await networkMember.getCredentials()
 
-    expect(credentials).to.have.length(3)
+    expect(credentials).to.have.length(4)
 
     const credentialIdToDelete = credentials[1].id
 
@@ -108,7 +110,7 @@ describe('AffinityWallet (flows that require OTP)', () => {
     const credentialIds = credentials.map((credential: any) => credential.id)
 
     expect(credentialIds).to.not.include(credentialIdToDelete)
-    expect(credentials).to.have.length(2)
+    expect(credentials).to.have.length(3)
 
     await networkMember.deleteAllCredentials()
     credentials = await networkMember.getCredentials()

@@ -98,3 +98,4 @@ describe('VCEducationPersonV1', () => {
       }
     `)
   })
+})

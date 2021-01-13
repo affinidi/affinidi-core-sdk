@@ -1,3 +1,4 @@
+import randomBytes from 'randombytes'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
 
 import KeysService from './KeysService'
@@ -36,7 +37,7 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
     return encryptedCredentials
   }
 
-  async decryptCredentials(blobs: any): Promise<any> {
+  async decryptCredentials(blobs: any) {
     const decryptedCredentials = []
 
     /* istanbul ignore else: code simplicity */
@@ -47,8 +48,12 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
 
         let key = credential.id
 
-        if (!isW3cCredential) {
+        if (!isW3cCredential && credential.data) {
           key = credential.data.id
+        }
+
+        if (!key) {
+          key = await randomBytes(8).toString('hex')
         }
 
         this._credentialsIdsAndIndexesMap[key] = blob.id
