@@ -11,8 +11,6 @@ import WalletStorageService from '../../../src/services/WalletStorageService'
 let seed: string
 let password: string
 
-// const seed = 'e775df62d6ed8a82068a070a2a7283aac978c6f38c5001ce1e5da41604fde998'
-// const didMethod = 'elem'
 let encryptedSeed: string
 
 let walletStorageService: any

@@ -1,7 +1,9 @@
+import randomBytes from 'randombytes'
+
+import { profile } from '@affinidi/common'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
 
 import KeysService from './KeysService'
-import { profile } from '@affinidi/common'
 
 @profile()
 export default class WalletStorageService extends __dangerous.WalletStorageService {
@@ -51,8 +53,12 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
 
         let key = credential.id
 
-        if (!isW3cCredential) {
+        if (!isW3cCredential && credential.data) {
           key = credential.data.id
+        }
+
+        if (!key) {
+          key = await randomBytes(8).toString('hex')
         }
 
         this._credentialsIdsAndIndexesMap[key] = blob.id
