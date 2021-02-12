@@ -40,7 +40,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
-    "@affinidi/vc-common": "1.2.0",
+    "@affinidi/vc-common": "file:affinidi-vc-common-1.2.0.tgz",
     "@affinidi/affinity-metrics-lib": "0.0.25",
     "@types/create-hash": "^1.2.2",
     "@types/jsonld": "^1.5.1",

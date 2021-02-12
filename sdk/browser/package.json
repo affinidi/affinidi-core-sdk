@@ -39,8 +39,8 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@affinidi/common": "1.5.0",
-    "@affinidi/wallet-core-sdk": "4.0.3",
+    "@affinidi/common": "file:affinidi-common-1.5.0.tgz",
+    "@affinidi/wallet-core-sdk": "file:affinidi-wallet-core-sdk-4.0.3.tgz",
     "@affinidi/affinity-metrics-lib": "0.0.25",
     "@sentry/browser": "^5.18.0",
     "bip32": "^2.0.5",

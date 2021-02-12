@@ -234,6 +234,11 @@ export default class CognitoService {
     messageParameters?: MessageParameters,
     options: any = {},
   ): Promise<any> {
+    console.log('<CognitoService> signUp')
+    let before
+
+    before = Date.now()
+
     const UserAttributes = this._buildUserAttributes(Username)
 
     const normalizedUsername = normalizeUsername(Username)
@@ -245,18 +250,25 @@ export default class CognitoService {
 
     try {
       const response = await this.cognitoidentityserviceprovider.signUp(params).promise()
+      console.log('  in signUp after this.cognitoidentityserviceprovider.signUp', { diff: Date.now() - before })
 
       return response
     } catch (error) {
       switch (error.code) {
         case 'UsernameExistsException': {
+          before = Date.now()
           const isUserUnconfirmed = await this.isUserUnconfirmed(normalizedUsername)
+          console.log('  in signUp after this.isUserUnconfirmed', { diff: Date.now() - before })
 
           if (isUserUnconfirmed) {
             // NOTE: this will remove unconfirmed user so we won't get here 2nd time
+            before = Date.now()
             await WalletStorageService.adminDeleteUnconfirmedUser(normalizedUsername, options)
+            console.log('  in signUp after WalletStorageService.adminDeleteUnconfirmedUser', { diff: Date.now() - before })
 
+            before = Date.now()
             await this.signUp(Username, Password, messageParameters, options)
+            console.log('  in signUp after WalletStorageService.adminDeleteUnconfirmedUser', { diff: Date.now() - before })
 
             break
           }
@@ -303,7 +315,12 @@ export default class CognitoService {
   }
 
   async confirmSignUp(Username: string, ConfirmationCode: string): Promise<any> {
+    console.log('<CognitoService> in confirmSignUp')
     Username = normalizeUsername(Username)
+
+    let before
+
+    before = Date.now()
 
     const { clientId: ClientId } = this.cognitoOptions
 
@@ -311,6 +328,7 @@ export default class CognitoService {
 
     try {
       const response = await this.cognitoidentityserviceprovider.confirmSignUp(params).promise()
+      console.log('  in confirmSignUp after this.cognitoidentityserviceprovider.confirmSignUp', { diff: Date.now() - before })
 
       return response
     } catch (error) {

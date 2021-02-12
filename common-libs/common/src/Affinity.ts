@@ -374,11 +374,24 @@ export class Affinity {
     encryptedSeed: string,
     encryptionKey: string,
   ): Promise<VCV1> {
+    console.log('<Common LIB> signCredential')
+    let before
+
+    before = Date.now()
+
     const keyService = new KeysService(encryptedSeed, encryptionKey)
     const { seed, didMethod } = keyService.decryptSeed()
 
+    console.log('  in signCredential after keyService.decryptSeed', { diff: Date.now() - before })
+
+    before = Date.now()
+
     const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
+
+    console.log('  in signCredential after getMyDid', { diff: Date.now() - before })
+
+    before = Date.now()
 
     const signedVc = buildVCV1({
       unsigned: unsignedCredential,
@@ -402,6 +415,10 @@ export class Affinity {
       }),
     })
 
+    console.log('  in signCredential after buildVCV1', { diff: Date.now() - before })
+
+    before = Date.now()
+
     // send VC_SIGNED event
     if (unsignedCredential.holder) {
       // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
@@ -412,6 +429,8 @@ export class Affinity {
       }
       this._metricsService.sendVcEvent(unsignedCredential, eventOptions)
     }
+
+    console.log('  in signCredential after sendVcEvent', { diff: Date.now() - before })
 
     return signedVc
   }

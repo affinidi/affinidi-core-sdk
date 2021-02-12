@@ -365,6 +365,11 @@ export default class WalletStorageService {
   }
 
   static async adminConfirmUser(username: string, options: any = {}): Promise<void> {
+    console.log('<CognitoService> in adminConfirmUser')
+    let before
+
+    before = Date.now()
+
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
 
     const url = `${keyStorageUrl}/api/v1/userManagement/adminConfirmUser`
@@ -376,6 +381,8 @@ export default class WalletStorageService {
       params: { username },
       method: 'POST',
     })
+
+    console.log('  adminConfirmUser after API call to keyStorageUrl', { diff: Date.now() - before })
   }
 
   static async adminDeleteUnconfirmedUser(username: string, options: any = {}): Promise<void> {

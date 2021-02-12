@@ -873,6 +873,12 @@ export class CommonNetworkMember {
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
   ): Promise<string | any> {
+    console.log('<SDK> in _signUp')
+    let before
+
+    before = Date.now()
+
+
     const { isUsername } = validateUsername(username)
 
     let passwordMustBeProvided = false
@@ -898,7 +904,10 @@ export class CommonNetworkMember {
     const { userPoolId, clientId, keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
+
     await cognitoService.signUp(username, password, messageParameters, { ...options, keyStorageUrl })
+
+    console.log('  in _signUp after cognitoService.signUp', { diff: Date.now() - before })
 
     const token = `${username}::${password}`
 
@@ -974,9 +983,17 @@ export class CommonNetworkMember {
     confirmationCode: string,
     options: SdkOptions = {},
   ): Promise<any> {
+    console.log('<SDK> in _confirmSignUpUser')
+
+    let before
+
+    before = Date.now()
+
     const [username] = token.split('::')
 
     const { isUsername } = validateUsername(username)
+
+    console.log('  _confirmSignUpUser after validateUsername', { diff: Date.now() - before })
 
     const fullOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
     const { userPoolId, clientId } = fullOptions
@@ -984,9 +1001,13 @@ export class CommonNetworkMember {
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
     if (isUsername) {
+      before = Date.now()
       await WalletStorageService.adminConfirmUser(username, fullOptions)
+      console.log('  _confirmSignUpUser after WalletStorageService.adminConfirmUser', { diff: Date.now() - before })
     } else {
+      before = Date.now()
       await cognitoService.confirmSignUp(username, confirmationCode)
+      console.log('  _confirmSignUpUser after cognitoService.confirmSignUp', { diff: Date.now() - before })
     }
 
     return cognitoService
@@ -998,6 +1019,11 @@ export class CommonNetworkMember {
     keyParams: KeyParams = {},
     options: SdkOptions = {},
   ): Promise<any> {
+    console.log('<SDK> in _confirmSignUp')
+    let before
+
+    before = Date.now()
+
     const parts = token.split('::')
     const username = parts[0]
     let password = parts[1]
@@ -1013,10 +1039,19 @@ export class CommonNetworkMember {
       encryptedSeed = result.encryptedSeed
     }
 
-    const cognitoService = await CommonNetworkMember._confirmSignUpUser(token, confirmationCode, options)
-    password = normalizeShortPassword(password, username)
-    options.cognitoUserTokens = await cognitoService.signIn(username, password)
+    console.log('  in _confirmSignUp after this.register', { diff: Date.now() - before })
 
+    before = Date.now()
+    const cognitoService = await CommonNetworkMember._confirmSignUpUser(token, confirmationCode, options)
+    console.log('  in _confirmSignUp after CommonNetworkMember._confirmSignUpUser', { diff: Date.now() - before })
+
+    password = normalizeShortPassword(password, username)
+
+    before = Date.now()
+    options.cognitoUserTokens = await cognitoService.signIn(username, password)
+    console.log('  in _confirmSignUp after cognitoService.signIn', { diff: Date.now() - before })
+
+    before = Date.now()
     const { accessToken } = options.cognitoUserTokens
 
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
@@ -1026,6 +1061,7 @@ export class CommonNetworkMember {
       passwordHash,
       encryptionKey,
     )
+    console.log('  in _confirmSignUp after WalletStorageService.pullEncryptionKey and CommonNetworkMember.reencryptSeedWithEncryptionKey', { diff: Date.now() - before })
 
     const commonNetworkMember = new this(encryptionKey, updatedEncryptedSeed, options)
 
@@ -1035,7 +1071,9 @@ export class CommonNetworkMember {
       return commonNetworkMember
     }
 
+    before = Date.now()
     await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
+    console.log('  in _confirmSignUp after commonNetworkMember.storeEncryptedSeed', { diff: Date.now() - before })
 
     return commonNetworkMember
   }
@@ -1659,6 +1697,10 @@ export class CommonNetworkMember {
     signCredentialOptionalInput: SignCredentialOptionalInput,
     expiresAt?: string,
   ): Promise<VCV1> {
+    console.log('<SDK> in signCredential')
+
+    let before = Date.now()
+
     await ParametersValidator.validate([
       { isArray: false, type: 'object', isRequired: true, value: credentialSubject },
       { isArray: false, type: ClaimMetadata, isRequired: true, value: claimMetadata },
@@ -1679,6 +1721,10 @@ export class CommonNetworkMember {
       requesterDid = credentialOfferResponse.payload.iss
     }
 
+    console.log('  in signCredential after JwtService.fromJWT', { diff: Date.now() - before })
+
+    before = Date.now()
+
     const unsignedCredential = buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton({
         id: `claimId:${randomBytes(8).toString('hex')}`,
@@ -1691,7 +1737,14 @@ export class CommonNetworkMember {
       expirationDate: expiresAt ? new Date(expiresAt).toISOString() : undefined,
     })
 
-    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
+    console.log('  in signCredential after buildVCV1Unsigned', { diff: Date.now() - before })
+
+    before = Date.now()
+    const credential = await this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
+
+    console.log('  in signCredential after this._affinity.signCredential', { diff: Date.now() - before })
+
+    return credential
   }
 
   /**

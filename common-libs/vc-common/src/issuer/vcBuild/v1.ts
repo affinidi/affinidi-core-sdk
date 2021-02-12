@@ -91,6 +91,11 @@ export const buildVCV1: BuildVCV1 = async ({
   validateId(unsigned.id, true)
 
   try {
+    console.log('<><><><> buildVCV1 <><><><>')
+    let before
+
+    before = Date.now()
+
     const result = await jsigs.sign(
       {
         ...unsigned,
@@ -114,6 +119,8 @@ export const buildVCV1: BuildVCV1 = async ({
         compactProof: false,
       },
     )
+
+    console.log('  <><><><> jsigs.sign', { diff: Date.now() - before })
 
     return result
   } catch (error) {
