@@ -56,6 +56,7 @@ export const baseDocumentLoader = async (url: string) => {
       throw new Error('URL could not be deferenced; only "http" and "https" URLs are supported')
     }
 
+    console.log('baseDocumentLoader url >>>>', { url })
     // If we have a local copy of the context do no make a request
     const localContext = localContexts[url]
 
