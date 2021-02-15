@@ -155,12 +155,11 @@ Behaves the same as the wallet-core-sdk `confirmSignIn` method, but with the add
 #### Confirm sign in (if using confirmSignIn for both sign up and login scenarios)
 
 ```ts
-const issueSignupCredential = true
+const options ={ issueSignupCredential: true }
 const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
   token,
   confirmationCode,
-  options,
-  issueSignupCredential,
+  options
 )
 ```
 
@@ -178,8 +177,8 @@ initialized instance of SDK - `affinityWallet`.
 #### Confirm sign up
 
 ```ts
-const issueSignupCredential = true
-const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, options, issueSignupCredential)
+const options = {issueSignupCredential: true}
+const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, options)
 ```
 
 `token` - AWS Cognito Access Token
