@@ -1020,9 +1020,13 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#getSignupCredentials', async () => {
+    // NOTE: Get full options because CognitoService will use staging variables
+    //       and `options` has only accessApiKey and env
+    //       This is important for testing against different environments
+    const fullOptions: SdkOptions = getOptionsForEnvironment(true)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const { clientId, userPoolId } = options
+    const { clientId, userPoolId } = fullOptions
 
     const cognitoService = new CognitoService({ clientId, userPoolId })
 

@@ -58,7 +58,7 @@ export class AffinityWallet extends CoreNetwork {
   static async confirmSignIn(
     token: string,
     confirmationCode: string,
-    options: SdkOptions,
+    options: SdkOptions = { issueSignupCredential: false },
   ): Promise<{ isNew: boolean; commonNetworkMember: any }> {
     await __dangerous.ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -107,9 +107,7 @@ export class AffinityWallet extends CoreNetwork {
     confirmationCode: string,
     options: SdkOptions = { issueSignupCredential: false },
   ): Promise<any> {
-    console.log('confirmSignUp before >>> ', { options })
     options = Object.assign({}, CoreNetwork.setEnvironmentVarialbles(options), options)
-    console.log('confirmSignUp after >>> ', { options })
     const networkMember = await super.confirmSignUp(token, confirmationCode, options)
     const { idToken } = networkMember.cognitoUserTokens
     const { password, encryptedSeed } = networkMember
