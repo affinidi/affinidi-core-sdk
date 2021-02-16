@@ -70,6 +70,7 @@ export class AffinityWallet extends CoreNetwork {
       },
       { isArray: false, type: __dangerous.SdkOptions, isRequired: false, value: options },
     ])
+    options = Object.assign({}, CoreNetwork.setEnvironmentVarialbles(options), options)
 
     let affinityWallet
     // NOTE: loginToken = '{"ChallengeName":"CUSTOM_CHALLENGE","Session":"...","ChallengeParameters":{"USERNAME":"...","email":"..."}}'
@@ -106,10 +107,10 @@ export class AffinityWallet extends CoreNetwork {
     confirmationCode: string,
     options: SdkOptions = { issueSignupCredential: false },
   ): Promise<any> {
+    options = Object.assign({}, CoreNetwork.setEnvironmentVarialbles(options), options)
     const networkMember = await super.confirmSignUp(token, confirmationCode, options)
     const { idToken } = networkMember.cognitoUserTokens
     const { password, encryptedSeed } = networkMember
-
     options.cognitoUserTokens = networkMember.cognitoUserTokens
 
     const affinityWallet = new AffinityWallet(password, encryptedSeed, options)

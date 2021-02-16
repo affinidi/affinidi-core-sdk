@@ -125,6 +125,7 @@ export class AffinityWallet extends CoreNetwork {
     confirmationCode: string,
     options: SdkOptions = { issueSignupCredential: false },
   ): Promise<any> {
+    options = Object.assign({}, CoreNetwork.setEnvironmentVarialbles(options), options)
     const networkMember = await super.confirmSignUp(token, confirmationCode, options)
     const { idToken } = networkMember.cognitoUserTokens
     const { password, encryptedSeed } = networkMember

@@ -21,8 +21,9 @@ You can also specify the stack environment to be used in `env` variable.
 
 ```ts
 const options = {
-  issuerUrl: 'https://affinity-issuer.staging.affinity-project.org'
-}
+  issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
+  apiKey: '<your sdk api key>'
+};
 
 const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
 ```
@@ -37,7 +38,8 @@ an Alpha-3 country code).
 
 ```ts
 const options = {
-  storageRegion: 'SGP'
+  storageRegion: 'SGP',
+  apiKey: '<your sdk api key>'
 }
 
 const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
@@ -103,8 +105,11 @@ Behaves the same as the wallet-core-sdk `confirmSignIn` method, but with the add
 #### Confirm sign in (if using confirmSignIn for both sign up and login scenarios)
 
 ```ts
-const issueSignupCredential = true
-const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(token, confirmationCode, options, issueSignupCredential)
+const options = { 
+   apiKey: '<your sdk api key>',
+   env: 'prod'
+ }
+const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(token, confirmationCode, options)
 ```
 
 `token` - AWS Cognito Access Token
@@ -113,25 +118,26 @@ const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.conf
 
 `options` - (optional) if not defined defaults will be used.
 
-`issueVC` - (optional) if not defined, set to false
-
 Returns `isNew` flag, identifying whether new account was created, and
 initialized instance of SDK - `affinityWallet`.
 
 #### Confirm sign up
 
 ```ts
-const issueSignupCredential = true
-const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, options, issueSignupCredential)
+const options = {env:'prod', apiKey:'<your_api_key>', issueSignupCredential: true}
+const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, options)
 ```
 
 `token` - AWS Cognito Access Token
 
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
 
-`options` - (optional) used to specify environment stack (dev | staging | prod).
+`options` - used to specify  
+   * `env`(optional) environment stack (dev | staging | prod). if not defined set to staging. 
+   * `apiKey` (mandatory) [API Key](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key) 
+   * `issueSignupCredential` (optional) if not defined, set to false
 
-`issueVC` - (optional) if not defined, set to false
+
 
 #### Delete credential by ID
 

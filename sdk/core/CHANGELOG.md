@@ -1,3 +1,6 @@
+# release 4.2.0 (2020-02-16)
+ * axios version update 
+ * `CommonNetworkMember.setEnvironmentVarialbles` return `env` as part of result options. 
 # release 3.4.0 (2020-12-01)
 
 ## New interface

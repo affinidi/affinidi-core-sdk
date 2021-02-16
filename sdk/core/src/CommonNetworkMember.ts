@@ -267,6 +267,7 @@ export class CommonNetworkMember {
     const { storageRegion } = options
 
     return {
+      env,
       storageRegion,
       accessApiKey,
       issuerUrl,

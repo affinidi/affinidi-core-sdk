@@ -84,6 +84,24 @@ const affinityWallet = await AffinityWallet.init(options)
 
 `options` - optional, if not defined default settings will be used.
 
+#### Confirm sign up
+
+```ts
+const options = {env:'prod', apiKey:'<your_api_key>', issueSignupCredential: true}
+const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, options)
+```
+
+`token` - AWS Cognito Access Token
+
+`confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
+
+options` - used to specify  
+   * `env`(optional) environment stack (dev | staging | prod). if not defined set to staging. 
+   * `apiKey` (mandatory) [API Key](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key) 
+   * `issueSignupCredential` (optional) if not defined, set to false
+
+
+
 ### Create encrypted message
 
 ```ts

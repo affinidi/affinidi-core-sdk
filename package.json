@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@ahryman40k/ts-fhir-types": "4.0.25",
-    "@types/axios": "0.14.0",
     "axios": "0.21.1"
   }
 }

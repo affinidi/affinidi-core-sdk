@@ -112,7 +112,10 @@ const options = {
   issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
   apiKey: '....'
 }
-
+// where didMethod is 'elem' / 'jolo'
+ const seed = await CommonNetworkMember.generateSeed(didMethod)
+ const seedHex = seed.toString('hex')
+ const seedWithMethod = `${seedHex}++${didMethod}`
 CommonNetworkMember.fromSeed(seedHex, options, password)
 ```
 
