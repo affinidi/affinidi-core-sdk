@@ -136,14 +136,15 @@ describe('AffinityWallet', () => {
   it.only('#signUp, #confirmSignUp', async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const emailDev = 'PLACEHOLDER'
+    const emailDev = 'volodymyr.p+glg-93@affinidi.com'
     const token = await AffinityWallet.signUp(emailDev, cognitoPassword, options)
 
+    console.log('####', options)
     const confirmationCode = await waitForConfirmationCodeInput()
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, { issueSignupCredential: true })
+    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, { env: options.env, issueSignupCredential: true, accessApiKey: options.accessApiKey })
 
     const credentialRequirements = [
       {
