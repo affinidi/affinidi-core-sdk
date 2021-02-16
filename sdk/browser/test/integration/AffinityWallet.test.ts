@@ -142,7 +142,11 @@ describe('AffinityWallet', () => {
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, { env: options.env, issueSignupCredential: true, accessApiKey: options.accessApiKey })
+    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, {
+      env: options.env,
+      issueSignupCredential: true,
+      accessApiKey: options.accessApiKey,
+    })
     const credentialRequirements = [
       {
         type: ['Credential', 'EmailCredentialPersonV1'],
