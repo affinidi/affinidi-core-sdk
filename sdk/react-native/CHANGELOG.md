@@ -1,3 +1,8 @@
+# release 4.2.0 (2020-02-16)
+ * axios version update 
+ * Documentation Updates 
+ * `AffinityWallet.confirmSignUp` & `AffinityWallet.confirmSignIn` - fix default options handling.
+ * Performance optimisation for revocable credentials. 
 # release 3.0.0 (2020-11-03)
 
 Drop the support of the test Api Key, thus it is crucial to make the update due to all earlier versions would be affected by that change.
