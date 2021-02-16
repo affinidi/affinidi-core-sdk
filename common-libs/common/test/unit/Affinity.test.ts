@@ -256,7 +256,6 @@ describe('Affinity', () => {
   it('#validateCredential (elem)', async () => {
     const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
     const result = await affinity.validateCredential(createdCredential)
-
     expect(result.result).to.be.true
   })
 
@@ -374,7 +373,7 @@ describe('Affinity', () => {
         context: getVCNamePersonV1Context(),
       }),
       issuanceDate: '2020-01-17T07:06:35.403Z',
-      expirationDate: '2021-01-16T07:06:35.337Z',
+      expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     })
     const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
     const createdPresentation = await affinity.signPresentation({
@@ -425,7 +424,7 @@ describe('Affinity', () => {
         context: getVCNamePersonV1Context(),
       }),
       issuanceDate: '2020-01-17T07:06:35.403Z',
-      expirationDate: '2021-01-16T07:06:35.337Z',
+      expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     })
     const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
     const createdPresentation = await affinity.signPresentation({
