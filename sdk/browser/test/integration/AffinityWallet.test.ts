@@ -133,7 +133,7 @@ describe('AffinityWallet', () => {
     expect(decryptedMessage).to.eql(objToCrypt)
   })
 
-  it.skip('#signUp, #confirmSignUp', async () => {
+  it.only('#signUp, #confirmSignUp', async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const emailDev = 'PLACEHOLDER'

@@ -58,7 +58,7 @@ export class AffinityWallet extends CoreNetwork {
   static async confirmSignIn(
     token: string,
     confirmationCode: string,
-    options: SdkOptions = { issueSignupCredential: false },
+    options: SdkOptions,
   ): Promise<{ isNew: boolean; commonNetworkMember: any }> {
     await __dangerous.ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
