@@ -256,7 +256,6 @@ describe('Affinity', () => {
   it('#validateCredential (elem)', async () => {
     const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
     const result = await affinity.validateCredential(createdCredential)
-
     expect(result.result).to.be.true
   })
 

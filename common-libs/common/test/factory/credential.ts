@@ -17,8 +17,8 @@ export const credential = buildVCV1Unsigned({
     type: 'NameCredentialPersonV1',
     context: getVCNamePersonV1Context(),
   }),
-  issuanceDate: '2020-01-17T07:06:35.403Z',
-  expirationDate: '2021-01-16T07:06:35.337Z',
+  issuanceDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
 })
 
 export const revocationListCredential = {
