@@ -1,3 +1,13 @@
+# release 4.2.1 (2020-02-22)
+ * axios version update 
+### Deprecation candidates 
+CommonNetworkMember 
+  - initiateEmailCredential
+  - verifyEmailCredential
+  - initiatePhoneCredential
+  - verifyPhoneCredential
+
+ 
 # release 4.2.0 (2020-02-16)
  * axios version update 
  * `CommonNetworkMember.setEnvironmentVarialbles` return `env` as part of result options. 
