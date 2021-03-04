@@ -3,16 +3,17 @@ import { expect } from 'chai'
 
 import DidDocumentService from '../../../src/services/DidDocumentService'
 import KeyService from '../../../src/services/KeysService'
+import { generateTestDIDs } from '../../factory/didFactory'
 
 /*
- _____  _                        _   __                     ___                _   _         _     _____                    _  _    _              
-|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)             
-  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___ 
+ _____  _                        _   __                     ___                _   _         _     _____                    _  _    _
+|_   _|| |                      | | / /                    / _ \              | \ | |       | |   /  ___|                  (_)| |  (_)
+  | |  | |__    ___  ___   ___  | |/ /   ___  _   _  ___  / /_\ \ _ __   ___  |  \| |  ___  | |_  \ `--.   ___  _ __   ___  _ | |_  _ __   __  ___
   | |  | '_ \  / _ \/ __| / _ \ |    \  / _ \| | | |/ __| |  _  || '__| / _ \ | . ` | / _ \ | __|  `--. \ / _ \| '_ \ / __|| || __|| |\ \ / / / _ \
   | |  | | | ||  __/\__ \|  __/ | |\  \|  __/| |_| |\__ \ | | | || |   |  __/ | |\  || (_) || |_  /\__/ /|  __/| | | |\__ \| || |_ | | \ V / |  __/
   \_/  |_| |_| \___||___/ \___| \_| \_/ \___| \__, ||___/ \_| |_/|_|    \___| \_| \_/ \___/  \__| \____/  \___||_| |_||___/|_| \__||_|  \_/   \___|
-                                               __/ |                                                                                               
-                                              |___/                                                                                                
+                                               __/ |
+                                              |___/
 
 The keys below this message are used to test that key cryptographic functionality does not break.
 They are fixtures and should not be considered sensitive.
@@ -68,17 +69,26 @@ const elemDidkey = `${elemDidShortForm}#primary`
 const elemDidLongkey = `${elemDid}#primary`
 
 /*
- _____             _           __    __  _        _                           
-|  ___|           | |         / _|  / _|(_)      | |                          
-| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___ 
+ _____             _           __    __  _        _
+|  ___|           | |         / _|  / _|(_)      | |
+| |__   _ __    __| |   ___  | |_  | |_  _ __  __| |_  _   _  _ __   ___  ___
 |  __| | '_ \  / _` |  / _ \ |  _| |  _|| |\ \/ /| __|| | | || '__| / _ \/ __|
 | |___ | | | || (_| | | (_) || |   | |  | | >  < | |_ | |_| || |   |  __/\__ \
 \____/ |_| |_| \__,_|  \___/ |_|   |_|  |_|/_/\_\ \__| \__,_||_|    \___||___/
-                                                                              
-                                                                              
+
+
 */
 
 describe('DidDocumentService', () => {
+  let password: string
+  let elemRSAEncryptedSeed: string
+
+  before(async () => {
+    const testDids = await generateTestDIDs()
+    password = testDids.password
+    elemRSAEncryptedSeed = testDids.elemWithRSA.encryptedSeed
+  })
+
   it('!parseDid', async () => {
     const [method, methodId] = DidDocumentService.parseDid(joloDid)
 
@@ -113,6 +123,25 @@ describe('DidDocumentService', () => {
 
     expect(did).to.exist
     expect(did).to.be.equal(elemDid)
+  })
+
+  it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys)', async () => {
+    console.log('elemRSAEncryptedSeed!!!', elemRSAEncryptedSeed)
+    const keyService = new KeyService(elemRSAEncryptedSeed, password)
+    const didDocumentService = new DidDocumentService(keyService)
+    const did = didDocumentService.getMyDid()
+    const didDocument = await didDocumentService.buildDidDocument()
+    const rsaPublicKey = didDocument.publicKey.find((key: any) => key.type === 'RsaVerificationKey2018')
+
+    const rsaKeyId = `${didDocument.id}#secondary`
+    const publicKeyBuffer = DidDocumentService.getPublicKey('', didDocument, rsaKeyId)
+    const publicKey = publicKeyBuffer.toString()
+
+    expect(did).to.exist
+    expect(rsaPublicKey).to.exist
+    expect(rsaPublicKey.publicKeyPem).to.exist
+    expect(publicKey).to.exist
+    expect(publicKey).to.be.equal(rsaPublicKey.publicKeyPem)
   })
 
   it('#getKeyId (jolo)', async () => {

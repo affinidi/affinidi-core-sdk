@@ -171,6 +171,34 @@ export default class KeysService {
     return Buffer.concat([iv, encryptedSeed]).toString('hex')
   }
 
+  private _validateExternalKeyType(keyType: string) {
+    const SUPPORTED_EXTERNAL_KEY_TYPES = ['rsa']
+    if (!SUPPORTED_EXTERNAL_KEY_TYPES.includes(keyType)) {
+      throw new Error(`${keyType} is not supported external key type, Supprted: ${SUPPORTED_EXTERNAL_KEY_TYPES}`)
+    }
+  }
+
+  private _getExternalKey(keyType: string, privateOrPublic: 'private' | 'public') {
+    this._validateExternalKeyType(keyType)
+
+    const { externalKeys } = this.decryptSeed()
+    const keyObject = externalKeys.find((key: any) => key.type === keyType)
+
+    if (!keyObject) {
+      throw new Error('Such key not present at your seed')
+    }
+
+    return keyObject[privateOrPublic]
+  }
+
+  getExternalPublicKey(keyType: string) {
+    return this._getExternalKey(keyType, 'public')
+  }
+
+  getExternalPrivateKey(keyType: string) {
+    return this._getExternalKey(keyType, 'private')
+  }
+
   decryptSeed() {
     return KeysService.decryptSeed(this._encryptedSeed, this._password)
   }
@@ -189,7 +217,9 @@ export default class KeysService {
     const seedParts = decryptedString.split('++')
     const seedString = seedParts[0]
     let didMethod = seedParts[1]
+    const base64EncodedKeys = seedParts[2]
 
+    let externalKeys
     let seed
     if (!didMethod) {
       // to suppoer already created seeds
@@ -203,7 +233,11 @@ export default class KeysService {
     const seedHex = seed.toString('hex')
     const seedHexWithMethod = `${seedHex}++${didMethod}`
 
-    return { seed, didMethod, seedHexWithMethod }
+    if (base64EncodedKeys) {
+      externalKeys = JSON.parse(encode.decode(base64EncodedKeys))
+    }
+
+    return { seed, didMethod, seedHexWithMethod, externalKeys }
   }
 
   static normalizePassword(password: string): Buffer | undefined {

@@ -34,7 +34,7 @@ export default class DidDocumentService {
     return `${did}#${signingKey}`
   }
 
-  async buildDidDocument() {
+  async buildDidDocument(): Promise<any> {
     return { id: 'did:...' }
   }
 
@@ -49,6 +49,10 @@ export default class DidDocumentService {
 
     if (!keySection) {
       throw new Error('Key not found.')
+    }
+
+    if (keySection.publicKeyPem) {
+      return Buffer.from(keySection.publicKeyPem)
     }
 
     return Buffer.from(keySection.publicKeyHex, 'hex')
