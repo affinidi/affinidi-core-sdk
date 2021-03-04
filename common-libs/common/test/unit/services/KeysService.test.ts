@@ -12,6 +12,8 @@ let password: string
 let encryptedSeed: string
 let publicKeyFromSeed: string
 let publicEthereumKeyFromSeed: string
+let elemRSAEncryptedSeed: string
+let elemRSASeedHex: string
 
 import { didDocument } from '../../factory/didDocument'
 
@@ -29,7 +31,10 @@ describe('KeysService', () => {
     seedHex = testDids.jolo.seedHex
     publicKeyFromSeed = testDids.jolo.publicKey
     publicEthereumKeyFromSeed = testDids.jolo.publicEthereumKey
+    elemRSAEncryptedSeed = testDids.elemWithRSA.encryptedSeed
+    elemRSASeedHex = testDids.elemWithRSA.seedHex
   })
+
   it('#decryptSeed', async () => {
     const keysService = new KeysService(encryptedSeed, password)
 
@@ -38,6 +43,21 @@ describe('KeysService', () => {
 
     expect(recoveredSeedHex).to.exist
     expect(recoveredSeedHex).to.be.equal(seedHex)
+  })
+
+  it('#decryptSeed with externalKeys', async () => {
+    const keysService = new KeysService(elemRSAEncryptedSeed, password)
+
+    const { seed: seedBuffer, externalKeys } = keysService.decryptSeed()
+    const recoveredSeedHex = seedBuffer.toString('hex')
+
+    const originalPublicKey = externalKeys[0].public
+    const derivedPublicKeyBuffer = keysService.getExternalPublicKey('rsa')
+    const derivedPublicKey = derivedPublicKeyBuffer.toString()
+
+    expect(recoveredSeedHex).to.exist
+    expect(recoveredSeedHex).to.be.equal(elemRSASeedHex)
+    expect(derivedPublicKey).to.be.equal(originalPublicKey)
   })
 
   it('#decryptSeed with hex password', async () => {

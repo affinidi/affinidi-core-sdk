@@ -13,12 +13,51 @@ export default class ElemDidDocument {
     this._signingKey = 'primary'
     this._keysService = keysService
   }
+
+  private _extendDIDDocModelByExternalKeys(
+    externalKeys: any,
+    initialDidDocumentModel: any,
+    authentication: string[],
+    assertionMethod: string[],
+  ) {
+    if (externalKeys && Array.isArray(externalKeys) && externalKeys.length > 0) {
+      for (const externalKey of externalKeys) {
+        if (externalKey.type === 'rsa') {
+          const rsaPubKeyId = 'secondary'
+
+          const rsaPubKey = {
+            id: `#${rsaPubKeyId}`,
+            usage: 'signing',
+            type: 'RsaVerificationKey2018',
+            publicKeyPem: externalKey.public,
+          }
+
+          initialDidDocumentModel.publicKey.push(rsaPubKey)
+
+          const { permissions } = externalKey
+          if (permissions && permissions.length > 0) {
+            for (const permission of permissions) {
+              if (permission === 'authentication') {
+                authentication.push(`#${rsaPubKeyId}`)
+              }
+
+              if (permission === 'assertionMethod') {
+                assertionMethod.push(`#${rsaPubKeyId}`)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   private _buildDIDDocModel(
     seedHex: string,
     publicKeyPrimary: string = null,
     privateKeyPrimary: string = null,
     publicKeyRecovery: string = null,
     privateKeyRecovery: string = null,
+    externalKeys: any = null,
   ) {
     const arePublicPrivateKeysDefined = publicKeyPrimary && privateKeyPrimary
 
@@ -41,15 +80,21 @@ export default class ElemDidDocument {
     const primaryKey = { publicKey: publicKeyPrimary, privateKey: privateKeyPrimary }
     const recoveryKey = { publicKey: publicKeyRecovery, privateKey: privateKeyRecovery }
 
+    const initialDidDocumentModel = op.getDidDocumentModel(primaryKey.publicKey, recoveryKey.publicKey)
+    const authentication = [`#${this._signingKey}`]
+    const assertionMethod = [`#${this._signingKey}`]
+
+    this._extendDIDDocModelByExternalKeys(externalKeys, initialDidDocumentModel, authentication, assertionMethod)
+
     return {
-      ...op.getDidDocumentModel(primaryKey.publicKey, recoveryKey.publicKey),
+      ...initialDidDocumentModel,
       '@context': 'https://w3id.org/security/v2',
-      authentication: [`#${this._signingKey}`],
-      assertionMethod: [`#${this._signingKey}`],
+      authentication,
+      assertionMethod,
     }
   }
 
-  private _getDid(seedHex: string) {
+  private _getDid(seedHex: string, externalKeys: any) {
     const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, 'elem')
 
     const primaryKey = {
@@ -57,7 +102,14 @@ export default class ElemDidDocument {
       privateKey: privateKey.toString('hex'),
     }
 
-    const didDocumentModel = this._buildDIDDocModel(seedHex, primaryKey.publicKey, primaryKey.privateKey)
+    const didDocumentModel = this._buildDIDDocModel(
+      seedHex,
+      primaryKey.publicKey,
+      primaryKey.privateKey,
+      null,
+      null,
+      externalKeys,
+    )
     const createPayload = op.getCreatePayload(didDocumentModel, primaryKey)
     const didUniqueSuffix = func.getDidUniqueSuffix(createPayload)
 
@@ -71,10 +123,10 @@ export default class ElemDidDocument {
   }
 
   private _getMyDidConfig() {
-    const { seed } = this._keysService.decryptSeed()
+    const { seed, externalKeys } = this._keysService.decryptSeed()
     const seedHex = seed.toString('hex')
 
-    return this._getDid(seedHex)
+    return this._getDid(seedHex, externalKeys)
   }
 
   getMyDid(): string {
@@ -93,10 +145,10 @@ export default class ElemDidDocument {
   }
 
   async buildDidDocument() {
-    const { seed } = this._keysService.decryptSeed()
+    const { seed, externalKeys } = this._keysService.decryptSeed()
     const seedHex = seed.toString('hex')
 
-    const { did, didDocModel } = this._getDid(seedHex)
+    const { did, didDocModel } = this._getDid(seedHex, externalKeys)
     const { did: parsedDid } = parse(did)
 
     const prependBaseDID = (field: any) => {
