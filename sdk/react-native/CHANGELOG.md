@@ -1,3 +1,5 @@
+# release 4.2.2 
+ * use new `vc-data`
 # release 4.2.1 (2020-02-22)
  * axios version update 
 # release 4.2.0 (2020-02-16)
