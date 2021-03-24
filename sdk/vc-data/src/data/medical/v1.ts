@@ -53,15 +53,23 @@ export type ObservationV1 = CreateThing<
 >
 
 export type SpecimenV1 = CreateThing<'Specimen', R4.ISpecimen>
+export type PractitionerV1 = CreateThing<'Practitioner', R4.IPractitioner>
 
 export type FHIROrganizationV1 = CreateThing<'Organization', R4.IOrganization>
 
-export type FHIRResourceList = ImmunizationV1 | FHIRPatientE | ObservationV1 | SpecimenV1 | FHIROrganizationV1
+export type FHIRResourceList =
+  | ImmunizationV1
+  | FHIRPatientE
+  | ObservationV1
+  | SpecimenV1
+  | FHIROrganizationV1
+  | PractitionerV1
 
 export type FHIRBundleEntry = CreateThing<
   'BundleEntry',
   R4.IBundle_Entry & {
     resource: FHIRResourceList
+    fullUrl?: string
   }
 >
 
