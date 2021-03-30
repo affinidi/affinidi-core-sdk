@@ -21,6 +21,7 @@ let walletPassword: string
 let encryptedSeed: string
 
 const fetchCredentialsPath = '/data/0/99'
+const fetchCredentialsBase = '/data/'
 
 describe('WalletStorageService', () => {
   before(async () => {
@@ -180,6 +181,45 @@ describe('WalletStorageService', () => {
     }
 
     expect(errorResponse.httpStatusCode).to.eql(500)
+  })
+
+  describe('#fetchEncryptedCredentials works with pagination', async () => {
+    const cases = [
+      { args: [{}], path: '0/99' },
+      { args: [{ limit: 5 }], path: '0/4' },
+      { args: [{ skip: 1 }], path: '1/100' },
+      { args: [{ skip: 1, limit: 1 }], path: '1/1' },
+    ]
+
+    for (const { args, path } of cases) {
+      it(`should request correct path with args ${JSON.stringify(args)}`, async () => {
+        await authorizeVault()
+
+        const expectedPath = fetchCredentialsBase + path
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, [signedCredential])
+
+        const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+        const response = await walletStorageService.fetchEncryptedCredentials(...args)
+
+        expect(response).to.be.an('array')
+        expect(response).to.eql([signedCredential])
+      })
+    }
+
+    it('should fail with invalid parameters', async () => {
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+
+      let errorResponse
+
+      try {
+        await walletStorageService.fetchEncryptedCredentials({ skip: -1, limit: -1 })
+      } catch (error) {
+        errorResponse = error
+      }
+
+      expect(errorResponse).not.to.be.undefined
+      expect(errorResponse.code).to.be.eq('COR-1')
+    })
   })
 
   it('#adminConfirmUser', async () => {

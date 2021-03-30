@@ -6,7 +6,7 @@ import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
 
-import { Env } from '../dto/shared.dto'
+import { Env, FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { isW3cCredential } from '../_helpers'
 
 import { FreeFormObject } from '../shared/interfaces'
@@ -48,6 +48,7 @@ import {
 } from '../_defaultConfig'
 
 import { SignedCredential } from '../dto/shared.dto'
+import { ParametersValidator } from '../shared'
 
 @profile()
 export default class WalletStorageService {
@@ -337,7 +338,11 @@ export default class WalletStorageService {
     return blobs.filter((blob: any) => blob.cyphertext !== null)
   }
 
-  async fetchEncryptedCredentials(): Promise<any> {
+  async fetchEncryptedCredentials(paginationOptions?: FetchCredentialsPaginationOptions): Promise<any> {
+    await ParametersValidator.validate([
+      { isArray: false, type: FetchCredentialsPaginationOptions, isRequired: false, value: paginationOptions },
+    ])
+
     const token = await this.authorizeVcVault()
 
     const headers: any = {
@@ -345,7 +350,7 @@ export default class WalletStorageService {
       ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
 
-    const url = `${this._vaultUrl}/data/0/99`
+    const url = this._buildVaultFetchEncryptedCredentialsUrl(paginationOptions)
 
     try {
       const { body: blobs } = await this._api.execute(null, {
@@ -362,6 +367,15 @@ export default class WalletStorageService {
         throw error
       }
     }
+  }
+
+  private _buildVaultFetchEncryptedCredentialsUrl(paginationOptions?: FetchCredentialsPaginationOptions): string {
+    const baseUrl = `${this._vaultUrl}/data/`
+
+    const skip = paginationOptions?.skip || 0
+    const limit = paginationOptions?.limit || 100
+
+    return baseUrl + `${skip}/${skip + limit - 1}`
   }
 
   static async adminConfirmUser(username: string, options: any = {}): Promise<void> {

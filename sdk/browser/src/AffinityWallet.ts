@@ -3,6 +3,7 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
+import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
 
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
@@ -176,19 +177,23 @@ export class AffinityWallet extends CoreNetwork {
   }
 
   /**
-   * @description Pulls all credentials which match by credentialShareRequestToken,
-   *   if token not provided all your VCs will be returned:
-   * 1. pull encrypted VCs
+   * @description Pulls a subset of your credentials to find a credential which matches the credentialShareRequestToken,
+   *   if token not provided the whole subset of VCs will be returned:
+   * 1. pull encrypted VCs (with given pagination or the first 100)
    * 2. decrypt encrypted VCs
    * 3. filter VCs by type
    * @param credentialShareRequestToken - JWT received from verifier
+   * @param paginationOptions - optional range for credentials to be pulled (default is skip: 0, limit: 100)
    * @returns array of VCs
    */
-  async getCredentials(credentialShareRequestToken: string = null): Promise<any> {
+  async getCredentials(
+    credentialShareRequestToken: string = null,
+    paginationOptions?: FetchCredentialsPaginationOptions,
+  ): Promise<any> {
     let blobs
 
     try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials()
+      blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
     } catch (error) {
       if (error.code === 'COR-14') {
         return []
@@ -209,14 +214,15 @@ export class AffinityWallet extends CoreNetwork {
   }
 
   /**
-   * @description Delete credential by id
+   * @description Delete credential by id if found in given range
    * @param id - id of the credential
+   * @param paginationOptions - range for pulling the credentials (default is skip: 0, limit: 100)
    */
-  async deleteCredential(id: string): Promise<void> {
+  async deleteCredential(id: string, paginationOptions?: FetchCredentialsPaginationOptions): Promise<void> {
     let blobs
 
     try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials()
+      blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
     } catch (error) {
       if (error.code === 'COR-14') {
         throw new __dangerous.SdkError('COR-14')

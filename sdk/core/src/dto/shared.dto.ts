@@ -12,6 +12,8 @@ import {
   IsJWT,
   Matches,
   IsIn,
+  IsInt,
+  Min,
 } from 'class-validator'
 
 import { FreeFormObject } from '../shared/interfaces'
@@ -338,4 +340,16 @@ export class SignCredentialOptionalInput {
   @IsOptional()
   @IsJWT()
   credentialOfferResponseToken?: string
+}
+
+export class FetchCredentialsPaginationOptions {
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  skip?: number
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  limit?: number
 }
