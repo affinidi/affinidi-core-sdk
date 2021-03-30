@@ -10,6 +10,7 @@ import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
 import { generateTestDIDs } from '../../factory/didFactory'
+import { authorizeVaultEndpoints } from '../../helpers/authorizeVault'
 
 const signedCredential = require('../../factory/signedCredential')
 
@@ -181,6 +182,72 @@ describe('WalletStorageService', () => {
     }
 
     expect(errorResponse.httpStatusCode).to.eql(500)
+  })
+
+  describe('#fetchAllEncryptedCredentialsInBatches', () => {
+    it('should work for single page', async () => {
+      await authorizeVault()
+
+      nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(200, [signedCredential])
+
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      let response: any[] = []
+
+      for await (const blobs of walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
+        response = response.concat(blobs)
+      }
+
+      expect(response).to.be.an('array')
+      expect(response).to.eql([signedCredential])
+    })
+
+    it('should work for multiple pages', async () => {
+      await authorizeVault()
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '0/0')
+        .reply(200, [signedCredential])
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '1/1')
+        .reply(200, [signedCredential])
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '2/2')
+        .reply(200, [])
+
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      let response: any[] = []
+
+      const paginationOptions = { skip: 0, limit: 1 }
+
+      for await (const blobs of walletStorageService.fetchAllEncryptedCredentialsInBatches(paginationOptions)) {
+        response = response.concat(blobs)
+
+        authorizeVaultEndpoints()
+      }
+
+      expect(response).to.be.an('array')
+      expect(response).to.eql([signedCredential, signedCredential])
+    })
+
+    it('should fail with invalid parameters', async () => {
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+
+      let errorResponse
+
+      try {
+        const asyncIterable = walletStorageService.fetchAllEncryptedCredentialsInBatches({ skip: -1, limit: -1 })
+        const asyncIterator = asyncIterable[Symbol.asyncIterator]()
+
+        await asyncIterator.next()
+      } catch (error) {
+        errorResponse = error
+      }
+
+      expect(errorResponse).not.to.be.undefined
+      expect(errorResponse.code).to.be.eq('COR-1')
+    })
   })
 
   describe('#fetchEncryptedCredentials works with pagination', async () => {

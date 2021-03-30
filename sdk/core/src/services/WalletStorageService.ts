@@ -338,11 +338,51 @@ export default class WalletStorageService {
     return blobs.filter((blob: any) => blob.cyphertext !== null)
   }
 
-  async fetchEncryptedCredentials(paginationOptions?: FetchCredentialsPaginationOptions): Promise<any> {
+  async fetchEncryptedCredentials(fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions): Promise<any> {
     await ParametersValidator.validate([
-      { isArray: false, type: FetchCredentialsPaginationOptions, isRequired: false, value: paginationOptions },
+      {
+        isArray: false,
+        type: FetchCredentialsPaginationOptions,
+        isRequired: false,
+        value: fetchCredentialsPaginationOptions,
+      },
     ])
 
+    const paginationOptions = WalletStorageService.getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
+
+    return this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+  }
+
+  /**
+   * Start fetching all credentials inside the vault page by page
+   * @param fetchCredentialsPaginationOptions starting and batch count for the credentials
+   */
+  async *fetchAllEncryptedCredentialsInBatches(
+    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
+  ): AsyncIterable<any> {
+    await ParametersValidator.validate([
+      {
+        isArray: false,
+        type: FetchCredentialsPaginationOptions,
+        isRequired: false,
+        value: fetchCredentialsPaginationOptions,
+      },
+    ])
+
+    const paginationOptions = WalletStorageService.getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
+    let lastCount = 0
+
+    do {
+      const blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+
+      yield blobs
+
+      paginationOptions.skip += paginationOptions.limit
+      lastCount = blobs.length
+    } while (lastCount === paginationOptions.limit)
+  }
+
+  private async _fetchEncryptedCredentialsWithPagination(paginationOptions: PaginationOptions): Promise<any> {
     const token = await this.authorizeVcVault()
 
     const headers: any = {
@@ -369,13 +409,10 @@ export default class WalletStorageService {
     }
   }
 
-  private _buildVaultFetchEncryptedCredentialsUrl(paginationOptions?: FetchCredentialsPaginationOptions): string {
-    const baseUrl = `${this._vaultUrl}/data/`
+  private _buildVaultFetchEncryptedCredentialsUrl(paginationOptions: PaginationOptions): string {
+    const { skip, limit } = paginationOptions
 
-    const skip = paginationOptions?.skip || 0
-    const limit = paginationOptions?.limit || 100
-
-    return baseUrl + `${skip}/${skip + limit - 1}`
+    return `${this._vaultUrl}/data/${skip}/${skip + limit - 1}`
   }
 
   static async adminConfirmUser(username: string, options: any = {}): Promise<void> {
@@ -466,4 +503,20 @@ export default class WalletStorageService {
 
     return signedCredentials
   }
+
+  private static getPaginationOptionsWithDefault(
+    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
+  ): PaginationOptions {
+    const { skip, limit } = fetchCredentialsPaginationOptions || {}
+
+    return {
+      skip: skip || 0,
+      limit: limit || 100,
+    }
+  }
+}
+
+type PaginationOptions = {
+  skip: number
+  limit: number
 }
