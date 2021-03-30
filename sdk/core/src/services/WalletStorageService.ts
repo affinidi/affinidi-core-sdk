@@ -348,7 +348,7 @@ export default class WalletStorageService {
       },
     ])
 
-    const paginationOptions = WalletStorageService.getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
+    const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
 
     return this._fetchEncryptedCredentialsWithPagination(paginationOptions)
   }
@@ -369,11 +369,21 @@ export default class WalletStorageService {
       },
     ])
 
-    const paginationOptions = WalletStorageService.getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
+    const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
     let lastCount = 0
 
     do {
-      const blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+      let blobs: any[] = []
+
+      try {
+        blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+      } catch (err) {
+        if (err.code === 'COR-14') {
+          break
+        }
+
+        throw err
+      }
 
       yield blobs
 
@@ -504,7 +514,7 @@ export default class WalletStorageService {
     return signedCredentials
   }
 
-  private static getPaginationOptionsWithDefault(
+  private static _getPaginationOptionsWithDefault(
     fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
   ): PaginationOptions {
     const { skip, limit } = fetchCredentialsPaginationOptions || {}

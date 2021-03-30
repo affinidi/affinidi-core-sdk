@@ -4,6 +4,7 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
 import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
+import SdkError from '@affinidi/wallet-core-sdk/dist/shared/SdkError'
 
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
@@ -177,9 +178,9 @@ export class AffinityWallet extends CoreNetwork {
   }
 
   /**
-   * @description Pulls a subset of your credentials to find a credential which matches the credentialShareRequestToken,
-   *   if token not provided the whole subset of VCs will be returned:
-   * 1. pull encrypted VCs (with given pagination or the first 100)
+   * @description Finds the given credentialShareRequestToken by searching all of your credentials
+   * If a token is not given, only returns the given subset of the credentials
+   * 1. pull encrypted VCs (all if token given, otherwise with the given pagination)
    * 2. decrypt encrypted VCs
    * 3. filter VCs by type
    * @param credentialShareRequestToken - JWT received from verifier
@@ -190,6 +191,10 @@ export class AffinityWallet extends CoreNetwork {
     credentialShareRequestToken: string = null,
     paginationOptions?: FetchCredentialsPaginationOptions,
   ): Promise<any> {
+    if (credentialShareRequestToken) {
+      return this._getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken)
+    }
+
     let blobs
 
     try {
@@ -206,32 +211,46 @@ export class AffinityWallet extends CoreNetwork {
       return []
     }
 
-    const credentials = await this.walletStorageService.decryptCredentials(blobs)
+    return this.walletStorageService.decryptCredentials(blobs)
+  }
 
-    const encryptedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
+  private async _getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken: string): Promise<any> {
+    let result: any[] = []
 
-    return encryptedCredentials
+    for await (const blobs of this.walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
+      const credentials = await this.walletStorageService.decryptCredentials(blobs)
+
+      const encryptedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
+
+      result = result.concat(encryptedCredentials)
+    }
+
+    return result
   }
 
   /**
    * @description Delete credential by id if found in given range
    * @param id - id of the credential
-   * @param paginationOptions - range for pulling the credentials (default is skip: 0, limit: 100)
+   * @param credentialIndex - credential to remove
    */
-  async deleteCredential(id: string, paginationOptions?: FetchCredentialsPaginationOptions): Promise<void> {
-    let blobs
-
-    try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
-    } catch (error) {
-      if (error.code === 'COR-14') {
-        throw new __dangerous.SdkError('COR-14')
-      } else {
-        throw error
-      }
+  async deleteCredential(id: string, credentialIndex?: any): Promise<void> {
+    if (credentialIndex !== undefined && id) {
+      throw new SdkError('COR-1', {
+        errors: [{ message: 'can not define both id and credentialIndex at the same time' }],
+      })
     }
 
-    await this.walletStorageService.decryptCredentials(blobs)
+    if (credentialIndex) {
+      return this.deleteCredentialByIndex(credentialIndex)
+    }
+
+    let allBlobs: any[] = []
+
+    for await (const blobs of this.walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
+      allBlobs = allBlobs.concat(blobs)
+    }
+
+    await this.walletStorageService.decryptCredentials(allBlobs)
 
     const credentialIndexToDelete = this.walletStorageService.findCredentialIndexById(id)
 
