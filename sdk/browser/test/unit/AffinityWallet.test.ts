@@ -75,7 +75,7 @@ describe('AffinityWallet', () => {
       expect(code).to.eql('COR-14')
     })
 
-    it('#getCredentials throws error', async () => {
+    it('throws error', async () => {
       const error = 'Error'
 
       sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: error })

@@ -4,7 +4,6 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
 import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
-import SdkError from '@affinidi/wallet-core-sdk/dist/shared/SdkError'
 
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
@@ -187,7 +186,7 @@ export class AffinityWallet extends CoreNetwork {
     const blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
 
     if (blobs.length < 1) {
-      throw new SdkError('COR-14')
+      throw new __dangerous.SdkError('COR-14')
     }
 
     const decryptedCredentials = await this.walletStorageService.decryptCredentials(blobs)
@@ -237,9 +236,9 @@ export class AffinityWallet extends CoreNetwork {
     for await (const blobs of this.walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
       const credentials = await this.walletStorageService.decryptCredentials(blobs)
 
-      const encryptedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
+      const matchedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
 
-      result = result.concat(encryptedCredentials)
+      result = result.concat(matchedCredentials)
     }
 
     return result
@@ -252,8 +251,8 @@ export class AffinityWallet extends CoreNetwork {
    */
   async deleteCredential(id: string, credentialIndex?: string): Promise<void> {
     if (credentialIndex !== undefined && id) {
-      throw new SdkError('COR-1', {
-        errors: [{ message: 'can not define both id and credentialIndex at the same time' }],
+      throw new __dangerous.SdkError('COR-1', {
+        errors: [{ message: 'can not pass both id and credentialIndex at the same time' }],
       })
     }
 

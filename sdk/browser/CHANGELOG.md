@@ -1,4 +1,4 @@
-# release 4.2.3
+# release 4.2.3 (2020-04-01)
  * add optional pagination to `AffinityWallet.getCredentials`
  * add new method `AffinityWallet.getCredentialByIndex` that returns credentials given at the index
 # release 4.2.2 
