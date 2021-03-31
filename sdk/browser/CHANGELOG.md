@@ -1,3 +1,6 @@
+# release 4.2.3
+ * add optional pagination to `AffinityWallet.getCredentials`
+ * add new method `AffinityWallet.getCredentialByIndex` that returns credentials given at the index
 # release 4.2.2 
  * use new `vc-data` 
 # release 4.2.0 (2020-02-16)

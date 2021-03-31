@@ -178,6 +178,23 @@ export class AffinityWallet extends CoreNetwork {
   }
 
   /**
+   * @description Retrieve only the credential at given index
+   * @param credentialIndex - index for the VC in vault
+   * @returns a single VC
+   */
+  async getCredentialByIndex(credentialIndex: number): Promise<any> {
+    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
+    const blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
+
+    if (blobs.length < 1) {
+      throw new SdkError('COR-14')
+    }
+
+    const decryptedCredentials = await this.walletStorageService.decryptCredentials(blobs)
+    return decryptedCredentials[0]
+  }
+
+  /**
    * @description Finds the given credentialShareRequestToken by searching all of your credentials
    * If a token is not given, only returns the given subset of the credentials
    * 1. pull encrypted VCs (all if token given, otherwise with the given pagination)
@@ -233,7 +250,7 @@ export class AffinityWallet extends CoreNetwork {
    * @param id - id of the credential
    * @param credentialIndex - credential to remove
    */
-  async deleteCredential(id: string, credentialIndex?: any): Promise<void> {
+  async deleteCredential(id: string, credentialIndex?: string): Promise<void> {
     if (credentialIndex !== undefined && id) {
       throw new SdkError('COR-1', {
         errors: [{ message: 'can not define both id and credentialIndex at the same time' }],
