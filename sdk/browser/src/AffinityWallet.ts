@@ -4,6 +4,7 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
 import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
+import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
 
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
@@ -47,6 +48,34 @@ export class AffinityWallet extends CoreNetwork {
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new AffinityWallet(encryptionKey, encryptedSeed, options)
+  }
+
+  /**
+   * @description Initiates sign up flow
+   * @param username - arbitrary username, email or phoneNumber
+   * @param password - is required if arbitrary username was provided.
+   * It is optional and random one will be generated, if not provided when
+   * email or phoneNumber was given as a username.
+   * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
+   * @returns token or, in case when arbitrary username was used, it returns
+   * initialized instance of SDK
+   */
+  static async signUp(
+    username: string,
+    password?: string,
+    options?: SdkOptions,
+    messageParameters?: MessageParameters,
+  ): Promise<string | any> {
+    const networkMember = await CoreNetwork.signUp(username, password, options, messageParameters)
+
+    if (networkMember.constructor === String) {
+      return networkMember
+    }
+
+    const { password: networkMemberPassword, encryptedSeed } = networkMember
+
+    return new AffinityWallet(networkMemberPassword, encryptedSeed, options)
   }
 
   /**
