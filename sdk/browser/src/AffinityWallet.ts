@@ -249,15 +249,15 @@ export class AffinityWallet extends CoreNetwork {
    * @param id - id of the credential
    * @param credentialIndex - credential to remove
    */
-  async deleteCredential(id: string, credentialIndex?: string): Promise<void> {
-    if (credentialIndex !== undefined && id) {
+  async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
+    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
       throw new __dangerous.SdkError('COR-1', {
-        errors: [{ message: 'can not pass both id and credentialIndex at the same time' }],
+        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
       })
     }
 
     if (credentialIndex) {
-      return this.deleteCredentialByIndex(credentialIndex)
+      return this.deleteCredentialByIndex(credentialIndex.toString())
     }
 
     let allBlobs: any[] = []

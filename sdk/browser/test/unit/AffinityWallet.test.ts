@@ -96,6 +96,52 @@ describe('AffinityWallet', () => {
     })
   })
 
+  describe('#deleteCredential', () => {
+    it('should throw if both parameters are given', async () => {
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+
+      let responseError
+
+      try {
+        await affinityWallet.deleteCredential('id', 1)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code } = responseError
+
+      expect(code).to.eql('COR-1')
+    })
+
+    it('should throw if neither parameters are given', async () => {
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+
+      let responseError
+
+      try {
+        await affinityWallet.deleteCredential(undefined, undefined)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code } = responseError
+
+      expect(code).to.eql('COR-1')
+    })
+
+    it('should remove with given index', async () => {
+      const credentialIndex = 1
+
+      sinon.stub(CommonNetworkMember.prototype as any, 'deleteCredentialByIndex').resolves(undefined)
+
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+
+      const result = await affinityWallet.deleteCredential(undefined, credentialIndex)
+
+      expect(result).to.be.undefined
+    })
+  })
+
   it('#getCredentials returns [] if there are no credentials for the user', async () => {
     sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: 'COR-14' })
 
