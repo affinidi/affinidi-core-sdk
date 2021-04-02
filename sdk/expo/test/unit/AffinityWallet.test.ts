@@ -56,6 +56,46 @@ describe('AffinityWallet', () => {
     sinon.restore()
   })
 
+  describe('#getCredentialByIndex', () => {
+    it('throws COR-14 if there are no credentials for the user', async () => {
+      sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').resolves([])
+
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+
+      let responseError
+
+      try {
+        await affinityWallet.getCredentialByIndex(0)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code } = responseError
+
+      expect(code).to.eql('COR-14')
+    })
+
+    it('throws error', async () => {
+      const error = 'Error'
+
+      sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: error })
+
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+
+      let responseError
+
+      try {
+        await affinityWallet.getCredentialByIndex(0)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code } = responseError
+
+      expect(code).to.eql(error)
+    })
+  })
+
   it('#getCredentials returns [] if there are no credentials for the user', async () => {
     sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: 'COR-14' })
 

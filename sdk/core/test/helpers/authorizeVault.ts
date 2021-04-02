@@ -47,3 +47,21 @@ export const authorizeVault = async () => {
 
   return token
 }
+
+export const authorizeVaultEndpoints = async () => {
+  const token = 'token'
+  const requestTokenPath = '/auth/request-token'
+  const validateTokenPath = '/auth/validate-token'
+
+  nock(STAGING_VAULT_URL)
+    .filteringPath(() => requestTokenPath)
+    .post(requestTokenPath)
+    .reply(200, { token })
+
+  nock(STAGING_VAULT_URL)
+    .filteringPath(() => validateTokenPath)
+    .post(validateTokenPath)
+    .reply(200, {})
+
+  return token
+}

@@ -1,3 +1,7 @@
+# release 4.2.3 (2020-04-01)
+ * add optional pagination to `WalletStorageService.fetchEncryptedCredentials` (backward compatible)
+ * add new `WalletStorageService.fetchAllEncryptedCredentialsInBatches` method for retrieving all credentials page by page using async generators
+ * fix elem did anchor metrics blocks flow in case of failure
 # release 4.2.2 
  * use new `vc-data` 
 # release 4.2.1 (2020-02-22)

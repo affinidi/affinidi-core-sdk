@@ -165,4 +165,25 @@ describe('AffinityWallet', () => {
 
     expect(credentials).to.exist
   })
+
+  it('#signUp when user registers with arbitrary username', async () => {
+    const generateUsername = () => {
+      const TIMESTAMP = Date.now().toString(16).toUpperCase()
+      return `test.user-${TIMESTAMP}`
+    }
+
+    const cognitoUsername = generateUsername()
+
+    let networkMember
+    networkMember = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
+
+    expect(networkMember.did).to.exist
+    expect(networkMember).to.be.an.instanceof(AffinityWallet)
+
+    await networkMember.signOut()
+
+    networkMember = await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+
+    expect(networkMember).to.be.an.instanceof(AffinityWallet)
+  })
 })

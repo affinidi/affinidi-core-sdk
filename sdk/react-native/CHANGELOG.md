@@ -1,3 +1,7 @@
+# release 4.2.3 (2020-04-01)
+ * add optional pagination to `AffinityWallet.getCredentials`
+ * add new method `AffinityWallet.getCredentialByIndex` that returns credentials given at the index
+ * fix `AffinityWallet.signUp` returning CommonNetworkMember instead of React Native AffinityWallet
 # release 4.2.2 
  * use new `vc-data`
 # release 4.2.1 (2020-02-22)

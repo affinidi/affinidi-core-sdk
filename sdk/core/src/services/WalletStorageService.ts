@@ -6,7 +6,7 @@ import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
 
-import { Env } from '../dto/shared.dto'
+import { Env, FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { isW3cCredential } from '../_helpers'
 
 import { FreeFormObject } from '../shared/interfaces'
@@ -48,6 +48,7 @@ import {
 } from '../_defaultConfig'
 
 import { SignedCredential } from '../dto/shared.dto'
+import { ParametersValidator } from '../shared'
 
 @profile()
 export default class WalletStorageService {
@@ -337,7 +338,61 @@ export default class WalletStorageService {
     return blobs.filter((blob: any) => blob.cyphertext !== null)
   }
 
-  async fetchEncryptedCredentials(): Promise<any> {
+  async fetchEncryptedCredentials(fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions): Promise<any> {
+    await ParametersValidator.validate([
+      {
+        isArray: false,
+        type: FetchCredentialsPaginationOptions,
+        isRequired: false,
+        value: fetchCredentialsPaginationOptions,
+      },
+    ])
+
+    const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
+
+    return this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+  }
+
+  /**
+   * Start fetching all credentials inside the vault page by page
+   * @param fetchCredentialsPaginationOptions starting and batch count for the credentials
+   */
+  async *fetchAllEncryptedCredentialsInBatches(
+    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
+  ): AsyncIterable<any> {
+    await ParametersValidator.validate([
+      {
+        isArray: false,
+        type: FetchCredentialsPaginationOptions,
+        isRequired: false,
+        value: fetchCredentialsPaginationOptions,
+      },
+    ])
+
+    const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
+    let lastCount = 0
+
+    do {
+      let blobs: any[] = []
+
+      try {
+        blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+      } catch (err) {
+        if (err.code === 'COR-14') {
+          break
+        }
+
+        throw err
+      }
+
+      yield blobs
+
+      paginationOptions.skip += paginationOptions.limit
+      lastCount = blobs.length
+    } while (lastCount === paginationOptions.limit)
+  }
+
+  private async _fetchEncryptedCredentialsWithPagination(paginationOptions: PaginationOptions): Promise<any> {
     const token = await this.authorizeVcVault()
 
     const headers: any = {
@@ -345,7 +400,7 @@ export default class WalletStorageService {
       ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
 
-    const url = `${this._vaultUrl}/data/0/99`
+    const url = this._buildVaultFetchEncryptedCredentialsUrl(paginationOptions)
 
     try {
       const { body: blobs } = await this._api.execute(null, {
@@ -362,6 +417,12 @@ export default class WalletStorageService {
         throw error
       }
     }
+  }
+
+  private _buildVaultFetchEncryptedCredentialsUrl(paginationOptions: PaginationOptions): string {
+    const { skip, limit } = paginationOptions
+
+    return `${this._vaultUrl}/data/${skip}/${skip + limit - 1}`
   }
 
   static async adminConfirmUser(username: string, options: any = {}): Promise<void> {
@@ -452,4 +513,20 @@ export default class WalletStorageService {
 
     return signedCredentials
   }
+
+  private static _getPaginationOptionsWithDefault(
+    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
+  ): PaginationOptions {
+    const { skip, limit } = fetchCredentialsPaginationOptions || {}
+
+    return {
+      skip: skip || 0,
+      limit: limit || 100,
+    }
+  }
+}
+
+type PaginationOptions = {
+  skip: number
+  limit: number
 }

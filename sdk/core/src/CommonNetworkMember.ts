@@ -480,7 +480,7 @@ export class CommonNetworkMember {
     // NOTE: for metrics purpose in case of ELEM method
     if (didMethod === ELEM_DID_METHOD) {
       try {
-        api.execute('registry.AnchorDid', {
+        await api.execute('registry.AnchorDid', {
           params: { did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' },
         })
       } catch (error) {

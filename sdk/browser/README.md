@@ -91,12 +91,31 @@ Region should be a 3 character string correlating to an Alpha-3 country code.
 
 ### Pull credential from VC vault
 
+#### All Credentials Matching the shareRequestToken
 ```ts
 const credentials = await affinityWallet.getCredentials(shareRequestToken)
 ```
 
 `shareRequestToken` - optional parameter (if passed - returns VC,
-which match the request, if not - then returns all VCs).
+which match the request, if not provided - then returns credentials with pagination of `{ skip: 0, limit: 100 }`).
+
+#### Some Credentials With Pagination
+```ts
+const credentials = await affinityWallet.getCredentials(null, paginationOptions)
+```
+
+`paginationOptions` is an optional parameter in the format of: `{ skip: number, limit: number }`. If given, the wallet will only pull credentials in given subset. E.g. `{ skip: 2, limit: 3 }` means fetching the credentials at indexes `2,3,4`
+
+`skip` can be omitted and has a default value of 0.
+
+`limit` can be omitted and has a default value of 100.
+
+#### A Single Credential
+```ts
+const credential = await affinityWallet.getCredentialByIndex(credentialIndex)
+```
+
+`credentialIndex` is a required parameter which is type of number.
 
 ### Get credential issued during signup process
 
