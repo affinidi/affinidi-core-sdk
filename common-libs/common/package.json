@@ -53,7 +53,7 @@
     "bip32": "^2.0.5",
     "browserify-aes": "^1.2.0",
     "create-hash": "^1.2.0",
-    "did-resolver": "^2.0.1",
+    "did-resolver": "^2.2.0",
     "ethereumjs-util": "^5.0.0",
     "jsonld": "^2.0.2",
     "jsontokens": "^3.0.0",
