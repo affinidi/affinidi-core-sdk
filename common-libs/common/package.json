@@ -43,7 +43,7 @@
     "@affinidi/vc-common": "1.2.0",
     "@affinidi/affinity-metrics-lib": "0.0.25",
     "@types/create-hash": "^1.2.2",
-    "@types/jsonld": "^1.5.1",
+    "@types/jsonld": "^1.5.5",
     "@types/lodash.keyby": "^4.6.6",
     "@types/node-fetch": "^2.5.4",
     "@types/secp256k1": "^4.0.1",
