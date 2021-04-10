@@ -41,7 +41,7 @@
   "dependencies": {
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
     "@affinidi/vc-common": "1.2.0",
-    "@affinidi/affinity-metrics-lib": "0.0.25",
+    "@affinidi/affinity-metrics-lib": "0.1.0",
     "@types/create-hash": "^1.2.2",
     "@types/jsonld": "^1.5.1",
     "@types/lodash.keyby": "^4.6.6",
