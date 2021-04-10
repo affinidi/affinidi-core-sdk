@@ -48,7 +48,7 @@
     "@types/node-fetch": "^2.5.4",
     "@types/secp256k1": "^4.0.1",
     "@types/tiny-secp256k1": "^1.0.0",
-    "@types/zen-observable": "^0.8.0",
+    "@types/zen-observable": "^0.8.2",
     "base64url": "^3.0.1",
     "bip32": "^2.0.5",
     "browserify-aes": "^1.2.0",
