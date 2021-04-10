@@ -59,7 +59,7 @@
     "jsontokens": "^3.0.0",
     "keccak256": "^1.0.0",
     "lodash.keyby": "^4.6.0",
-    "multihashes": "^3.0.0",
+    "multihashes": "^3.1.2",
     "node-addon-api": "^3.0.0",
     "node-fetch": "^2.6.0",
     "randombytes": "^2.1.0",
