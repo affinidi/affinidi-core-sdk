@@ -7,9 +7,10 @@ import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } from '../../helpers'
+import { MessageParameters } from '../../../dist/dto'
 
 const { TEST_SECRETS } = process.env
-const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
+const { COGNITO_PASSWORD, COGNITO_USERNAME } = JSON.parse(TEST_SECRETS)
 
 const options: SdkOptions = getOptionsForEnvironment()
 
@@ -309,6 +310,25 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     expect(responseError).to.exist
     expect(responseError.name).to.eql('COR-17')
+  })
+
+  it('#passwordlessLogin with custom messages ', async () => {
+    const cognitoUsername = COGNITO_USERNAME
+    const stmp = `${Date.now()} stmp`
+    const messageParameters: MessageParameters = {
+      message: `Your verification code is ${stmp} {{CODE}}.`,
+      subject: `${stmp} {{CODE}}.`,
+    }
+    const fullOptions = getOptionsForEnvironment(true)
+
+    const token = await CommonNetworkMember.passwordlessLogin(cognitoUsername, fullOptions, messageParameters)
+
+    // NOTE: wait for 180s before providing the answer
+    await wait(DELAY)
+    const otp = await getOtp()
+    console.log(otp)
+    // expect(otp.startsWith(stmp)).to.equal(true)
+    await CommonNetworkMember.completeLoginChallenge(token, otp, options)
   })
 
   it('#signUp or change user attribute is not possible for existing email', async () => {
