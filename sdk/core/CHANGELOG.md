@@ -1,3 +1,5 @@
+# release 4.2.4 (2021-04-)
+  * custom messages support for passwordless login 
 # release 4.2.3 (2020-04-01)
  * add optional pagination to `WalletStorageService.fetchEncryptedCredentials` (backward compatible)
  * add new `WalletStorageService.fetchAllEncryptedCredentialsInBatches` method for retrieving all credentials page by page using async generators

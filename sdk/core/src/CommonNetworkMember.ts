@@ -11,6 +11,7 @@ import CognitoService from './services/CognitoService'
 import SdkError from './shared/SdkError'
 
 import WalletStorageService from './services/WalletStorageService'
+import { CustomMessageTemplatesService } from './services/CustomMessageTemplatesService'
 import RevocationService from './services/RevocationService'
 import HolderService from './services/HolderService'
 import {
@@ -103,6 +104,7 @@ export class CommonNetworkMember {
   private readonly _encryptedSeed: string
   private _password: string
   private readonly _walletStorageService: WalletStorageService
+  private readonly _customMessageTemplateService: CustomMessageTemplatesService
   private readonly _revocationService: RevocationService
   private readonly _keysService: KeysService
   private readonly _jwtService: JwtService
@@ -153,6 +155,7 @@ export class CommonNetworkMember {
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
+    this._customMessageTemplateService = new CustomMessageTemplatesService( this._sdkOptions )
     this._keysService = new KeysService(encryptedSeed, password)
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions, this._component)
@@ -631,6 +634,16 @@ export class CommonNetworkMember {
     ])
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    if (messageParameters) {
+      const customMessagesTemplateService = new CustomMessageTemplatesService(options)
+      await customMessagesTemplateService.storeTemplate({
+        username: username,
+        template: messageParameters.message,
+        subject: messageParameters.subject,
+        htmlTemplate: messageParameters.htmlMessage,
+      })
+    }
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
     const token = await cognitoService.signInWithUsername(username, messageParameters)
