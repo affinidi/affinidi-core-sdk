@@ -11,7 +11,7 @@ import { MessageParameters } from '../../../dist/dto'
 import { TestEmailHelper } from '../../helpers/getOtpFromTestMailApp'
 
 const { TEST_SECRETS } = process.env
-const { COGNITO_PASSWORD, COGNITO_USERNAME } = JSON.parse(TEST_SECRETS)
+const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
 const options: SdkOptions = getOptionsForEnvironment()
 
@@ -313,31 +313,25 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     expect(responseError.name).to.eql('COR-17')
   })
 
-  it.only('#passwordlessLogin with custom messages ', async () => {
-    const cognitoUsername = COGNITO_USERNAME
-    const stmp = `${Date.now()} stmp`
+  it('#passwordlessLogin with custom messages ', async () => {
+    const stamp = `${Date.now()} stamp`
     const delimiter = ':'
     const messageParameters: MessageParameters = {
-      message: `Your verification code is:${stmp}:{{CODE}}.`,
-      subject: `{{CODE}}`,
+      message: `Your verification code is ${delimiter}${stamp}${delimiter}{{CODE}}.`,
+      subject: `${stamp}${delimiter}{{CODE}}`,
     }
-    const fullOptions = getOptionsForEnvironment(true)
 
+    const fullOptions = getOptionsForEnvironment(true)
     const tag = `${fullOptions.env}_passwordlessLogin_integration`
     const userName = TestEmailHelper.generateEmailForTag(tag)
-    console.log(userName)
-    console.log(await TestEmailHelper.getEmailsForTag(tag))
-    return
-    /*
-    const token = await CommonNetworkMember.passwordlessLogin(cognitoUsername, fullOptions, messageParameters)
-
+    const token = await CommonNetworkMember.passwordlessLogin(userName, fullOptions, messageParameters)
     await wait(DELAY)
-    const otp = await getOtp()
-    console.log(otp)
-    // expect(otp.startsWith(stmp)).to.equal(true)
-    await CommonNetworkMember.completeLoginChallenge(token, otp, options)
-
-     */
+    const [{ text, subject }] = await TestEmailHelper.getEmailsForTag(tag)
+    const [_, expectedStampFromMessage, __] = text.split(delimiter)
+    const [expectedStampFromSubject, otp] = subject.split(delimiter)
+    expect(expectedStampFromMessage).to.equal(stamp)
+    expect(expectedStampFromSubject).to.equal(stamp)
+    await CommonNetworkMember.completeLoginChallenge(token, otp, fullOptions)
   })
 
   it('#signUp or change user attribute is not possible for existing email', async () => {

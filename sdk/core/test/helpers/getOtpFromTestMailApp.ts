@@ -12,16 +12,30 @@ export class EmailConfiguration {
   public static readonly TESTMAIL_PATH = '/api/json'
 }
 
+export interface TestEmail {
+  subject: string
+  html: string
+  text: string
+  downloadUrl: string
+  from: string
+  to: string
+  tag: string
+  timestamp: number
+}
+
 export class TestEmailHelper {
   public static generateEmailForTag = (tag: string): string =>
     `${EmailConfiguration.TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`
-  public static getEmailsForTag = async (tag: string): Promise<any> => {
+  public static getEmailsForTag = async (tag: string): Promise<TestEmail[]> => {
     const url = `${EmailConfiguration.TESTMAIL_URL}${EmailConfiguration.TESTMAIL_PATH}?apikey=${EmailConfiguration.TESTMAIL_API_KEY}&namespace=${EmailConfiguration.TESTMAIL_NAMESPACE}&tag=${tag}`
     const request = await fetch(url)
     const data = await request.json()
-    return data
-  }
-  public static getLatestEmail = (tag : string): Promise<string> = {
-  TestEmailHelper.
+    const emails = data.emails.map(
+      (m: any): TestEmail => {
+        const { from, to, subject, html, downloadUrl, tag, timestamp, text } = m
+        return { from, to, subject, html, downloadUrl, tag, timestamp, text }
+      },
+    )
+    return emails
   }
 }
