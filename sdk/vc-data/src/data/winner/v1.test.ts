@@ -22,7 +22,7 @@ describe('VCWinnerPersonV1', () => {
         otherTeamMembers: 'Alice',
         awardedDate: '09-06-2021',
         awardedBy: 'Affinidi',
-        certificateLink: '',
+        certificate: '',
       },
       context: getVCWinnerPersonV1Context(),
     })
@@ -53,7 +53,7 @@ describe('VCWinnerPersonV1', () => {
                     "@value": "09-06-2021",
                   },
                 ],
-                "https://schema.org/certificateLink": Array [
+                "https://schema.org/certificate": Array [
                   Object {
                     "@value": "",
                   },

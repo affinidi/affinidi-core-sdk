@@ -28,7 +28,7 @@ type WinnerPersonV1Mixin = CreateThing<
     awardedDate: string,
     awardedBy: string,
     expiryDate?: string,
-    certificateLink?: string
+    certificate?: string
   }
 >
 
