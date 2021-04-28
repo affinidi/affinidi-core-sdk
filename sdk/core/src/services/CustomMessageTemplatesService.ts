@@ -15,9 +15,8 @@ export class CustomMessageTemplatesService {
     const url = `${this._serviceBaseUrl}/api/v1/message-templates/storeTemplate`
 
     const api = new API(null, null, null, this._options)
-    console.log(this._options)
 
-   const r = await api.execute(null, {
+    await api.execute(null, {
       url,
       params: input,
       method: 'POST',
