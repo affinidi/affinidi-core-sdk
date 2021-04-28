@@ -14,20 +14,20 @@ import {
 type WinnerPersonV1Mixin = CreateThing<
   'WinnerPerson',
   {
-    firstName: string,
-    lastName: string,
-    participantEmail: string,
-    dateOfBirth?: string,
-    eventName: string,
-    eventDescription?: string,
-    prizeName: string,
-    prizeCurrency?: string,
-    prizeAmount?: string,
-    transactionLink?: string,
-    otherTeamMembers?: MaybeArray<string>,
-    awardedDate: string,
-    awardedBy: string,
-    expiryDate?: string,
+    firstName: string
+    lastName: string
+    participantEmail: string
+    dateOfBirth?: string
+    eventName: string
+    eventDescription?: string
+    prizeName: string
+    prizeCurrency?: string
+    prizeAmount?: string
+    transactionLink?: string
+    otherTeamMembers?: MaybeArray<string>
+    awardedDate: string
+    awardedBy: string
+    expiryDate?: string
     certificate?: string
   }
 >
