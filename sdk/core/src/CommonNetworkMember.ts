@@ -155,7 +155,7 @@ export class CommonNetworkMember {
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
-    this._customMessageTemplateService = new CustomMessageTemplatesService( this._sdkOptions )
+    this._customMessageTemplateService = new CustomMessageTemplatesService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions, this._component)
@@ -636,8 +636,8 @@ export class CommonNetworkMember {
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
 
     if (messageParameters) {
-      const customMessagesTemplateService = new CustomMessageTemplatesService(options)
-      await customMessagesTemplateService.storeTemplate({
+      const customMessageTemplateService = new CustomMessageTemplatesService(options)
+      await customMessageTemplateService.storeTemplate({
         username: username,
         template: messageParameters.message,
         subject: messageParameters.subject,

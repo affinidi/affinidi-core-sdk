@@ -327,6 +327,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     const token = await CommonNetworkMember.passwordlessLogin(userName, fullOptions, messageParameters)
     await wait(DELAY)
     const [{ text, subject }] = await TestEmailHelper.getEmailsForTag(tag)
+    // eslint-disable-next-line no-unused-vars
     const [_, expectedStampFromMessage, __] = text.split(delimiter)
     const [expectedStampFromSubject, otp] = subject.split(delimiter)
     expect(expectedStampFromMessage).to.equal(stamp)
