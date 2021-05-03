@@ -104,7 +104,6 @@ export class CommonNetworkMember {
   private readonly _encryptedSeed: string
   private _password: string
   private readonly _walletStorageService: WalletStorageService
-  private readonly _customMessageTemplateService: CustomMessageTemplatesService
   private readonly _revocationService: RevocationService
   private readonly _keysService: KeysService
   private readonly _jwtService: JwtService
@@ -155,7 +154,6 @@ export class CommonNetworkMember {
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
     this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
     this._revocationService = new RevocationService(this._sdkOptions)
-    this._customMessageTemplateService = new CustomMessageTemplatesService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions, this._component)
