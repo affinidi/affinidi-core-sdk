@@ -38,7 +38,7 @@ export class TestEmailHelper {
     )
     return emails
   }
-  public static extractOpt = async (tag: string) => {
+  public static extractOtp = async (tag: string) => {
     const [{ text, html }] = await TestEmailHelper.getEmailsForTag(tag)
     const matches = (html || text || '').match(/\d{6}/)
     return matches[matches.length - 1]
