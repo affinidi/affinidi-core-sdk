@@ -347,7 +347,7 @@ describe('CommonNetworkMember', () => {
     const didAuthRequestParams = {
       audienceDid: holderDid,
     }
-    const issuerServer = `https://affinity-issuer.${fullOptions.env}.affinity-project.org`
+    const issuerServer = `https://revocation-api.${fullOptions.env}.affinity-project.org`
     const didRequestTokenResponse = await request(issuerServer)
       .post('/api/v1/did-auth/create-did-auth-request')
       .send(didAuthRequestParams)
