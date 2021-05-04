@@ -130,7 +130,7 @@ export default class ApiService {
     let jsonResponse
 
     if (status.toString().startsWith('2')) {
-      jsonResponse = await response.json()
+      jsonResponse = status.toString() === '204' ? {} : await response.json()
     } else {
       const error = await response.json()
 

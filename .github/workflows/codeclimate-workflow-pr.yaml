@@ -43,6 +43,8 @@ jobs:
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
+          TESTMAIL_API_KEY: ${{secrets.TESTMAIL_API_KEY}}
+          TESTMAIL_NS: ${{secrets.TESTMAIL_NS}}
         with:
           coverageCommand: npm run test:coverage:codeclimate
       - name: Generate and Upload Test Coverage
@@ -50,4 +52,4 @@ jobs:
             $GITHUB_WORKSPACE/tmp/cc-test-reporter sum-coverage $GITHUB_WORKSPACE/tmp/codeclimate.*.json -p $(ls -1q $GITHUB_WORKSPACE/tmp/codeclimate.*.json | wc -l) -d -o tmp/codeclimate.total.json
             $GITHUB_WORKSPACE/tmp/cc-test-reporter upload-coverage -i $GITHUB_WORKSPACE/tmp/codeclimate.total.json
         env:
-          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}} 
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}

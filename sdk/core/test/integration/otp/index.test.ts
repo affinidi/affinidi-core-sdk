@@ -7,6 +7,8 @@ import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } from '../../helpers'
+import { MessageParameters } from '../../../dist/dto'
+import { TestEmailHelper } from '../../helpers/getOtpFromTestMailApp'
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -309,6 +311,28 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     expect(responseError).to.exist
     expect(responseError.name).to.eql('COR-17')
+  })
+
+  it('#passwordlessLogin with custom messages ', async () => {
+    const stamp = `${Date.now()} stamp`
+    const delimiter = ':'
+    const messageParameters: MessageParameters = {
+      message: `Your verification code is ${delimiter}${stamp}${delimiter}{{CODE}}.`,
+      subject: `${stamp}${delimiter}{{CODE}}`,
+    }
+
+    const fullOptions = getOptionsForEnvironment(true)
+    const tag = `${fullOptions.env}_passwordlessLogin_integration`
+    const userName = TestEmailHelper.generateEmailForTag(tag)
+    const token = await CommonNetworkMember.passwordlessLogin(userName, fullOptions, messageParameters)
+    await wait(DELAY)
+    const [{ text, subject }] = await TestEmailHelper.getEmailsForTag(tag)
+    // eslint-disable-next-line no-unused-vars
+    const [_, expectedStampFromMessage, __] = text.split(delimiter)
+    const [expectedStampFromSubject, otp] = subject.split(delimiter)
+    expect(expectedStampFromMessage).to.equal(stamp)
+    expect(expectedStampFromSubject).to.equal(stamp)
+    await CommonNetworkMember.completeLoginChallenge(token, otp, fullOptions)
   })
 
   it('#signUp or change user attribute is not possible for existing email', async () => {

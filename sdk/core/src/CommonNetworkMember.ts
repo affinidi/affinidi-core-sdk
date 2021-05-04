@@ -11,6 +11,7 @@ import CognitoService from './services/CognitoService'
 import SdkError from './shared/SdkError'
 
 import WalletStorageService from './services/WalletStorageService'
+import { CustomMessageTemplatesService } from './services/CustomMessageTemplatesService'
 import RevocationService from './services/RevocationService'
 import HolderService from './services/HolderService'
 import {
@@ -631,6 +632,16 @@ export class CommonNetworkMember {
     ])
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    if (messageParameters) {
+      const customMessageTemplateService = new CustomMessageTemplatesService(options)
+      await customMessageTemplateService.storeTemplate({
+        username: username,
+        template: messageParameters.message,
+        subject: messageParameters.subject,
+        htmlTemplate: messageParameters.htmlMessage,
+      })
+    }
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
     const token = await cognitoService.signInWithUsername(username, messageParameters)
