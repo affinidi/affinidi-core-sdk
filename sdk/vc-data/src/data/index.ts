@@ -19,5 +19,6 @@ export * from './name'
 export * from './nationalid'
 export * from './phone'
 export * from './trade'
+export * from './winner'
 
 export * from './util'
