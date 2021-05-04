@@ -1,5 +1,6 @@
-# release 4.2.4 (2021-04-28)
+# release 4.2.4 (2021-05-04)
 * custom messages support for passwordless login
+* vc-data winner schema
 
 # release 4.2.3 (2020-04-01)
  * add optional pagination to `AffinityWallet.getCredentials`

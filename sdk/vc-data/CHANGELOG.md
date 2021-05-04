@@ -1,3 +1,5 @@
+#  1.2.5 (2021-05-04)
+* vc-data winner schema
 ## 1.2.3
  - fhire compatible bundle 
    * Practitioner added as a bundle list
