@@ -319,13 +319,15 @@ export const validateVPV1 = ({
     presentation_submission: isUndefinedOr(isValid(validatePresentationSubmission)),
     verifiableCredential: [
       isArrayOf(isValid(validateVCV1({ documentLoader, getVerifySuite, getProofPurposeOptions }))),
-      isArrayOf((value, data) =>
-        createValidatorResponse(
+      isArrayOf((value, data: Record<string, any>) => {
+        const dataHolderId = parse(data?.holder?.id)
+        const valueHolderId = parse(value?.holder?.id)
+        return createValidatorResponse(
           // Parse the DID URLs to compare just the DID part
-          parse(data.holder.id).did === parse(value.holder.id).did,
+          dataHolderId !== null && valueHolderId !== null && dataHolderId.did === valueHolderId.did,
           `Credential ${value.id} has a different holder than the VP`,
-        ),
-      ),
+        )
+      }),
     ],
     holder: isValid(validateHolder),
     proof: [isValid(validateVPProofStructure), isValidVPProof(documentLoader, getVerifySuite, getProofPurposeOptions)],

@@ -23,20 +23,21 @@
     "test:coverage": "npm run test -- --coverage",
     "test:coverage:codeclimate": "npm run test -- --coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.vc_common.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)  || echo \"lcov file is empty. There is no tests\"",
     "lint": "tsdx lint src",
+    "lint:fix": "tsdx lint src --fix",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint",
     "test:integration": "",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
   },
   "dependencies": {
-    "did-resolver": "^2.0.1",
-    "jsonld": "^2.0.2",
-    "jsonld-signatures": "^5.1.0",
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
+    "did-resolver": "^3.1.0",
+    "jsonld": "^5.2.0",
+    "jsonld-signatures": "^9.0.2",
     "tiny-warning": "^1.0.3",
     "tslib": "^2.0.1"
   },
   "devDependencies": {
-    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/jest": "24.9.1",

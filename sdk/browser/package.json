@@ -39,7 +39,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@affinidi/common": "1.6.0",
+    "@affinidi/common": "1.7.0",
     "@affinidi/wallet-core-sdk": "4.2.4",
     "@affinidi/affinity-metrics-lib": "0.0.25",
     "@sentry/browser": "^5.18.0",

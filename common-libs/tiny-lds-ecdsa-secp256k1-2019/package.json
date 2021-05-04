@@ -11,9 +11,12 @@
   "scripts": {
     "start": "tsdx watch --target node --tsconfig ./tsconfig.build.json",
     "build": "tsdx build --target node --tsconfig ./tsconfig.build.json",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix --force",
     "test": "tsdx test",
     "test:watch": "tsdx test --watch",
     "lint": "tsdx lint src",
+    "lint:fix": "tsdx lint src --fix",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint",
     "test:coverage": "tsdx test --coverage",
@@ -27,21 +30,21 @@
     "directory": "common-libs/tiny-lds-ecdsa-secp256k1-2019"
   },
   "dependencies": {
-    "@types/create-hash": "^1.2.2",
-    "@types/tiny-secp256k1": "^1.0.0",
+    "@transmute/es256k-jws-ts": "^0.1.3",
+    "@transmute/lds-ecdsa-secp256k1-2019": "0.1.1",
     "base64url": "^3.0.1",
     "create-hash": "^1.2.0",
-    "jsonld": "^2.0.2",
-    "jsonld-signatures": "^5.1.0",
-    "tiny-secp256k1": "^1.1.5",
+    "jsonld": "^5.2.0",
+    "jsonld-signatures": "^9.0.2",
+    "tiny-secp256k1": "^1.1.6",
     "tslib": "^2.0.1"
   },
   "devDependencies": {
-    "@affinidi/eslint-config": "^1.0.1",
-    "@affinidi/prettier-config": "^1.0.1",
-    "@transmute/lds-ecdsa-secp256k1-2019": "^0.1.3",
-    "@transmute/es256k-jws-ts": "^0.1.3",
+    "@affinidi/eslint-config": "1.0.1",
+    "@affinidi/prettier-config": "1.0.1",
+    "@types/create-hash": "^1.2.2",
     "@types/jest": "^24.0.25",
+    "@types/tiny-secp256k1": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^3.2.0",
     "@typescript-eslint/parser": "^3.2.0",
     "acorn": "^7.1.0",
@@ -51,8 +54,11 @@
     "license-checker": "25.0.1",
     "prettier": "^2.0.5",
     "ts-node": "^8.6.2",
-    "tsdx": "^0.13.3",
+    "tsdx": "^0.14.1",
     "typescript": "^4.0.2"
+  },
+  "peerDependencies": {
+    "elliptic": "^6.5.4"
   },
   "jest": {
     "moduleFileExtensions": [
