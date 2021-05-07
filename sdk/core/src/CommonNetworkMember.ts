@@ -2021,6 +2021,8 @@ export class CommonNetworkMember {
    *   expiresAt (isoString) - expire date-time of generated token
    *
    *   nonce (number) - nonce/jti of generated token
+
+   *   callbackUrl (string)
    * @returns JWT
    */
   async generatePresentationChallenge(
@@ -2057,8 +2059,8 @@ export class CommonNetworkMember {
 
   /**
    * @description Creates VP from VP challenge and credentials
-   * @param credentialShareRequestToken - JWT with the requested VCs
-   * @param suppliedCredentials - array of signed credentials
+   * @param challenge - challenge with the requested VCs
+   * @param vcs - array of signed credentials
    * @returns VPV1
    */
   async createPresentationFromChallenge(challenge: string, vcs: VCV1[], domain: string): Promise<VPV1> {
@@ -2090,7 +2092,7 @@ export class CommonNetworkMember {
    * @description Validates a VP, and the contained VCs
    * @param vp - the presentation to be validated
    * when needed to verify if holder is a subject of VC
-   * @returns { isValid, did, challenge, suppliedPresentations, errors }
+   * @returns { isValid, did, challenge, suppliedPresentation, errors }
    *
    * isValid - boolean, result of the verification
    *
@@ -2099,7 +2101,7 @@ export class CommonNetworkMember {
    * challenge - unique identifier for the presentation.
    * You are responsible for checking this to protect against replay attacks
    *
-   * suppliedPresentations - the validated presentation
+   * suppliedPresentation - the validated presentation
    *
    * errors - array of validation errors
    */
