@@ -43,12 +43,12 @@
     - [Issuance](#issuance-of-revocable-credential)
     - [Revocation](#revocation-of-revocable-credential)
   - [Verifier](#verifier)
-    - [Initiate credential share request](#initiate-credential-share-request)
-    - [Validate Holder Response on Share Request](#validate-holder-response-on-share-request)
+    - [Initiate Verifiable Presentation request (credential share request)](#initiate-verifiable-presentation-request-credential-share-request)
+    - [Validate Verifiable Presentation (Holder Response on Share Request)](#validate-verifiable-presentation-holder-response-on-share-request)
     - [Validate Holder Response on Did auth Request](#validate-holder-response-on-did-auth-request)
   - [Wallet](#wallet)
     - [Initialize region for storing credentials](#initialize-region-for-storing-credentials)
-    - [Create Response on credential share request](#create-response-on-credential-share-request)
+    - [Create Verifiable Presentation (Response on credential share request)](#create-verifiable-presentation-response-on-credential-share-request)
     - [Create Response on credential offer request](#create-response-on-credential-offer-request)
     - [Create Response on DID auth request](#create-response-on-did-auth-request)
     - [Delete All Credentials](#delete-all-credentials)
@@ -760,10 +760,11 @@ options
 
 ### Verifier
 
-#### Initiate credential share request
+#### Initiate Verifiable Presentation request (credential share request)
 
+##### Verifiable Presentation according to w3c spec structure flow:
 ```ts
-const credentialShareRequestToken = await verifier.generatePresentationChallenge(
+const presentationChallenge = await verifier.generatePresentationChallenge(
   credentialRequirements,
   issuerDid,
   jwtOptions,
@@ -792,8 +793,26 @@ const credentialRequirements = [{ type: ['Credential', 'ProofOfNameCredential'] 
 
 `credentialShareRequestToken` can be send to Wallet/Holder to anwser on this with response with requested VC inside.
 
-#### Validate Holder Response on Share Request
+##### Verifiable Presentation as JWT method:
 
+```ts
+const credentialShareRequestToken = await verifier.generateCredentialShareRequestToken(
+  credentialRequirements,
+  issuerDid,
+  options,
+)
+```
+
+see parameters description at `Verifiable Presentation according to w3c spec` section
+
+#### Validate Verifiable Presentation (Holder Response on Share Request)
+
+##### Verifiable Presentation according to w3c spec structure flow:
+```ts
+const { isValid, did, challenge, suppliedPresentation } = await verifier.verifyPresentation(vp)
+```
+
+##### Verifiable Presentation as JWT method:
 ```ts
 const { isValid, did, nonce, suppliedCredentials } = await verifier.verifyCredentialShareResponseToken(
   credentialShareResponseToken,
@@ -834,19 +853,34 @@ const options = {
 const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
 ```
 
-#### Create Response on credential share request
+#### Create Verifiable Presentation (Response on credential share request)
+
+##### Verifiable Presentation according to w3c spec structure flow:
 
 ```ts
-const responseToken = await wallet.createPresentationFromChallenge(
+const vp = await wallet.createPresentationFromChallenge(
+  presentationChallenge,
+  credentials,
+  domain,
+)
+```
+
+`credentials` - credentials which Holder providing for Verifier.
+
+`callbackURL` - (optional)
+
+`domain` - (could be empty string)
+
+##### Verifiable Presentation as JWT method:
+```ts
+const responseToken = await wallet.createCredentialShareResponseToken(
   credentialShareRequestToken,
   suppliedCredentials,
-  callbackURL,
 )
 ```
 
 `suppliedCredentials` - credentials which Holder providing for Verifier.
 
-`callbackURL` - (optional)
 
 #### Create Response on credential offer request
 
