@@ -48,7 +48,7 @@
     - [Validate Holder Response on Did auth Request](#validate-holder-response-on-did-auth-request)
   - [Wallet](#wallet)
     - [Initialize region for storing credentials](#initialize-region-for-storing-credentials)
-    - [Create Verifiable Presentation (Response on credential share request)](##create-verifiable-presentation-response-on-credential-share-request)
+    - [Create Verifiable Presentation (Response on credential share request)](#create-verifiable-presentation-response-on-credential-share-request)
     - [Create Response on credential offer request](#create-response-on-credential-offer-request)
     - [Create Response on DID auth request](#create-response-on-did-auth-request)
     - [Delete All Credentials](#delete-all-credentials)
