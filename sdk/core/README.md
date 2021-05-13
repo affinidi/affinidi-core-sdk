@@ -52,6 +52,7 @@
     - [Create Response on credential offer request](#create-response-on-credential-offer-request)
     - [Create Response on DID auth request](#create-response-on-did-auth-request)
     - [Delete All Credentials](#delete-all-credentials)
+* [Dependencies on Affinidi infra](#affinidi-infra-dependencies)
 
 ## How to install
 
@@ -903,3 +904,11 @@ const authDidResponseToken = await wallet.createDidAuthResponse(authDidRequestTo
 ```ts
 await wallet.deleteAllCredentials()
 ```
+
+## Affinidi Infra dependencies
+This SDK using next Affinidi services:
+- affinidi registry (to ahcnor when applicable, resolve and update did/didDocument)
+- affinidi verifier (to build credential request)
+- affinidi issuer (to build credential offer and verify credential offer response)
+- affinidi wallet backend (to store endrypted seed and encrypted VC optioanlly as backup)
+- affinidi user management (using only when backup option for encrypted seed used)
