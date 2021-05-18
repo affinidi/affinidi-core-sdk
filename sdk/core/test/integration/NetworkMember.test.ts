@@ -496,7 +496,7 @@ describe('CommonNetworkMember', () => {
     expect(tokenElem).to.exist
   })
 
-  it('#generateCredentialOfferRequestToken throws `COM-5 / 500` when expiration date is the past', async () => {
+  it('#generateCredentialOfferRequestToken throws `ISS-11 / 400` when expiration date is the past', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
     // const commonNetworkMemberElem = new CommonNetworkMember(password, encryptedSeedElem, options)
 
@@ -513,9 +513,9 @@ describe('CommonNetworkMember', () => {
 
     const { code, message, httpStatusCode } = responseError
 
-    expect(code).to.equal('COM-5')
-    expect(message).to.equal('ExpiresAt parameter should be in future.')
-    expect(httpStatusCode).to.equal(500)
+    expect(code).to.equal('ISS-11')
+    expect(message).to.equal('Invalid Request. ExpiresAt parameter should be in future.')
+    expect(httpStatusCode).to.equal(400)
   })
 
   it('#generateCredentialOfferRequestToken throws `COR-1 / 400` when bad parameters passed', async () => {
