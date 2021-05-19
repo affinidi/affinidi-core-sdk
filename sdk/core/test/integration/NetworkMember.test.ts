@@ -785,7 +785,7 @@ describe('CommonNetworkMember', () => {
       responseError = error
     }
 
-    const { code, httpStatusCode, message } = responseError
+    const { code, httpStatusCode } = responseError
 
     expect(code).to.equal('ISS-12')
     expect(httpStatusCode).to.equal(400)
