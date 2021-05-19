@@ -166,6 +166,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('removes user if it is "UNCONFIMRED" before sign up', async () => {
+    // TODO: perhaps replace with "prepareOtpMessageProperties"? and remove "generateEmail" completely
     const email = generateEmail()
 
     await CommonNetworkMember.signUp(email, cognitoPassword, options)
