@@ -97,7 +97,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
     expect(testId2).to.equal(testId)
 
     const result = await CommonNetworkMember.confirmSignIn(token2, otpCode2, options)
-    expect(result.commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    expect(result.commonNetworkMember).to.be.an.instanceOf(CommonNetworkMember)
   })
 
   it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
@@ -114,31 +114,32 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(token, otpCode, options)
 
-    expect(isNew).to.eql(true)
+    expect(isNew).to.be.true
     expect(commonNetworkMember).to.be.an.instanceOf(CommonNetworkMember)
   })
 
   it('#signIn and #confirmSignIn WHEN user exists', async () => {
-    const cognitoUsername = generateEmail()
+    const { tag, messageParameters, username } = prepareOtpMessageParameters(testId)
 
-    const signUptoken = await CommonNetworkMember.signIn(cognitoUsername, options)
+    const timestamp1 = Date.now()
+    const signUpToken = await CommonNetworkMember.signIn(username, options, messageParameters)
 
-    await wait(DELAY)
-    const sighUpOtp = await getOtp()
+    const otpEmail1 = await TestmailHelper.waitForNewEmail(tag, timestamp1)
+    const [otpCode1] = parseOtpEmail(otpEmail1)
 
-    const networkMember = await CommonNetworkMember.confirmSignUp(signUptoken, sighUpOtp, options)
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, otpCode1, options)
+    await commonNetworkMember.signOut()
 
-    await networkMember.signOut()
+    const timestamp2 = Date.now()
+    const signInToken = await CommonNetworkMember.signIn(username, options, messageParameters)
 
-    const signInToken = await CommonNetworkMember.signIn(cognitoUsername, options)
+    const otpEmail2 = await TestmailHelper.waitForNewEmail(tag, timestamp2)
+    const [otpCode2] = parseOtpEmail(otpEmail2)
 
-    await wait(DELAY)
-    const signInOtp = await getOtp()
+    const result = await CommonNetworkMember.confirmSignIn(signInToken, otpCode2, options)
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, signInOtp, options)
-
-    expect(isNew).to.eql(false)
-    expect(commonNetworkMember).to.exist
+    expect(result.isNew).to.be.false
+    expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
   })
 
   it('#signUp, change email, change password, login', async () => {
