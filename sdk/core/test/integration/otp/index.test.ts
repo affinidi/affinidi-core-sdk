@@ -21,21 +21,22 @@ const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
 
 const cognitoPassword = COGNITO_PASSWORD
 
-const prepareOtpMessageParameters = (testId: number) => {
-  const message = `Your verification code is: {{CODE}} #${testId}`
-  const subject = `Code #${testId}`
+const prepareOtpMessageParameters = (testId: number, suffix?: string): [string, string, MessageParameters] => {
+  const messageParameters: MessageParameters = {
+    message: `Your verification code is: {{CODE}} #${testId}`,
+    subject: `Code #${testId}`,
+  }
 
-  const messageParameters: MessageParameters = { message, subject }
+  const { env } = getOptionsForEnvironment(true)
 
-  const fullOptions = getOptionsForEnvironment(true)
-  const tag = `${fullOptions.env}.${testId}.otp`
+  let tag = `${env}.${testId}.otp`
+  if (suffix) {
+    tag = `${tag}.${suffix}`
+  }
+
   const username = TestmailHelper.generateEmailForTag(tag)
 
-  return {
-    messageParameters,
-    username,
-    tag,
-  }
+  return [username, tag, messageParameters]
 }
 
 // TODO: investigate why "text" is not provided sometimes
@@ -58,7 +59,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   })
 
   it('#signIn with skipBackupEncryptedSeed, #storeEncryptedSeed, #signIn', async () => {
-    const { tag, messageParameters, username } = prepareOtpMessageParameters(testId)
+    const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
 
     const timestamp1 = Date.now()
     const token1 = await CommonNetworkMember.signIn(username, options, messageParameters)
@@ -101,7 +102,7 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   })
 
   it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
-    const { tag, messageParameters, username } = prepareOtpMessageParameters(testId)
+    const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
 
     await CommonNetworkMember.signUp(username, null, options, messageParameters)
 
@@ -119,79 +120,69 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
   })
 
   it('#signIn and #confirmSignIn WHEN user exists', async () => {
-    const { tag, messageParameters, username } = prepareOtpMessageParameters(testId)
+    const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
 
     const timestamp1 = Date.now()
-    const signUpToken = await CommonNetworkMember.signIn(username, options, messageParameters)
+    const token1 = await CommonNetworkMember.signIn(username, options, messageParameters)
 
     const otpEmail1 = await TestmailHelper.waitForNewEmail(tag, timestamp1)
     const [otpCode1] = parseOtpEmail(otpEmail1)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, otpCode1, options)
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token1, otpCode1, options)
     await commonNetworkMember.signOut()
 
     const timestamp2 = Date.now()
-    const signInToken = await CommonNetworkMember.signIn(username, options, messageParameters)
+    const token2 = await CommonNetworkMember.signIn(username, options, messageParameters)
 
     const otpEmail2 = await TestmailHelper.waitForNewEmail(tag, timestamp2)
     const [otpCode2] = parseOtpEmail(otpEmail2)
 
-    const result = await CommonNetworkMember.confirmSignIn(signInToken, otpCode2, options)
+    const result = await CommonNetworkMember.confirmSignIn(token2, otpCode2, options)
 
     expect(result.isNew).to.be.false
     expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
   })
 
   it('#signUp, change email, change password, login', async () => {
-    const cognitoUsername = generateEmail()
+    const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const password = cognitoPassword
 
-    const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+    const timestamp1 = Date.now()
+    const token = await CommonNetworkMember.signUp(username, password, options, messageParameters)
 
-    await wait(DELAY)
-    const signUpOtp = await getOtp()
+    const otpEmail1 = await TestmailHelper.waitForNewEmail(tag, timestamp1)
+    const [otpCode1] = parseOtpEmail(otpEmail1)
 
-    let networkMember = await CommonNetworkMember.confirmSignUp(token, signUpOtp, options)
+    let commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode1, options)
+    expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
-    expect(networkMember).to.exist
+    const [newUsername, newTag, newMessageParameters] = prepareOtpMessageParameters(testId, 'updated')
 
-    const newCognitoUsername = generateEmail()
+    const timestamp2 = Date.now()
+    await commonNetworkMember.changeUsername(newUsername, {}, newMessageParameters)
 
-    await networkMember.changeUsername(newCognitoUsername)
+    const otpEmail2 = await TestmailHelper.waitForNewEmail(newTag, timestamp2)
+    const [otpCode2] = parseOtpEmail(otpEmail2)
 
-    await wait(DELAY)
-    const changeUsernameOtp = await getOtp()
+    await commonNetworkMember.confirmChangeUsername(newUsername, otpCode2)
+    await commonNetworkMember.signOut()
 
-    await networkMember.confirmChangeUsername(newCognitoUsername, changeUsernameOtp)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newUsername, password, options)
+    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
-    await networkMember.signOut()
+    await commonNetworkMember.signOut()
 
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, cognitoPassword, options)
+    const timestamp3 = Date.now()
+    await CommonNetworkMember.forgotPassword(newUsername, options, newMessageParameters)
 
-    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+    const otpEmail3 = await TestmailHelper.waitForNewEmail(newTag, timestamp3)
+    const [otpCode3] = parseOtpEmail(otpEmail3)
 
-    await networkMember.signOut()
+    const newPassword = `${password}_updated`
+    await CommonNetworkMember.forgotPasswordSubmit(newUsername, otpCode3, newPassword, options)
 
-    const forgotPasswordResponse = await CommonNetworkMember.forgotPassword(newCognitoUsername, options)
-
-    expect(forgotPasswordResponse).to.be.undefined
-
-    const newPassword = COGNITO_PASSWORD
-
-    await wait(DELAY)
-    const forgotPasswordOtp = await getOtp()
-
-    const forgotPasswordSubmitResponse = await CommonNetworkMember.forgotPasswordSubmit(
-      newCognitoUsername,
-      forgotPasswordOtp,
-      newPassword,
-      options,
-    )
-
-    expect(forgotPasswordSubmitResponse).to.be.undefined
-
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(newCognitoUsername, newPassword, options)
-
-    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newUsername, newPassword, options)
+    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
   it('#signUp (without password), change password, change username', async () => {
