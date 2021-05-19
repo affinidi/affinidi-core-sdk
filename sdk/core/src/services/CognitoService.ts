@@ -278,11 +278,8 @@ export default class CognitoService {
 
     const { clientId: ClientId } = this.cognitoOptions
 
-    const params = { ClientId, Username }
-
-    if (messageParameters) {
-      Object.assign(params, { ClientMetadata: messageParameters })
-    }
+    const ClientMetadata = messageParameters || {}
+    const params = { ClientId, Username, ClientMetadata }
 
     try {
       const response = await this.cognitoidentityserviceprovider.resendConfirmationCode(params).promise()
