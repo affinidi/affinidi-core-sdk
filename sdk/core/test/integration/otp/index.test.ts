@@ -8,7 +8,7 @@ import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
-import { TestEmailHelper } from '../../helpers/getOtpFromTestMailApp'
+import { TestmailEmail, TestmailHelper } from '../../helpers/TestmailHelper'
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -21,20 +21,61 @@ const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
 
 const cognitoPassword = COGNITO_PASSWORD
 
+const prepareOtpMessageParameters = (testId: number) => {
+  const message = `Your verification code is: {{CODE}} #${testId}`
+  const subject = `Code #${testId}`
+
+  const messageParameters: MessageParameters = { message, subject }
+
+  const fullOptions = getOptionsForEnvironment(true)
+  const tag = `${fullOptions.env}.${testId}.otp`
+  const username = TestmailHelper.generateEmailForTag(tag)
+
+  return {
+    messageParameters,
+    username,
+    tag,
+  }
+}
+
+// TODO: investigate why "text" is not provided sometimes
+const parseOtpEmail = ({ text, html, subject }: TestmailEmail): [string, number] => {
+  const [messageCode, messageTestId] = (text || html).replace('Your verification code is: ', '').split(' #')
+  const subjectTestId = subject.replace('Code #', '')
+
+  if (messageTestId !== subjectTestId) {
+    throw new Error(`Template mismatch: ${messageTestId} does not equal ${subjectTestId}`)
+  }
+
+  return [messageCode, Number(messageTestId)]
+}
+
 describe('CommonNetworkMember (flows that require OTP)', () => {
+  let testId: number
+
+  beforeEach(() => {
+    testId = Date.now()
+  })
+
   it('#signIn with skipBackupEncryptedSeed, #storeEncryptedSeed, #signIn', async () => {
-    const cognitoUsername = generateEmail()
+    const { tag, messageParameters, username } = prepareOtpMessageParameters(testId)
 
-    const signInToken = await CommonNetworkMember.signIn(cognitoUsername, options)
+    const timestamp1 = Date.now()
+    const signInToken1 = await CommonNetworkMember.signIn(username, options, messageParameters)
 
-    await wait(DELAY)
-    let otp = await getOtp()
+    const otpEmail1 = await TestmailHelper.waitForNewEmail(tag, timestamp1)
+    const [otpCode1, testId1] = parseOtpEmail(otpEmail1)
 
-    const optionsWithSkippedBackupEncryptedSeed = Object.assign({}, options, { skipBackupEncryptedSeed: true })
+    expect(testId1).to.equal(testId)
 
-    const { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
-      signInToken,
-      otp,
+    const optionsWithSkippedBackupEncryptedSeed: SdkOptions = {
+      ...options,
+      skipBackupEncryptedSeed: true,
+    }
+
+    let { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
+      signInToken1,
+      otpCode1,
       optionsWithSkippedBackupEncryptedSeed,
     )
 
@@ -42,21 +83,20 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     const { password, accessToken, encryptedSeed } = commonNetworkMember
 
-    const networkMember = new CommonNetworkMember(password, encryptedSeed, options)
+    commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
 
-    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+    await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
+    await commonNetworkMember.signOut()
 
-    await networkMember.storeEncryptedSeed('', '', accessToken)
+    const timestamp2 = Date.now()
+    const signInToken2 = await CommonNetworkMember.signIn(username, options, messageParameters)
 
-    await networkMember.signOut()
+    const otpEmail2 = await TestmailHelper.waitForNewEmail(tag, timestamp2)
+    const [otpCode2, testId2] = parseOtpEmail(otpEmail2)
 
-    const token = await CommonNetworkMember.signIn(cognitoUsername, options)
+    expect(testId2).to.equal(testId)
 
-    await wait(DELAY)
-    otp = await getOtp()
-
-    const result = await CommonNetworkMember.confirmSignIn(token, otp, options)
-
+    const result = await CommonNetworkMember.confirmSignIn(signInToken2, otpCode2, options)
     expect(result.commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
@@ -323,10 +363,10 @@ describe('CommonNetworkMember (flows that require OTP)', () => {
 
     const fullOptions = getOptionsForEnvironment(true)
     const tag = `${fullOptions.env}_passwordlessLogin_integration`
-    const userName = TestEmailHelper.generateEmailForTag(tag)
+    const userName = TestmailHelper.generateEmailForTag(tag)
     const token = await CommonNetworkMember.passwordlessLogin(userName, fullOptions, messageParameters)
     await wait(DELAY)
-    const [{ text, subject }] = await TestEmailHelper.getEmailsForTag(tag)
+    const [{ text, subject }] = await TestmailHelper.getEmailsForTag(tag)
     // eslint-disable-next-line no-unused-vars
     const [_, expectedStampFromMessage, __] = text.split(delimiter)
     const [expectedStampFromSubject, otp] = subject.split(delimiter)
