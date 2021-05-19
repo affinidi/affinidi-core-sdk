@@ -1114,6 +1114,7 @@ export class CommonNetworkMember {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
