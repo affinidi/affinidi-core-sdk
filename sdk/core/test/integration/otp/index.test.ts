@@ -5,6 +5,7 @@ import '../env'
 import { expect } from 'chai'
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
+import SdkError from '../../../src/shared/SdkError'
 
 import { getOtp, generateUsername, generateEmail, getOptionsForEnvironment } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
@@ -188,10 +189,10 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
 
     const [otpCode2] = await waitForOtpCode(tag, timestamp2)
 
-    const newPassword = COGNITO_PASSWORD
-    await CommonNetworkMember.forgotPasswordSubmit(username, otpCode2, newPassword, options)
+    const password = COGNITO_PASSWORD
+    await CommonNetworkMember.forgotPasswordSubmit(username, otpCode2, password, options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(username, newPassword, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(username, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
     const [newUsername, newTag, newMessageParameters] = prepareOtpMessageParameters(testId, 'updated')
@@ -204,51 +205,45 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
     await commonNetworkMember.confirmChangeUsername(newUsername, otpCode3)
     await commonNetworkMember.signOut()
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newUsername, cognitoPassword, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newUsername, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
-  it('#signUp, #resendSignUpConfirmationCode, then #signIn (with 1 wrong OTP)', async () => {
-    const cognitoUsername = generateEmail()
+  it.only('#signUp, #resendSignUpConfirmationCode, then #signIn (with 1 wrong OTP)', async () => {
+    const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const password = COGNITO_PASSWORD
 
-    const signUpToken = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+    const token1 = await CommonNetworkMember.signUp(username, password, options, messageParameters)
 
-    await CommonNetworkMember.resendSignUpConfirmationCode(cognitoUsername, options)
+    await waitForOtpCode(tag) // skip first OTP code
 
-    await wait(DELAY)
-    const signUpOtp = await getOtp()
+    const timestamp1 = Date.now()
+    await CommonNetworkMember.resendSignUpConfirmationCode(username, options, messageParameters)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpOtp, options)
+    const [otpCode1] = await waitForOtpCode(tag, timestamp1)
 
-    expect(commonNetworkMember).to.exist
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token1, otpCode1, options)
+    expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
 
-    // signIn with wrong OTP
-    const loginToken = await CommonNetworkMember.signIn(cognitoUsername, options)
+    const timestamp2 = Date.now()
+    const token2 = await CommonNetworkMember.signIn(username, options, messageParameters)
 
-    let responseError
+    const [otpCode2] = await waitForOtpCode(tag, timestamp2)
+
+    let error
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
-    } catch (error) {
-      responseError = error
+      await CommonNetworkMember.confirmSignIn(token2, '123456', options)
+    } catch (err) {
+      error = err
     }
 
-    expect(responseError).to.exist
-    expect(responseError.name).to.eql('COR-5')
+    expect(error).to.be.instanceOf(SdkError)
+    expect(error.name).to.equal('COR-5')
 
-    await wait(DELAY)
-    const loginOtp = await getOtp()
-
-    let secondError
-
-    try {
-      await CommonNetworkMember.confirmSignIn(loginToken, loginOtp, options)
-    } catch (error) {
-      secondError = error
-    }
-
-    expect(secondError).to.not.exist
+    const result = await CommonNetworkMember.confirmSignIn(token2, otpCode2, options)
+    expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
   })
 
   it('#signIn throws `COR-13 / 400` when OTP is wrong 3 times', async () => {
