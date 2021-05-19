@@ -1,3 +1,4 @@
+// TODO: investigate why node-fetch has been imported weirdly before
 import fetch from 'node-fetch'
 import { URL } from 'url'
 
@@ -6,7 +7,7 @@ const TESTMAIL_API_KEY = process.env.TESTMAIL_API_KEY
 const TESTMAIL_NAMESPACE = process.env.TESTMAIL_NS
 const TESTMAIL_PATH = '/api/json'
 
-export interface TestmailEmail {
+interface TestmailEmail {
   subject: string
   html: string
   text?: string
