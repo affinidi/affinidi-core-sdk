@@ -333,53 +333,42 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
       expect(error).to.be.instanceOf(SdkError)
       expect(error.name).to.eql('COR-17')
     })
-  })
 
-  it('#signUp or change user attribute is not possible for existing email', async () => {
-    const cognitoUsername = generateEmail()
+    it('#signUp should throw "COR-7" error when signing user with already existing email', async () => {
+      const password = COGNITO_PASSWORD
 
-    const token = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+      let error
+      try {
+        await CommonNetworkMember.signUp(username, password, options)
+      } catch (err) {
+        error = err
+      }
 
-    await wait(DELAY)
-    const otp = await getOtp()
+      expect(error).to.be.instanceOf(SdkError)
+      expect(error.name).to.eql('COR-7')
+    })
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otp, options)
+    it('#changeUsername should throw "COR-7" error when when changing email to an already existing one', async () => {
+      const [newUsername, newTag, newMessageParameters] = prepareOtpMessageParameters(testId, 'new')
+      const password = COGNITO_PASSWORD
 
-    expect(commonNetworkMember).to.exist
+      const token = await CommonNetworkMember.signUp(newUsername, password, options, newMessageParameters)
 
-    let responseError
+      const [otpCode] = await waitForOtpCode(newTag)
 
-    try {
-      await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
-    } catch (error) {
-      responseError = error
-    }
+      const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode, options)
+      expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
-    expect(responseError).to.exist
-    expect(responseError.name).to.eql('COR-7')
+      let error
+      try {
+        await commonNetworkMember.changeUsername(username, options)
+      } catch (err) {
+        error = err
+      }
 
-    // creating new user
-    const cognitoUsernameNew = generateEmail()
-
-    const tokenNew = await CommonNetworkMember.signUp(cognitoUsernameNew, cognitoPassword, options)
-
-    await wait(DELAY)
-    const otpNew = await getOtp()
-
-    const commonNetworkMemberNew = await CommonNetworkMember.confirmSignUp(tokenNew, otpNew, options)
-
-    expect(commonNetworkMemberNew).to.exist
-
-    let responseErrorNew
-
-    try {
-      await commonNetworkMemberNew.changeUsername(cognitoUsername, options)
-    } catch (error) {
-      responseErrorNew = error
-    }
-
-    expect(responseErrorNew).to.exist
-    expect(responseErrorNew.name).to.eql('COR-7')
+      expect(error).to.be.instanceOf(SdkError)
+      expect(error.name).to.eql('COR-7')
+    })
   })
 
   it('#signUp with username, add email, signIn with email, change password', async () => {
