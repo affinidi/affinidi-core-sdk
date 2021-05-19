@@ -209,7 +209,7 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
-  it.only('#signUp, #resendSignUpConfirmationCode, then #signIn (with 1 wrong OTP)', async () => {
+  it('#signUp, #resendSignUpConfirmationCode, then #signIn (with 1 wrong OTP)', async () => {
     const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
     const password = COGNITO_PASSWORD
 
@@ -247,49 +247,47 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
   })
 
   it('#signIn throws `COR-13 / 400` when OTP is wrong 3 times', async () => {
-    const cognitoUsername = generateEmail()
+    const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const password = COGNITO_PASSWORD
 
-    const signUpToken = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+    const signUpToken = await CommonNetworkMember.signUp(username, password, options, messageParameters)
 
-    await wait(DELAY)
-    const signUpOtp = await getOtp()
+    const [otpCode] = await waitForOtpCode(tag)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpOtp, options)
-
-    expect(commonNetworkMember).to.exist
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, otpCode, options)
+    expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
 
-    // signIn with wrong OTP
-    const loginToken = await CommonNetworkMember.signIn(cognitoUsername, options)
+    const loginToken = await CommonNetworkMember.signIn(username, options)
 
-    let responseError
+    let error
     try {
       await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
-    } catch (error) {
-      responseError = error
+    } catch (err) {
+      error = err
     }
 
-    expect(responseError).to.exist
-    expect(responseError.name).to.eql('COR-5')
-
-    try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
-    } catch (error) {
-      responseError = error
-    }
-
-    expect(responseError).to.exist
-    expect(responseError.name).to.eql('COR-5')
+    expect(error).to.be.instanceOf(SdkError)
+    expect(error.name).to.eql('COR-5')
 
     try {
       await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
-    } catch (error) {
-      responseError = error
+    } catch (err) {
+      error = err
     }
 
-    expect(responseError).to.exist
-    expect(responseError.name).to.eql('COR-13')
+    expect(error).to.be.instanceOf(SdkError)
+    expect(error.name).to.eql('COR-5')
+
+    try {
+      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
+    } catch (err) {
+      error = err
+    }
+
+    expect(error).to.be.instanceOf(SdkError)
+    expect(error.name).to.eql('COR-13')
   })
 
   it.skip('Throws `COR-17 / 400` when OTP is expired (answer provided > 3 minutes)', async () => {
