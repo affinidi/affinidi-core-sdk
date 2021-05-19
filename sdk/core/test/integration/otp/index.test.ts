@@ -1,8 +1,8 @@
 import 'mocha'
-
 import '../env'
 
 import { expect } from 'chai'
+import cryptoRandomString from 'crypto-random-string';
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import SdkError from '../../../src/shared/SdkError'
@@ -22,7 +22,7 @@ const wait = (ms: any) => new global.Promise(resolve => setTimeout(resolve, ms))
 
 const cognitoPassword = COGNITO_PASSWORD
 
-const prepareOtpMessageParameters = (testId: number, suffix?: string): [string, string, MessageParameters] => {
+const prepareOtpMessageParameters = (testId: string, suffix?: string): [string, string, MessageParameters] => {
   const messageParameters: MessageParameters = {
     message: `Your verification code is: {{CODE}} #${testId}`,
     subject: `Code #${testId}`,
@@ -47,11 +47,11 @@ const waitForOtpCode = async (tag: string, timestampFrom?: number): Promise<[str
 }
 
 describe.only('CommonNetworkMember (flows that require OTP)', () => {
-  // testmail recommends to use unique IDs for each test run to avoid collisions
-  let testId: number
+  // testmail recommends to use "unique" IDs for each test run to avoid collisions
+  let testId: string
 
   beforeEach(() => {
-    testId = Date.now()
+    testId = cryptoRandomString({ length: 10 })
   })
 
   it('#signIn with skipBackupEncryptedSeed, #storeEncryptedSeed, #signIn', async () => {
@@ -250,11 +250,11 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
     const [username, tag, messageParameters] = prepareOtpMessageParameters(testId)
     const password = COGNITO_PASSWORD
 
-    const signUpToken = await CommonNetworkMember.signUp(username, password, options, messageParameters)
+    const token = await CommonNetworkMember.signUp(username, password, options, messageParameters)
 
     const [otpCode] = await waitForOtpCode(tag)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, otpCode, options)
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
@@ -290,47 +290,49 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
     expect(error.name).to.eql('COR-13')
   })
 
-  it.skip('Throws `COR-17 / 400` when OTP is expired (answer provided > 3 minutes)', async () => {
-    const cognitoUsername = generateEmail()
+  describe('[with existing user]', () => {
+    let username: string
+    let tag: string
+    let messageParameters: MessageParameters
 
-    const token = await CommonNetworkMember.passwordlessLogin(cognitoUsername, options)
+    beforeEach(async () => {
+      ;[username, tag, messageParameters] = prepareOtpMessageParameters(testId)
 
-    // NOTE: wait for 180s before providing the answer
-    await wait(DELAY)
-    const otp = await getOtp()
+      const token = await CommonNetworkMember.signUp(username, null, options, messageParameters)
+      const [otpCode] = await waitForOtpCode(tag)
 
-    let responseError
+      const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode, options)
+      await commonNetworkMember.signOut()
+    })
 
-    try {
-      await CommonNetworkMember.completeLoginChallenge(token, otp, options)
-    } catch (error) {
-      responseError = error
-    }
+    it('#passwordlessLogin with custom messages', async () => {
+      const timestamp = Date.now()
+      const token = await CommonNetworkMember.passwordlessLogin(username, options, messageParameters)
 
-    expect(responseError).to.exist
-    expect(responseError.name).to.eql('COR-17')
-  })
+      const [otpCode] = await waitForOtpCode(tag, timestamp)
 
-  it('#passwordlessLogin with custom messages ', async () => {
-    const stamp = `${Date.now()} stamp`
-    const delimiter = ':'
-    const messageParameters: MessageParameters = {
-      message: `Your verification code is ${delimiter}${stamp}${delimiter}{{CODE}}.`,
-      subject: `${stamp}${delimiter}{{CODE}}`,
-    }
+      const commonNetworkMember = await CommonNetworkMember.completeLoginChallenge(token, otpCode, options)
+      expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+    })
 
-    const fullOptions = getOptionsForEnvironment(true)
-    const tag = `${fullOptions.env}_passwordlessLogin_integration`
-    const userName = TestmailHelper.generateEmailForTag(tag)
-    const token = await CommonNetworkMember.passwordlessLogin(userName, fullOptions, messageParameters)
-    await wait(DELAY)
-    const [{ text, subject }] = await TestmailHelper.getEmailsForTag(tag)
-    // eslint-disable-next-line no-unused-vars
-    const [_, expectedStampFromMessage, __] = text.split(delimiter)
-    const [expectedStampFromSubject, otp] = subject.split(delimiter)
-    expect(expectedStampFromMessage).to.equal(stamp)
-    expect(expectedStampFromSubject).to.equal(stamp)
-    await CommonNetworkMember.completeLoginChallenge(token, otp, fullOptions)
+    it.skip('Throws `COR-17 / 400` when OTP is expired (answer provided > 3 minutes)', async () => {
+      const timestamp = Date.now()
+      const token = await CommonNetworkMember.passwordlessLogin(username, options, messageParameters)
+
+      const [otpCode] = await waitForOtpCode(tag, timestamp)
+
+      await wait(3 * 60 * 1000) // wait for 3 minutes before completing the login challenge
+
+      let error
+      try {
+        await CommonNetworkMember.completeLoginChallenge(token, otpCode, options)
+      } catch (err) {
+        error = err
+      }
+
+      expect(error).to.be.instanceOf(SdkError)
+      expect(error.name).to.eql('COR-17')
+    })
   })
 
   it('#signUp or change user attribute is not possible for existing email', async () => {
