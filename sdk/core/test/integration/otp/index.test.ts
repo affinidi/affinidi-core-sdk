@@ -34,12 +34,12 @@ const prepareOtpMessageParameters = (testId: string, suffix?: string): [string, 
   return [email, tag, messageParameters]
 }
 
-const waitForOtpCode = async (tag: string, timestampFrom?: number): Promise<[string, number]> => {
+const waitForOtpCode = async (tag: string, timestampFrom?: number): Promise<[string, string]> => {
   const { text, html } = await TestmailHelper.waitForNewEmail(tag, timestampFrom)
 
   // TODO: investigate why "text" is not provided sometimes
   const [messageCode, messageTestId] = (text || html).replace('Your verification code is: ', '').split(' #')
-  return [messageCode, Number(messageTestId)]
+  return [messageCode, messageTestId]
 }
 
 describe.only('CommonNetworkMember (flows that require OTP)', () => {
