@@ -1227,6 +1227,7 @@ export class CommonNetworkMember {
     await cognitoService.changePassword(accessToken, oldPassword, newPassword)
   }
 
+  // TODO: additional specs for "messageParameters" may be required
   /**
    * @description Initiates change user attribute (email/phoneNumber) flow
    * @param newUsername - new email/phoneNumber
@@ -1234,10 +1235,15 @@ export class CommonNetworkMember {
    */
   // NOTE: operation is used for change the attribute, not username. Consider renaming
   //       New email/phoneNumber can be useded as a username to login.
-  async changeUsername(newUsername: string, options: SdkOptions = {}): Promise<void> {
+  async changeUsername(
+    newUsername: string,
+    options: SdkOptions = {},
+    messageParameters?: MessageParameters,
+  ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newUsername },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
@@ -1245,7 +1251,7 @@ export class CommonNetworkMember {
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.changeUsername(accessToken, newUsername)
+    await cognitoService.changeUsername(accessToken, newUsername, messageParameters)
   }
 
   /**
