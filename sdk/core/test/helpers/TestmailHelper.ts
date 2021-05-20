@@ -2,10 +2,9 @@
 import fetch from 'node-fetch'
 import { URL } from 'url'
 
-const TESTMAIL_URL = 'https://api.testmail.app'
+const TESTMAIL_API_URL = 'https://api.testmail.app/api/json'
 const TESTMAIL_API_KEY = process.env.TESTMAIL_API_KEY
 const TESTMAIL_NAMESPACE = process.env.TESTMAIL_NS
-const TESTMAIL_PATH = '/api/json'
 
 interface TestmailEmail {
   subject: string
@@ -18,11 +17,13 @@ interface TestmailEmail {
   timestamp: number
 }
 
+// NOTE: Don't use this helper for mere email generation,
+//       since there are limits for emails sent per month
 export class TestmailHelper {
   public static generateEmailForTag = (tag: string): string => `${TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`
 
   public static waitForNewEmail = async (queryTag: string, timestampFrom: number): Promise<TestmailEmail> => {
-    const url = new URL(`${TESTMAIL_URL}${TESTMAIL_PATH}`)
+    const url = new URL(TESTMAIL_API_URL)
     url.searchParams.append('apikey', TESTMAIL_API_KEY)
     url.searchParams.append('namespace', TESTMAIL_NAMESPACE)
     url.searchParams.append('tag', queryTag)
