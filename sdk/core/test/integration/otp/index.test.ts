@@ -49,7 +49,7 @@ const generateTag = (testId: string, suffix?: string): string => {
 
 const generateTestId = (): string => cryptoRandomString({ length: 10 })
 
-describe.only('CommonNetworkMember [OTP]', () => {
+describe('CommonNetworkMember [OTP]', () => {
   // testmail recommends to use unique IDs for each test run to avoid collisions
   let testId: string
 
@@ -371,7 +371,7 @@ describe.only('CommonNetworkMember [OTP]', () => {
     })
 
     // requires test timeout >= 180000 ms
-    it.only('#completeLoginChallenge should throw "COR-17" for expired OTP', async () => {
+    it.skip('#completeLoginChallenge should throw "COR-17" for expired OTP', async () => {
       const timestamp = Date.now()
       const token = await CommonNetworkMember.passwordlessLogin(email, options, messageParameters)
       const otpCode = await waitForOtpCode(tag, timestamp)
