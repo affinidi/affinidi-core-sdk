@@ -349,7 +349,7 @@ describe('CommonNetworkMember [OTP]', () => {
       const { subject, text, html } = await TestmailHelper.waitForNewEmail(tag, timestamp)
 
       const [messageCode, messageTestId] = (text || html).replace('Your verification code is: ', '').split(' #')
-      // TODO: const [subjectCode, subjectTestId] = ...
+      // TODO: const [subjectCode, subjectTestId] = ... (see below)
       const [, subjectTestId] = subject.replace('Code ', '').split(' #')
 
       // TODO: update "affinity-dev-create-auth-challenge" lambda script to not to replace {{CODE}} in the subject
