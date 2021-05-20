@@ -23,6 +23,8 @@ describe('VCWinnerPersonV1', () => {
         awardedDate: '09-06-2021',
         awardedBy: 'Affinidi',
         certificate: '',
+        awardeeDescription: 'Awesome Developer',
+        profileLink: 'linkedin.com',
       },
       context: getVCWinnerPersonV1Context(),
     })
@@ -51,6 +53,11 @@ describe('VCWinnerPersonV1', () => {
                 "https://schema.org/awardedDate": Array [
                   Object {
                     "@value": "09-06-2021",
+                  },
+                ],
+                "https://schema.org/awardeeDescription": Array [
+                  Object {
+                    "@value": "Awesome Developer",
                   },
                 ],
                 "https://schema.org/certificate": Array [
@@ -106,6 +113,11 @@ describe('VCWinnerPersonV1', () => {
                 "https://schema.org/prizeName": Array [
                   Object {
                     "@value": "First Prize",
+                  },
+                ],
+                "https://schema.org/profileLink": Array [
+                  Object {
+                    "@value": "linkedin.com",
                   },
                 ],
                 "https://schema.org/transactionLink": Array [

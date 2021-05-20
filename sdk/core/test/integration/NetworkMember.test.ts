@@ -773,7 +773,7 @@ describe('CommonNetworkMember', () => {
     expect(httpStatusCode).to.equal(400)
   })
 
-  it('#verifyCredentialOfferResponseToken throws `COM-0 / 500` when token is not valid (no suppliedCredentials)', async () => {
+  it('#verifyCredentialOfferResponseToken throws `ISS-12 / 400` when token is not valid (no suppliedCredentials)', async () => {
     const credentialOfferResponseToken =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
@@ -786,11 +786,10 @@ describe('CommonNetworkMember', () => {
       responseError = error
     }
 
-    const { code, httpStatusCode, message } = responseError
+    const { code, httpStatusCode } = responseError
 
-    expect(code).to.equal('COM-0')
-    expect(message).to.equal("Cannot read property 'selectedCredentials' of undefined")
-    expect(httpStatusCode).to.equal(500)
+    expect(code).to.equal('ISS-12')
+    expect(httpStatusCode).to.equal(400)
   })
 
   it('#storeEncryptedSeed throws `WAL-2 / 409` WHEN key for userId already exists', async () => {
