@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-browser-sdk",
-  "version": "4.2.4",
+  "version": "4.2.5",
   "description": "SDK monorepo for affinity DID solution for browser",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
