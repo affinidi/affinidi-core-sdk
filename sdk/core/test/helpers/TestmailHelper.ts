@@ -7,13 +7,8 @@ const TESTMAIL_NAMESPACE = process.env.TESTMAIL_NS
 
 interface TestmailEmail {
   subject: string
-  html: string
+  html?: string
   text?: string
-  downloadUrl: string
-  from: string
-  to: string
-  tag: string
-  timestamp: number
 }
 
 // NOTE: Don't use this helper for mere email generation,
@@ -32,21 +27,7 @@ export class TestmailHelper {
 
     const response = await (await fetch(url)).json()
 
-    const { from, to, subject, html, downloadUrl, tag, timestamp, text } = response.emails[0]
-    return { from, to, subject, html, downloadUrl, tag, timestamp, text }
-  }
-
-  /** @deprecated */
-  public static getEmailsForTag = async (tag: string): Promise<TestmailEmail[]> => {
-    const url = `${TESTMAIL_URL}${TESTMAIL_PATH}?apikey=${TESTMAIL_API_KEY}&namespace=${TESTMAIL_NAMESPACE}&tag=${tag}`
-    const request = await fetch(url)
-    const data = await request.json()
-    const emails = data.emails.map(
-      (m: any): TestmailEmail => {
-        const { from, to, subject, html, downloadUrl, tag, timestamp } = m
-        return { from, to, subject, html, downloadUrl, tag, timestamp }
-      },
-    )
-    return emails
+    const { subject, html, text } = response.emails[0]
+    return { subject, html, text }
   }
 }
