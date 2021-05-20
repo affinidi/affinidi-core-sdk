@@ -618,6 +618,7 @@ export class CommonNetworkMember {
    * @description Initiates passwordless login to Affinity
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
   static async passwordlessLogin(
@@ -754,6 +755,7 @@ export class CommonNetworkMember {
    * @description Initiates reset password flow
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    */
   static async forgotPassword(
     username: string,
@@ -1105,6 +1107,7 @@ export class CommonNetworkMember {
    * @description Resends OTP for sign up flow
    * @param username - email/phoneNumber, registered and unconfirmed in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    */
   static async resendSignUpConfirmationCode(
     username: string,
@@ -1129,6 +1132,7 @@ export class CommonNetworkMember {
    * or signs up a new one, if user was not registered
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
   static async signIn(
@@ -1232,6 +1236,7 @@ export class CommonNetworkMember {
    * @description Initiates change user attribute (email/phoneNumber) flow
    * @param newUsername - new email/phoneNumber
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    */
   // NOTE: operation is used for change the attribute, not username. Consider renaming
   //       New email/phoneNumber can be useded as a username to login.
