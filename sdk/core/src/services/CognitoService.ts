@@ -333,7 +333,6 @@ export default class CognitoService {
     return this.cognitoidentityserviceprovider.changePassword(params).promise()
   }
 
-  // TODO: additional specs for "messageParameters" may be required
   async changeUsername(AccessToken: string, attribute: string, messageParameters?: MessageParameters): Promise<any> {
     const userExists = await this._userExists(attribute)
 

@@ -1228,7 +1228,6 @@ export class CommonNetworkMember {
     await cognitoService.changePassword(accessToken, oldPassword, newPassword)
   }
 
-  // TODO: additional specs for "messageParameters" may be required
   /**
    * @description Initiates change user attribute (email/phoneNumber) flow
    * @param newUsername - new email/phoneNumber
