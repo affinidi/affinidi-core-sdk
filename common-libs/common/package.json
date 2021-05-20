@@ -64,7 +64,7 @@
     "node-fetch": "^2.6.0",
     "randombytes": "^2.1.0",
     "secp256k1": "^4.0.1",
-    "tiny-secp256k1": "^1.1.5",
+    "tiny-secp256k1": "^1.1.6",
     "tslib": "^2.0.0",
     "vc-revocation-list": "^2.0.0"
   },
