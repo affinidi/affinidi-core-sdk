@@ -307,6 +307,7 @@ describe.only('CommonNetworkMember [OTP]', () => {
     let tag: string
     let messageParameters: MessageParameters
 
+    // reuse the same user for all subsequent tests to reduce OTP emails count
     before(async () => {
       ;[email, tag, messageParameters] = prepareOtpMessageParameters(testId, { suffix: 'existing' })
 
