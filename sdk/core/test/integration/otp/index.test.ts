@@ -12,13 +12,10 @@ import { generateUsername, getOptionsForEnvironment } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
 import { TestmailHelper } from '../../helpers/TestmailHelper'
 
-const { TEST_SECRETS } = process.env
-const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
+const { COGNITO_PASSWORD } = JSON.parse(process.env.TEST_SECRETS)
 
 const options: SdkOptions = getOptionsForEnvironment()
 const { env } = getOptionsForEnvironment(true)
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const prepareOtpMessageParameters = (
   testId: string,
@@ -48,6 +45,7 @@ const generateTag = (testId: string, suffix?: string): string => {
 }
 
 const generateTestId = (): string => cryptoRandomString({ length: 10 })
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 describe('CommonNetworkMember [OTP]', () => {
   // testmail recommends to use unique IDs for each test run to avoid collisions
@@ -64,7 +62,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const timestamp = Date.now()
     await CommonNetworkMember.signIn(email, options, {
       message: `Your verification code is: {{CODE}} #${testId}`,
-      subject: `Code {{CODE}} {####} #${testId}`,
+      subject: `Code {{CODE}} #${testId}`,
     })
 
     const { subject, text, html } = await TestmailHelper.waitForNewEmail(tag, timestamp)
@@ -72,7 +70,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const [messageCode, messageTestId] = (text || html).replace('Your verification code is: ', '').split(' #')
     const [subjectCode, subjectTestId] = subject.replace('Code ', '').split(' #')
 
-    expect(subjectCode).to.equal('{{CODE}} {####}') // should not be replaced due to Cognito's security policy
+    expect(subjectCode).to.equal('{{CODE}}') // should not be replaced due to Cognito's security policy
     expect(messageCode).to.be.lengthOf(6)
     expect(Number(messageCode)).not.to.be.NaN
 
@@ -343,7 +341,7 @@ describe('CommonNetworkMember [OTP]', () => {
       const timestamp = Date.now()
       await CommonNetworkMember.passwordlessLogin(email, options, {
         message: `Your verification code is: {{CODE}} #${testId}`,
-        subject: `Code {{CODE}} {####} #${testId}`,
+        subject: `Code {{CODE}} #${testId}`,
       })
 
       const { subject, text, html } = await TestmailHelper.waitForNewEmail(tag, timestamp)
@@ -353,7 +351,7 @@ describe('CommonNetworkMember [OTP]', () => {
       const [, subjectTestId] = subject.replace('Code ', '').split(' #')
 
       // TODO: update "affinity-dev-create-auth-challenge" lambda script to not to replace {{CODE}} in the subject
-      // expect(subjectCode).to.equal('{{CODE}} {####}') // should not be replaced due to Cognito's security policy
+      // expect(subjectCode).to.equal('{{CODE}}') // should not be replaced due to Cognito's security policy
       expect(messageCode).to.be.lengthOf(6)
       expect(Number(messageCode)).not.to.be.NaN
 
