@@ -1,5 +1,5 @@
 # release 4.2.5 (2021-05-20)
-  * custom messages support for 
+  * custom messages support for all methods
   * migrated OTP integration tests to testmail.app
 # release 4.2.4 (2021-05-04)
   * custom messages support for passwordless login 
