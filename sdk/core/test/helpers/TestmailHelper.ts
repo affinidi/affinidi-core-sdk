@@ -1,4 +1,3 @@
-// TODO: investigate why node-fetch has been imported weirdly before
 import fetch from 'node-fetch'
 import { URL } from 'url'
 
@@ -19,6 +18,7 @@ interface TestmailEmail {
 
 // NOTE: Don't use this helper for mere email generation,
 //       since there are limits for emails sent per month
+//       Use generateEmail() for random email generation
 export class TestmailHelper {
   public static generateEmailForTag = (tag: string): string => `${TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`
 
