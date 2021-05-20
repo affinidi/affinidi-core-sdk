@@ -21,16 +21,13 @@ interface TestmailEmail {
 export class TestmailHelper {
   public static generateEmailForTag = (tag: string): string => `${TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`
 
-  public static waitForNewEmail = async (queryTag: string, timestampFrom?: number): Promise<TestmailEmail> => {
+  public static waitForNewEmail = async (queryTag: string, timestampFrom: number): Promise<TestmailEmail> => {
     const url = new URL(`${TESTMAIL_URL}${TESTMAIL_PATH}`)
     url.searchParams.append('apikey', TESTMAIL_API_KEY)
     url.searchParams.append('namespace', TESTMAIL_NAMESPACE)
     url.searchParams.append('tag', queryTag)
+    url.searchParams.append('timestamp_from', String(timestampFrom))
     url.searchParams.append('livequery', 'true')
-
-    if (timestampFrom) {
-      url.searchParams.append('timestamp_from', String(timestampFrom))
-    }
 
     const response = await (await fetch(url)).json()
 

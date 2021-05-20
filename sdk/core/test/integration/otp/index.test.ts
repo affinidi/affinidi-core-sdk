@@ -2,7 +2,8 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
-import cryptoRandomString from 'crypto-random-string';
+import cryptoRandomString from 'crypto-random-string'
+
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import SdkError from '../../../src/shared/SdkError'
@@ -42,8 +43,8 @@ const waitForOtpCode = async (tag: string, timestampFrom?: number): Promise<[str
   return [messageCode, messageTestId]
 }
 
-describe.only('CommonNetworkMember (flows that require OTP)', () => {
-  // testmail recommends to use "unique" IDs for each test run to avoid collisions
+describe.only('CommonNetworkMember [OTP]', () => {
+  // testmail recommends to use unique IDs for each test run to avoid collisions
   let testId: string
 
   beforeEach(() => {
@@ -92,14 +93,15 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
   it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
     const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
 
+    const timestamp1 = Date.now()
     await CommonNetworkMember.signUp(email, null, options, messageParameters)
 
-    await waitForOtpCode(tag) // ignore first OTP code
+    await waitForOtpCode(tag, timestamp1) // ignore first OTP code
 
-    const timestamp = Date.now()
+    const timestamp2 = Date.now()
     const token = await CommonNetworkMember.signIn(email, options, messageParameters)
 
-    const [otpCode] = await waitForOtpCode(tag, timestamp)
+    const [otpCode] = await waitForOtpCode(tag, timestamp2)
 
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(token, otpCode, options)
 
@@ -210,24 +212,25 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
     const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
     const password = COGNITO_PASSWORD
 
+    const timestamp1 = Date.now()
     const token1 = await CommonNetworkMember.signUp(email, password, options, messageParameters)
 
-    await waitForOtpCode(tag) // ignore first OTP code
+    await waitForOtpCode(tag, timestamp1) // ignore first OTP code
 
-    const timestamp1 = Date.now()
+    const timestamp2 = Date.now()
     await CommonNetworkMember.resendSignUpConfirmationCode(email, options, messageParameters)
 
-    const [otpCode1] = await waitForOtpCode(tag, timestamp1)
+    const [otpCode1] = await waitForOtpCode(tag, timestamp2)
 
     const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token1, otpCode1, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
 
-    const timestamp2 = Date.now()
+    const timestamp3 = Date.now()
     const token2 = await CommonNetworkMember.signIn(email, options, messageParameters)
 
-    const [otpCode2] = await waitForOtpCode(tag, timestamp2)
+    const [otpCode2] = await waitForOtpCode(tag, timestamp3)
 
     let error
     try {
@@ -247,9 +250,10 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
     const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
     const password = COGNITO_PASSWORD
 
+    const timestamp = Date.now()
     const token = await CommonNetworkMember.signUp(email, password, options, messageParameters)
 
-    const [otpCode] = await waitForOtpCode(tag)
+    const [otpCode] = await waitForOtpCode(tag, timestamp)
 
     const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
@@ -295,8 +299,10 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
     beforeEach(async () => {
       ;[email, tag, messageParameters] = prepareOtpMessageParameters(testId)
 
+      const timestamp = Date.now()
       const token = await CommonNetworkMember.signUp(email, null, options, messageParameters)
-      const [otpCode] = await waitForOtpCode(tag)
+
+      const [otpCode] = await waitForOtpCode(tag, timestamp)
 
       await CommonNetworkMember.confirmSignUp(token, otpCode, options)
     })
@@ -348,9 +354,10 @@ describe.only('CommonNetworkMember (flows that require OTP)', () => {
       const [newEmail, newTag, newMessageParameters] = prepareOtpMessageParameters(testId, 'new')
       const password = COGNITO_PASSWORD
 
+      const timestamp = Date.now()
       const token = await CommonNetworkMember.signUp(newEmail, password, options, newMessageParameters)
 
-      const [otpCode] = await waitForOtpCode(newTag)
+      const [otpCode] = await waitForOtpCode(newTag, timestamp)
 
       const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode, options)
       expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
