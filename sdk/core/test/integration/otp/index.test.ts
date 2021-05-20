@@ -46,7 +46,7 @@ const waitForOtpCode = async (tag: string, timestampFrom?: number): Promise<[str
   return [messageCode, messageTestId]
 }
 
-describe.only('CommonNetworkMember [OTP]', () => {
+describe('CommonNetworkMember [OTP]', () => {
   // testmail recommends to use unique IDs for each test run to avoid collisions
   let testId: string
 
