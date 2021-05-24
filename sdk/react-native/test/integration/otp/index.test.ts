@@ -43,7 +43,7 @@ const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.browser' })
+const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.react-native' })
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 describe('AffinityWallet [OTP]', () => {
