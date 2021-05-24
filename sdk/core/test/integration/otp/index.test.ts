@@ -25,7 +25,7 @@ const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp' })
+const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.core' })
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
