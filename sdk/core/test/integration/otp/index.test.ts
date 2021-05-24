@@ -2,7 +2,6 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
-import cryptoRandomString from 'crypto-random-string'
 
 import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
@@ -10,80 +9,51 @@ import SdkError from '../../../src/shared/SdkError'
 
 import { generateUsername, getOptionsForEnvironment } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
-import { TestmailHelper } from '../../helpers/TestmailHelper'
+import { TestmailInbox } from '../../helpers/TestmailInbox'
 
 const { COGNITO_PASSWORD } = JSON.parse(process.env.TEST_SECRETS)
 
 const options: SdkOptions = getOptionsForEnvironment()
 const { env } = getOptionsForEnvironment(true)
 
-const prepareOtpMessageParameters = (
-  testId: string,
-  { suffix }: { suffix?: string } = {},
-): [string, string, MessageParameters] => {
-  const tag = generateTag(testId, suffix)
-  const email = TestmailHelper.generateEmailForTag(tag)
-  const messageParameters: MessageParameters = {
-    message: `Your verification code is: {{CODE}}`,
-    subject: `Verification code`,
-  }
-
-  return [email, tag, messageParameters]
+const messageParameters: MessageParameters = {
+  message: `Your verification code is: {{CODE}}`,
+  subject: `Verification code`,
 }
 
-const waitForOtpCode = async (tag: string, timestampFrom?: number): Promise<string> => {
-  const { text, html } = await TestmailHelper.waitForNewEmail(tag, timestampFrom)
-  return (text || html).replace('Your verification code is: ', '')
+const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
+  const { body } = await inbox.waitForNewEmail()
+  return body.replace('Your verification code is: ', '')
 }
 
-const generateTag = (testId: string, suffix?: string): string => {
-  if (suffix) {
-    return `${env}.${testId}.otp.${suffix}`
-  } else {
-    return `${env}.${testId}.otp`
-  }
-}
+const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp' })
 
-const generateTestId = (): string => cryptoRandomString({ length: 10 })
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 describe('CommonNetworkMember [OTP]', () => {
-  // testmail recommends to use unique IDs for each test run to avoid collisions
-  let testId: string
-
-  beforeEach(() => {
-    testId = generateTestId()
-  })
-
   it('#signIn should send email with OTP code using the provided template (message parameters)', async () => {
-    const tag = generateTag(testId)
-    const email = TestmailHelper.generateEmailForTag(tag)
+    const inbox = createInbox()
 
-    const timestamp = Date.now()
-    await CommonNetworkMember.signIn(email, options, {
-      message: `Your verification code is: {{CODE}} #${testId}`,
-      subject: `Code {{CODE}} #${testId}`,
+    const timestamp = String(Date.now())
+    await CommonNetworkMember.signIn(inbox.email, options, {
+      message: `Your verification code is: {{CODE}} #${timestamp}`,
+      subject: `Code {{CODE}} #${timestamp}`,
     })
 
-    const { subject, text, html } = await TestmailHelper.waitForNewEmail(tag, timestamp)
+    const { subject, body } = await inbox.waitForNewEmail()
+    const [messageCode, messageTimestamp] = body.replace('Your verification code is: ', '').split(' #')
 
-    const [messageCode, messageTestId] = (text || html).replace('Your verification code is: ', '').split(' #')
-    const [subjectCode, subjectTestId] = subject.replace('Code ', '').split(' #')
-
-    expect(subjectCode).to.equal('{{CODE}}') // should not be replaced due to Cognito's security policy
+    expect(subject).to.equal(`Code {{CODE}} #${timestamp}`) // code should not be replaced due to Cognito's security policy
+    expect(messageTimestamp).to.equal(timestamp)
     expect(messageCode).to.be.lengthOf(6)
     expect(Number(messageCode)).not.to.be.NaN
-
-    expect(messageTestId).to.equal(testId)
-    expect(subjectTestId).to.equal(testId)
   })
 
   it('#signIn with skipBackupEncryptedSeed, #storeEncryptedSeed, #signIn', async () => {
-    const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const inbox = createInbox()
 
-    const timestamp1 = Date.now()
-    const token1 = await CommonNetworkMember.signIn(email, options, messageParameters)
-    const otpCode1 = await waitForOtpCode(tag, timestamp1)
+    const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    const signInCode = await waitForOtpCode(inbox)
 
     const optionsWithSkippedBackupEncryptedSeed: SdkOptions = {
       ...options,
@@ -91,8 +61,8 @@ describe('CommonNetworkMember [OTP]', () => {
     }
 
     let { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
-      token1,
-      otpCode1,
+      signInToken,
+      signInCode,
       optionsWithSkippedBackupEncryptedSeed,
     )
 
@@ -105,126 +75,113 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
     await commonNetworkMember.signOut()
 
-    const timestamp2 = Date.now()
-    const token2 = await CommonNetworkMember.signIn(email, options, messageParameters)
-    const otpCode2 = await waitForOtpCode(tag, timestamp2)
+    const signInToken2 = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    const signInCode2 = await waitForOtpCode(inbox)
 
-    const result = await CommonNetworkMember.confirmSignIn(token2, otpCode2, options)
+    const result = await CommonNetworkMember.confirmSignIn(signInToken2, signInCode2, options)
     expect(result.commonNetworkMember).to.be.an.instanceOf(CommonNetworkMember)
   })
 
   it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
-    const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const inbox = createInbox()
 
-    const timestamp1 = Date.now()
-    await CommonNetworkMember.signUp(email, null, options, messageParameters)
-    await waitForOtpCode(tag, timestamp1) // ignore first OTP code
+    await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+    await waitForOtpCode(inbox) // ignore first OTP code
 
-    const timestamp2 = Date.now()
-    const token = await CommonNetworkMember.signIn(email, options, messageParameters)
-    const otpCode = await waitForOtpCode(tag, timestamp2)
+    const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    const signInCode = await waitForOtpCode(inbox)
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(token, otpCode, options)
+    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
 
     expect(isNew).to.be.true
     expect(commonNetworkMember).to.be.an.instanceOf(CommonNetworkMember)
   })
 
   it('#signUp with password, change email, forgot password, login with password', async () => {
-    const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const timestamp1 = Date.now()
-    const token = await CommonNetworkMember.signUp(email, password, options, messageParameters)
-    const otpCode1 = await waitForOtpCode(tag, timestamp1)
+    const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    const signUpCode = await waitForOtpCode(inbox)
 
-    let commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode1, options)
+    let commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
-    const [newEmail, newTag, newMessageParameters] = prepareOtpMessageParameters(testId, { suffix: 'updated' })
+    const newInbox = createInbox()
 
-    const timestamp2 = Date.now()
-    await commonNetworkMember.changeUsername(newEmail, {}, newMessageParameters)
-    const otpCode2 = await waitForOtpCode(newTag, timestamp2)
+    await commonNetworkMember.changeUsername(newInbox.email, {}, messageParameters)
+    const changeUsernameCode = await waitForOtpCode(newInbox)
 
-    await commonNetworkMember.confirmChangeUsername(newEmail, otpCode2)
+    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode)
     await commonNetworkMember.signOut()
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newEmail, password, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
 
-    const timestamp3 = Date.now()
-    await CommonNetworkMember.forgotPassword(newEmail, options, newMessageParameters)
-    const otpCode3 = await waitForOtpCode(newTag, timestamp3)
+    await CommonNetworkMember.forgotPassword(newInbox.email, options, messageParameters)
+    const forgotPasswordCode = await waitForOtpCode(newInbox)
 
     const newPassword = `${password}_updated`
-    await CommonNetworkMember.forgotPasswordSubmit(newEmail, otpCode3, newPassword, options)
+    await CommonNetworkMember.forgotPasswordSubmit(newInbox.email, forgotPasswordCode, newPassword, options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newEmail, newPassword, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, newPassword, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
   it('#signUp without password, forget password, change email, login with password', async () => {
-    const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const inbox = createInbox()
 
-    const timestamp1 = Date.now()
-    const token = await CommonNetworkMember.signUp(email, null, options, messageParameters)
-    const otpCode1 = await waitForOtpCode(tag, timestamp1)
+    const signUpToken = await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+    const signUpCode = await waitForOtpCode(inbox)
 
-    let commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode1, options)
+    let commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
 
-    const timestamp2 = Date.now()
-    await CommonNetworkMember.forgotPassword(email, options, messageParameters)
-    const otpCode2 = await waitForOtpCode(tag, timestamp2)
+    await CommonNetworkMember.forgotPassword(inbox.email, options, messageParameters)
+    const forgotPasswordCode = await waitForOtpCode(inbox)
 
     const password = COGNITO_PASSWORD
-    await CommonNetworkMember.forgotPasswordSubmit(email, otpCode2, password, options)
+    await CommonNetworkMember.forgotPasswordSubmit(inbox.email, forgotPasswordCode, password, options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(email, password, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
-    const [newEmail, newTag, newMessageParameters] = prepareOtpMessageParameters(testId, { suffix: 'updated' })
+    const newInbox = createInbox()
 
-    const timestamp3 = Date.now()
-    await commonNetworkMember.changeUsername(newEmail, {}, newMessageParameters)
-    const otpCode3 = await waitForOtpCode(newTag, timestamp3)
+    await commonNetworkMember.changeUsername(newInbox.email, {}, messageParameters)
+    const changeUsernameCode = await waitForOtpCode(newInbox)
 
-    await commonNetworkMember.confirmChangeUsername(newEmail, otpCode3)
+    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode)
     await commonNetworkMember.signOut()
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newEmail, password, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
   it('#signUp, #resendSignUpConfirmationCode, #confirmSignIn with 1 wrong OTP', async () => {
-    const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const timestamp1 = Date.now()
-    const token1 = await CommonNetworkMember.signUp(email, password, options, messageParameters)
-    await waitForOtpCode(tag, timestamp1) // ignore first OTP code
+    const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    await waitForOtpCode(inbox) // ignore first OTP code
 
-    const timestamp2 = Date.now()
-    await CommonNetworkMember.resendSignUpConfirmationCode(email, options, messageParameters)
-    const otpCode1 = await waitForOtpCode(tag, timestamp2)
+    await CommonNetworkMember.resendSignUpConfirmationCode(inbox.email, options, messageParameters)
+    const newSignUpCode = await waitForOtpCode(inbox)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token1, otpCode1, options)
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, newSignUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
 
-    const timestamp3 = Date.now()
-    const token2 = await CommonNetworkMember.signIn(email, options, messageParameters)
-    const otpCode2 = await waitForOtpCode(tag, timestamp3)
+    const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
 
     let error
     try {
-      await CommonNetworkMember.confirmSignIn(token2, '123456', options)
+      await CommonNetworkMember.confirmSignIn(signInToken, '123456', options)
     } catch (err) {
       error = err
     }
@@ -232,24 +189,25 @@ describe('CommonNetworkMember [OTP]', () => {
     expect(error).to.be.instanceOf(SdkError)
     expect(error.name).to.equal('COR-5')
 
-    const result = await CommonNetworkMember.confirmSignIn(token2, otpCode2, options)
+    const signInCode = await waitForOtpCode(inbox)
+
+    const result = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
     expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
   })
 
   it('#confirmSignIn should throw "COR-13" after 3 consecutive wrong OTPs', async () => {
-    const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const timestamp = Date.now()
-    const token = await CommonNetworkMember.signUp(email, password, options, messageParameters)
-    const otpCode = await waitForOtpCode(tag, timestamp)
+    const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    const signUpCode = await waitForOtpCode(inbox)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode, options)
+    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
     await commonNetworkMember.signOut()
 
-    const loginToken = await CommonNetworkMember.signIn(email, options)
+    const loginToken = await CommonNetworkMember.signIn(inbox.email, options)
 
     let error
     try {
@@ -288,16 +246,15 @@ describe('CommonNetworkMember [OTP]', () => {
 
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
-    const [email, tag, messageParameters] = prepareOtpMessageParameters(testId)
+    const inbox = createInbox()
 
-    const timestamp = Date.now()
-    await commonNetworkMember.changeUsername(email, options, messageParameters)
-    const otpCode = await waitForOtpCode(tag, timestamp)
+    await commonNetworkMember.changeUsername(inbox.email, options, messageParameters)
+    const changeUsernameCode = await waitForOtpCode(inbox)
 
-    await commonNetworkMember.confirmChangeUsername(email, otpCode, options)
+    await commonNetworkMember.confirmChangeUsername(inbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut()
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(email, password, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
     const newPassword = `${password}_updated`
@@ -305,94 +262,80 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.changePassword(password, newPassword, options)
     await commonNetworkMember.signOut()
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(email, newPassword, options)
+    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, newPassword, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
   describe('[with existing user]', () => {
-    let email: string
-    let tag: string
-    let messageParameters: MessageParameters
+    let inbox: TestmailInbox
 
-    // reuse the same user for all subsequent tests to reduce OTP emails count
     before(async () => {
-      // testId is not available in "before" hook, so we generate it separately
-      ;[email, tag, messageParameters] = prepareOtpMessageParameters(generateTestId())
+      inbox = createInbox()
 
-      const timestamp = Date.now()
-      const token = await CommonNetworkMember.signUp(email, null, options, messageParameters)
-      const otpCode = await waitForOtpCode(tag, timestamp)
+      const signUpToken = await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+      const signUpCode = await waitForOtpCode(inbox)
 
-      await CommonNetworkMember.confirmSignUp(token, otpCode, options)
+      await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
     })
 
     it('#signIn and #confirmSignIn', async () => {
-      const timestamp = Date.now()
-      const token = await CommonNetworkMember.signIn(email, options, messageParameters)
-      const otpCode = await waitForOtpCode(tag, timestamp)
+      const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+      const signInCode = await waitForOtpCode(inbox)
 
-      const result = await CommonNetworkMember.confirmSignIn(token, otpCode, options)
+      const result = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
 
       expect(result.isNew).to.be.false
       expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
     })
 
     it('#passwordlessLogin should send email with OTP code using the provided template (message parameters)', async () => {
-      const timestamp = Date.now()
-      await CommonNetworkMember.passwordlessLogin(email, options, {
-        message: `Your verification code is: {{CODE}} #${testId}`,
-        subject: `Code {{CODE}} #${testId}`,
+      const timestamp = String(Date.now())
+      await CommonNetworkMember.passwordlessLogin(inbox.email, options, {
+        message: `Your verification code is: {{CODE}} #${timestamp}`,
+        subject: `Code {{CODE}} #${timestamp}`,
       })
 
-      const { subject, text, html } = await TestmailHelper.waitForNewEmail(tag, timestamp)
+      const { body } = await inbox.waitForNewEmail()
+      const [messageCode, messageTimestamp] = body.replace('Your verification code is: ', '').split(' #')
 
-      const [messageCode, messageTestId] = (text || html).replace('Your verification code is: ', '').split(' #')
-      // TODO: const [subjectCode, subjectTestId] = ... (see below)
-      const [, subjectTestId] = subject.replace('Code ', '').split(' #')
-
-      // TODO: update "affinity-dev-create-auth-challenge" lambda script to not to replace {{CODE}} in the subject
-      // expect(subjectCode).to.equal('{{CODE}}') // should not be replaced due to Cognito's security policy
+      // TODO: update "create-auth-challenge" lambda script to not to replace {{CODE}} in the subject
+      // expect(subject).to.equal(`Code {{CODE}} #${timestamp}`) // should not be replaced due to Cognito's security policy
       expect(messageCode).to.be.lengthOf(6)
       expect(Number(messageCode)).not.to.be.NaN
-
-      expect(messageTestId).to.equal(testId)
-      expect(subjectTestId).to.equal(testId)
+      expect(messageTimestamp).to.equal(timestamp)
     })
 
     it('#passwordlessLogin and #completeLoginChallenge', async () => {
-      const timestamp = Date.now()
-      const token = await CommonNetworkMember.passwordlessLogin(email, options, messageParameters)
-      const otpCode = await waitForOtpCode(tag, timestamp)
+      const loginToken = await CommonNetworkMember.passwordlessLogin(inbox.email, options, messageParameters)
+      const loginCode = await waitForOtpCode(inbox)
 
-      const commonNetworkMember = await CommonNetworkMember.completeLoginChallenge(token, otpCode, options)
+      const commonNetworkMember = await CommonNetworkMember.completeLoginChallenge(loginToken, loginCode, options)
       expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
     })
 
-    // requires test timeout >= 180000 ms
     it.skip('#completeLoginChallenge should throw "COR-17" for expired OTP', async () => {
-      const timestamp = Date.now()
-      const token = await CommonNetworkMember.passwordlessLogin(email, options, messageParameters)
-      const otpCode = await waitForOtpCode(tag, timestamp)
+      const loginToken = await CommonNetworkMember.passwordlessLogin(inbox.email, options, messageParameters)
+      const loginCode = await waitForOtpCode(inbox)
 
-      await wait(3 * 60 * 1000) // wait for 3 minutes before completing the login challenge
+      await wait(180_000) // wait for 3 minutes before completing the login challenge
 
       let error
       try {
-        await CommonNetworkMember.completeLoginChallenge(token, otpCode, options)
+        await CommonNetworkMember.completeLoginChallenge(loginToken, loginCode, options)
       } catch (err) {
         error = err
       }
 
       expect(error).to.be.instanceOf(SdkError)
       expect(error.name).to.eql('COR-17')
-    })
+    }).timeout(200_000)
 
     it('#signUp should throw "COR-7" error when signing user with already existing email', async () => {
       const password = COGNITO_PASSWORD
 
       let error
       try {
-        await CommonNetworkMember.signUp(email, password, options)
+        await CommonNetworkMember.signUp(inbox.email, password, options)
       } catch (err) {
         error = err
       }
@@ -402,19 +345,18 @@ describe('CommonNetworkMember [OTP]', () => {
     })
 
     it('#changeUsername should throw "COR-7" error when when changing email to an already existing one', async () => {
-      const [newEmail, newTag, newMessageParameters] = prepareOtpMessageParameters(testId, { suffix: 'new' })
+      const newInbox = createInbox()
       const password = COGNITO_PASSWORD
 
-      const timestamp = Date.now()
-      const token = await CommonNetworkMember.signUp(newEmail, password, options, newMessageParameters)
-      const otpCode = await waitForOtpCode(newTag, timestamp)
+      const signUpToken = await CommonNetworkMember.signUp(newInbox.email, password, options, messageParameters)
+      const signUpCode = await waitForOtpCode(newInbox)
 
-      const commonNetworkMember = await CommonNetworkMember.confirmSignUp(token, otpCode, options)
+      const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
       expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
       let error
       try {
-        await commonNetworkMember.changeUsername(email, options)
+        await commonNetworkMember.changeUsername(inbox.email, options)
       } catch (err) {
         error = err
       }
