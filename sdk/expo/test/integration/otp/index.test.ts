@@ -254,7 +254,7 @@ describe('AffinityWallet [OTP]', () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options)
+    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
     const signUpOtp = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpOtp, options)
