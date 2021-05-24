@@ -127,15 +127,11 @@ describe('AffinityWallet [OTP]', () => {
       issueSignupCredential: false,
     }
 
-    const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
-      signInToken,
-      signInCode,
-      confirmSignInOptions,
-    )
+    const result = await AffinityWallet.confirmSignIn(signInToken, signInCode, confirmSignInOptions)
 
-    expect(isNew).to.be.false
-    expect(affinityWallet.did).to.exist
-    expect(affinityWallet).to.be.an.instanceof(AffinityWallet)
+    expect(result.isNew).to.be.false
+    expect(result.commonNetworkMember.did).to.exist
+    expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
   })
 
   it('#confirmSignIn logIn scenario with issueVC flag set', async () => {
@@ -156,15 +152,11 @@ describe('AffinityWallet [OTP]', () => {
       issueSignupCredential: true,
     }
 
-    const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
-      signInToken,
-      signInCode,
-      confirmSignInOptions,
-    )
+    const result = await AffinityWallet.confirmSignIn(signInToken, signInCode, confirmSignInOptions)
 
-    expect(isNew).to.be.false
-    expect(affinityWallet.did).to.exist
-    expect(affinityWallet).to.be.an.instanceof(AffinityWallet)
+    expect(result.isNew).to.be.false
+    expect(result.commonNetworkMember.did).to.exist
+    expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
   })
 
   it('#signUp, #init, #changeUsername', async () => {

@@ -26,7 +26,6 @@ const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
 }
 
 const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.core' })
-
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 describe('CommonNetworkMember [OTP]', () => {
