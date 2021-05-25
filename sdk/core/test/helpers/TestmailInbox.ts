@@ -30,7 +30,7 @@ export class TestmailInbox {
     this._tag = `${prefix}.${inboxId}.${suffix}`
     this._email = `${TESTMAIL_NAMESPACE}.${this._tag}@${TESTMAIL_INBOX_DOMAIN}`
 
-    // if inbox has already been used, ignore its old emails
+    // if inbox has already been used, ignore its old emails (1 minute is an arbitrary duration)
     this._lastEmailTimestamp = Date.now() - 60_000
   }
 

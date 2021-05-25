@@ -31,7 +31,7 @@ const credentialShareRequestToken =
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
 const options: __dangerous.SdkOptions = getOptionsForEnvironment()
-const { env } = getOptionsForEnvironment(true)
+const { env } = options
 
 const messageParameters: MessageParameters = {
   message: `Your verification code is: {{CODE}}`,

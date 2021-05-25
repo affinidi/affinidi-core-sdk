@@ -13,7 +13,7 @@ import { TestmailInbox } from '../../helpers/TestmailInbox'
 const { COGNITO_PASSWORD } = JSON.parse(process.env.TEST_SECRETS)
 
 const options: SdkOptions = getOptionsForEnvironment()
-const { env } = getOptionsForEnvironment(true)
+const { env } = options
 
 const messageParameters: MessageParameters = {
   message: `Your verification code is: {{CODE}}`,
