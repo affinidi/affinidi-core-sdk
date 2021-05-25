@@ -632,10 +632,11 @@ export class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const fullOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = fullOptions
 
     if (messageParameters) {
-      const customMessageTemplateService = new CustomMessageTemplatesService(options)
+      const customMessageTemplateService = new CustomMessageTemplatesService(fullOptions)
       await customMessageTemplateService.storeTemplate({
         username: username,
         template: messageParameters.message,
