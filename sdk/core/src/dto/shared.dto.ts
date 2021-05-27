@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsISO8601,
   IsUrl,
-  IsDate,
   IsNumber,
   IsObject,
   IsString,
