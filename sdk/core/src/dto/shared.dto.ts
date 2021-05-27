@@ -296,24 +296,8 @@ export class OfferedCredential {
 
 export class Proof {
   @IsDefined()
-  @IsDate()
-  created: string
-
-  @IsDefined()
   @IsString()
   type: string
-
-  @IsDefined()
-  @IsString()
-  nonce: string
-
-  @IsDefined()
-  @IsString()
-  signatureValue: string
-
-  @IsDefined()
-  @IsString()
-  creator: string
 }
 
 export class ClaimMetadata {
