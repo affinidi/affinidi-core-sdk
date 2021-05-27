@@ -1,5 +1,9 @@
-# release 4.2.5 (2021-05-20)
-  * custom messages support for all methods
+# release 4.2.6 (2021-05-27)
+* custom messages support for all methods
+* updated OTP tests
+# release 4.2.5 (2021-05-27)
+* optional DTO fields are marked as TypeScript optional fields
+
 # release 4.2.4 (2021-05-04)
 * custom messages support for passwordless login
 * vc-data winner schema
