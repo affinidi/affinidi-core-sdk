@@ -189,7 +189,7 @@ export class SignedCredential {
   // current structure according to W3C https://www.w3.org/TR/vc-data-model
   @IsDefined()
   @IsArray()
-  '@context': FreeFormObject[]
+  '@context': (FreeFormObject | string)[]
 
   @IsDefined()
   @IsString()
@@ -297,7 +297,7 @@ export class OfferedCredential {
 export class Proof {
   @IsDefined()
   @IsDate()
-  created: Date
+  created: string
 
   @IsDefined()
   @IsString()
