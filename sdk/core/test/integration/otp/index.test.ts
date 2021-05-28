@@ -8,7 +8,7 @@ import SdkError from '../../../src/shared/SdkError'
 
 import { generateUsername, getOptionsForEnvironment } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
-import { TestmailInbox } from '../../helpers/TestmailInbox'
+import { __dangerous } from '../../../dist'
 
 const { COGNITO_PASSWORD } = JSON.parse(process.env.TEST_SECRETS)
 
@@ -20,12 +20,12 @@ const messageParameters: MessageParameters = {
   subject: `Verification code`,
 }
 
-const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
+const waitForOtpCode = async (inbox: __dangerous.TestmailInbox): Promise<string> => {
   const { body } = await inbox.waitForNewEmail()
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.core' })
+const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: 'otp.core' })
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 describe('CommonNetworkMember [OTP]', () => {
@@ -265,7 +265,7 @@ describe('CommonNetworkMember [OTP]', () => {
   })
 
   describe('[with existing user]', () => {
-    let inbox: TestmailInbox
+    let inbox: __dangerous.TestmailInbox
 
     before(async () => {
       inbox = createInbox()
