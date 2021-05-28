@@ -17,9 +17,8 @@ interface Email {
   body: string
 }
 
-// NOTE: Don't use this helper for mere email generation,
-//       since there are limits for emails sent per month
-//       Use generateEmail() instead
+// NOTE: Only use this helper when you need to read inbox contents
+//       For email generation use generateEmail() helper instead
 export class TestmailInbox {
   private _tag: string
   private _email: string
@@ -30,7 +29,7 @@ export class TestmailInbox {
     this._tag = `${prefix}.${inboxId}.${suffix}`
     this._email = `${TESTMAIL_NAMESPACE}.${this._tag}@${TESTMAIL_INBOX_DOMAIN}`
 
-    // if inbox has already been used, ignore its old emails (1 minute is an arbitrary duration)
+    // if inbox has already been used, ignore its old emails (1 minute is arbitrary)
     this._lastEmailTimestamp = Date.now() - 60_000
   }
 

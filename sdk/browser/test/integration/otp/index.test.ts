@@ -8,7 +8,6 @@ import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
 import { AffinityWallet } from '../../../src/AffinityWallet'
 
 import { getOptionsForEnvironment } from '../../helpers'
-import { TestmailInbox } from '../../../test/helpers/TestmailInbox'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 
 const signedCredentials = require('../../factory/signedCredentials')
@@ -37,12 +36,12 @@ const messageParameters: MessageParameters = {
   subject: `Verification code`,
 }
 
-const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
+const waitForOtpCode = async (inbox: __dangerous.TestmailInbox): Promise<string> => {
   const { body } = await inbox.waitForNewEmail()
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.browser' })
+const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: 'otp.browser' })
 
 describe('AffinityWallet [OTP]', () => {
   it('Save Open Attestation credential and #deleteCredential scenario', async () => {

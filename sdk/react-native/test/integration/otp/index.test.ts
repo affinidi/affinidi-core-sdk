@@ -8,7 +8,6 @@ import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
 import { AffinityWallet } from '../../../src/AffinityWallet'
 
 import { getOptionsForEnvironment } from '../../helpers'
-import { TestmailInbox } from '../../../test/helpers/TestmailInbox'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 import { SdkError } from '@affinidi/wallet-core-sdk/dist/shared'
 
@@ -38,12 +37,12 @@ const messageParameters: MessageParameters = {
   subject: `Verification code`,
 }
 
-const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
+const waitForOtpCode = async (inbox: __dangerous.TestmailInbox): Promise<string> => {
   const { body } = await inbox.waitForNewEmail()
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.react-native' })
+const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: 'otp.react-native' })
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 describe('AffinityWallet [OTP]', () => {
