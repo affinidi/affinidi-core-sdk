@@ -7,6 +7,7 @@ import chai, { expect } from 'chai'
 
 import CognitoService from '../../../src/services/CognitoService'
 import { normalizeUsername } from '../../../src/shared/normalizeUsername'
+import { MessageParameters } from '../../../src/dto'
 
 const cognitoAccessToken = require('../../factory/cognitoAccessToken')
 const cognitoAuthSuccessResponse = require('../../factory/cognitoAuthSuccessResponse')
@@ -711,16 +712,35 @@ describe('CognitoService', () => {
   })
 
   describe('#changeUsername', () => {
-    it(successPathTestName, async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
+    describe('[username is not taken]', () => {
+      beforeEach(() => {
+        stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
+      })
 
-      stubMethod(INITIATE_AUTH, null, error)
-      stubMethod(UPDATE_USER_ATTRIBUTES, {})
+      it(successPathTestName, async () => {
+        stubMethod(UPDATE_USER_ATTRIBUTES, {})
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.changeUsername(cognitoAccessToken, email)
+        const cognitoService = new CognitoService()
+        const response = await cognitoService.changeUsername(cognitoAccessToken, email)
 
-      expect(response).to.exist
+        expect(response).to.exist
+      })
+
+      it('should use email message parameters when provided', async () => {
+        const messageParameters: MessageParameters = {
+          message: 'Fake message',
+          htmlMessage: 'Fake html message',
+          subject: 'Fake subject',
+        }
+
+        AWSMock.mock('CognitoIdentityServiceProvider', UPDATE_USER_ATTRIBUTES, (params: any, callback: any) => {
+          expect(params.ClientMetadata).to.equal(messageParameters)
+          callback(null, {})
+        })
+
+        const cognitoService = new CognitoService()
+        await cognitoService.changeUsername(cognitoAccessToken, email, messageParameters)
+      })
     })
 
     it('throws `COR-7 / 409` when new username already exists', async () => {

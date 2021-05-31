@@ -278,11 +278,8 @@ export default class CognitoService {
 
     const { clientId: ClientId } = this.cognitoOptions
 
-    const params = { ClientId, Username }
-
-    if (messageParameters) {
-      Object.assign(params, { ClientMetadata: messageParameters })
-    }
+    const ClientMetadata = messageParameters || {}
+    const params = { ClientId, Username, ClientMetadata }
 
     try {
       const response = await this.cognitoidentityserviceprovider.resendConfirmationCode(params).promise()
@@ -336,7 +333,7 @@ export default class CognitoService {
     return this.cognitoidentityserviceprovider.changePassword(params).promise()
   }
 
-  async changeUsername(AccessToken: string, attribute: string): Promise<any> {
+  async changeUsername(AccessToken: string, attribute: string, messageParameters?: MessageParameters): Promise<any> {
     const userExists = await this._userExists(attribute)
 
     if (userExists) {
@@ -345,7 +342,8 @@ export default class CognitoService {
 
     const UserAttributes = this._buildUserAttributes(attribute)
 
-    const params = { AccessToken, UserAttributes }
+    const ClientMetadata = messageParameters || {}
+    const params = { AccessToken, UserAttributes, ClientMetadata }
 
     return this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
   }
