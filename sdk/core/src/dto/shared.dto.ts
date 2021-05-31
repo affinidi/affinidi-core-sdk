@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsISO8601,
   IsUrl,
-  IsDate,
   IsNumber,
   IsObject,
   IsString,
@@ -129,19 +128,19 @@ export class KeyParams {
 export class CognitoUserTokens {
   @IsOptional()
   @IsString()
-  accessToken: string
+  accessToken?: string
 
   @IsOptional()
   @IsString()
-  idToken: string
+  idToken?: string
 
   @IsOptional()
   @IsString()
-  refreshToken: string
+  refreshToken?: string
 
   @IsOptional()
   @IsNumber()
-  expiresIn: number
+  expiresIn?: number
 }
 
 export class SdkOptionsWithCongitoSetup extends SdkOptions {
@@ -176,11 +175,11 @@ export class SignedCredential {
   // legacy attributes - to be deleted after support is dropped
   @IsOptional()
   @IsObject()
-  claim: FreeFormObject
+  claim?: FreeFormObject
 
   @IsOptional()
   @IsISO8601()
-  issued: string
+  issued?: string
 
   @IsOptional()
   @IsISO8601()
@@ -189,7 +188,7 @@ export class SignedCredential {
   // current structure according to W3C https://www.w3.org/TR/vc-data-model
   @IsDefined()
   @IsArray()
-  '@context': FreeFormObject[]
+  '@context': (FreeFormObject | string)[]
 
   @IsDefined()
   @IsString()
@@ -207,11 +206,11 @@ export class SignedCredential {
 
   @IsOptional()
   @IsISO8601()
-  issuanceDate: string
+  issuanceDate?: string
 
   @IsOptional()
   @IsISO8601()
-  expirationDate: string
+  expirationDate?: string
 
   @IsDefined()
   @IsArray()
@@ -220,7 +219,7 @@ export class SignedCredential {
   // NOTE, according to W3C it can be an object or an array of objects
   // https://www.w3.org/TR/vc-data-model/#credential-subject
   @IsOptional()
-  credentialSubject: FreeFormObject | FreeFormObject[]
+  credentialSubject?: FreeFormObject | FreeFormObject[]
 
   @IsDefined()
   @IsObject()
@@ -228,27 +227,27 @@ export class SignedCredential {
 
   @IsOptional()
   @IsObject()
-  credentialStatus: FreeFormObject
+  credentialStatus?: FreeFormObject
 
   @IsOptional()
   @IsArray()
-  verifiableCredential: FreeFormObject[]
+  verifiableCredential?: FreeFormObject[]
 
   @IsOptional()
   @IsObject()
-  credentialSchema: FreeFormObject
+  credentialSchema?: FreeFormObject
 
   @IsOptional()
   @IsObject()
-  refreshService: FreeFormObject
+  refreshService?: FreeFormObject
 
   @IsOptional()
   @IsArray()
-  termsOfUse: FreeFormObject[]
+  termsOfUse?: FreeFormObject[]
 
   @IsOptional()
   @IsArray()
-  evidence: FreeFormObject[]
+  evidence?: FreeFormObject[]
 }
 
 export class CredentialRequirement {
@@ -296,24 +295,8 @@ export class OfferedCredential {
 
 export class Proof {
   @IsDefined()
-  @IsDate()
-  created: Date
-
-  @IsDefined()
   @IsString()
   type: string
-
-  @IsDefined()
-  @IsString()
-  nonce: string
-
-  @IsDefined()
-  @IsString()
-  signatureValue: string
-
-  @IsDefined()
-  @IsString()
-  creator: string
 }
 
 export class ClaimMetadata {
@@ -326,7 +309,7 @@ export class ClaimMetadata {
 
   @IsOptional()
   @IsArray()
-  type: string[]
+  type?: string[]
 
   @IsOptional()
   claimInterface?: FreeFormObject
