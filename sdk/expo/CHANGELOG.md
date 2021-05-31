@@ -1,3 +1,6 @@
+# release 4.2.5 (2021-05-27)
+* optional DTO fields are marked a TypeScript optional fields
+
 # release 4.2.4 (2021-05-04)
 * custom messages support for passwordless login
 * vc-data winner schema
