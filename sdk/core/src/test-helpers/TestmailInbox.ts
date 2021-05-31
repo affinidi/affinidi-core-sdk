@@ -1,6 +1,12 @@
-import fetch from 'node-fetch'
-import { URL } from 'url'
 import cryptoRandomString from 'crypto-random-string'
+
+let fetch = global.fetch
+let URL = global.URL
+
+/* istanbul ignore next */
+if (!fetch) fetch = require('node-fetch')
+/* istanbul ignore next */
+if (!URL) URL = require('url').URL
 
 const TESTMAIL_API_URL = 'https://api.testmail.app/api/json'
 const TESTMAIL_INBOX_DOMAIN = 'inbox.testmail.app'
@@ -41,7 +47,7 @@ export class TestmailInbox {
     url.searchParams.append('timestamp_from', String(this._lastEmailTimestamp + 1))
     url.searchParams.append('livequery', 'true')
 
-    const response = await (await fetch(url)).json()
+    const response = await (await fetch(url.toString())).json()
     const { subject, html, text, timestamp } = response.emails[0]
 
     this._lastEmailTimestamp = timestamp
