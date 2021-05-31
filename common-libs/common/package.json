@@ -45,7 +45,7 @@
     "@types/create-hash": "^1.2.2",
     "@types/jsonld": "^1.5.1",
     "@types/lodash.keyby": "^4.6.6",
-    "@types/node-fetch": "^2.5.4",
+    "@types/node-fetch": "^2.5.10",
     "@types/secp256k1": "^4.0.1",
     "@types/tiny-secp256k1": "^1.0.0",
     "@types/zen-observable": "^0.8.0",
@@ -60,12 +60,12 @@
     "keccak256": "^1.0.0",
     "lodash.keyby": "^4.6.0",
     "multihashes": "^3.0.0",
-    "node-addon-api": "^3.0.0",
+    "node-addon-api": "^3.1.0",
     "node-fetch": "^2.6.0",
     "randombytes": "^2.1.0",
     "secp256k1": "^4.0.1",
     "tiny-secp256k1": "^1.1.5",
-    "tslib": "^2.0.0",
+    "tslib": "^2.2.0",
     "vc-revocation-list": "^2.0.0"
   },
   "devDependencies": {
