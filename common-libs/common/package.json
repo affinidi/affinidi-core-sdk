@@ -60,7 +60,7 @@
     "randombytes": "^2.1.0",
     "secp256k1": "^4.0.1",
     "tiny-secp256k1": "^1.1.5",
-    "tslib": "^2.0.0",
+    "tslib": "^2.2.0",
     "vc-revocation-list": "^2.0.0"
   },
   "devDependencies": {
