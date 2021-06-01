@@ -1,3 +1,5 @@
+# release 4.2.7 (2021-05-01)
+* removed unused dependencies
 # release 4.2.6 (2021-05-31)
 * custom messages support for all methods
 * updated OTP tests
