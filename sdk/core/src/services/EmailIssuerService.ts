@@ -4,8 +4,12 @@ import {
   InlineResponse2001 as _VerifyResponse,
 } from '@affinidi/issuer-email-ses-client'
 import { VCEmailPersonV1 } from '@affinidi/vc-data'
-import { AxiosInstance } from 'axios'
 import { profile } from '@affinidi/common'
+
+type Awaited<T> = T extends PromiseLike<infer U> ? U : never
+type ApiInitiatePostPromise = ReturnType<ReturnType<typeof Api>['apiInitiatePost']>
+type ApiInitiatePostResult = Awaited<ApiInitiatePostPromise>
+type AxiosInstance = Parameters<ApiInitiatePostResult>[0]
 
 export type VerifyResponse = Omit<_VerifyResponse, 'vcs'> & {
   vcs: VCEmailPersonV1[]
