@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-expo-sdk",
-  "version": "4.2.5",
+  "version": "4.2.6",
   "description": "SDK monorepo for affinity DID solution for Expo",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -14,7 +14,6 @@
     "test:only": "NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
     "test": "npm run lint && npm run test:only",
     "test:integration": "NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
-    "test:integration:otp": "NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/integration/otp/index.test.ts -p ./tsconfig.json --timeout 115000",
     "test:coverage": "NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
     "test:coverage:codeclimate": "NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000 && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.expo.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
@@ -41,7 +40,7 @@
   "license": "ISC",
   "dependencies": {
     "@affinidi/common": "1.7.0",
-    "@affinidi/wallet-core-sdk": "4.2.5",
+    "@affinidi/wallet-core-sdk": "4.2.6",
     "@affinidi/affinity-metrics-lib": "0.0.25",
     "@react-native-community/netinfo": "^5.5.1",
     "@types/text-encoding": "0.0.35",

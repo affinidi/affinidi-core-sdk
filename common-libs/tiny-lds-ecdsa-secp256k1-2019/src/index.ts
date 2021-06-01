@@ -201,7 +201,7 @@ export class Secp256k1Signature extends jsigs.suites.LinkedDataSignature {
 
   async verifySignature<T extends WithImplicitCoercion<Uint8Array | ReadonlyArray<number> | string>>({ verifyData, proof }: { verifyData: T; proof: Record<string, any> }): Promise<boolean> {
     return this.verifier.verify({
-      data: Buffer.from(verifyData),
+      data: Buffer.from(verifyData as any),
       signature: proof[this.proofSignatureKey],
     })
   }

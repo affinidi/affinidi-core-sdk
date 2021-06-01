@@ -618,6 +618,7 @@ export class CommonNetworkMember {
    * @description Initiates passwordless login to Affinity
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
   static async passwordlessLogin(
@@ -631,10 +632,11 @@ export class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const fullOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = fullOptions
 
     if (messageParameters) {
-      const customMessageTemplateService = new CustomMessageTemplatesService(options)
+      const customMessageTemplateService = new CustomMessageTemplatesService(fullOptions)
       await customMessageTemplateService.storeTemplate({
         username: username,
         template: messageParameters.message,
@@ -754,6 +756,7 @@ export class CommonNetworkMember {
    * @description Initiates reset password flow
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    */
   static async forgotPassword(
     username: string,
@@ -1105,6 +1108,7 @@ export class CommonNetworkMember {
    * @description Resends OTP for sign up flow
    * @param username - email/phoneNumber, registered and unconfirmed in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    */
   static async resendSignUpConfirmationCode(
     username: string,
@@ -1114,6 +1118,7 @@ export class CommonNetworkMember {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
@@ -1128,6 +1133,7 @@ export class CommonNetworkMember {
    * or signs up a new one, if user was not registered
    * @param username - email/phoneNumber, registered in Cognito
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
   static async signIn(
@@ -1231,13 +1237,19 @@ export class CommonNetworkMember {
    * @description Initiates change user attribute (email/phoneNumber) flow
    * @param newUsername - new email/phoneNumber
    * @param options - optional parameters with specified environment
+   * @param messageParameters - optional parameters with specified welcome message
    */
   // NOTE: operation is used for change the attribute, not username. Consider renaming
   //       New email/phoneNumber can be useded as a username to login.
-  async changeUsername(newUsername: string, options: SdkOptions = {}): Promise<void> {
+  async changeUsername(
+    newUsername: string,
+    options: SdkOptions = {},
+    messageParameters?: MessageParameters,
+  ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newUsername },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
@@ -1245,7 +1257,7 @@ export class CommonNetworkMember {
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.changeUsername(accessToken, newUsername)
+    await cognitoService.changeUsername(accessToken, newUsername, messageParameters)
   }
 
   /**
