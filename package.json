@@ -27,7 +27,7 @@
     "checkLicenses": "lerna run checkLicenses"
   },
   "dependencies": {
-    "@ahryman40k/ts-fhir-types": "4.0.25",
+    "@ahryman40k/ts-fhir-types": "4.0.34",
     "axios": "0.21.1"
   }
 }
