@@ -1,19 +1,8 @@
 import { parse } from 'did-resolver'
 
 import { DocumentLoader, absoluteURIRegex } from '../../shared'
-import {
-  VCV1,
-  VCV1Holder,
-  VCV1Revocation,
-  VCV1Proof,
-  VCV1Subject,
-} from '../../vc'
-import {
-  PresentationSubmissionV1,
-  PresentationSubmissionDescriptorV1,
-  VPV1,
-  VPV1Proof,
-} from '../../vp'
+import { VCV1, VCV1Holder, VCV1Revocation, VCV1Proof, VCV1Subject } from '../../vc'
+import { PresentationSubmissionV1, PresentationSubmissionDescriptorV1, VPV1, VPV1Proof } from '../../vp'
 import {
   genValidateFn,
   ValidateFn,
