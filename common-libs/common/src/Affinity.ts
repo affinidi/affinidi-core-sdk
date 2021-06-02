@@ -241,6 +241,7 @@ export class Affinity {
         credential,
         documentLoader,
         verifyRevocationListCredential,
+        verifyMatchingIssuers: false,
       })
 
       return { verified, error }

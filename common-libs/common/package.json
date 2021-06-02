@@ -57,7 +57,7 @@
     "secp256k1": "^4.0.1",
     "tiny-secp256k1": "^1.1.5",
     "tslib": "^2.2.0",
-    "vc-revocation-list": "^2.0.0"
+    "vc-revocation-list": "^3.0.0"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
