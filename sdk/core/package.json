@@ -42,7 +42,6 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/affinidi-did-auth-lib": "1.0.1",
     "@affinidi/affinity-metrics-lib": "0.0.25",
     "@affinidi/common": "1.7.0",
     "@affinidi/issuer-email-ses-client": "0.1.1",
@@ -58,7 +57,6 @@
     "did-resolver": "^2.0.1",
     "ethereumjs-util": "^5.0.0",
     "fluent-schema": "^1.0.4",
-    "jsonwebtoken": "^8.5.1",
     "keccak256": "^1.0.0",
     "lodash.keyby": "^4.6.0",
     "lodash.uniq": "^4.5.0",
@@ -69,6 +67,7 @@
     "uuid": "^8.3.1"
   },
   "devDependencies": {
+    "@affinidi/affinidi-did-auth-lib": "^1.0.3",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/async-retry": "^1.4.2",
@@ -96,6 +95,7 @@
     "eslint": "7.6.0",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.4",
+    "jsonwebtoken": "^8.5.1",
     "license-checker": "25.0.1",
     "mocha": "7.2.0",
     "nock": "12.0.3",
