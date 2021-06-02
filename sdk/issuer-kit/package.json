@@ -46,7 +46,7 @@
     "husky": "4.2.5",
     "license-checker": "25.0.1",
     "prettier": "2.0.5",
-    "tsdx": "0.13.3",
+    "tsdx": "^0.14.1",
     "typescript": "3.9.7"
   },
   "dependencies": {
