@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/vc-common",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "main": "dist/index.js",
   "module": "dist/vc-common.esm.js",
   "typings": "dist/index.d.ts",
@@ -30,7 +30,6 @@
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
   },
   "dependencies": {
-    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.1",
     "did-resolver": "^3.1.0",
     "jsonld": "^5.2.0",
     "jsonld-signatures": "^9.0.2",
@@ -40,6 +39,7 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "3.2.0",
     "@typescript-eslint/parser": "3.2.0",
     "eslint": "7.2.0",
