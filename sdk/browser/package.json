@@ -39,8 +39,8 @@
   "license": "ISC",
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "0.0.25",
-    "@affinidi/common": "1.7.0",
-    "@affinidi/wallet-core-sdk": "4.2.6",
+    "@affinidi/common": "1.7.1",
+    "@affinidi/wallet-core-sdk": "4.2.7",
     "eccrypto-js": "^5.0.0",
     "randombytes": "^2.1.0"
   },

@@ -46,7 +46,7 @@
     "typescript": "3.9.7"
   },
   "dependencies": {
-    "@affinidi/vc-common": "1.2.0",
+    "@affinidi/vc-common": "1.2.1",
     "ajv": "6.12.2",
     "fastify": "^2.15.1",
     "fastify-cors": "^4.0.0",
