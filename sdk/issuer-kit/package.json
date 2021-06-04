@@ -43,7 +43,7 @@
     "license-checker": "25.0.1",
     "prettier": "2.0.5",
     "tsdx": "^0.14.1",
-    "typescript": "3.9.7"
+    "typescript": "^4.3.2"
   },
   "dependencies": {
     "@affinidi/vc-common": "1.2.1",
