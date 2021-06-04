@@ -14,7 +14,9 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 14
+      - name: Install npm v7
+        run: npm install -g npm@7
       - name: Check for skipped tests
         run: |
             [ $(find . -maxdepth 6 -name *.test.ts -exec grep \\.only {} \; | wc -l) -eq 0 ];
