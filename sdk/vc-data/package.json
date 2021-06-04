@@ -42,7 +42,7 @@
     "@affinidi/prettier-config": "1.0.1",
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.0",
     "eslint-config-react-app": "6.0.0-next.77",
-    "jsonld": "^5.2.0",
+    "jsonld": "^4.0.1",
     "license-checker": "25.0.1",
     "lodash.uniq": "^4.5.0",
     "prettier": "2.0.5",

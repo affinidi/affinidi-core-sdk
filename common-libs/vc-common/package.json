@@ -31,8 +31,7 @@
   },
   "dependencies": {
     "did-resolver": "^3.1.0",
-    "jsonld": "^5.2.0",
-    "jsonld-signatures": "^9.0.2",
+    "jsonld-signatures": "^7.0.0",
     "tiny-warning": "^1.0.3",
     "tslib": "^2.0.1"
   },
@@ -41,6 +40,7 @@
     "@affinidi/prettier-config": "1.0.1",
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.0",
     "eslint-config-react-app": "6.0.0-next.77",
+    "jsonld": "^4.0.1",
     "license-checker": "25.0.1",
     "prettier": "2.0.5",
     "tsdx": "0.13.3",
