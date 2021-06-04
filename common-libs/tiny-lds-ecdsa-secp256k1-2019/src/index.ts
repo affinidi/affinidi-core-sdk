@@ -161,7 +161,9 @@ type Secp256k1SignatureOptions = {
   useNativeCanonize?: boolean
 }
 
-type WithImplicitCoercion<T> = T | { valueOf(): T };
+type WithImplicitCoercion<T> = T | { valueOf(): T }
+type SignatureType = WithImplicitCoercion<Uint8Array | ReadonlyArray<number> | string>
+type VerifySignatureParams = { verifyData: SignatureType; proof: Record<string, any> }
 
 export class Secp256k1Signature extends jsigs.suites.LinkedDataSignature {
   private readonly key: Secp256k1Key
@@ -199,7 +201,7 @@ export class Secp256k1Signature extends jsigs.suites.LinkedDataSignature {
     return proof
   }
 
-  async verifySignature<T extends WithImplicitCoercion<Uint8Array | ReadonlyArray<number> | string>>({ verifyData, proof }: { verifyData: T; proof: Record<string, any> }): Promise<boolean> {
+  async verifySignature({ verifyData, proof }: VerifySignatureParams): Promise<boolean> {
     return this.verifier.verify({
       data: Buffer.from(verifyData as any),
       signature: proof[this.proofSignatureKey],
