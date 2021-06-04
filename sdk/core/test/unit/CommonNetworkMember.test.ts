@@ -131,12 +131,18 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
 
   nock(registryUrl).post('/api/v1/did/anchor-did').reply(200, {})
 
-  sinon
-    .stub(KeysService, 'decryptSeed')
-    .returns({ seed: Buffer.from(opts.seedHex), didMethod, seedHexWithMethod: `${seedHex}++${didMethod}` })
-  sinon
-    .stub(KeysService.prototype, 'decryptSeed')
-    .returns({ seed: Buffer.from(opts.seedHex), didMethod, seedHexWithMethod: `${seedHex}++${didMethod}` })
+  sinon.stub(KeysService, 'decryptSeed').returns({
+    seed: Buffer.from(opts.seedHex),
+    didMethod,
+    seedHexWithMethod: `${seedHex}++${didMethod}`,
+    externalKeys: null,
+  })
+  sinon.stub(KeysService.prototype, 'decryptSeed').returns({
+    seed: Buffer.from(opts.seedHex),
+    didMethod,
+    seedHexWithMethod: `${seedHex}++${didMethod}`,
+    externalKeys: null,
+  })
   walletStub = sinon.stub(WalletStorageService.prototype, 'storeEncryptedSeed')
 }
 
