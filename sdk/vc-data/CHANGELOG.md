@@ -1,3 +1,5 @@
+# 1.3.0 (2021-06-04)
+* Reorganized dependencies
 #  1.2.5 (2021-05-04)
 * vc-data winner schema
 ## 1.2.3

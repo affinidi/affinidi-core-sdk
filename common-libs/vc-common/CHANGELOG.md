@@ -1,6 +1,8 @@
-## 1.2.1
+## 1.3.0
 
-- Removed unused dependencies
+### Improvements
+
+* Reorganized dependencies
 
 ## 1.2.0
 
