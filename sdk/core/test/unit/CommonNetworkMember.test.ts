@@ -805,7 +805,7 @@ describe('CommonNetworkMember', () => {
     expect(message).to.eql('Invalid operation parameters.')
     expect(contextMessage1).to.eql('Parameter "12345678" should be a string.')
     expect(contextMessage2).to.eql('Required parameter at index [1] is missing.')
-    expect(isIn).to.eql('didMethod must be one of the following values: jolo,elem')
+    expect(isIn).to.eql('didMethod must be one of the following values: jolo, elem')
   })
 
   it('#getSignedCredentials', async () => {
