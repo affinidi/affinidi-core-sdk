@@ -17,7 +17,7 @@ type Users = 'issuer' | 'bob' | 'alice'
 
 type DidConfigs = {
   [key in Users]: {
-    did: string
+    did: NonNullable<string>
     didDoc: {
       '@context': string
       id: string
@@ -1277,6 +1277,15 @@ describe('validateVPV1', () => {
     expect.assertions(1)
 
     const { issuer, bob } = didConfigs
+
+    const parsed = parse(bob.did)
+    // TS assertion
+    if (!parsed) {
+      fail('unable to parse bob.did')
+    }
+
+    const shortFormDid = parsed.did
+
     // Issue a VC to bob
     const vc = await createVC(
       {
@@ -1286,7 +1295,7 @@ describe('validateVPV1', () => {
       },
       {
         // Provide the short form DID here becuase VP.holder.id needs to be resolvable
-        did: parse(bob.did).did,
+        did: shortFormDid,
       },
     )
 
