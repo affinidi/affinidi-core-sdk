@@ -21,7 +21,7 @@ import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig
 export type Env = 'dev' | 'staging' | 'prod'
 export type DidMethod = 'jolo' | 'elem'
 export const DID_METHOD = /^(jolo|elem)$/
-export const DID = /^did:[\w|\d]{2,}:[\w|\d|:|;|\-|=]{10,}/
+export const DID = /^did:[\w\d]{2,}:[\w\d:;\-=]{10,}/
 export const PASSWORD = /^.{6,}$/
 export const JWT = /^[A-Za-z0-9_=-]+\.[A-Za-z0-9_=-]+\.?[A-Za-z0-9_.+/=-]*$/
 export const COGNITO_CONFIRMATION_CODE = /^\d{6}$/
