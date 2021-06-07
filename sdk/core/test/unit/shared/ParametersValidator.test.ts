@@ -33,7 +33,7 @@ describe('ParametersValidator', () => {
     expect(errorMessage2).to.equal(expectedErrorMessage2)
   })
 
-  it('throws validation error when invalid DID is provided', async () => {
+  it('#validatePrimitive throws validation error when invalid DID is provided', async () => {
     const { isValid, message } = await ParametersValidator.validatePrimitive('did', 'did:my|method:hello|world')
 
     expect(isValid).to.be.false
