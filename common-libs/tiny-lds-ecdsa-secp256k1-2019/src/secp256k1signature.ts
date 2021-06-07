@@ -41,6 +41,7 @@ export default class Secp256k1Signature extends jsigs.suites.LinkedDataSignature
       LDKeyClass: Secp256k1Key,
       date: options.date,
       useNativeCanonize: options.useNativeCanonize,
+      contextUrl: null,
     })
 
     this.verificationKeyType = VERIFICATION_KEY_TYPE
