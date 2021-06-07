@@ -35,6 +35,20 @@ jobs:
         run: npm run bootstrap
       - name: Lerna checkLicenses
         run: npm run checkLicenses
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+          TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
+          TESTMAIL_API_KEY: ${{secrets.TESTMAIL_API_KEY}}
+          TESTMAIL_NS: ${{secrets.TESTMAIL_NS}}
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+          TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
+          TESTMAIL_API_KEY: ${{secrets.TESTMAIL_API_KEY}}
+          TESTMAIL_NS: ${{secrets.TESTMAIL_NS}}
       - uses: paambaati/codeclimate-action@v2.6.0
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
