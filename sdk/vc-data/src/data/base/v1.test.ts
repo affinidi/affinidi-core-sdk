@@ -29,7 +29,7 @@ describe('The base context entries', () => {
       Array [
         Object {
           "@type": Array [
-            "/Person",
+            "Person",
             "https://schema.affinity-project.org/PersonE",
           ],
           "https://schema.org/name": Array [
@@ -59,13 +59,13 @@ describe('The base context entries', () => {
       Array [
         Object {
           "@type": Array [
-            "/Organization",
+            "Organization",
             "https://schema.affinity-project.org/OrganizationE",
           ],
           "https://schema.affinity-project.org/identifiers": Array [
             Object {
               "@type": Array [
-                "/PropertyValue",
+                "PropertyValue",
               ],
             },
           ],
@@ -94,7 +94,7 @@ describe('The base context entries', () => {
       Array [
         Object {
           "@type": Array [
-            "/EducationalOccupationalCredential",
+            "EducationalOccupationalCredential",
             "https://schema.affinity-project.org/Credential",
           ],
           "https://schema.affinity-project.org/dateRevoked": Array [
@@ -105,7 +105,7 @@ describe('The base context entries', () => {
           "https://schema.affinity-project.org/recognizedBy": Array [
             Object {
               "@type": Array [
-                "/City",
+                "City",
               ],
             },
           ],
@@ -140,7 +140,7 @@ describe('The base context entries', () => {
       Array [
         Object {
           "@type": Array [
-            "/EducationalOccupationalCredential",
+            "EducationalOccupationalCredential",
             "https://schema.affinity-project.org/Credential",
             "https://schema.affinity-project.org/OrganizationalCredential",
           ],
@@ -177,7 +177,7 @@ describe('The base context entries', () => {
           "https://schema.affinity-project.org/recognizedBy": Array [
             Object {
               "@type": Array [
-                "/City",
+                "City",
               ],
             },
           ],

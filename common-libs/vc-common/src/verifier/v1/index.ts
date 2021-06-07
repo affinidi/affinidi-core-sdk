@@ -1,18 +1,8 @@
 import { parse } from 'did-resolver'
 
-import {
-  VPV1,
-  PresentationSubmissionV1,
-  PresentationSubmissionDescriptorV1,
-  VCV1,
-  VCV1Holder,
-  VPV1Proof,
-  VCV1Revocation,
-  VCV1Proof,
-  VCV1Subject,
-  DocumentLoader,
-  absoluteURIRegex,
-} from '../../'
+import { DocumentLoader, absoluteURIRegex } from '../../shared'
+import { VCV1, VCV1Holder, VCV1Revocation, VCV1Proof, VCV1Subject } from '../../vc'
+import { PresentationSubmissionV1, PresentationSubmissionDescriptorV1, VPV1, VPV1Proof } from '../../vp'
 import {
   genValidateFn,
   ValidateFn,
@@ -319,13 +309,15 @@ export const validateVPV1 = ({
     presentation_submission: isUndefinedOr(isValid(validatePresentationSubmission)),
     verifiableCredential: [
       isArrayOf(isValid(validateVCV1({ documentLoader, getVerifySuite, getProofPurposeOptions }))),
-      isArrayOf((value, data) =>
-        createValidatorResponse(
+      isArrayOf((value, data: Record<string, any>) => {
+        const dataHolderId = parse(data?.holder?.id)
+        const valueHolderId = parse(value?.holder?.id)
+        return createValidatorResponse(
           // Parse the DID URLs to compare just the DID part
-          parse(data.holder.id).did === parse(value.holder.id).did,
+          dataHolderId !== null && valueHolderId !== null && dataHolderId.did === valueHolderId.did,
           `Credential ${value.id} has a different holder than the VP`,
-        ),
-      ),
+        )
+      }),
     ],
     holder: isValid(validateHolder),
     proof: [isValid(validateVPProofStructure), isValidVPProof(documentLoader, getVerifySuite, getProofPurposeOptions)],

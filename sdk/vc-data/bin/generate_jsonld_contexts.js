@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const _ = require('lodash')
+const uniq = require('lodash.uniq')
 const util = require('util')
 const exec = require('child_process').exec
 const ts = require('typescript')
@@ -42,7 +42,7 @@ importNodes.forEach(x => {
 })
 
 Object.keys(imports).forEach(k => {
-  imports[k] = _.uniq(imports[k])
+  imports[k] = uniq(imports[k])
 })
 
 // Categorize the nodes

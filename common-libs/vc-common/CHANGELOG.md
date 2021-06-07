@@ -1,3 +1,9 @@
+## 1.3.0
+
+### Improvements
+
+* Reorganized dependencies
+
 ## 1.2.0
 
 ### Improvements

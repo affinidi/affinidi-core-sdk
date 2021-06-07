@@ -2,11 +2,7 @@
   "name": "affinidi-core-sdk",
   "private": true,
   "devDependencies": {
-    "@types/sinon": "^9.0.5",
-    "husky": "4.2.5",
-    "lerna": "3.20.2",
-    "sinon": "^9.0.3",
-    "typescript": "3.9.7"
+    "lerna": "^3.22.1"
   },
   "scripts": {
     "ci": "lerna exec npm ci",
@@ -25,9 +21,5 @@
     "exec": "lerna exec",
     "list-packages": "lerna list --json",
     "checkLicenses": "lerna run checkLicenses"
-  },
-  "dependencies": {
-    "@ahryman40k/ts-fhir-types": "4.0.25",
-    "axios": "0.21.1"
   }
 }

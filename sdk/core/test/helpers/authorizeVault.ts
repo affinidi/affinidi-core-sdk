@@ -15,10 +15,11 @@ const seed = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 // @ts-ignore
 const seedHex = seed.toString('hex')
 const seedHexWithMethod = `${seedHex}++${didMethod}`
-const decryptSeedResponse = {
+const decryptSeedResponse: ReturnType<typeof KeysService.decryptSeed> = {
   seed: Buffer.from(seed),
   didMethod,
   seedHexWithMethod,
+  externalKeys: null,
 }
 
 export const authorizeVault = async () => {
