@@ -1,3 +1,5 @@
+# release 4.3.1 (2021-06-07)
+  * Fixed DID validation
 # release 4.3.0 (2021-06-04)
   * Reorganized dependencies
 # release 4.2.6 (2021-05-31)

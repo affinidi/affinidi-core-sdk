@@ -1630,4 +1630,44 @@ describe('CommonNetworkMember', () => {
 
     expect(result.isValid).to.be.false
   })
+
+  it('#generateDidAuthRequest should throw validation error for invalid "jwtOptions.audienceDid"', async () => {
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+
+    let validationError
+    try {
+      await commonNetworkMember.generateDidAuthRequest({ audienceDid: 'did:my|method:hello|world' })
+    } catch (error) {
+      validationError = error
+    }
+
+    const { name, message, context } = validationError
+
+    expect(name).to.eql('COR-1')
+    expect(message).to.eql('Invalid operation parameters.')
+    expect(context.errors[0][0].argument).to.eql('audienceDid')
+    expect(context.errors[0][0].message.matches).to.have.string('audienceDid must match')
+  })
+
+  it('#signCredential should throw validation error for invalid "signCredentialOptionalInput.requesterDid"', async () => {
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+
+    let validationError
+    try {
+      await commonNetworkMember.signCredential(
+        { data: { '@type': 'FakeType' } },
+        {},
+        { requesterDid: 'did:my|method:hello|world' },
+      )
+    } catch (error) {
+      validationError = error
+    }
+
+    const { name, message, context } = validationError
+
+    expect(name).to.eql('COR-1')
+    expect(message).to.eql('Invalid operation parameters.')
+    expect(context.errors[0][0].argument).to.eql('requesterDid')
+    expect(context.errors[0][0].message.matches).to.have.string('requesterDid must match')
+  })
 })

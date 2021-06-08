@@ -32,4 +32,11 @@ describe('ParametersValidator', () => {
     expect(errorValue2).to.equal(badNumber)
     expect(errorMessage2).to.equal(expectedErrorMessage2)
   })
+
+  it('#validatePrimitive throws validation error when invalid DID is provided', async () => {
+    const { isValid, message } = await ParametersValidator.validatePrimitive('did', 'did:my|method:hello|world')
+
+    expect(isValid).to.be.false
+    expect(message).to.have.string('Parameter "did:my|method:hello|world" is not a valid. Valid format: ')
+  })
 })
