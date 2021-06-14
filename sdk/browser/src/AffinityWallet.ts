@@ -195,8 +195,7 @@ export class AffinityWallet extends CoreNetwork {
    * @returns array of ids for corelated records
    */
   async saveCredentials(data: any, storageRegion?: string): Promise<any> {
-    const encryptedCredentials = await this.walletStorageService.encryptCredentials(data)
-    const result = await this.saveEncryptedCredentials(encryptedCredentials, storageRegion)
+    const result = await this.walletStorageService.saveUnencryptedCredentials(data, storageRegion)
 
     this._sendVCSavedMetrics(data)
     // NOTE: what if creds actually were not saved in the vault?
@@ -212,14 +211,13 @@ export class AffinityWallet extends CoreNetwork {
    */
   async getCredentialByIndex(credentialIndex: number): Promise<any> {
     const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
-    const blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
+    const credentials = await this.walletStorageService.fetchDecryptedCredentials(paginationOptions)
 
-    if (blobs.length < 1) {
+    if (!credentials[0]) {
       throw new __dangerous.SdkError('COR-14')
     }
 
-    const decryptedCredentials = await this.walletStorageService.decryptCredentials(blobs)
-    return decryptedCredentials[0]
+    return credentials[0]
   }
 
   /**
@@ -229,40 +227,16 @@ export class AffinityWallet extends CoreNetwork {
    * 2. decrypt encrypted VCs
    * 3. filter VCs by type
    * @param credentialShareRequestToken - JWT received from verifier
-   * @param paginationOptions - optional range for credentials to be pulled (default is skip: 0, limit: 100)
    * @returns array of VCs
    */
-  async getCredentials(
-    credentialShareRequestToken: string = null,
-    paginationOptions?: FetchCredentialsPaginationOptions,
-  ): Promise<any> {
+  async getCredentials(credentialShareRequestToken: string = null): Promise<any[]> {
+    const allCredentials = await this.walletStorageService.fetchAllDecryptedCredentials()
+
     if (credentialShareRequestToken) {
-      return this._getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken)
+      return this.walletStorageService.filterCredentials(credentialShareRequestToken, allCredentials)
     }
 
-    let blobs
-
-    try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
-    } catch (error) {
-      if (error.code === 'COR-14') {
-        return []
-      } else {
-        throw error
-      }
-    }
-
-    if (blobs.length === 0) {
-      return []
-    }
-
-    return this.walletStorageService.decryptCredentials(blobs)
-  }
-
-  private async _getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken: string): Promise<any> {
-    const allBlobs = await this.walletStorageService.fetchAllBlobs()
-    const credentials = await this.walletStorageService.decryptCredentials(allBlobs)
-    return this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
+    return allCredentials
   }
 
   /**
@@ -277,15 +251,7 @@ export class AffinityWallet extends CoreNetwork {
       })
     }
 
-    if (credentialIndex) {
-      return this.deleteCredentialByIndex(credentialIndex.toString())
-    }
-
-    const allBlobs = await this.walletStorageService.fetchAllBlobs()
-    await this.walletStorageService.decryptCredentials(allBlobs)
-
-    const credentialIndexToDelete = this.walletStorageService.findCredentialIndexById(id)
-
-    return this.deleteCredentialByIndex(credentialIndexToDelete)
+    const credentialIndexToDelete = credentialIndex ?? (await this.walletStorageService.findCredentialIndexById(id))
+    return this.deleteCredentialByIndex(credentialIndexToDelete.toString())
   }
 }

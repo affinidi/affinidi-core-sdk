@@ -154,7 +154,7 @@ describe('AffinityWallet', () => {
   it('#getCredentials throws error', async () => {
     const error = 'Error'
 
-    sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: error })
+    sinon.stub(WalletStorageService.prototype, 'fetchAllDecryptedCredentials').rejects({ code: error })
 
     const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
 
@@ -174,8 +174,7 @@ describe('AffinityWallet', () => {
   it('#saveCredentials', async () => {
     const credentials = [signedCredential]
 
-    sinon.stub(WalletStorageService.prototype, 'encryptCredentials').resolves(credentials)
-    sinon.stub(CommonNetworkMember.prototype as any, 'saveEncryptedCredentials').resolves('token')
+    sinon.stub(WalletStorageService.prototype, 'saveUnencryptedCredentials').resolves(['token'])
 
     const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
 

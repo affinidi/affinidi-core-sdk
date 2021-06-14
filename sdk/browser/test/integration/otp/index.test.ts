@@ -10,7 +10,7 @@ import { AffinityWallet } from '../../../src/AffinityWallet'
 import { getOptionsForEnvironment } from '../../helpers'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 
-const signedCredentials = require('../../factory/signedCredentials')
+import { generateCredentials } from '../../factory/signedCredentials'
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -85,7 +85,7 @@ describe('AffinityWallet [OTP]', () => {
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
 
-    signedCredentials.push({ anything: {} })
+    const signedCredentials = generateCredentials(4)
 
     await commonNetworkMember.saveCredentials(signedCredentials)
 
