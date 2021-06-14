@@ -194,7 +194,7 @@ export class AffinityWallet extends CoreNetwork {
    * @param storageRegion - (optional) specify AWS region where credentials will be stored
    * @returns array of ids for corelated records
    */
-  async saveCredentials(data: any, storageRegion?: string): Promise<any> {
+  async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
     const result = await this.walletStorageService.saveUnencryptedCredentials(data, storageRegion)
 
     this._sendVCSavedMetrics(data)

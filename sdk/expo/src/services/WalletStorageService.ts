@@ -1,7 +1,6 @@
-import randomBytes from 'randombytes'
-
 import { profile } from '@affinidi/common'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
+import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
 
 import KeysService from './KeysService'
 
@@ -27,56 +26,62 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
     return encryptedMessage
   }
 
-  async encryptCredentials(data: any) {
+  private async encryptCredentials(data: any[]) {
     const encryptedCredentials = []
 
-    /* istanbul ignore else: code simplicity */
-    if (data.length && data.length > 0) {
-      for (const item of data) {
-        const cyphertext = await this.createEncryptedMessageByMyKey(item)
+    for (const item of data) {
+      const cyphertext = await this.createEncryptedMessageByMyKey(item)
 
-        encryptedCredentials.push(cyphertext)
-      }
+      encryptedCredentials.push(cyphertext)
     }
 
     return encryptedCredentials
   }
 
-  async decryptCredentials(blobs: any) {
-    const decryptedCredentials = []
+  async saveUnencryptedCredentials(data: any[], storageRegion?: string) {
+    const encryptedCredentials = await this.encryptCredentials(data)
+    return await this.saveCredentials(encryptedCredentials, storageRegion)
+  }
 
-    /* istanbul ignore else: code simplicity */
-    if (blobs && blobs.length) {
-      for (const blob of blobs) {
-        const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
-        const isW3cCredential = __dangerous.isW3cCredential(credential)
+  async fetchAllDecryptedCredentials() {
+    const allBlobs = await this.fetchAllBlobs()
+    const allCredentials = []
+    for (const blob of allBlobs) {
+      const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
+      allCredentials.push(credential)
+    }
 
-        let key = credential.id
+    return allCredentials
+  }
 
-        if (!isW3cCredential && credential.data) {
-          key = credential.data.id
-        }
+  async fetchDecryptedCredentials(fetchCredentialsPaginationOptions: FetchCredentialsPaginationOptions) {
+    const blobs = await this.fetchEncryptedCredentials(fetchCredentialsPaginationOptions)
+    const credentials = []
+    for (const blob of blobs) {
+      const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
+      credentials.push(credential)
+    }
 
-        if (!key) {
-          key = await randomBytes(8).toString('hex')
-        }
+    return credentials
+  }
 
-        this._credentialsIdsAndIndexesMap[key] = blob.id
+  async findCredentialIndexById(id: string) {
+    const allBlobs = await this.fetchAllBlobs()
+    for (const blob of allBlobs) {
+      const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
+      const isW3cCredential = __dangerous.isW3cCredential(credential)
 
-        decryptedCredentials.push(credential)
+      let credentialId = credential.id
+
+      if (!isW3cCredential && credential.data) {
+        credentialId = credential.data.id
+      }
+
+      if (credentialId && credentialId == id) {
+        return blob.id
       }
     }
 
-    return decryptedCredentials
-  }
-
-  findCredentialIndexById(id: string) {
-    const credentialIndexToDelete = this._credentialsIdsAndIndexesMap[id]
-
-    if (!credentialIndexToDelete && credentialIndexToDelete !== 0) {
-      throw new __dangerous.SdkError('COR-23', { id })
-    }
-
-    return credentialIndexToDelete
+    throw new __dangerous.SdkError('COR-23', { id })
   }
 }

@@ -22,22 +22,18 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
     return encryptedMessage
   }
 
-  private async encryptCredentials(data: any) {
+  private async encryptCredentials(data: any[]) {
     const encryptedCredentials = []
 
-    /* istanbul ignore else: code simplicity */
-    if (data.length && data.length > 0) {
-      for (const item of data) {
-        const cyphertext = await this.createEncryptedMessageByMyKey(item)
-
-        encryptedCredentials.push(cyphertext)
-      }
+    for (const item of data) {
+      const cyphertext = await this.createEncryptedMessageByMyKey(item)
+      encryptedCredentials.push(cyphertext)
     }
 
     return encryptedCredentials
   }
 
-  async saveUnencryptedCredentials(data: any, storageRegion?: string) {
+  async saveUnencryptedCredentials(data: any[], storageRegion?: string) {
     const encryptedCredentials = await this.encryptCredentials(data)
     return await this.saveCredentials(encryptedCredentials, storageRegion)
   }

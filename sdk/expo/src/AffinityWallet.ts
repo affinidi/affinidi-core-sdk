@@ -16,7 +16,7 @@ const COMPONENT = EventComponent.AffinidiExpoSDK
 @profile()
 export class AffinityWallet extends CoreNetwork {
   _skipBackupCredentials: boolean = false
-  _credentials: any = []
+  _credentials: any[] = []
   keysService: KeysService
   walletStorageService: WalletStorageService
 
@@ -217,9 +217,8 @@ export class AffinityWallet extends CoreNetwork {
    * @param storageRegion - (optional) specify AWS region where credentials will be stored
    * @returns array of ids for corelated records
    */
-  async saveCredentials(data: any, storageRegion?: string): Promise<any> {
-    const encryptedCredentials = await this.walletStorageService.encryptCredentials(data)
-    const result = await this.saveEncryptedCredentials(encryptedCredentials, storageRegion)
+  async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
+    const result = await this.walletStorageService.saveUnencryptedCredentials(data, storageRegion)
 
     this._sendVCSavedMetrics(data)
     // NOTE: what if creds actually were not saved in the vault?
@@ -235,14 +234,13 @@ export class AffinityWallet extends CoreNetwork {
    */
   async getCredentialByIndex(credentialIndex: number): Promise<any> {
     const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
-    const blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
+    const credentials = await this.walletStorageService.fetchDecryptedCredentials(paginationOptions)
 
-    if (blobs.length < 1) {
+    if (!credentials[0]) {
       throw new __dangerous.SdkError('COR-14')
     }
 
-    const decryptedCredentials = await this.walletStorageService.decryptCredentials(blobs)
-    return decryptedCredentials[0]
+    return credentials[0]
   }
 
   /**
@@ -260,44 +258,20 @@ export class AffinityWallet extends CoreNetwork {
   async getCredentials(
     credentialShareRequestToken: string = null,
     fetchBackupCredentials: boolean = true,
-    paginationOptions?: FetchCredentialsPaginationOptions,
   ): Promise<any> {
-    if (!fetchBackupCredentials) {
-      return this.walletStorageService.filterCredentials(credentialShareRequestToken, this._credentials)
-    }
+    const credentials = fetchBackupCredentials ? await this.fetchAllCredentials() : this._credentials
 
     if (credentialShareRequestToken) {
-      return this._getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken)
+      return this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
     }
 
-    return this._fetchCredentialsWithPagination(paginationOptions)
+    return credentials
   }
 
-  private async _fetchCredentialsWithPagination(paginationOptions?: FetchCredentialsPaginationOptions): Promise<any[]> {
-    let blobs
-
-    try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
-    } catch (error) {
-      if (error.code === 'COR-14') {
-        return []
-      } else {
-        throw error
-      }
-    }
-
-    if (blobs.length === 0) {
-      return []
-    }
-
-    return this.walletStorageService.decryptCredentials(blobs)
-  }
-
-  private async _getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken: string): Promise<any> {
-    const blobs = await this.walletStorageService.fetchAllBlobs()
-    const credentials = await this.walletStorageService.decryptCredentials(blobs)
+  private async fetchAllCredentials() {
+    const credentials = await this.walletStorageService.fetchAllDecryptedCredentials()
     this._credentials = credentials
-    return this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
+    return credentials
   }
 
   /**
@@ -312,14 +286,8 @@ export class AffinityWallet extends CoreNetwork {
       })
     }
 
-    if (credentialIndex) {
-      return this.deleteCredentialByIndex(credentialIndex)
-    }
+    const index = credentialIndex ?? (await this.walletStorageService.findCredentialIndexById(id))
 
-    const allBlobs = await this.walletStorageService.fetchAllBlobs()
-    await this.walletStorageService.decryptCredentials(allBlobs)
-    const credentialIndexToDelete = this.walletStorageService.findCredentialIndexById(id)
-
-    return this.deleteCredentialByIndex(credentialIndexToDelete)
+    return this.deleteCredentialByIndex(index)
   }
 }

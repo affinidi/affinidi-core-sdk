@@ -1,5 +1,11 @@
 # release 4.4.0 (2021-06-14)
-* Refer to the changelog for `wallet-core-sdk` v4.4.0
+* `getCredentials` now returns all credentials (even if there are more than 100 of them)
+* Retrieved credentials are cached even if no `credentialShareRequestToken` is passed to `getCredentials`
+* Also refer to the changelog for `wallet-core-sdk` v4.4.0
+* Breaking changes:
+  * `getCredentials` no longer accepts pagination parameters
+  * Some methods that returned arrays now declare their return type as `any[]` instead of `any`.
+  * Some methods that accepted arrays now accept `unknown[]` instead of `any`.
 # release 4.3.1 (2021-06-07)
 * Fixed DID validation
 # release 4.3.0 (2021-06-04)
