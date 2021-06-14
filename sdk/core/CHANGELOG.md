@@ -1,3 +1,10 @@
+# release 4.4.0 (2021-06-14)
+  * Implemented `WalletStorageService.fetchAllBlobs`
+  * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries
+  * Optimized `WalletStorageService.fetchAllEncryptedCredentialsInBatches` to only call `authorizeVcVault` once instead of once per batch
+  * Breaking changes:
+    * `WalletStorageService.fetchAllEncryptedCredentialsInBatches` is now private, use `fetchAllBlobs` instead
+    * Some methods that returned arrays now declare their return type as `any[]` instead of `any`.
 # release 4.3.1 (2021-06-07)
   * Fixed DID validation
 # release 4.3.0 (2021-06-04)

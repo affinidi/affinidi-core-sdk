@@ -1,3 +1,5 @@
+# release 4.4.0 (2021-06-14)
+* Refer to the changelog for `wallet-core-sdk` v4.4.0
 # release 4.3.1 (2021-06-07)
 * Fixed DID validation
 # release 4.3.0 (2021-06-04)

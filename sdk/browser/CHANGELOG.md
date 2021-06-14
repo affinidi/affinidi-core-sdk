@@ -1,3 +1,8 @@
+# release 4.4.0 (2021-06-14)
+* `getCredentials` now returns all credentials (even if there are more than 100 of them)
+* Also refer to the changelog for `wallet-core-sdk` v4.4.0
+* Breaking changes:
+  * `getCredentials` no longer accepts pagination parameters
 # release 4.3.1 (2021-06-07)
 * Fixed DID validation
 # release 4.3.0 (2021-06-04)
