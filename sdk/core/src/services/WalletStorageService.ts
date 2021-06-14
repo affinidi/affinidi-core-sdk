@@ -359,19 +359,8 @@ export default class WalletStorageService {
    * Start fetching all credentials inside the vault page by page
    * @param fetchCredentialsPaginationOptions starting and batch count for the credentials
    */
-  async *fetchAllEncryptedCredentialsInBatches(
-    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
-  ): AsyncIterable<any[]> {
-    await ParametersValidator.validate([
-      {
-        isArray: false,
-        type: FetchCredentialsPaginationOptions,
-        isRequired: false,
-        value: fetchCredentialsPaginationOptions,
-      },
-    ])
-
-    const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
+  private async *fetchAllEncryptedCredentialsInBatches(): AsyncIterable<any[]> {
+    const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault()
     let lastCount = 0
 
     const token = await this.authorizeVcVault()
@@ -396,7 +385,19 @@ export default class WalletStorageService {
     } while (lastCount === paginationOptions.limit)
   }
 
-  private async _fetchEncryptedCredentialsWithPagination(paginationOptions: PaginationOptions, token: string): Promise<any[]> {
+  public async fetchAllBlobs() {
+    let allBlobs: any[] = []
+    for await (const blobs of this.fetchAllEncryptedCredentialsInBatches()) {
+      allBlobs = [...allBlobs, ...blobs]
+    }
+
+    return allBlobs
+  }
+
+  private async _fetchEncryptedCredentialsWithPagination(
+    paginationOptions: PaginationOptions,
+    token: string,
+  ): Promise<any[]> {
     const headers: any = {
       Authorization: `Bearer ${token}`,
       ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),

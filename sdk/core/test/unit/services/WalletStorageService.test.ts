@@ -10,7 +10,6 @@ import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
 import { generateTestDIDs } from '../../factory/didFactory'
-import { authorizeVaultEndpoints } from '../../helpers/authorizeVault'
 
 const signedCredential = require('../../factory/signedCredential')
 
@@ -184,19 +183,14 @@ describe('WalletStorageService', () => {
     expect(errorResponse.httpStatusCode).to.eql(500)
   })
 
-  describe('#fetchAllEncryptedCredentialsInBatches', () => {
+  describe('#fetchAllBlobs', () => {
     it('should work for single page', async () => {
       await authorizeVault()
 
       nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(200, [signedCredential])
 
       const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
-      let response: any[] = []
-
-      for await (const blobs of walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
-        response = response.concat(blobs)
-      }
-
+      const response = await walletStorageService.fetchAllBlobs()
       expect(response).to.be.an('array')
       expect(response).to.eql([signedCredential])
     })
@@ -205,48 +199,77 @@ describe('WalletStorageService', () => {
       await authorizeVault()
 
       nock(STAGING_VAULT_URL)
-        .get(fetchCredentialsBase + '0/0')
-        .reply(200, [signedCredential])
+        .get(fetchCredentialsBase + '0/99')
+        .reply(200, Array(100).fill(signedCredential))
 
       nock(STAGING_VAULT_URL)
-        .get(fetchCredentialsBase + '1/1')
-        .reply(200, [signedCredential])
+        .get(fetchCredentialsBase + '100/199')
+        .reply(200, Array(100).fill(signedCredential))
 
       nock(STAGING_VAULT_URL)
-        .get(fetchCredentialsBase + '2/2')
+        .get(fetchCredentialsBase + '200/299')
+        .reply(200, Array(50).fill(signedCredential))
+
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const response = await walletStorageService.fetchAllBlobs()
+
+      expect(response).to.be.an('array')
+      expect(response.length).to.eql(250)
+      expect(response).to.eql(Array(250).fill(signedCredential))
+    })
+
+    it('should work for whole number of pages', async () => {
+      await authorizeVault()
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '0/99')
+        .reply(200, Array(100).fill(signedCredential))
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '100/199')
+        .reply(200, Array(100).fill(signedCredential))
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '200/299')
         .reply(200, [])
 
       const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
-      let response: any[] = []
-
-      const paginationOptions = { skip: 0, limit: 1 }
-
-      for await (const blobs of walletStorageService.fetchAllEncryptedCredentialsInBatches(paginationOptions)) {
-        response = response.concat(blobs)
-
-        authorizeVaultEndpoints()
-      }
+      const response = await walletStorageService.fetchAllBlobs()
 
       expect(response).to.be.an('array')
-      expect(response).to.eql([signedCredential, signedCredential])
+      expect(response.length).to.eql(200)
+      expect(response).to.eql(Array(200).fill(signedCredential))
     })
 
-    it('should fail with invalid parameters', async () => {
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    it('should handle deleted values when fetching all', async () => {
+      await authorizeVault()
 
-      let errorResponse
-
-      try {
-        const asyncIterable = walletStorageService.fetchAllEncryptedCredentialsInBatches({ skip: -1, limit: -1 })
-        const asyncIterator = asyncIterable[Symbol.asyncIterator]()
-
-        await asyncIterator.next()
-      } catch (error) {
-        errorResponse = error
+      {
+        const expectedResult = Array(100).fill(signedCredential)
+        expectedResult[2] = { cyphertext: null }
+        const expectedPath = `${fetchCredentialsBase}0/99`
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
       }
 
-      expect(errorResponse).not.to.be.undefined
-      expect(errorResponse.code).to.be.eq('COR-1')
+      {
+        const expectedResult = Array(100).fill(signedCredential)
+        expectedResult[90] = { cyphertext: null }
+        const expectedPath = `${fetchCredentialsBase}100/199`
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
+      }
+
+      {
+        const expectedResult = Array(50).fill(signedCredential)
+        expectedResult[30] = { cyphertext: null }
+        const expectedPath = `${fetchCredentialsBase}200/299`
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
+      }
+
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const allBlobs = await walletStorageService.fetchAllBlobs()
+
+      expect(allBlobs.length).to.eql(247)
+      expect(allBlobs).to.eql(Array(247).fill(signedCredential))
     })
   })
 
@@ -301,39 +324,6 @@ describe('WalletStorageService', () => {
 
       expect(response).to.be.an('array')
       expect(response.length).to.eql(4)
-    })
-
-    it('should handle deleted values when fetching all', async () => {
-      await authorizeVault()
-
-      {
-        const expectedResult = Array(100).fill(signedCredential)
-        expectedResult[2] = { cyphertext: null }
-        const expectedPath = `${fetchCredentialsBase}0/99`
-        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
-      }
-
-      {
-        const expectedResult = Array(100).fill(signedCredential)
-        expectedResult[90] = { cyphertext: null }
-        const expectedPath = `${fetchCredentialsBase}100/199`
-        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
-      }
-
-      {
-        const expectedResult = Array(50).fill(signedCredential)
-        expectedResult[30] = { cyphertext: null }
-        const expectedPath = `${fetchCredentialsBase}200/299`
-        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
-      }
-
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
-      let allBlobs: any[] = []
-      for await (const blobs of walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
-        allBlobs = [...allBlobs, ...blobs]
-      }
-
-      expect(allBlobs.length).to.eql(247)
     })
   })
 

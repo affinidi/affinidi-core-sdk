@@ -293,21 +293,10 @@ export class AffinityWallet extends CoreNetwork {
   }
 
   private async _getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken: string): Promise<any> {
-    let allCredentials: any[] = []
-    let result: any[] = []
-
-    for await (const blobs of this.walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
-      const credentials = await this.walletStorageService.decryptCredentials(blobs)
-
-      const matchedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
-
-      allCredentials = allCredentials.concat(credentials)
-      result = result.concat(matchedCredentials)
-    }
-
-    this._credentials = allCredentials
-
-    return result
+    const blobs = await this.walletStorageService.fetchAllBlobs()
+    const credentials = await this.walletStorageService.decryptCredentials(blobs)
+    this._credentials = credentials
+    return this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
   }
 
   /**
@@ -326,12 +315,7 @@ export class AffinityWallet extends CoreNetwork {
       return this.deleteCredentialByIndex(credentialIndex)
     }
 
-    let allBlobs: any[] = []
-
-    for await (const blobs of this.walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
-      allBlobs = allBlobs.concat(blobs)
-    }
-
+    const allBlobs = await this.walletStorageService.fetchAllBlobs()
     await this.walletStorageService.decryptCredentials(allBlobs)
 
     const credentialIndexToDelete = this.walletStorageService.findCredentialIndexById(id)
