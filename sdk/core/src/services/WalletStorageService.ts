@@ -334,8 +334,8 @@ export default class WalletStorageService {
     }
   }
 
-  private _filterDeletedCredentials(blobs: any): [] {
-    return blobs.filter((blob: any) => blob.cyphertext !== null)
+  private _filterDeletedCredentials(blobs: any[]): any[] {
+    return blobs.filter((blob) => blob.cyphertext !== null)
   }
 
   async fetchEncryptedCredentials(fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions): Promise<any> {
@@ -350,7 +350,9 @@ export default class WalletStorageService {
 
     const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
 
-    return this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+    const token = await this.authorizeVcVault()
+    const blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token)
+    return this._filterDeletedCredentials(blobs)
   }
 
   /**
@@ -359,7 +361,7 @@ export default class WalletStorageService {
    */
   async *fetchAllEncryptedCredentialsInBatches(
     fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
-  ): AsyncIterable<any> {
+  ): AsyncIterable<any[]> {
     await ParametersValidator.validate([
       {
         isArray: false,
@@ -372,11 +374,13 @@ export default class WalletStorageService {
     const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
     let lastCount = 0
 
+    const token = await this.authorizeVcVault()
+
     do {
       let blobs: any[] = []
 
       try {
-        blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions)
+        blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token)
       } catch (err) {
         if (err.code === 'COR-14') {
           break
@@ -385,16 +389,14 @@ export default class WalletStorageService {
         throw err
       }
 
-      yield blobs
+      yield this._filterDeletedCredentials(blobs)
 
       paginationOptions.skip += paginationOptions.limit
       lastCount = blobs.length
     } while (lastCount === paginationOptions.limit)
   }
 
-  private async _fetchEncryptedCredentialsWithPagination(paginationOptions: PaginationOptions): Promise<any> {
-    const token = await this.authorizeVcVault()
-
+  private async _fetchEncryptedCredentialsWithPagination(paginationOptions: PaginationOptions, token: string): Promise<any[]> {
     const headers: any = {
       Authorization: `Bearer ${token}`,
       ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
@@ -409,7 +411,7 @@ export default class WalletStorageService {
         method: 'GET',
       })
 
-      return this._filterDeletedCredentials(blobs)
+      return blobs
     } catch (error) {
       if (error.httpStatusCode === 404) {
         throw new SdkError('COR-14', {}, error)

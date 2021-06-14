@@ -287,6 +287,54 @@ describe('WalletStorageService', () => {
       expect(errorResponse).not.to.be.undefined
       expect(errorResponse.code).to.be.eq('COR-1')
     })
+
+    it('should handle deleted values', async () => {
+      await authorizeVault()
+
+      const expectedResult = Array(5).fill(signedCredential)
+      expectedResult[2] = { cyphertext: null }
+      const expectedPath = `${fetchCredentialsBase}0/99`
+      nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
+
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const response = await walletStorageService.fetchEncryptedCredentials()
+
+      expect(response).to.be.an('array')
+      expect(response.length).to.eql(4)
+    })
+
+    it('should handle deleted values when fetching all', async () => {
+      await authorizeVault()
+
+      {
+        const expectedResult = Array(100).fill(signedCredential)
+        expectedResult[2] = { cyphertext: null }
+        const expectedPath = `${fetchCredentialsBase}0/99`
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
+      }
+
+      {
+        const expectedResult = Array(100).fill(signedCredential)
+        expectedResult[90] = { cyphertext: null }
+        const expectedPath = `${fetchCredentialsBase}100/199`
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
+      }
+
+      {
+        const expectedResult = Array(50).fill(signedCredential)
+        expectedResult[30] = { cyphertext: null }
+        const expectedPath = `${fetchCredentialsBase}200/299`
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
+      }
+
+      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      let allBlobs: any[] = []
+      for await (const blobs of walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
+        allBlobs = [...allBlobs, ...blobs]
+      }
+
+      expect(allBlobs.length).to.eql(247)
+    })
   })
 
   it('#adminConfirmUser', async () => {

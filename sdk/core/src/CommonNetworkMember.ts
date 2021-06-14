@@ -1300,7 +1300,7 @@ export class CommonNetworkMember {
   }
 
   /* istanbul ignore next: protected method */
-  protected async saveEncryptedCredentials(data: any, storageRegion?: string): Promise<any> {
+  protected async saveEncryptedCredentials(data: any, storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.saveCredentials(data, storageRegion)
   }
 
