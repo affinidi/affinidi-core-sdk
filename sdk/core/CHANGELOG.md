@@ -2,6 +2,7 @@
   * Implemented `WalletStorageService.fetchAllBlobs`
   * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries
   * Optimized `WalletStorageService.fetchAllEncryptedCredentialsInBatches` to only call `authorizeVcVault` once instead of once per batch
+  * Also refer to the changelog for `common` v1.9.0
   * Breaking changes:
     * `WalletStorageService.fetchAllEncryptedCredentialsInBatches` is now private, use `fetchAllBlobs` instead
     * Some methods that returned arrays now declare their return type as `any[]` instead of `any`.

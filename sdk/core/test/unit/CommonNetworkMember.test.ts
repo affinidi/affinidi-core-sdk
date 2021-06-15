@@ -120,14 +120,14 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
   sinon.stub(KeysService, 'encryptSeed').resolves(opts.seedHex)
   sinon.stub(DidDocumentService.prototype, 'getMyDid').resolves(did)
   sinon.stub(DidDocumentService.prototype, 'buildDidDocument').resolves(opts.didDocument)
-  sinon.stub(KeysService.prototype, 'signDidDocument').resolves(opts.didDocument)
+  sinon.stub(KeysService.prototype, 'signDidDocument').resolves(opts.didDocument as any)
 
   nock(registryUrl).post('/api/v1/did/put-in-ipfs').reply(200, { hash: 'didDocumentAddress' })
 
   nock(registryUrl).post('/api/v1/did/anchor-transaction').reply(200, { digestHex: 'digestHex' })
 
   sinon.stub(KeysService.prototype, 'createTransactionSignature').resolves('transactionSignatureJson')
-  sinon.stub(KeysService, 'getAnchorTransactionPublicKey').returns('publicKey')
+  sinon.stub(KeysService, 'getAnchorTransactionPublicKey').returns(Buffer.from('publicKey'))
 
   nock(registryUrl).post('/api/v1/did/anchor-did').reply(200, {})
 

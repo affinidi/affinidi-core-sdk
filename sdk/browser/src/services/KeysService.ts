@@ -50,10 +50,9 @@ export default class KeysService extends CoreKeysService {
     return data
   }
 
-  async encryptByPublicKey(publicKeyHex: string, data: any) {
+  async encryptByPublicKey(publicKeyBuffer: Buffer, data: any) {
     const dataString = JSON.stringify(data)
     const dataBuffer = Buffer.from(dataString)
-    const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
 
     const randomIv = await randomBytes(16)
     const ephemPrivateKey = await this.getEphemKeyPair()

@@ -196,8 +196,9 @@ export class AffinityWallet extends CoreNetwork {
     }
 
     const publicKeyHex = this.getPublicKeyHexFromDidDocument(didDocument)
+    const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
 
-    return this.keysService.encryptByPublicKey(publicKeyHex, object)
+    return this.keysService.encryptByPublicKey(publicKeyBuffer, object)
   }
 
   /**

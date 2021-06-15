@@ -17,9 +17,9 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
   async createEncryptedMessageByMyKey(object: any): Promise<string> {
     const { seed, didMethod } = this._keysService.decryptSeed()
     const seedHex = seed.toString('hex')
-    const publicKeyHex = KeysService.getPublicKey(seedHex, didMethod)
+    const publicKeyBuffer = KeysService.getPublicKey(seedHex, didMethod)
 
-    return this._keysService.encryptByPublicKey(publicKeyHex, object)
+    return this._keysService.encryptByPublicKey(publicKeyBuffer, object)
   }
 
   private async encryptCredentials(data: any[]): Promise<string[]> {
