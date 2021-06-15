@@ -3,18 +3,20 @@
 import sinon from 'sinon'
 import { expect } from 'chai'
 import { KeysService } from '@affinidi/common'
+import { __dangerous } from '@affinidi/wallet-core-sdk'
 
 import { stubDecryptSeed } from '../../unit/stubs'
 import { generateTestDIDs } from '../../factory/didFactory'
-import { PlatformEncryptionTools } from '../../../src/PlatformEncryptionTools'
-import WalletStorageService from '../../../src/services/WalletStorageService'
+import platformEncryptionTools, { PlatformEncryptionTools } from '../../../src/PlatformEncryptionTools'
+
+const { WalletStorageService } = __dangerous
 
 let seed: string
 let password: string
 
 let encryptedSeed: string
 
-let walletStorageService: any
+let walletStorageService: InstanceType<typeof WalletStorageService>
 
 describe('WalletStorageService', () => {
   before(async () => {
@@ -27,22 +29,18 @@ describe('WalletStorageService', () => {
     stubDecryptSeed(seed, 'elem')
     sinon.stub(KeysService, 'getPublicKey')
     sinon.stub(PlatformEncryptionTools.prototype, 'encryptByPublicKey').resolves('encryptedMessage')
+    sinon.stub(WalletStorageService.prototype, 'saveCredentials').resolves([])
 
-    walletStorageService = new WalletStorageService(encryptedSeed, password)
+    const keysService = new KeysService(encryptedSeed, password)
+    walletStorageService = new WalletStorageService(keysService, platformEncryptionTools)
   })
 
   afterEach(() => {
     sinon.restore()
   })
 
-  it('#createEncryptedMessageByMyKey', async () => {
-    const response = await walletStorageService.createEncryptedMessageByMyKey('message')
-
-    expect(response).to.exist
-  })
-
-  it('#encryptCredentials', async () => {
-    const response = await walletStorageService.encryptCredentials([{ foo: 'bar' }])
+  it('#saveUnencryptedCredentials', async () => {
+    const response = await walletStorageService.saveUnencryptedCredentials([{ foo: 'bar' }])
 
     expect(response).to.exist
   })

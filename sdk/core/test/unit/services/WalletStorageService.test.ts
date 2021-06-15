@@ -4,12 +4,13 @@ import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
 
-import { JwtService } from '@affinidi/common'
+import { JwtService, KeysService } from '@affinidi/common'
 import { authorizeVault } from './../../helpers'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
 import { generateTestDIDs } from '../../factory/didFactory'
+import { testPlatformTools } from '../../helpers/testPlatformTools'
 
 const signedCredential = require('../../factory/signedCredential')
 
@@ -22,6 +23,11 @@ let encryptedSeed: string
 
 const fetchCredentialsPath = '/data/0/99'
 const fetchCredentialsBase = '/data/'
+
+const createWalletStorageService = () => {
+  const keysService = new KeysService(encryptedSeed, walletPassword)
+  return new WalletStorageService(keysService, testPlatformTools)
+}
 
 describe('WalletStorageService', () => {
   before(async () => {
@@ -48,7 +54,7 @@ describe('WalletStorageService', () => {
       .post(saveCredentialPath)
       .reply(200, {})
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    const walletStorageService = createWalletStorageService()
 
     const response = await walletStorageService.saveCredentials([{}])
 
@@ -72,7 +78,7 @@ describe('WalletStorageService', () => {
   it('#filterCredentials', () => {
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    const walletStorageService = createWalletStorageService()
 
     const credentials = [signedCredential]
     const response = walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
@@ -99,7 +105,7 @@ describe('WalletStorageService', () => {
 
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    const walletStorageService = createWalletStorageService()
 
     const expectedFilteredCredentialsToReturn = [
       { type: ['Denis', 'Igor', 'Max', 'Artem'] },
@@ -123,7 +129,7 @@ describe('WalletStorageService', () => {
   it('#filterCredentials when share request token not provided', () => {
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    const walletStorageService = createWalletStorageService()
 
     const credentials = [signedCredential]
     const response = walletStorageService.filterCredentials(null, credentials)
@@ -137,7 +143,7 @@ describe('WalletStorageService', () => {
 
     nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(200, [signedCredential])
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    const walletStorageService = createWalletStorageService()
     const response = await walletStorageService.fetchEncryptedCredentials()
 
     expect(response).to.be.an('array')
@@ -149,7 +155,7 @@ describe('WalletStorageService', () => {
 
     nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(404, {})
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    const walletStorageService = createWalletStorageService()
 
     let errorResponse
 
@@ -170,7 +176,7 @@ describe('WalletStorageService', () => {
 
     nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(500, {})
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+    const walletStorageService = createWalletStorageService()
 
     let errorResponse
 
@@ -189,7 +195,7 @@ describe('WalletStorageService', () => {
 
       nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(200, [signedCredential])
 
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const walletStorageService = createWalletStorageService()
       const response = await walletStorageService.fetchAllBlobs()
       expect(response).to.be.an('array')
       expect(response).to.eql([signedCredential])
@@ -210,7 +216,7 @@ describe('WalletStorageService', () => {
         .get(fetchCredentialsBase + '200/299')
         .reply(200, Array(50).fill(signedCredential))
 
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const walletStorageService = createWalletStorageService()
       const response = await walletStorageService.fetchAllBlobs()
 
       expect(response).to.be.an('array')
@@ -233,7 +239,7 @@ describe('WalletStorageService', () => {
         .get(fetchCredentialsBase + '200/299')
         .reply(200, [])
 
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const walletStorageService = createWalletStorageService()
       const response = await walletStorageService.fetchAllBlobs()
 
       expect(response).to.be.an('array')
@@ -265,7 +271,7 @@ describe('WalletStorageService', () => {
         nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
       }
 
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const walletStorageService = createWalletStorageService()
       const allBlobs = await walletStorageService.fetchAllBlobs()
 
       expect(allBlobs.length).to.eql(247)
@@ -288,7 +294,7 @@ describe('WalletStorageService', () => {
         const expectedPath = fetchCredentialsBase + path
         nock(STAGING_VAULT_URL).get(expectedPath).reply(200, [signedCredential])
 
-        const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+        const walletStorageService = createWalletStorageService()
         const response = await walletStorageService.fetchEncryptedCredentials(...args)
 
         expect(response).to.be.an('array')
@@ -297,7 +303,7 @@ describe('WalletStorageService', () => {
     }
 
     it('should fail with invalid parameters', async () => {
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const walletStorageService = createWalletStorageService()
 
       let errorResponse
 
@@ -319,7 +325,7 @@ describe('WalletStorageService', () => {
       const expectedPath = `${fetchCredentialsBase}0/99`
       nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
 
-      const walletStorageService = new WalletStorageService(encryptedSeed, walletPassword)
+      const walletStorageService = createWalletStorageService()
       const response = await walletStorageService.fetchEncryptedCredentials()
 
       expect(response).to.be.an('array')

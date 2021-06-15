@@ -9,7 +9,7 @@ import { JwtService, KeysService } from '@affinidi/common'
 import { Env, FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { isW3cCredential } from '../_helpers'
 
-import { FreeFormObject } from '../shared/interfaces'
+import { FreeFormObject, IPlatformEncryptionTools } from '../shared/interfaces'
 
 const keccak256 = require('keccak256')
 const createHash = require('create-hash')
@@ -58,11 +58,17 @@ export default class WalletStorageService {
   _userPoolId: string
   _storageRegion: string
   _keysService: KeysService
+  _platformEncryptionTools: IPlatformEncryptionTools
   _api: API
   _accessApiKey: string
 
-  constructor(encryptedSeed: string, password: string, options: any = {}) {
-    this._keysService = new KeysService(encryptedSeed, password)
+  constructor(
+    keysService: KeysService,
+    platformEncryptionTools: IPlatformEncryptionTools,
+    options: Record<string, any> = {},
+  ) {
+    this._keysService = keysService
+    this._platformEncryptionTools = platformEncryptionTools
 
     this._keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
     this._vaultUrl = options.vaultUrl || STAGING_VAULT_URL
@@ -216,7 +222,7 @@ export default class WalletStorageService {
     return token
   }
 
-  async saveCredentials(data: any, region?: string) {
+  async saveCredentials(data: unknown[], region?: string) {
     const responses = []
     const token = await this.authorizeVcVault(region)
 
@@ -229,19 +235,16 @@ export default class WalletStorageService {
 
     const url = `${this._vaultUrl}/data`
 
-    /* istanbul ignore else: code simplicity */
-    if (data.length && data.length > 0) {
-      for (const cyphertext of data) {
-        const params = { cyphertext }
-        const { body } = await this._api.execute(null, {
-          url,
-          headers,
-          params,
-          method: 'POST',
-        })
+    for (const cyphertext of data) {
+      const params = { cyphertext }
+      const { body } = await this._api.execute(null, {
+        url,
+        headers,
+        params,
+        method: 'POST',
+      })
 
-        responses.push(body)
-      }
+      responses.push(body)
     }
 
     return responses
@@ -526,6 +529,62 @@ export default class WalletStorageService {
       skip: skip || 0,
       limit: limit || 100,
     }
+  }
+
+  async saveUnencryptedCredentials(data: unknown[], storageRegion?: string) {
+    const publicKeyBuffer = this._keysService.getOwnPublicKey()
+    const encryptedCredentials = []
+
+    for (const item of data) {
+      const cyphertext = await this._platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, item)
+      encryptedCredentials.push(cyphertext)
+    }
+
+    return await this.saveCredentials(encryptedCredentials, storageRegion)
+  }
+
+  async fetchAllDecryptedCredentials() {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+    const allBlobs = await this.fetchAllBlobs()
+    const allCredentials = []
+    for (const blob of allBlobs) {
+      const credential = await this._platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
+      allCredentials.push(credential)
+    }
+
+    return allCredentials
+  }
+
+  async fetchDecryptedCredentials(fetchCredentialsPaginationOptions: FetchCredentialsPaginationOptions) {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+    const blobs = await this.fetchEncryptedCredentials(fetchCredentialsPaginationOptions)
+    const credentials = []
+    for (const blob of blobs) {
+      const credential = await this._platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
+      credentials.push(credential)
+    }
+
+    return credentials
+  }
+
+  async findCredentialIndexById(id: string) {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+    const allBlobs = await this.fetchAllBlobs()
+    for (const blob of allBlobs) {
+      const credential = await this._platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
+
+      let credentialId = credential.id
+
+      if (!isW3cCredential(credential) && credential.data) {
+        credentialId = credential.data.id
+      }
+
+      if (credentialId && credentialId === id) {
+        return blob.id
+      }
+    }
+
+    throw new SdkError('COR-23', { id })
   }
 }
 

@@ -2,6 +2,8 @@ import * as eccrypto from 'eccrypto-js'
 import randomBytes from 'randombytes'
 
 export class PlatformEncryptionTools {
+  platformName = 'react-native'
+
   isValidPrivateKey(privateKey: Buffer) {
     const { EC_GROUP_ORDER, ZERO32 } = eccrypto
 

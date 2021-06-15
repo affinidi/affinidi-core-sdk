@@ -1,8 +1,7 @@
-import { KeysService, profile } from '@affinidi/common'
+import { profile } from '@affinidi/common'
 import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
-import WalletStorageService from './services/WalletStorageService'
 import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
 import platformEncryptionTools from './PlatformEncryptionTools'
 
@@ -16,8 +15,6 @@ const COMPONENT = EventComponent.AffinidiExpoSDK
 export class AffinityWallet extends CoreNetwork {
   _skipBackupCredentials: boolean = false
   _credentials: any = []
-  keysService: KeysService
-  walletStorageService: WalletStorageService
 
   constructor(
     password: string,
@@ -25,14 +22,9 @@ export class AffinityWallet extends CoreNetwork {
     options: __dangerous.SdkOptions = {},
     component: EventComponent = COMPONENT,
   ) {
-    super(password, encryptedSeed, options, component)
-
-    const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
+    super(password, encryptedSeed, platformEncryptionTools, options, component)
 
     this.skipBackupCredentials = options.skipBackupCredentials
-
-    this.keysService = new KeysService(encryptedSeed, password)
-    this.walletStorageService = new WalletStorageService(encryptedSeed, password, sdkOptions)
   }
 
   set skipBackupCredentials(value: boolean) {
@@ -61,8 +53,8 @@ export class AffinityWallet extends CoreNetwork {
     const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVarialbles(options)
     const { accessToken } = __dangerous.readUserTokensFromSessionStorage(userPoolId)
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+    const encryptedSeed = await __dangerous.WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptionKey = await __dangerous.WalletStorageService.pullEncryptionKey(accessToken)
 
     return new AffinityWallet(encryptionKey, encryptedSeed, options)
   }
@@ -115,7 +107,7 @@ export class AffinityWallet extends CoreNetwork {
    * @returns decrypted message
    */
   async readEncryptedMessage(encryptedMessage: string): Promise<any> {
-    const privateKeyBuffer = this.keysService.getOwnPrivateKey()
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     return platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, encryptedMessage)
   }
 
@@ -128,7 +120,7 @@ export class AffinityWallet extends CoreNetwork {
    * @returns array of ids for corelated records
    */
   async saveCredentials(data: any, storageRegion?: string): Promise<any> {
-    const result = await this.walletStorageService.saveUnencryptedCredentials(data, storageRegion)
+    const result = await this._walletStorageService.saveUnencryptedCredentials(data, storageRegion)
 
     this._sendVCSavedMetrics(data)
     // NOTE: what if creds actually were not saved in the vault?
@@ -144,7 +136,7 @@ export class AffinityWallet extends CoreNetwork {
    */
   async getCredentialByIndex(credentialIndex: number): Promise<any> {
     const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
-    const credentials = await this.walletStorageService.fetchDecryptedCredentials(paginationOptions)
+    const credentials = await this._walletStorageService.fetchDecryptedCredentials(paginationOptions)
 
     if (!credentials[0]) {
       throw new __dangerous.SdkError('COR-14')
@@ -172,14 +164,14 @@ export class AffinityWallet extends CoreNetwork {
     const credentials = fetchBackupCredentials ? await this.fetchAllCredentials() : this._credentials
 
     if (credentialShareRequestToken) {
-      return this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
+      return this._walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
     }
 
     return credentials
   }
 
   private async fetchAllCredentials() {
-    const credentials = await this.walletStorageService.fetchAllDecryptedCredentials()
+    const credentials = await this._walletStorageService.fetchAllDecryptedCredentials()
     this._credentials = credentials
     return credentials
   }
@@ -196,7 +188,7 @@ export class AffinityWallet extends CoreNetwork {
       })
     }
 
-    const index = credentialIndex ?? (await this.walletStorageService.findCredentialIndexById(id))
+    const index = credentialIndex ?? (await this._walletStorageService.findCredentialIndexById(id))
 
     return this.deleteCredentialByIndex(index)
   }

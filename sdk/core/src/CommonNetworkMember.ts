@@ -41,7 +41,7 @@ import {
 
 import { validateUsername } from './shared/validateUsername'
 
-import { FreeFormObject } from './shared/interfaces'
+import { FreeFormObject, IPlatformEncryptionTools } from './shared/interfaces'
 import { ParametersValidator } from './shared/ParametersValidator'
 
 import {
@@ -114,26 +114,31 @@ type DerivedThis<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructo
 export abstract class CommonNetworkMember {
   private readonly _api: API
   private _did: string
-  private _apiKey: string
-  private _accessApiKey: string
+  private readonly _accessApiKey: string
   private readonly _encryptedSeed: string
   private _password: string
-  private readonly _walletStorageService: WalletStorageService
+  protected readonly _walletStorageService: WalletStorageService
   private readonly _revocationService: RevocationService
-  private readonly _keysService: KeysService
+  protected readonly _keysService: KeysService
   private readonly _jwtService: JwtService
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
   private readonly _didDocumentService: DidDocumentService
-  private _affinity: Affinity
+  private readonly _affinity: Affinity
   protected readonly _sdkOptions: SdkOptionsWithCongitoSetup
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
   private _didDocumentKeyId: string
-  protected _component: EventComponent
+  protected readonly _component: EventComponent
   protected cognitoUserTokens: CognitoUserTokens
 
-  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}, component?: EventComponent) {
+  constructor(
+    password: string,
+    encryptedSeed: string,
+    platformEncryptionTools: IPlatformEncryptionTools,
+    options: SdkOptions = {},
+    component?: EventComponent,
+  ) {
     // await ParametersValidator.validateSync(
     //   [
     //     { isArray: false, type: 'string', isRequired: true, value: password },
@@ -145,6 +150,10 @@ export abstract class CommonNetworkMember {
     if (!password || !encryptedSeed) {
       // TODO: implement appropriate error wrapper
       throw new Error('`password` and `encryptedSeed` must be provided!')
+    }
+
+    if (!platformEncryptionTools?.platformName) {
+      throw new Error('`platformEncryptionTools` must be provided!')
     }
 
     this._sdkOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
@@ -167,9 +176,9 @@ export abstract class CommonNetworkMember {
       component: this._component,
     })
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
-    this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
-    this._revocationService = new RevocationService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
+    this._walletStorageService = new WalletStorageService(this._keysService, platformEncryptionTools, this._sdkOptions)
+    this._revocationService = new RevocationService(this._sdkOptions)
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions, this._component)
     this._didDocumentService = new DidDocumentService(this._keysService)

@@ -3,16 +3,17 @@
 import sinon from 'sinon'
 import * as chai from 'chai'
 import sinonChai from 'sinon-chai'
+import { CommonNetworkMember, __dangerous } from '@affinidi/wallet-core-sdk'
 
 const expect = chai.expect
 chai.use(sinonChai)
 
-import { CommonNetworkMember } from '@affinidi/wallet-core-sdk'
 import { AffinityWallet, SdkOptions } from '../../src/AffinityWallet'
-import WalletStorageService from '../../src/services/WalletStorageService'
+import { generateTestDIDs } from '../factory/didFactory'
 
 const signedCredential = require('../factory/signedCredential')
-import { generateTestDIDs } from '../factory/didFactory'
+
+const { WalletStorageService } = __dangerous
 
 let walletPassword: string
 

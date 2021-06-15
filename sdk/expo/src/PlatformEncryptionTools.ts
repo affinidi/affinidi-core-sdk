@@ -5,6 +5,8 @@ const randomBytes = require('../mobileRandomBytes')
 
 @profile()
 export class PlatformEncryptionTools {
+  platformName = 'expo'
+
   isValidPrivateKey(privateKey: any) {
     const { EC_GROUP_ORDER, ZERO32 } = eccrypto
 

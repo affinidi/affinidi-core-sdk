@@ -7,12 +7,13 @@ import sinonChai from 'sinon-chai'
 const expect = chai.expect
 chai.use(sinonChai)
 
-import { CommonNetworkMember } from '@affinidi/wallet-core-sdk'
+import { CommonNetworkMember, __dangerous } from '@affinidi/wallet-core-sdk'
 import { AffinityWallet, SdkOptions } from '../../src/AffinityWallet'
-import WalletStorageService from '../../src/services/WalletStorageService'
 
 const signedCredential = require('../factory/signedCredential')
 import { generateTestDIDs } from '../factory/didFactory'
+
+const { WalletStorageService } = __dangerous
 
 let walletPassword: string
 
