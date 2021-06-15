@@ -2,10 +2,11 @@
 
 import sinon from 'sinon'
 import { expect } from 'chai'
+import { KeysService } from '@affinidi/common'
 
 import { stubDecryptSeed } from '../../unit/stubs'
 import { generateTestDIDs } from '../../factory/didFactory'
-import KeysService from '../../../src/services/KeysService'
+import { PlatformEncryptionTools } from '../../../src/PlatformEncryptionTools'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 
 let seed: string
@@ -27,7 +28,7 @@ describe('WalletStorageService', () => {
   beforeEach(() => {
     stubDecryptSeed(seed, 'elem')
     sinon.stub(KeysService, 'getPublicKey')
-    sinon.stub(KeysService.prototype, 'encryptByPublicKey').resolves('encryptedMessage')
+    sinon.stub(PlatformEncryptionTools.prototype, 'encryptByPublicKey').resolves('encryptedMessage')
 
     walletStorageService = new WalletStorageService(encryptedSeed, password)
   })

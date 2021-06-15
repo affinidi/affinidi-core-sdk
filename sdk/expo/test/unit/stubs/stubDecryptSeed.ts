@@ -2,7 +2,7 @@
 
 import sinon from 'sinon'
 
-import KeysService from '../../../src/services/KeysService'
+import { KeysService } from '@affinidi/common'
 
 export const stubDecryptSeed = (seedHex: string, didMethod: string) => {
   const seedHexWithMethod = `${seedHex}++${didMethod}`
