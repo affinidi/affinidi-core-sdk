@@ -5,8 +5,8 @@
   * Also refer to the changelog for `common` v1.9.0
   * Breaking changes:
     * `WalletStorageService.fetchAllEncryptedCredentialsInBatches` is now private, use `fetchAllBlobs` instead
-    * Some methods that returned arrays now declare their return type as `any[]` instead of `any`.
-    * Some methods that accepted arrays now accept `unknown[]` instead of `any`.
+    * More specific type declarations
+    * `CommonNetworkMember` made abstract
 # release 4.3.1 (2021-06-07)
   * Fixed DID validation
 # release 4.3.0 (2021-06-04)

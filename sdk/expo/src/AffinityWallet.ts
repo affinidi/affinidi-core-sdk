@@ -4,10 +4,9 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import WalletStorageService from './services/WalletStorageService'
 import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
-import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
 import platformEncryptionTools from './PlatformEncryptionTools'
 
-type SdkOptions = __dangerous.SdkOptions & {
+export type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
 }
 
@@ -54,7 +53,7 @@ export class AffinityWallet extends CoreNetwork {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init(options: __dangerous.SdkOptions = {}): Promise<any> {
+  static async init(options: __dangerous.SdkOptions = {}): Promise<AffinityWallet> {
     await __dangerous.ParametersValidator.validate([
       { isArray: false, type: __dangerous.SdkOptions, isRequired: false, value: options },
     ])
@@ -68,101 +67,12 @@ export class AffinityWallet extends CoreNetwork {
     return new AffinityWallet(encryptionKey, encryptedSeed, options)
   }
 
-  /**
-   * @description Initiates sign up flow
-   * @param username - arbitrary username, email or phoneNumber
-   * @param password - is required if arbitrary username was provided.
-   * It is optional and random one will be generated, if not provided when
-   * email or phoneNumber was given as a username.
-   * @param options - optional parameters with specified environment
-   * @param messageParameters - optional parameters with specified welcome message
-   * @returns token or, in case when arbitrary username was used, it returns
-   * initialized instance of SDK
-   */
-  static async signUp(
-    username: string,
-    password?: string,
-    options?: SdkOptions,
-    messageParameters?: MessageParameters,
-  ): Promise<string | any> {
-    const networkMember = await CoreNetwork.signUp(username, password, options, messageParameters)
-
-    if (networkMember.constructor === String) {
-      return networkMember
-    }
-
-    const { password: networkMemberPassword, encryptedSeed } = networkMember
-
-    return new AffinityWallet(networkMemberPassword, encryptedSeed, options)
-  }
-
-  /**
-   * @description Completes sign in
-   * @param token - received from #signIn method
-   * @param confirmationCode - OTP sent by AWS Cognito/SES
-   * @param options - optional parameters for CommonNetworkMember initialization
-   * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
-   */
-  static async confirmSignIn(
-    token: string,
-    confirmationCode: string,
-    options: SdkOptions = { issueSignupCredential: false },
-  ): Promise<{ isNew: boolean; commonNetworkMember: any }> {
-    await __dangerous.ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: token },
-      {
-        isArray: false,
-        type: 'confirmationCode',
-        isRequired: true,
-        value: confirmationCode,
-      },
-      { isArray: false, type: __dangerous.SdkOptions, isRequired: false, value: options },
-    ])
-
-    let affinityWallet
-    // NOTE: loginToken = '{"ChallengeName":"CUSTOM_CHALLENGE","Session":"...","ChallengeParameters":{"USERNAME":"...","email":"..."}}'
-    //       signUpToken = 'username::password'
-    const isSignUpToken = token.split('::')[1] !== undefined
-
-    if (isSignUpToken) {
-      affinityWallet = await this.confirmSignUp(token, confirmationCode, options)
-
-      return { isNew: true, commonNetworkMember: affinityWallet }
-    }
-
-    const parentWallet = await this.completeLoginChallenge(token, confirmationCode, options)
-
-    // affinityWallet = await AffinityWallet.init(options)
-    const { password, encryptedSeed } = parentWallet
-    const cognitoUserTokens = parentWallet.cognitoUserTokens
-    options.cognitoUserTokens = cognitoUserTokens
-
-    affinityWallet = new AffinityWallet(password, encryptedSeed, options)
-
-    return { isNew: false, commonNetworkMember: affinityWallet }
-  }
-
-  /**
-   * @description Completes sign up flow with optional VC issuance using sign up info
-   * @param token - received from #signUp method
-   * @param confirmationCode - OTP sent by AWS Cognito/SES.
-   * NOTE: is not required if email or phoneNumber was given on #signUp.
-   * @param options - optional parameters for CommonNetworkMember initialization
-   * @returns initialized instance of SDK
-   */
-  static async confirmSignUp(
-    token: string,
-    confirmationCode: string,
-    options: SdkOptions = { issueSignupCredential: false },
-  ): Promise<any> {
-    options = Object.assign({}, CoreNetwork.setEnvironmentVarialbles(options), options)
-    const networkMember = await super.confirmSignUp(token, confirmationCode, options)
-    const { idToken } = networkMember.cognitoUserTokens
-    const { password, encryptedSeed } = networkMember
-
-    options.cognitoUserTokens = networkMember.cognitoUserTokens
-
-    const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
+  static async afterConfirmSignUp(
+    affinityWallet: AffinityWallet,
+    originalOptions: SdkOptions = { issueSignupCredential: false },
+  ): Promise<void> {
+    const options = Object.assign({}, affinityWallet._sdkOptions, originalOptions)
+    const { idToken } = affinityWallet.cognitoUserTokens
 
     if (options.issueSignupCredential) {
       const signedCredentials = await affinityWallet.getSignupCredentials(idToken, options)
@@ -173,8 +83,6 @@ export class AffinityWallet extends CoreNetwork {
         await affinityWallet.saveCredentials(signedCredentials)
       }
     }
-
-    return affinityWallet
   }
 
   /**

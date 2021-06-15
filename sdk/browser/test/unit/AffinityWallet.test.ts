@@ -8,7 +8,7 @@ const expect = chai.expect
 chai.use(sinonChai)
 
 import { CommonNetworkMember } from '@affinidi/wallet-core-sdk'
-import { AffinityWallet } from '../../src/AffinityWallet'
+import { AffinityWallet, SdkOptions } from '../../src/AffinityWallet'
 import WalletStorageService from '../../src/services/WalletStorageService'
 
 const signedCredential = require('../factory/signedCredential')
@@ -26,16 +26,16 @@ const idToken = 'dummy_token'
 
 const stubConfirmAuthRequests = async (opts: { walletPassword: string; encryptedSeed: string }) => {
   const spys: { [key: string]: any } = {}
-  const networkMemberStub = {
-    cognitoUserTokens: {
-      accessToken,
-      idToken,
-    },
-    encryptedSeed: opts.encryptedSeed,
-    password: opts.walletPassword,
-  }
-
-  spys.confirmSignUp = sinon.stub(CommonNetworkMember, 'confirmSignUp').resolves(networkMemberStub)
+  spys.confirmSignUp = sinon
+    .stub(CommonNetworkMember as any, '_confirmSignUp')
+    // eslint-disable-next-line no-unused-vars
+    .callsFake((_self, _token, _confirmationCode, _keyParams, options: SdkOptions) => {
+      const result = new AffinityWallet(opts.walletPassword, opts.encryptedSeed, {
+        cognitoUserTokens: { accessToken, idToken },
+        ...options,
+      })
+      return result
+    })
   spys.getSignupCredentials = sinon
     .stub(CommonNetworkMember.prototype, 'getSignupCredentials')
     .resolves([signedCredential])
@@ -195,10 +195,9 @@ describe('AffinityWallet', () => {
 
   it('#confirmSignUp with VC issuance', async () => {
     const spys = await stubConfirmAuthRequests({ walletPassword, encryptedSeed })
+    const options: SdkOptions = { issueSignupCredential: true }
 
-    const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, {
-      issueSignupCredential: true,
-    })
+    const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
 
     expect(response.did).to.exist
     expect(response).to.be.an.instanceof(AffinityWallet)
@@ -221,13 +220,12 @@ describe('AffinityWallet', () => {
 
   it('#confirmSignIn signUp scenario with VC issuance', async () => {
     const spys = await stubConfirmAuthRequests({ walletPassword, encryptedSeed })
+    const options: SdkOptions = { issueSignupCredential: true }
 
     const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
       signUpWithEmailResponseToken,
       confirmationCode,
-      {
-        issueSignupCredential: true,
-      },
+      options,
     )
 
     expect(isNew).to.be.true

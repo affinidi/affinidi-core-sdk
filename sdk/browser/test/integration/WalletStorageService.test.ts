@@ -31,44 +31,19 @@ const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: '
 
 const getCredentialIds = (credentials: any[]) => new Set(credentials.map((credential) => credential.id))
 
+function checkIsString(value: string | unknown): asserts value is string {
+  expect(value).to.be.a('string')
+}
+
 describe('WalletStorageService [OTP]', () => {
   it.skip('full flow with 100+ credentials', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
     const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
     console.log('signed up')
-
-    /*{
-      const credentialsToSave = generateCredentials(30)
-      await commonNetworkMember.saveCredentials(credentialsToSave)
-
-      {
-        let credentials = await commonNetworkMember.getCredentials()
-        console.log('retrieved credentials')
-        expect(credentials).to.have.length(30)
-        expect(getCredentialIds(credentials)).to.deep.equal(getCredentialIds(credentialsToSave))
-      }
-
-      const credentialIdsToDelete = [
-        credentialsToSave[9].id,
-        credentialsToSave[15].id,
-        credentialsToSave[21].id,
-      ]
-
-      const expectedIds = getCredentialIds(credentialsToSave)
-      for (const id of credentialIdsToDelete) {
-        expectedIds.delete(id)
-        await commonNetworkMember.deleteCredential(id)
-        console.log('deleted credential')
-      }
-
-      let credentials = await commonNetworkMember.getCredentials()
-      console.log('retrieved credentials')
-      expect(credentials).to.have.length(27)
-      expect(getCredentialIds(credentials)).to.deep.equal(expectedIds)
-    }*/
 
     const credentialsToSave = generateCredentials(220)
     await commonNetworkMember.saveCredentials(credentialsToSave.slice(0, 55))

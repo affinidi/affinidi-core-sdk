@@ -14,7 +14,7 @@ import CognitoService from '../../src/services/CognitoService'
 import WalletStorageService from '../../src/services/WalletStorageService'
 import { PhoneIssuerService } from '../../src/services/PhoneIssuerService'
 import { EmailIssuerService } from '../../src/services/EmailIssuerService'
-import { CommonNetworkMember } from '../../src/CommonNetworkMember'
+import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 
 import { SdkOptions } from '../../src/dto/shared.dto'
 
@@ -314,6 +314,10 @@ describe('CommonNetworkMember', () => {
     sinon.stub(WalletStorageService, 'adminConfirmUser')
 
     const response = await CommonNetworkMember.signUp(username, walletPassword)
+    expect(response).to.be.an.instanceof(CommonNetworkMember)
+    if (typeof response === 'string') {
+      expect.fail('TS type guard')
+    }
 
     expect(response.did).to.exist
     expect(response).to.be.an.instanceof(CommonNetworkMember)
