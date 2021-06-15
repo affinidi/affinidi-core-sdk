@@ -1,6 +1,5 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
-import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
 
 import platformEncryptionTools from './PlatformEncryptionTools'
 
@@ -26,20 +25,6 @@ export class AffinityWallet extends CoreNetwork {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init(options: __dangerous.SdkOptions = {}): Promise<AffinityWallet> {
-    await __dangerous.ParametersValidator.validate([
-      { isArray: false, type: __dangerous.SdkOptions, isRequired: false, value: options },
-    ])
-
-    const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVarialbles(options)
-    const { accessToken } = __dangerous.readUserTokensFromSessionStorage(userPoolId)
-
-    const encryptedSeed = await __dangerous.WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
-    const encryptionKey = await __dangerous.WalletStorageService.pullEncryptionKey(accessToken)
-
-    return new AffinityWallet(encryptionKey, encryptedSeed, options)
-  }
-
   static async afterConfirmSignUp(
     affinityWallet: AffinityWallet,
     originalOptions: SdkOptions = { issueSignupCredential: false },
@@ -90,40 +75,6 @@ export class AffinityWallet extends CoreNetwork {
   }
 
   /**
-   * @description Save's encrypted VCs in Affinity Guardian Wallet
-   * 1. encrypt VCs
-   * 2. store encrypted VCs in Affinity Guardian Wallet
-   * @param data - array of VCs
-   * @param storageRegion - (optional) specify AWS region where credentials will be stored
-   * @returns array of ids for corelated records
-   */
-  async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
-    const result = await this._walletStorageService.saveUnencryptedCredentials(data, storageRegion)
-
-    this._sendVCSavedMetrics(data)
-    // NOTE: what if creds actually were not saved in the vault?
-    //       follow up with Isaak/Dustin on this - should we parse the response
-    //       to define if we need to send the metrics
-    return result
-  }
-
-  /**
-   * @description Retrieve only the credential at given index
-   * @param credentialIndex - index for the VC in vault
-   * @returns a single VC
-   */
-  async getCredentialByIndex(credentialIndex: number): Promise<any> {
-    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
-    const credentials = await this._walletStorageService.fetchDecryptedCredentials(paginationOptions)
-
-    if (!credentials[0]) {
-      throw new __dangerous.SdkError('COR-14')
-    }
-
-    return credentials[0]
-  }
-
-  /**
    * @description Finds the given credentialShareRequestToken by searching all of your credentials
    * If a token is not given, only returns the given subset of the credentials
    * 1. pull encrypted VCs (all if token given, otherwise with the given pagination)
@@ -140,21 +91,5 @@ export class AffinityWallet extends CoreNetwork {
     }
 
     return allCredentials
-  }
-
-  /**
-   * @description Delete credential by id if found in given range
-   * @param id - id of the credential
-   * @param credentialIndex - credential to remove
-   */
-  async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
-    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
-      throw new __dangerous.SdkError('COR-1', {
-        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
-      })
-    }
-
-    const credentialIndexToDelete = credentialIndex ?? (await this._walletStorageService.findCredentialIndexById(id))
-    return this.deleteCredentialByIndex(credentialIndexToDelete.toString())
   }
 }

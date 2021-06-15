@@ -37,6 +37,7 @@ import {
   SdkOptionsWithCongitoSetup,
   MessageParameters,
   KeyParams,
+  FetchCredentialsPaginationOptions,
 } from './dto/shared.dto'
 
 import { validateUsername } from './shared/validateUsername'
@@ -2197,5 +2198,73 @@ export abstract class CommonNetworkMember {
         errors: [response.error],
       }
     }
+  }
+
+  /**
+   * @description Logins with access token of Cognito user registered in Affinity
+   * @param options - optional parameters for AffinityWallet initialization
+   * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
+   * if user is not logged in.
+   */
+  static async init<T extends CommonNetworkMember>(this: DerivedThis<T>, options: SdkOptions = {}): Promise<T> {
+    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
+
+    const { keyStorageUrl, userPoolId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { accessToken } = readUserTokensFromSessionStorage(userPoolId)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+
+    return new this(encryptionKey, encryptedSeed, options)
+  }
+
+  /**
+   * @description Save's encrypted VCs in Affinity Guardian Wallet
+   * 1. encrypt VCs
+   * 2. store encrypted VCs in Affinity Guardian Wallet
+   * @param data - array of VCs
+   * @param storageRegion - (optional) specify AWS region where credentials will be stored
+   * @returns array of ids for corelated records
+   */
+  async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
+    const result = await this._walletStorageService.saveUnencryptedCredentials(data, storageRegion)
+
+    this._sendVCSavedMetrics(data)
+    // NOTE: what if creds actually were not saved in the vault?
+    //       follow up with Isaak/Dustin on this - should we parse the response
+    //       to define if we need to send the metrics
+    return result
+  }
+
+  /**
+   * @description Retrieve only the credential at given index
+   * @param credentialIndex - index for the VC in vault
+   * @returns a single VC
+   */
+  async getCredentialByIndex(credentialIndex: number): Promise<any> {
+    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
+    const credentials = await this._walletStorageService.fetchDecryptedCredentials(paginationOptions)
+
+    if (!credentials[0]) {
+      throw new SdkError('COR-14')
+    }
+
+    return credentials[0]
+  }
+
+  /**
+   * @description Delete credential by id if found in given range
+   * @param id - id of the credential
+   * @param credentialIndex - credential to remove
+   */
+  async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
+    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
+      throw new SdkError('COR-1', {
+        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
+      })
+    }
+
+    const credentialIndexToDelete = credentialIndex ?? (await this._walletStorageService.findCredentialIndexById(id))
+    return this.deleteCredentialByIndex(credentialIndexToDelete.toString())
   }
 }
