@@ -1,4 +1,4 @@
-# release 4.4.0 (2021-06-14)
+# release 5.0.0 (2021-06-16)
   * Implemented `WalletStorageService.fetchAllBlobs`
   * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries
   * Optimized `WalletStorageService.fetchAllEncryptedCredentialsInBatches` to only call `authorizeVcVault` once instead of once per batch

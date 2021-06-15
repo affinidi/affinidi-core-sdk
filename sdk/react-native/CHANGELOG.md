@@ -1,4 +1,4 @@
-# release 4.4.0 (2021-06-14)
+# release 5.0.0 (2021-06-16)
 * `getCredentials` now returns all credentials (even if there are more than 100 of them)
 * Performance optimization
 * Retrieved credentials are cached even if no `credentialShareRequestToken` is passed to `getCredentials`
