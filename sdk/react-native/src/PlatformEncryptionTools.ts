@@ -1,12 +1,8 @@
 import * as eccrypto from 'eccrypto-js'
 import randomBytes from 'randombytes'
-import { KeysService as CoreKeysService } from '@affinidi/common'
 
-const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
-
-export default class KeysService extends CoreKeysService {
-  /* istanbul ignore next: private method */
-  private isValidPrivateKey(privateKey: any) {
+export class PlatformEncryptionTools {
+  isValidPrivateKey(privateKey: Buffer) {
     const { EC_GROUP_ORDER, ZERO32 } = eccrypto
 
     return privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
@@ -22,11 +18,7 @@ export default class KeysService extends CoreKeysService {
     return ephemPrivateKey
   }
 
-  async decryptByPrivateKey(encryptedDataString: string): Promise<any> {
-    const { seed, didMethod } = this.decryptSeed()
-    const seedHex = seed.toString('hex')
-    const privateKey = CoreKeysService.getPrivateKey(seedHex, didMethod)
-
+  async decryptByPrivateKey(privateKeyBuffer: Buffer, encryptedDataString: string): Promise<any> {
     const encryptedDataObject = JSON.parse(encryptedDataString)
 
     const { iv, ephemPublicKey, ciphertext, mac } = encryptedDataObject
@@ -43,12 +35,12 @@ export default class KeysService extends CoreKeysService {
       mac: Buffer.from(mac, 'hex'),
     }
 
-    const dataBuffer = await eccrypto.decrypt(privateKey, encryptedData)
+    const dataBuffer = await eccrypto.decrypt(privateKeyBuffer, encryptedData)
 
     return JSON.parse(dataBuffer.toString())
   }
 
-  async encryptByPublicKey(publicKeyBuffer: Buffer, data: any): Promise<string> {
+  async encryptByPublicKey(publicKeyBuffer: Buffer, data: unknown): Promise<string> {
     const dataString = JSON.stringify(data)
     const dataBuffer = Buffer.from(dataString)
 
@@ -71,3 +63,7 @@ export default class KeysService extends CoreKeysService {
     return JSON.stringify(serializedEncryptedData)
   }
 }
+
+const platformEncryptionTools = new PlatformEncryptionTools()
+
+export default platformEncryptionTools

@@ -12,7 +12,7 @@ let seed: string
 let password: string
 let encryptedSeed: string
 
-describe('KeysService', () => {
+describe('PlatformEncryptionTools', () => {
   before(async () => {
     const testDids = await generateTestDIDs()
     password = testDids.password

@@ -1,5 +1,6 @@
 # release 4.4.0 (2021-06-14)
 * `getCredentials` now returns all credentials (even if there are more than 100 of them)
+* Performance optimization
 * Retrieved credentials are cached even if no `credentialShareRequestToken` is passed to `getCredentials`
 * Also refer to the changelog for `common` v1.9.0
 * Also refer to the changelog for `wallet-core-sdk` v4.4.0

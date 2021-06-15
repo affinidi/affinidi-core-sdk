@@ -1,11 +1,11 @@
+import { KeysService, profile } from '@affinidi/common'
 import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
-import KeysService from './services/KeysService'
 import WalletStorageService from './services/WalletStorageService'
 import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
-import { profile } from '@affinidi/common'
 import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
+import platformEncryptionTools from './PlatformEncryptionTools'
 
 type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
@@ -197,7 +197,7 @@ export class AffinityWallet extends CoreNetwork {
     const publicKeyHex = this.getPublicKeyHexFromDidDocument(didDocument)
     const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
 
-    return this.keysService.encryptByPublicKey(publicKeyBuffer, object)
+    return platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, object)
   }
 
   /**
@@ -206,7 +206,8 @@ export class AffinityWallet extends CoreNetwork {
    * @returns decrypted message
    */
   async readEncryptedMessage(encryptedMessage: string): Promise<any> {
-    return this.keysService.decryptByPrivateKey(encryptedMessage)
+    const privateKeyBuffer = this.keysService.getOwnPrivateKey()
+    return platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, encryptedMessage)
   }
 
   /**

@@ -2,18 +2,17 @@
 
 import sinon from 'sinon'
 import { expect } from 'chai'
+import { KeysService } from '@affinidi/common'
 
-import KeysService from '../../../src/services/KeysService'
-
-import { generateTestDIDs } from '../../factory/didFactory'
-
-import { stubDecryptSeed } from '../../unit/stubs'
+import platformEncryptionTools, { PlatformEncryptionTools } from '../../src/PlatformEncryptionTools'
+import { generateTestDIDs } from '../factory/didFactory'
+import { stubDecryptSeed } from '../unit/stubs'
 
 let seed: string
 let password: string
 let encryptedSeed: string
 
-describe('KeysService', () => {
+describe('PlatformEncryptionTools', () => {
   before(async () => {
     const testDids = await generateTestDIDs()
     password = testDids.password
@@ -24,25 +23,13 @@ describe('KeysService', () => {
     sinon.restore()
   })
 
-  it('#decryptSeed', async () => {
-    const keysService = new KeysService(encryptedSeed, password)
-
-    const { seed: decryptSeed, didMethod } = keysService.decryptSeed()
-    const seedHex = decryptSeed.toString('hex')
-
-    expect(didMethod).to.exist
-    expect(seedHex).to.exist
-    expect(seedHex).to.be.equal(seed)
-  })
-
   it('#getEphemKeyPair', async () => {
-    const stub = sinon.stub(KeysService.prototype as any, 'isValidPrivateKey')
+    const stub = sinon.stub(PlatformEncryptionTools.prototype, 'isValidPrivateKey')
 
     stub.onFirstCall().returns(false)
     stub.onSecondCall().returns(true)
 
-    const keysService = new KeysService(encryptedSeed, password)
-    const response = await keysService.getEphemKeyPair()
+    const response = await platformEncryptionTools.getEphemKeyPair()
 
     expect(response).to.exist
   })
@@ -55,7 +42,8 @@ describe('KeysService', () => {
     const badEncryptedDataObjectString = JSON.stringify(badEncryptedDataObject)
 
     const keysService = new KeysService(encryptedSeed, password)
-    const response = await keysService.decryptByPrivateKey(badEncryptedDataObjectString)
+    const privateKeyBuffer = keysService.getOwnPrivateKey()
+    const response = await platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, badEncryptedDataObjectString)
 
     expect(response).to.eql(badEncryptedDataObject)
   })
