@@ -1,7 +1,8 @@
+import { KeysService } from '@affinidi/common'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
 import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
 
-import KeysService from './KeysService'
+import platformEncryptionTools from '../PlatformEncryptionTools'
 
 export default class WalletStorageService extends __dangerous.WalletStorageService {
   _keysService: KeysService
@@ -13,11 +14,9 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
   }
 
   async createEncryptedMessageByMyKey(object: any) {
-    const { seed, didMethod } = this._keysService.decryptSeed()
-    const seedHex = seed.toString('hex')
-    const publicKeyBuffer = KeysService.getPublicKey(seedHex, didMethod)
+    const publicKeyBuffer = this._keysService.getOwnPublicKey()
 
-    const encryptedMessage = await this._keysService.encryptByPublicKey(publicKeyBuffer, object)
+    const encryptedMessage = await platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, object)
 
     return encryptedMessage
   }
@@ -39,10 +38,11 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
   }
 
   async fetchAllDecryptedCredentials() {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const allBlobs = await this.fetchAllBlobs()
     const allCredentials = []
     for (const blob of allBlobs) {
-      const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
+      const credential = await platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
       allCredentials.push(credential)
     }
 
@@ -50,10 +50,11 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
   }
 
   async fetchDecryptedCredentials(fetchCredentialsPaginationOptions: FetchCredentialsPaginationOptions) {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const blobs = await this.fetchEncryptedCredentials(fetchCredentialsPaginationOptions)
     const credentials = []
     for (const blob of blobs) {
-      const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
+      const credential = await platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
       credentials.push(credential)
     }
 
@@ -61,10 +62,11 @@ export default class WalletStorageService extends __dangerous.WalletStorageServi
   }
 
   async findCredentialIndexById(id: string) {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const allBlobs = await this.fetchAllBlobs()
 
     for (const blob of allBlobs) {
-      const credential = await this._keysService.decryptByPrivateKey(blob.cyphertext)
+      const credential = await platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
       const isW3cCredential = __dangerous.isW3cCredential(credential)
 
       let credentialId = credential.id

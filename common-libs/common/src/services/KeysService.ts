@@ -144,8 +144,20 @@ export default class KeysService {
     return { publicKey, privateKey }
   }
 
+  getOwnPublicKey() {
+    const { seed, didMethod } = this.decryptSeed()
+    const seedHex = seed.toString('hex')
+    return KeysService.getPublicKey(seedHex, didMethod)
+  }
+
   static getPublicKey(seedHex: string, didMethod: string) {
     return KeysService.getKey(seedHex, didMethod).publicKey
+  }
+
+  public getOwnPrivateKey() {
+    const { seed, didMethod } = this.decryptSeed()
+    const seedHex = seed.toString('hex')
+    return KeysService.getPrivateKey(seedHex, didMethod)
   }
 
   static getPrivateKey(seedHex: string, didMethod: string) {
