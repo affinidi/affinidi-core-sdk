@@ -258,7 +258,7 @@ export class AffinityWallet extends CoreNetwork {
   async getCredentials(
     credentialShareRequestToken: string = null,
     fetchBackupCredentials: boolean = true,
-  ): Promise<any> {
+  ): Promise<any[]> {
     const credentials = fetchBackupCredentials ? await this.fetchAllCredentials() : this._credentials
 
     if (credentialShareRequestToken) {
