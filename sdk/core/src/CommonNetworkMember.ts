@@ -2205,6 +2205,30 @@ export abstract class CommonNetworkMember {
   }
 
   /**
+   * @description Creates a new instance of SDK by access token
+   * @param accessToken
+   * @param options - optional parameters for AffinityWallet initialization
+   * @returns initialized instance of SDK
+   */
+  static async fromAccessToken<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
+    accessToken: string,
+    options: SdkOptions = {},
+  ): Promise<T> {
+    await ParametersValidator.validate([
+      { isArray: false, type: 'string', isRequired: false, value: accessToken },
+      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+    ])
+
+    const { keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+
+    return new this(encryptionKey, encryptedSeed, options)
+  }
+
+  /**
    * @description Logins with access token of Cognito user registered in Affinity
    * @param options - optional parameters for AffinityWallet initialization
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
