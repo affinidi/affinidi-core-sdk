@@ -1772,6 +1772,7 @@ export abstract class CommonNetworkMember {
 
   /**
    * @description Initiates the phone number verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.phoneNumber - The phone number to send the confirmation code to
@@ -1806,6 +1807,7 @@ export abstract class CommonNetworkMember {
 
   /**
    * @description Finishes the phone number verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.code - The code the user recieved
@@ -1836,6 +1838,7 @@ export abstract class CommonNetworkMember {
 
   /**
    * @description Initiates the email address verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.emailAddress - The email address to send the confirmation code to
@@ -1866,6 +1869,7 @@ export abstract class CommonNetworkMember {
 
   /**
    * @description Finishes the email address verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.code - The code the user recieved
