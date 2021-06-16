@@ -111,6 +111,25 @@ type ConstructorKeys<T> = {
 type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
 type DerivedThis<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructor<typeof CommonNetworkMember>
 
+/**
+ * This class is abstract.
+ * You can use implementations from wallet-browser-sdk, wallet-expo-sdk or wallet-react-native-sdk as needed.
+ * 
+ * Alternatively you can implement your own derived class.
+ * Derived classes should have:
+ *  * A constructor with a signature `new (password: string, encryptedSeed: string, options?: SdkOptions, component?: EventComponent)`
+ *  * A static method `afterConfirmSignUp(networkMember: YourClass, originalOptions: SdkOptions) => Promise<void>`
+ *
+ * Constructor should pass an implementation of `IPlatformEncryptionTools` to the base constructor.
+ * This implementation should be compatible with one in other SDKs,
+ * it will be used to encrypt and decrypt credentials stored in vault.
+ * Alternatively you can provide a stub implementation, with all methods throwing errors,
+ * if you are not going to use any features that depend on platform tools.
+ * 
+ * `afterConfirmSignUp` is invoked on every call to `confirmSignUp`, direct or indirect.
+ * It allows you to perform some tasks specific to your implementation.
+ * You can leave the method body empty if you don't need it.
+ */
 @profile()
 export abstract class CommonNetworkMember {
   private readonly _api: API
