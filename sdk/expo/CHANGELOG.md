@@ -3,7 +3,7 @@
 * Performance optimization
 * Retrieved credentials are cached even if no `credentialShareRequestToken` is passed to `getCredentials`
 * Also refer to the changelog for `common` v1.9.0
-* Also refer to the changelog for `wallet-core-sdk` v4.4.0
+* Also refer to the changelog for `wallet-core-sdk` v5.0.0
 * Breaking changes:
   * `getCredentials` no longer accepts pagination parameters
   * Some methods that returned arrays now declare their return type as `any[]` instead of `any`.
