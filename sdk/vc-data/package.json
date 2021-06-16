@@ -19,6 +19,7 @@
     "start": "tsdx watch --tsconfig ./tsconfig.build.json",
     "build": "tsdx build --tsconfig ./tsconfig.build.json",
     "test": "tsdx test",
+    "test-update": "tsdx test --updateSnapshot",
     "test:watch": "tsdx test --watch",
     "lint": "tsdx lint src",
     "prepare": "npm run build",

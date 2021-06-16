@@ -20,5 +20,6 @@ export * from './nationalid'
 export * from './phone'
 export * from './trade'
 export * from './winner'
+export * from './orgCertification'
 
 export * from './util'
