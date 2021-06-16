@@ -114,7 +114,7 @@ type DerivedThis<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructo
 /**
  * This class is abstract.
  * You can use implementations from wallet-browser-sdk, wallet-expo-sdk or wallet-react-native-sdk as needed.
- * 
+ *
  * Alternatively you can implement your own derived class.
  * Derived classes should have:
  *  * A constructor with a signature `new (password: string, encryptedSeed: string, options?: SdkOptions, component?: EventComponent)`
@@ -125,7 +125,7 @@ type DerivedThis<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructo
  * it will be used to encrypt and decrypt credentials stored in vault.
  * Alternatively you can provide a stub implementation, with all methods throwing errors,
  * if you are not going to use any features that depend on platform tools.
- * 
+ *
  * `afterConfirmSignUp` is invoked on every call to `confirmSignUp`, direct or indirect.
  * It allows you to perform some tasks specific to your implementation.
  * You can leave the method body empty if you don't need it.
