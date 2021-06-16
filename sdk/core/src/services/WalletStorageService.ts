@@ -531,7 +531,7 @@ export default class WalletStorageService {
     }
   }
 
-  async saveUnencryptedCredentials(data: unknown[], storageRegion?: string) {
+  async encryptAndSaveCredentials(data: unknown[], storageRegion?: string) {
     const publicKeyBuffer = this._keysService.getOwnPublicKey()
     const encryptedCredentials = []
 

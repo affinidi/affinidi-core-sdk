@@ -2274,7 +2274,7 @@ export abstract class CommonNetworkMember {
    * @returns array of ids for corelated records
    */
   async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
-    const result = await this._walletStorageService.saveUnencryptedCredentials(data, storageRegion)
+    const result = await this._walletStorageService.encryptAndSaveCredentials(data, storageRegion)
 
     this._sendVCSavedMetrics(data)
     // NOTE: what if creds actually were not saved in the vault?

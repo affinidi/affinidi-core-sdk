@@ -175,7 +175,7 @@ describe('AffinityWallet', () => {
   it('#saveCredentials', async () => {
     const credentials = [signedCredential]
 
-    sinon.stub(WalletStorageService.prototype, 'saveUnencryptedCredentials').resolves(['token'])
+    sinon.stub(WalletStorageService.prototype, 'encryptAndSaveCredentials').resolves(['token'])
 
     const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
 

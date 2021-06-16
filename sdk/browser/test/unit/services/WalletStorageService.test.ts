@@ -39,8 +39,8 @@ describe('WalletStorageService', () => {
     sinon.restore()
   })
 
-  it('#saveUnencryptedCredentials', async () => {
-    const response = await walletStorageService.saveUnencryptedCredentials([{ foo: 'bar' }])
+  it('encryptAndSaveCredentials', async () => {
+    const response = await walletStorageService.encryptAndSaveCredentials([{ foo: 'bar' }])
 
     expect(response).to.exist
   })
