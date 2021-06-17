@@ -1,14 +1,7 @@
 import { VCV1, VCV1Subject } from '@affinidi/vc-common'
 
 import { PersonEV1, getBaseV1ContextEntries } from '../base/v1'
-import {
-  CreateThing,
-  ExtendThing,
-  Type,
-  ExpandThing,
-  createContextEntry,
-  createVCContextEntry,
-} from '../util'
+import { CreateThing, ExtendThing, Type, ExpandThing, createContextEntry, createVCContextEntry } from '../util'
 
 type EmployeePersonV1Mixin = CreateThing<
   'EmployeePerson',
