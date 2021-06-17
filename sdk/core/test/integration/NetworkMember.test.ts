@@ -7,7 +7,7 @@ import { Affinity } from '@affinidi/common'
 import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
-import { CommonNetworkMember } from '../../src/CommonNetworkMember'
+import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 import CognitoService from '../../src/services/CognitoService'
 
 import { SdkOptions } from '../../src/dto/shared.dto'
@@ -425,6 +425,11 @@ describe('CommonNetworkMember', () => {
       cognitoPassword,
       options,
     )
+    expect(affinityWallet).to.be.an.instanceof(CommonNetworkMember)
+    if (typeof affinityWallet === 'string') {
+      expect.fail('TS type guard')
+    }
+
     const walletShortDid = affinityWallet.did.split(';elem:')[0]
     expect(walletShortDid).to.equal(did)
 
@@ -440,6 +445,11 @@ describe('CommonNetworkMember', () => {
     const username = did
 
     const affinityWallet = await CommonNetworkMember.signUpWithExistsEntity(keyParams, username, userPassword, options)
+    expect(affinityWallet).to.be.an.instanceof(CommonNetworkMember)
+    if (typeof affinityWallet === 'string') {
+      expect.fail('TS type guard')
+    }
+
     const walletShortDid = affinityWallet.did.split(';elem:')[0]
     expect(walletShortDid).to.equal(did)
 
@@ -895,17 +905,24 @@ describe('CommonNetworkMember', () => {
   it('#signUp when user registers with arbitrary username', async () => {
     const cognitoUsername = generateUsername()
 
-    let networkMember
-    networkMember = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+    const signUpNetworkMember = await CommonNetworkMember.signUp(cognitoUsername, cognitoPassword, options)
+    expect(signUpNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    if (typeof signUpNetworkMember === 'string') {
+      expect.fail('TS type guard')
+    }
 
-    expect(networkMember.did).to.exist
-    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+    expect(signUpNetworkMember.did).to.exist
+    expect(signUpNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
-    await networkMember.signOut()
+    await signUpNetworkMember.signOut()
 
-    networkMember = await CommonNetworkMember.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+    const fromLoginNetworkMember = await CommonNetworkMember.fromLoginAndPassword(
+      cognitoUsername,
+      cognitoPassword,
+      options,
+    )
 
-    expect(networkMember).to.be.an.instanceof(CommonNetworkMember)
+    expect(fromLoginNetworkMember).to.be.an.instanceof(CommonNetworkMember)
   })
 
   it('#pullEncryptedSeed throws `WAL-1 / 404` WHEN key for userId does not exist', async () => {

@@ -1,3 +1,17 @@
+# release 5.0.0 (2021-06-16)
+  * Implemented `WalletStorageService.fetchAllBlobs`.
+  * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries.
+  * Optimized `WalletStorageService.fetchAllEncryptedCredentialsInBatches` to only call `authorizeVcVault` once instead of once per batch.
+  * Deprecation candidates from v4.2.1 marked as deprecated.
+  * Also refer to the changelog for `common` v1.9.0.
+  * Breaking changes:
+    * `WalletStorageService.fetchAllEncryptedCredentialsInBatches` is now private, use `fetchAllBlobs` instead.
+    * More specific type declarations.
+    * `CommonNetworkMember` made abstract.
+      Use `AffinityWallet` from `wallet-browser-sdk`, `wallet-expo-sdk` or `wallet-react-native-sdk` instead,
+      or implement your own derived class using these as a reference.
+      See JSDoc comment for `CommonNetworkMember` for more information on this change.
+      This change does not affect projects that do not use `CommonNetworkMember` directly.
 # release 4.3.1 (2021-06-07)
   * Fixed DID validation
 # release 4.3.0 (2021-06-04)

@@ -10,7 +10,7 @@ import { AffinityWallet } from '../../../src/AffinityWallet'
 import { getOptionsForEnvironment } from '../../helpers'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 
-const signedCredentials = require('../../factory/signedCredentials')
+import { generateCredentials } from '../../factory/signedCredentials'
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -43,12 +43,21 @@ const waitForOtpCode = async (inbox: __dangerous.TestmailInbox): Promise<string>
 
 const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: 'otp.browser' })
 
+function checkIsString(value: string | unknown): asserts value is string {
+  expect(value).to.be.a('string')
+}
+
+function checkIsAffinityWallet(value: AffinityWallet | unknown): asserts value is AffinityWallet {
+  expect(value).to.be.an.instanceof(AffinityWallet)
+}
+
 describe('AffinityWallet [OTP]', () => {
   it('Save Open Attestation credential and #deleteCredential scenario', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
     const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
@@ -81,11 +90,12 @@ describe('AffinityWallet [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
 
-    signedCredentials.push({ anything: {} })
+    const signedCredentials = generateCredentials(4)
 
     await commonNetworkMember.saveCredentials(signedCredentials)
 
@@ -113,12 +123,14 @@ describe('AffinityWallet [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
     await commonNetworkMember.signOut(options)
 
     const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
+    checkIsString(signInToken)
     const signInCode = await waitForOtpCode(inbox)
 
     const confirmSignInOptions = {
@@ -138,12 +150,14 @@ describe('AffinityWallet [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
     await commonNetworkMember.signOut(options)
 
     const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
+    checkIsString(signInToken)
     const signInCode = await waitForOtpCode(inbox)
 
     const confirmSignInOptions = {
@@ -163,20 +177,21 @@ describe('AffinityWallet [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
-    let commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
-    expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
+    const originalWallet = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
+    checkIsAffinityWallet(originalWallet)
 
     const newInbox = createInbox()
 
-    await commonNetworkMember.changeUsername(newInbox.email, options, messageParameters)
+    await originalWallet.changeUsername(newInbox.email, options, messageParameters)
     const changeUsernameCode = await waitForOtpCode(newInbox)
 
-    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
-    await commonNetworkMember.signOut(options)
+    await originalWallet.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
+    await originalWallet.signOut(options)
 
-    commonNetworkMember = await AffinityWallet.fromLoginAndPassword(newInbox.email, password, options)
-    expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
+    const newWallet = await AffinityWallet.fromLoginAndPassword(newInbox.email, password, options)
+    checkIsAffinityWallet(newWallet)
   })
 })

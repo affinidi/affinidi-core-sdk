@@ -38,9 +38,10 @@ describe('KeysService', () => {
   it('#decryptSeed', async () => {
     const keysService = new KeysService(encryptedSeed, password)
 
-    const { seed: seedBuffer } = keysService.decryptSeed()
+    const { seed: seedBuffer, didMethod } = keysService.decryptSeed()
     const recoveredSeedHex = seedBuffer.toString('hex')
 
+    expect(didMethod).to.exist
     expect(recoveredSeedHex).to.exist
     expect(recoveredSeedHex).to.be.equal(seedHex)
   })

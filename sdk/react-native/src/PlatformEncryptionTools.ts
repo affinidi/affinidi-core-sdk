@@ -1,33 +1,26 @@
 import * as eccrypto from 'eccrypto-js'
 import randomBytes from 'randombytes'
-import { KeysService as CoreKeysService } from '@affinidi/common'
 
-const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
+export class PlatformEncryptionTools {
+  platformName = 'react-native'
 
-export default class KeysService extends CoreKeysService {
-  /* istanbul ignore next: private method */
-  private isValidPrivateKey(privateKey: any) {
+  isValidPrivateKey(privateKey: Buffer) {
     const { EC_GROUP_ORDER, ZERO32 } = eccrypto
 
-    const isValid = privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
-    return isValid
+    return privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
   }
 
-  async getEphemKeyPair() {
-    let ephemPrivateKey = await randomBytes(32)
+  getEphemKeyPair(): Buffer {
+    let ephemPrivateKey = randomBytes(32)
 
     while (!this.isValidPrivateKey(ephemPrivateKey)) {
-      ephemPrivateKey = await randomBytes(32)
+      ephemPrivateKey = randomBytes(32)
     }
 
     return ephemPrivateKey
   }
 
-  async decryptByPrivateKey(encryptedDataString: string) {
-    const { seed, didMethod } = this.decryptSeed()
-    const seedHex = seed.toString('hex')
-    const privateKey = CoreKeysService.getPrivateKey(seedHex, didMethod)
-
+  async decryptByPrivateKey(privateKeyBuffer: Buffer, encryptedDataString: string): Promise<any> {
     const encryptedDataObject = JSON.parse(encryptedDataString)
 
     const { iv, ephemPublicKey, ciphertext, mac } = encryptedDataObject
@@ -44,19 +37,17 @@ export default class KeysService extends CoreKeysService {
       mac: Buffer.from(mac, 'hex'),
     }
 
-    const dataBuffer = await eccrypto.decrypt(privateKey, encryptedData)
-    const data = JSON.parse(dataBuffer.toString())
+    const dataBuffer = await eccrypto.decrypt(privateKeyBuffer, encryptedData)
 
-    return data
+    return JSON.parse(dataBuffer.toString())
   }
 
-  async encryptByPublicKey(publicKeyHex: string, data: any) {
+  async encryptByPublicKey(publicKeyBuffer: Buffer, data: unknown): Promise<string> {
     const dataString = JSON.stringify(data)
     const dataBuffer = Buffer.from(dataString)
-    const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
 
-    const randomIv = await randomBytes(16)
-    const ephemPrivateKey = await this.getEphemKeyPair()
+    const randomIv = randomBytes(16)
+    const ephemPrivateKey = this.getEphemKeyPair()
 
     const options = { iv: randomIv, ephemPrivateKey }
 
@@ -71,8 +62,10 @@ export default class KeysService extends CoreKeysService {
       mac: mac.toString('hex'),
     }
 
-    const serializedEncryptedDataString = JSON.stringify(serializedEncryptedData)
-
-    return serializedEncryptedDataString
+    return JSON.stringify(serializedEncryptedData)
   }
 }
+
+const platformEncryptionTools = new PlatformEncryptionTools()
+
+export default platformEncryptionTools

@@ -37,11 +37,12 @@ import {
   SdkOptionsWithCongitoSetup,
   MessageParameters,
   KeyParams,
+  FetchCredentialsPaginationOptions,
 } from './dto/shared.dto'
 
 import { validateUsername } from './shared/validateUsername'
 
-import { FreeFormObject } from './shared/interfaces'
+import { FreeFormObject, IPlatformEncryptionTools } from './shared/interfaces'
 import { ParametersValidator } from './shared/ParametersValidator'
 
 import {
@@ -95,30 +96,69 @@ import {
   PROD_METRICS_URL,
 } from './_defaultConfig'
 
+type Constructor<T> = new (
+  password: string,
+  encryptedSeed: string,
+  options?: SdkOptions,
+  component?: EventComponent,
+) => T
+type AbstractStaticMethods<T> = {
+  afterConfirmSignUp: (networkMember: T, originalOptions: SdkOptions) => Promise<void>
+}
+type ConstructorKeys<T> = {
+  [P in keyof T]: T[P] extends new (...args: unknown[]) => unknown ? P : never
+}[keyof T]
+type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
+type DerivedThis<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructor<typeof CommonNetworkMember>
+
+/**
+ * This class is abstract.
+ * You can use implementations from wallet-browser-sdk, wallet-expo-sdk or wallet-react-native-sdk as needed.
+ *
+ * Alternatively you can implement your own derived class.
+ * Derived classes should have:
+ *  * A constructor with a signature `new (password: string, encryptedSeed: string, options?: SdkOptions, component?: EventComponent)`
+ *  * A static method `afterConfirmSignUp(networkMember: YourClass, originalOptions: SdkOptions) => Promise<void>`
+ *
+ * Constructor should pass an implementation of `IPlatformEncryptionTools` to the base constructor.
+ * This implementation should be compatible with one in other SDKs,
+ * it will be used to encrypt and decrypt credentials stored in vault.
+ * Alternatively you can provide a stub implementation, with all methods throwing errors,
+ * if you are not going to use any features that depend on platform tools.
+ *
+ * `afterConfirmSignUp` is invoked on every call to `confirmSignUp`, direct or indirect.
+ * It allows you to perform some tasks specific to your implementation.
+ * You can leave the method body empty if you don't need it.
+ */
 @profile()
-export class CommonNetworkMember {
+export abstract class CommonNetworkMember {
   private readonly _api: API
   private _did: string
-  private _apiKey: string
-  private _accessApiKey: string
+  private readonly _accessApiKey: string
   private readonly _encryptedSeed: string
   private _password: string
-  private readonly _walletStorageService: WalletStorageService
+  protected readonly _walletStorageService: WalletStorageService
   private readonly _revocationService: RevocationService
-  private readonly _keysService: KeysService
+  protected readonly _keysService: KeysService
   private readonly _jwtService: JwtService
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
   private readonly _didDocumentService: DidDocumentService
-  private _affinity: Affinity
-  private readonly _sdkOptions: SdkOptionsWithCongitoSetup
+  private readonly _affinity: Affinity
+  protected readonly _sdkOptions: SdkOptionsWithCongitoSetup
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
   private _didDocumentKeyId: string
-  protected _component: EventComponent
+  protected readonly _component: EventComponent
   protected cognitoUserTokens: CognitoUserTokens
 
-  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}, component?: EventComponent) {
+  constructor(
+    password: string,
+    encryptedSeed: string,
+    platformEncryptionTools: IPlatformEncryptionTools,
+    options: SdkOptions = {},
+    component?: EventComponent,
+  ) {
     // await ParametersValidator.validateSync(
     //   [
     //     { isArray: false, type: 'string', isRequired: true, value: password },
@@ -130,6 +170,10 @@ export class CommonNetworkMember {
     if (!password || !encryptedSeed) {
       // TODO: implement appropriate error wrapper
       throw new Error('`password` and `encryptedSeed` must be provided!')
+    }
+
+    if (!platformEncryptionTools?.platformName) {
+      throw new Error('`platformEncryptionTools` must be provided!')
     }
 
     this._sdkOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
@@ -152,9 +196,9 @@ export class CommonNetworkMember {
       component: this._component,
     })
     this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
-    this._walletStorageService = new WalletStorageService(encryptedSeed, password, this._sdkOptions)
-    this._revocationService = new RevocationService(this._sdkOptions)
     this._keysService = new KeysService(encryptedSeed, password)
+    this._walletStorageService = new WalletStorageService(this._keysService, platformEncryptionTools, this._sdkOptions)
+    this._revocationService = new RevocationService(this._sdkOptions)
     this._jwtService = new JwtService()
     this._holderService = new HolderService(this._sdkOptions, this._component)
     this._didDocumentService = new DidDocumentService(this._keysService)
@@ -336,7 +380,12 @@ export class CommonNetworkMember {
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */
-  static async fromSeed(seedHexWithMethod: string, options: SdkOptions = {}, password: string = null) {
+  static async fromSeed<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
+    seedHexWithMethod: string,
+    options: SdkOptions = {},
+    password: string = null,
+  ): Promise<T> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: seedHexWithMethod },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -404,7 +453,11 @@ export class CommonNetworkMember {
    *
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
-  static async register(password: string, options: SdkOptions = {}): Promise<{ did: string; encryptedSeed: string }> {
+  static async register<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
+    password: string,
+    options: SdkOptions = {},
+  ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -659,7 +712,12 @@ export class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async completeLoginChallenge(token: string, confirmationCode: string, options: SdkOptions = {}): Promise<any> {
+  static async completeLoginChallenge<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
+    token: string,
+    confirmationCode: string,
+    options: SdkOptions = {},
+  ): Promise<T> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
@@ -809,7 +867,12 @@ export class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async fromLoginAndPassword(username: string, password: string, options: SdkOptions = {}): Promise<any> {
+  static async fromLoginAndPassword<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
+    username: string,
+    password: string,
+    options: SdkOptions = {},
+  ): Promise<T> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
@@ -862,13 +925,14 @@ export class CommonNetworkMember {
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUpWithExistsEntity(
+  static async signUpWithExistsEntity<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
     keyParams: KeyParams,
     username: string,
     password?: string,
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
-  ): Promise<string | any> {
+  ): Promise<string | T> {
     await ParametersValidator.validate([{ isArray: false, type: KeyParams, isRequired: true, value: keyParams }])
 
     CommonNetworkMember._validateKeys(keyParams)
@@ -879,7 +943,7 @@ export class CommonNetworkMember {
       return token
     }
 
-    return CommonNetworkMember.confirmSignUpWithExistsEntity(keyParams, token, '', options)
+    return this.confirmSignUpWithExistsEntity(keyParams, token, '', options)
   }
 
   private static async _signUp(
@@ -887,7 +951,7 @@ export class CommonNetworkMember {
     password?: string,
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
-  ): Promise<string | any> {
+  ): Promise<{ token: string; isUsername: boolean }> {
     const { isUsername } = validateUsername(username)
 
     let passwordMustBeProvided = false
@@ -931,19 +995,20 @@ export class CommonNetworkMember {
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUp(
+  static async signUp<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
     username: string,
     password?: string,
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
-  ): Promise<string | any> {
+  ): Promise<string | T> {
     const { token, isUsername } = await CommonNetworkMember._signUp(username, password, options, messageParameters)
 
     if (!isUsername) {
       return token
     }
 
-    return CommonNetworkMember.confirmSignUp(token, '', options)
+    return this.confirmSignUp(token, '', options)
   }
 
   /**
@@ -959,12 +1024,13 @@ export class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUpWithExistsEntity(
+  static async confirmSignUpWithExistsEntity<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
     keyParams: KeyParams,
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-  ): Promise<any> {
+  ): Promise<T> {
     const [username] = token.split('::')
 
     const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
@@ -981,14 +1047,14 @@ export class CommonNetworkMember {
 
     await ParametersValidator.validate(parametersToValidate)
 
-    return CommonNetworkMember._confirmSignUp(token, confirmationCode, keyParams, options)
+    return CommonNetworkMember._confirmSignUp(this, token, confirmationCode, keyParams, options)
   }
 
   private static async _confirmSignUpUser(
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-  ): Promise<any> {
+  ): Promise<CognitoService> {
     const [username] = token.split('::')
 
     const { isUsername } = validateUsername(username)
@@ -1007,12 +1073,13 @@ export class CommonNetworkMember {
     return cognitoService
   }
 
-  private static async _confirmSignUp(
+  private static async _confirmSignUp<T extends CommonNetworkMember>(
+    self: DerivedThis<T>,
     token: string,
     confirmationCode: string,
     keyParams: KeyParams = {},
     options: SdkOptions = {},
-  ): Promise<any> {
+  ): Promise<T> {
     const parts = token.split('::')
     const username = parts[0]
     let password = parts[1]
@@ -1024,7 +1091,7 @@ export class CommonNetworkMember {
       passwordHash = keyParams.password
     } else {
       passwordHash = WalletStorageService.hashFromString(password)
-      const result = await this.register(passwordHash, options)
+      const result = await self.register(passwordHash, options)
       encryptedSeed = result.encryptedSeed
     }
 
@@ -1042,7 +1109,7 @@ export class CommonNetworkMember {
       encryptionKey,
     )
 
-    const commonNetworkMember = new this(encryptionKey, updatedEncryptedSeed, options)
+    const commonNetworkMember = new self(encryptionKey, updatedEncryptedSeed, options)
 
     const skipBackupEncryptedSeed = options && options.skipBackupEncryptedSeed
 
@@ -1065,7 +1132,12 @@ export class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUp(token: string, confirmationCode: string, options: SdkOptions = {}): Promise<any> {
+  static async confirmSignUp<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
+    token: string,
+    confirmationCode: string,
+    options: SdkOptions = {},
+  ): Promise<T> {
     const [username] = token.split('::')
 
     const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
@@ -1081,7 +1153,9 @@ export class CommonNetworkMember {
 
     await ParametersValidator.validate(parametersToValidate)
 
-    return CommonNetworkMember._confirmSignUp(token, confirmationCode, undefined, options)
+    const result = await CommonNetworkMember._confirmSignUp(this, token, confirmationCode, undefined, options)
+    await this.afterConfirmSignUp(result, options)
+    return result
   }
 
   /* To cover scenario when registration failed and private key is not saved:
@@ -1136,11 +1210,12 @@ export class CommonNetworkMember {
    * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
-  static async signIn(
+  static async signIn<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
     username: string,
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
-  ): Promise<string> {
+  ): Promise<string | T> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -1149,19 +1224,16 @@ export class CommonNetworkMember {
 
     // NOTE: This is a passwordless login/sign up flow,
     //       case when user signs up more often
-    let token
 
     try {
-      token = await CommonNetworkMember.signUp(username, null, options, messageParameters)
+      return await this.signUp(username, null, options, messageParameters)
     } catch (error) {
       if (error.code === 'COR-7') {
-        token = await CommonNetworkMember.passwordlessLogin(username, options, messageParameters)
+        return await this.passwordlessLogin(username, options, messageParameters)
       } else {
         throw error
       }
     }
-
-    return token
   }
 
   /**
@@ -1171,30 +1243,29 @@ export class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
-  static async confirmSignIn(
+  static async confirmSignIn<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-  ): Promise<{ isNew: boolean; commonNetworkMember: any }> {
+  ): Promise<{ isNew: boolean; commonNetworkMember: T }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    let commonNetworkMember
-
     // NOTE: loginToken = '{"ChallengeName":"CUSTOM_CHALLENGE","Session":"...","ChallengeParameters":{"USERNAME":"...","email":"..."}}'
     //       signUpToken = 'username::password'
     const isSignUpToken = token.split('::')[1] !== undefined
 
     if (isSignUpToken) {
-      commonNetworkMember = await this.confirmSignUp(token, confirmationCode, options)
+      const commonNetworkMember = await this.confirmSignUp(token, confirmationCode, options)
 
       return { isNew: true, commonNetworkMember }
     }
 
-    commonNetworkMember = await this.completeLoginChallenge(token, confirmationCode, options)
+    const commonNetworkMember = await this.completeLoginChallenge(token, confirmationCode, options)
 
     return { isNew: false, commonNetworkMember }
   }
@@ -1266,7 +1337,7 @@ export class CommonNetworkMember {
    * @param confirmationCode - OTP sent by AWS Cognito/SES
    * @param options - optional parameters with specified environment
    */
-  async confirmChangeUsername(newUsername: string, confirmationCode: string, options: SdkOptions = {}): Promise<any> {
+  async confirmChangeUsername(newUsername: string, confirmationCode: string, options: SdkOptions = {}): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newUsername },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
@@ -1300,7 +1371,7 @@ export class CommonNetworkMember {
   }
 
   /* istanbul ignore next: protected method */
-  protected async saveEncryptedCredentials(data: any, storageRegion?: string): Promise<any> {
+  protected async saveEncryptedCredentials(data: any, storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.saveCredentials(data, storageRegion)
   }
 
@@ -1720,6 +1791,7 @@ export class CommonNetworkMember {
 
   /**
    * @description Initiates the phone number verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.phoneNumber - The phone number to send the confirmation code to
@@ -1754,6 +1826,7 @@ export class CommonNetworkMember {
 
   /**
    * @description Finishes the phone number verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.code - The code the user recieved
@@ -1784,6 +1857,7 @@ export class CommonNetworkMember {
 
   /**
    * @description Initiates the email address verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.emailAddress - The email address to send the confirmation code to
@@ -1814,6 +1888,7 @@ export class CommonNetworkMember {
 
   /**
    * @description Finishes the email address verification flow
+   * @deprecated
    * @param config - Configuration options
    * @param config.apiKey - They api access key to the issuer service
    * @param config.code - The code the user recieved
@@ -1925,7 +2000,7 @@ export class CommonNetworkMember {
   }
 
   /* istanbul ignore next: private method */
-  private _sendVCVerifiedPerPartyMetrics(credentials: any) {
+  private _sendVCVerifiedPerPartyMetrics(credentials: any[]) {
     const verifierDid = this.did
 
     for (const credential of credentials) {
@@ -2146,5 +2221,97 @@ export class CommonNetworkMember {
         errors: [response.error],
       }
     }
+  }
+
+  /**
+   * @description Creates a new instance of SDK by access token
+   * @param accessToken
+   * @param options - optional parameters for AffinityWallet initialization
+   * @returns initialized instance of SDK
+   */
+  static async fromAccessToken<T extends CommonNetworkMember>(
+    this: DerivedThis<T>,
+    accessToken: string,
+    options: SdkOptions = {},
+  ): Promise<T> {
+    await ParametersValidator.validate([
+      { isArray: false, type: 'string', isRequired: false, value: accessToken },
+      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+    ])
+
+    const { keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+
+    return new this(encryptionKey, encryptedSeed, options)
+  }
+
+  /**
+   * @description Logins with access token of Cognito user registered in Affinity
+   * @param options - optional parameters for AffinityWallet initialization
+   * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
+   * if user is not logged in.
+   */
+  static async init<T extends CommonNetworkMember>(this: DerivedThis<T>, options: SdkOptions = {}): Promise<T> {
+    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
+
+    const { keyStorageUrl, userPoolId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { accessToken } = readUserTokensFromSessionStorage(userPoolId)
+
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+
+    return new this(encryptionKey, encryptedSeed, options)
+  }
+
+  /**
+   * @description Save's encrypted VCs in Affinity Guardian Wallet
+   * 1. encrypt VCs
+   * 2. store encrypted VCs in Affinity Guardian Wallet
+   * @param data - array of VCs
+   * @param storageRegion - (optional) specify AWS region where credentials will be stored
+   * @returns array of ids for corelated records
+   */
+  async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
+    const result = await this._walletStorageService.encryptAndSaveCredentials(data, storageRegion)
+
+    this._sendVCSavedMetrics(data)
+    // NOTE: what if creds actually were not saved in the vault?
+    //       follow up with Isaak/Dustin on this - should we parse the response
+    //       to define if we need to send the metrics
+    return result
+  }
+
+  /**
+   * @description Retrieve only the credential at given index
+   * @param credentialIndex - index for the VC in vault
+   * @returns a single VC
+   */
+  async getCredentialByIndex(credentialIndex: number): Promise<any> {
+    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
+    const credentials = await this._walletStorageService.fetchDecryptedCredentials(paginationOptions)
+
+    if (!credentials[0]) {
+      throw new SdkError('COR-14')
+    }
+
+    return credentials[0]
+  }
+
+  /**
+   * @description Delete credential by id if found in given range
+   * @param id - id of the credential
+   * @param credentialIndex - credential to remove
+   */
+  async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
+    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
+      throw new SdkError('COR-1', {
+        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
+      })
+    }
+
+    const credentialIndexToDelete = credentialIndex ?? (await this._walletStorageService.findCredentialIndexById(id))
+    return this.deleteCredentialByIndex(credentialIndexToDelete.toString())
   }
 }
