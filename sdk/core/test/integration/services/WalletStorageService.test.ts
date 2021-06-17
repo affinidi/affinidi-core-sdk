@@ -2,13 +2,15 @@
 
 import { expect } from 'chai'
 import * as jwt from 'jsonwebtoken'
+import { KeysService } from '@affinidi/common'
 
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import CognitoService from '../../../src/services/CognitoService'
-import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
+import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
 
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import { getOptionsForEnvironment } from '../../helpers'
+import { testPlatformTools } from '../../helpers/testPlatformTools'
 
 const { TEST_SECRETS } = process.env
 
@@ -29,6 +31,11 @@ const cognitoUsername = cognitoUsernameStaging
 const { keyStorageUrl } = options
 let cognitoService: CognitoService
 
+const createWalletStorageService = () => {
+  const keysService = new KeysService(encryptedSeed, password)
+  return new WalletStorageService(keysService, testPlatformTools, options)
+}
+
 describe('WalletStorageService', () => {
   beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -41,7 +48,7 @@ describe('WalletStorageService', () => {
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {
     const { accessToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
+    const walletStorageService = createWalletStorageService()
 
     let responseError
 
@@ -56,14 +63,14 @@ describe('WalletStorageService', () => {
   })
 
   it('#pullEncryptedSeed', async () => {
-    const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
+    const walletStorageService = createWalletStorageService()
     const pulledEncryptedSeed = await walletStorageService.pullEncryptedSeed(cognitoUsername, cognitoPassword)
 
     expect(pulledEncryptedSeed).to.exist
   })
 
   it('#pullEncryptedSeed throws exception WHEN key for userId does not exist', async () => {
-    const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
+    const walletStorageService = createWalletStorageService()
 
     let responseError
 
@@ -79,7 +86,7 @@ describe('WalletStorageService', () => {
   it.skip('#storeEncryptedSeed throws exception WHEN userId does not exists', async () => {
     const { accessToken } = await cognitoService.signIn(nonExistingUser, cognitoPassword)
 
-    const walletStorageService = new WalletStorageService(encryptedSeed, password, options)
+    const walletStorageService = createWalletStorageService()
 
     let responseError
 
@@ -174,8 +181,6 @@ describe('WalletStorageService', () => {
 
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     const networkMember = new CommonNetworkMember(encryptionKey, returnedEncryptedSeed, options)
 
     const offerResponse = await networkMember.createCredentialOfferResponseToken(offerToken)

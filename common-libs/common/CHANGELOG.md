@@ -1,3 +1,6 @@
+# 1.9.0 (2020-06-16)
+* Declared input and output types on `KeysService` methods
+* Implemented `KeysService.getOwnPublicKey` and `KeysService.getOwnPrivateKey`
 # 1.8.0 (2020-06-04)
 * Reorganized dependencies
 # 1.6.0 (2020-02-16)

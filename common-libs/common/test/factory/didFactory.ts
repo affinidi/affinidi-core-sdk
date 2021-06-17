@@ -1,6 +1,6 @@
 const cryptoRandomString = require('crypto-random-string')
 
-import { CommonNetworkMember } from '@affinidi/wallet-core-sdk'
+import { CommonNetworkMember } from './CommonNetworkMember'
 import { KeysService, DidDocumentService } from '../../'
 import base64url from 'base64url'
 

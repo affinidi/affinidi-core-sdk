@@ -2,7 +2,7 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
-import { CommonNetworkMember } from '../../../src/CommonNetworkMember'
+import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import SdkError from '../../../src/shared/SdkError'
 
@@ -28,6 +28,14 @@ const waitForOtpCode = async (inbox: __dangerous.TestmailInbox): Promise<string>
 const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: 'otp.core' })
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+function checkIsString(value: string | unknown): asserts value is string {
+  expect(value).to.be.a('string')
+}
+
+function checkIsCommonNetworkMember(value: CommonNetworkMember | unknown): asserts value is CommonNetworkMember {
+  expect(value).to.be.an.instanceof(CommonNetworkMember)
+}
+
 describe('CommonNetworkMember [OTP]', () => {
   it('#signIn should send email with OTP code using the provided template (message parameters)', async () => {
     const inbox = createInbox()
@@ -51,6 +59,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const inbox = createInbox()
 
     const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    checkIsString(signInToken)
     const signInCode = await waitForOtpCode(inbox)
 
     const optionsWithSkippedBackupEncryptedSeed: SdkOptions = {
@@ -74,6 +83,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.signOut()
 
     const signInToken2 = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    checkIsString(signInToken2)
     const signInCode2 = await waitForOtpCode(inbox)
 
     const result = await CommonNetworkMember.confirmSignIn(signInToken2, signInCode2, options)
@@ -87,6 +97,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await waitForOtpCode(inbox) // ignore first OTP code
 
     const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    checkIsString(signInToken)
     const signInCode = await waitForOtpCode(inbox)
 
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
@@ -100,6 +111,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
     let commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
@@ -132,6 +144,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const inbox = createInbox()
 
     const signUpToken = await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
     let commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
@@ -165,6 +178,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     await waitForOtpCode(inbox) // ignore first OTP code
 
     await CommonNetworkMember.resendSignUpConfirmationCode(inbox.email, options, messageParameters)
@@ -176,6 +190,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.signOut()
 
     const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    checkIsString(signInToken)
 
     let error
     try {
@@ -198,6 +213,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
@@ -206,6 +222,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.signOut()
 
     const loginToken = await CommonNetworkMember.signIn(inbox.email, options)
+    checkIsString(loginToken)
 
     let error
     try {
@@ -241,8 +258,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const password = COGNITO_PASSWORD
 
     let commonNetworkMember = await CommonNetworkMember.signUp(username, password, options)
-
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     const inbox = createInbox()
 
@@ -271,6 +287,7 @@ describe('CommonNetworkMember [OTP]', () => {
       inbox = createInbox()
 
       const signUpToken = await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+      checkIsString(signUpToken)
       const signUpCode = await waitForOtpCode(inbox)
 
       await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
@@ -278,6 +295,7 @@ describe('CommonNetworkMember [OTP]', () => {
 
     it('#signIn and #confirmSignIn', async () => {
       const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+      checkIsString(signInToken)
       const signInCode = await waitForOtpCode(inbox)
 
       const result = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
@@ -347,6 +365,7 @@ describe('CommonNetworkMember [OTP]', () => {
       const password = COGNITO_PASSWORD
 
       const signUpToken = await CommonNetworkMember.signUp(newInbox.email, password, options, messageParameters)
+      checkIsString(signUpToken)
       const signUpCode = await waitForOtpCode(newInbox)
 
       const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)

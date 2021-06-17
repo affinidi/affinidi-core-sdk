@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
 import { getOptionsForEnvironment, waitForConfirmationCodeInput } from '../helpers'
 
-import { AffinityWallet } from '../../src/AffinityWallet'
+import { AffinityWallet, SdkOptions } from '../../src/AffinityWallet'
 
 const signedCredential = require('../factory/signedCredential')
 
@@ -50,6 +50,14 @@ const credentialShareRequestToken =
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
 const options: __dangerous.SdkOptions = getOptionsForEnvironment()
+
+function checkIsString(value: string | unknown): asserts value is string {
+  expect(value).to.be.a('string')
+}
+
+function checkIsAffinityWallet(value: AffinityWallet | unknown): asserts value is AffinityWallet {
+  expect(value).to.be.an.instanceof(AffinityWallet)
+}
 
 describe('AffinityWallet', () => {
   it('.init returns SDK instance, initialize with default environment', async () => {
@@ -136,10 +144,11 @@ describe('AffinityWallet', () => {
   it.skip('#signUp, #confirmSignUp', async () => {
     const emailDev = 'PLACEHOLDER'
     const token = await AffinityWallet.signUp(emailDev, cognitoPassword)
+    checkIsString(token)
 
     const confirmationCode = await waitForConfirmationCodeInput()
-
-    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, { issueSignupCredential: true })
+    const options: SdkOptions = { issueSignupCredential: true }
+    const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCode, options)
 
     const credentialRequirements = [
       {
@@ -152,7 +161,7 @@ describe('AffinityWallet', () => {
     const newCredentialShareRequestToken = await affinityWallet.generateCredentialShareRequestToken(
       credentialRequirements,
       affinityWallet.did,
-      callbackUrl,
+      { callbackUrl },
     )
 
     const credentials = await affinityWallet.getCredentials(newCredentialShareRequestToken)
@@ -168,16 +177,16 @@ describe('AffinityWallet', () => {
 
     const cognitoUsername = generateUsername()
 
-    let networkMember
-    networkMember = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
+    const networkMemberSignUp = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
+    checkIsAffinityWallet(networkMemberSignUp)
+    expect(networkMemberSignUp.did).to.exist
+    await networkMemberSignUp.signOut()
 
-    expect(networkMember.did).to.exist
-    expect(networkMember).to.be.an.instanceof(AffinityWallet)
-
-    await networkMember.signOut()
-
-    networkMember = await AffinityWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
-
-    expect(networkMember).to.be.an.instanceof(AffinityWallet)
+    const networkMemberFromLoginAndPassword = await AffinityWallet.fromLoginAndPassword(
+      cognitoUsername,
+      cognitoPassword,
+      options,
+    )
+    checkIsAffinityWallet(networkMemberFromLoginAndPassword)
   })
 })

@@ -1,18 +1,16 @@
-import { randomBytes } from '../shared/randomBytes'
-import createHash from 'create-hash'
-
 import encode from 'base64url'
+import { fromSeed as bip32FromSeed, BIP32Interface } from 'bip32'
+import createHash from 'create-hash'
 import { ecsign } from 'ethereumjs-util'
 
+import { validateDidMethodSupported } from '../_helpers'
+import { randomBytes } from '../shared/randomBytes'
 import DigestService from './DigestService'
 import DidDocumentService from './DidDocumentService'
-
-import { validateDidMethodSupported } from '../_helpers'
 
 const tinySecp256k1 = require('tiny-secp256k1')
 const aes = require('browserify-aes/browser')
 const aesModes = require('browserify-aes/modes')
-const bip32 = require('bip32')
 
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc'
 const IV_LENGTH = 16
@@ -22,9 +20,19 @@ const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
 const etheriumIdentityKey = "m/44'/60'/0'/0/0" // eslint-disable-line
 const elemIdentityPrimaryKey = "m/44'/60'/0'/1/0" // eslint-disable-line
 
-const cachedSigningKey: any = {}
+const cachedSigningKey: Record<string, BIP32Interface> = {}
 
-const createCipher = (suite: string, key: any, iv: any, isDecipher = false) => {
+type DocumentWithOptionalProof = { proof?: { signatureValue?: string } }
+type JwtObject = {
+  header?: unknown
+  payload?: Record<string, unknown> & {
+    kid?: string
+    iss?: string
+  }
+  signature?: string
+}
+
+const createCipher = (suite: string, key: unknown, iv: unknown, isDecipher = false) => {
   let cipherType = 'createCipheriv'
   if (isDecipher) {
     cipherType = 'createDecipheriv'
@@ -39,11 +47,11 @@ const createCipher = (suite: string, key: any, iv: any, isDecipher = false) => {
   throw new Error('invalid suite type')
 }
 
-const createCipheriv = (suite: string, key: any, iv: any) => {
+const createCipheriv = (suite: string, key: unknown, iv: unknown) => {
   return createCipher(suite, key, iv)
 }
 
-const createDecipheriv = (suite: string, key: any, iv: any) => {
+const createDecipheriv = (suite: string, key: unknown, iv: unknown) => {
   return createCipher(suite, key, iv, true)
 }
 
@@ -58,7 +66,7 @@ export default class KeysService {
     this._password = password
   }
 
-  sign(digest: any) {
+  sign(digest: Buffer) {
     const { seed, didMethod } = this.decryptSeed()
 
     const seedHex = seed.toString('hex')
@@ -80,20 +88,18 @@ export default class KeysService {
     }
   }
 
-  static sha256(data: any): Buffer {
+  static sha256(data: string | Buffer | createHash.TypedArray | DataView): Buffer {
     return createHash('sha256').update(data).digest()
   }
 
-  static getSigningKey(seedHex: string, deriviationPath: string): any {
+  static getSigningKey(seedHex: string, deriviationPath: string) {
     const seed = Buffer.from(seedHex, 'hex')
 
     const id = `${seedHex}::${deriviationPath}`
 
-    if (cachedSigningKey[id]) {
-      return cachedSigningKey[id]
+    if (!cachedSigningKey[id]) {
+      cachedSigningKey[id] = bip32FromSeed(seed).derivePath(deriviationPath)
     }
-
-    cachedSigningKey[id] = bip32.fromSeed(seed).derivePath(deriviationPath)
 
     return cachedSigningKey[id]
   }
@@ -138,8 +144,20 @@ export default class KeysService {
     return { publicKey, privateKey }
   }
 
+  getOwnPublicKey() {
+    const { seed, didMethod } = this.decryptSeed()
+    const seedHex = seed.toString('hex')
+    return KeysService.getPublicKey(seedHex, didMethod)
+  }
+
   static getPublicKey(seedHex: string, didMethod: string) {
     return KeysService.getKey(seedHex, didMethod).publicKey
+  }
+
+  public getOwnPrivateKey() {
+    const { seed, didMethod } = this.decryptSeed()
+    const seedHex = seed.toString('hex')
+    return KeysService.getPrivateKey(seedHex, didMethod)
   }
 
   static getPrivateKey(seedHex: string, didMethod: string) {
@@ -154,7 +172,7 @@ export default class KeysService {
     return KeysService.getKey(seedHex, didMethod, true).publicKey
   }
 
-  static async encryptSeed(seedHexWithMethod: string, encryptionKeyBuffer: any) {
+  static async encryptSeed(seedHexWithMethod: string, encryptionKeyBuffer: unknown) {
     const isMethodAdded = seedHexWithMethod.split('++')[1]
     let bufferMethod: undefined | 'hex' = undefined
 
@@ -260,7 +278,7 @@ export default class KeysService {
     return passwordBuffer
   }
 
-  async signDidDocument(didDocument: any) {
+  async signDidDocument<T extends DocumentWithOptionalProof>(didDocument: T): Promise<T & DocumentWithOptionalProof> {
     const { digest } = await this._digestService.getJsonLdDigest(didDocument)
 
     const signature = this.sign(digest)
@@ -272,7 +290,7 @@ export default class KeysService {
 
   async createTransactionSignature(digestHex: string, seedHex: string) {
     const seed = Buffer.from(seedHex, 'hex')
-    const privateKey = bip32.fromSeed(seed).derivePath(etheriumIdentityKey).privateKey
+    const privateKey = bip32FromSeed(seed).derivePath(etheriumIdentityKey).privateKey
 
     const buffer = Buffer.from(digestHex, 'hex')
     const signature = ecsign(buffer, privateKey)
@@ -288,7 +306,7 @@ export default class KeysService {
     return JSON.stringify(serializedSignature)
   }
 
-  signJWT(jwtObject: any, keyId: string = null) {
+  signJWT<T extends JwtObject>(jwtObject: T, keyId: string = null): T & JwtObject {
     if (!keyId) {
       const didDocumentService = new DidDocumentService(this)
       const did = didDocumentService.getMyDid()

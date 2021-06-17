@@ -1,33 +1,22 @@
-import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
+import { CommonNetworkMember as CoreNetwork, __dangerous } from '@affinidi/wallet-core-sdk'
 
-import KeysService from './services/KeysService'
-import WalletStorageService from './services/WalletStorageService'
-import { FetchCredentialsPaginationOptions } from '@affinidi/wallet-core-sdk/dist/dto/shared.dto'
-import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
+import platformEncryptionTools from './PlatformEncryptionTools'
 
-type SdkOptions = __dangerous.SdkOptions & {
+export type SdkOptions = __dangerous.SdkOptions & {
   issueSignupCredential?: boolean
 }
 
 const COMPONENT = EventComponent.AffinidiBrowserSDK
 
 export class AffinityWallet extends CoreNetwork {
-  keysService: KeysService
-  walletStorageService: WalletStorageService
-
   constructor(
     password: string,
     encryptedSeed: string,
     options: __dangerous.SdkOptions = {},
     component: EventComponent = COMPONENT,
   ) {
-    super(password, encryptedSeed, options, component)
-
-    const sdkOptions = CoreNetwork.setEnvironmentVarialbles(options)
-
-    this.keysService = new KeysService(encryptedSeed, password)
-    this.walletStorageService = new WalletStorageService(encryptedSeed, password, sdkOptions)
+    super(password, encryptedSeed, platformEncryptionTools, options, component)
   }
 
   /**
@@ -36,122 +25,18 @@ export class AffinityWallet extends CoreNetwork {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init(options: __dangerous.SdkOptions = {}): Promise<any> {
-    await __dangerous.ParametersValidator.validate([
-      { isArray: false, type: __dangerous.SdkOptions, isRequired: false, value: options },
-    ])
-
-    const { keyStorageUrl, userPoolId } = CoreNetwork.setEnvironmentVarialbles(options)
-    const { accessToken } = __dangerous.readUserTokensFromSessionStorage(userPoolId)
-
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
-    return new AffinityWallet(encryptionKey, encryptedSeed, options)
-  }
-
-  /**
-   * @description Initiates sign up flow
-   * @param username - arbitrary username, email or phoneNumber
-   * @param password - is required if arbitrary username was provided.
-   * It is optional and random one will be generated, if not provided when
-   * email or phoneNumber was given as a username.
-   * @param options - optional parameters with specified environment
-   * @param messageParameters - optional parameters with specified welcome message
-   * @returns token or, in case when arbitrary username was used, it returns
-   * initialized instance of SDK
-   */
-  static async signUp(
-    username: string,
-    password?: string,
-    options?: SdkOptions,
-    messageParameters?: MessageParameters,
-  ): Promise<string | any> {
-    const networkMember = await CoreNetwork.signUp(username, password, options, messageParameters)
-
-    if (networkMember.constructor === String) {
-      return networkMember
-    }
-
-    const { password: networkMemberPassword, encryptedSeed } = networkMember
-
-    return new AffinityWallet(networkMemberPassword, encryptedSeed, options)
-  }
-
-  /**
-   * @description Completes sign in
-   * @param token - received from #signIn method
-   * @param confirmationCode - OTP sent by AWS Cognito/SES
-   * @param options - optional parameters for CommonNetworkMember initialization
-   * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
-   */
-  static async confirmSignIn(
-    token: string,
-    confirmationCode: string,
-    options: SdkOptions = { issueSignupCredential: false },
-  ): Promise<{ isNew: boolean; commonNetworkMember: any }> {
-    await __dangerous.ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: token },
-      {
-        isArray: false,
-        type: 'confirmationCode',
-        isRequired: true,
-        value: confirmationCode,
-      },
-      { isArray: false, type: __dangerous.SdkOptions, isRequired: false, value: options },
-    ])
-    options = Object.assign({}, CoreNetwork.setEnvironmentVarialbles(options), options)
-
-    let affinityWallet
-    // NOTE: loginToken = '{"ChallengeName":"CUSTOM_CHALLENGE","Session":"...","ChallengeParameters":{"USERNAME":"...","email":"..."}}'
-    //       signUpToken = 'username::password'
-    const isSignUpToken = token.split('::')[1] !== undefined
-
-    if (isSignUpToken) {
-      affinityWallet = await this.confirmSignUp(token, confirmationCode, options)
-
-      return { isNew: true, commonNetworkMember: affinityWallet }
-    }
-
-    const parentWallet = await this.completeLoginChallenge(token, confirmationCode, options)
-
-    // affinityWallet = await AffinityWallet.init(options)
-    const { password, encryptedSeed } = parentWallet
-    const cognitoUserTokens = parentWallet.cognitoUserTokens
-    options.cognitoUserTokens = cognitoUserTokens
-    affinityWallet = new AffinityWallet(password, encryptedSeed, options)
-
-    return { isNew: false, commonNetworkMember: affinityWallet }
-  }
-
-  /**
-   * @description Completes sign up flow with optional VC issuance using sign up info
-   * @param token - received from #signUp method
-   * @param confirmationCode - OTP sent by AWS Cognito/SES.
-   * NOTE: is not required if email or phoneNumber was given on #signUp.
-   * @param options - optional parameters for CommonNetworkMember initialization
-   * @returns initialized instance of SDK
-   */
-  static async confirmSignUp(
-    token: string,
-    confirmationCode: string,
-    options: SdkOptions = { issueSignupCredential: false },
-  ): Promise<any> {
-    options = Object.assign({}, CoreNetwork.setEnvironmentVarialbles(options), options)
-    const networkMember = await super.confirmSignUp(token, confirmationCode, options)
-    const { idToken } = networkMember.cognitoUserTokens
-    const { password, encryptedSeed } = networkMember
-    options.cognitoUserTokens = networkMember.cognitoUserTokens
-
-    const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
+  static async afterConfirmSignUp(
+    affinityWallet: AffinityWallet,
+    originalOptions: SdkOptions = { issueSignupCredential: false },
+  ): Promise<void> {
+    const options = Object.assign({}, affinityWallet._sdkOptions, originalOptions)
+    const { idToken } = affinityWallet.cognitoUserTokens
 
     if (options.issueSignupCredential) {
       const signedCredentials = await affinityWallet.getSignupCredentials(idToken, options)
 
       await affinityWallet.saveCredentials(signedCredentials)
     }
-
-    return affinityWallet
   }
 
   /**
@@ -173,8 +58,9 @@ export class AffinityWallet extends CoreNetwork {
     }
 
     const publicKeyHex = this.getPublicKeyHexFromDidDocument(didDocument)
+    const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
 
-    return this.keysService.encryptByPublicKey(publicKeyHex, object)
+    return platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, object)
   }
 
   /**
@@ -183,43 +69,9 @@ export class AffinityWallet extends CoreNetwork {
    * @returns decrypted message
    */
   async readEncryptedMessage(encryptedMessage: string): Promise<any> {
-    return this.keysService.decryptByPrivateKey(encryptedMessage)
-  }
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
-  /**
-   * @description Save's encrypted VCs in Affinity Guardian Wallet
-   * 1. encrypt VCs
-   * 2. store encrypted VCs in Affinity Guardian Wallet
-   * @param data - array of VCs
-   * @param storageRegion - (optional) specify AWS region where credentials will be stored
-   * @returns array of ids for corelated records
-   */
-  async saveCredentials(data: any, storageRegion?: string): Promise<any> {
-    const encryptedCredentials = await this.walletStorageService.encryptCredentials(data)
-    const result = await this.saveEncryptedCredentials(encryptedCredentials, storageRegion)
-
-    this._sendVCSavedMetrics(data)
-    // NOTE: what if creds actually were not saved in the vault?
-    //       follow up with Isaak/Dustin on this - should we parse the response
-    //       to define if we need to send the metrics
-    return result
-  }
-
-  /**
-   * @description Retrieve only the credential at given index
-   * @param credentialIndex - index for the VC in vault
-   * @returns a single VC
-   */
-  async getCredentialByIndex(credentialIndex: number): Promise<any> {
-    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
-    const blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
-
-    if (blobs.length < 1) {
-      throw new __dangerous.SdkError('COR-14')
-    }
-
-    const decryptedCredentials = await this.walletStorageService.decryptCredentials(blobs)
-    return decryptedCredentials[0]
+    return platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, encryptedMessage)
   }
 
   /**
@@ -229,76 +81,15 @@ export class AffinityWallet extends CoreNetwork {
    * 2. decrypt encrypted VCs
    * 3. filter VCs by type
    * @param credentialShareRequestToken - JWT received from verifier
-   * @param paginationOptions - optional range for credentials to be pulled (default is skip: 0, limit: 100)
    * @returns array of VCs
    */
-  async getCredentials(
-    credentialShareRequestToken: string = null,
-    paginationOptions?: FetchCredentialsPaginationOptions,
-  ): Promise<any> {
+  async getCredentials(credentialShareRequestToken: string = null): Promise<any[]> {
+    const allCredentials = await this._walletStorageService.fetchAllDecryptedCredentials()
+
     if (credentialShareRequestToken) {
-      return this._getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken)
+      return this._walletStorageService.filterCredentials(credentialShareRequestToken, allCredentials)
     }
 
-    let blobs
-
-    try {
-      blobs = await this.walletStorageService.fetchEncryptedCredentials(paginationOptions)
-    } catch (error) {
-      if (error.code === 'COR-14') {
-        return []
-      } else {
-        throw error
-      }
-    }
-
-    if (blobs.length === 0) {
-      return []
-    }
-
-    return this.walletStorageService.decryptCredentials(blobs)
-  }
-
-  private async _getCredentialsWithCredentialShareRequestToken(credentialShareRequestToken: string): Promise<any> {
-    let result: any[] = []
-
-    for await (const blobs of this.walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
-      const credentials = await this.walletStorageService.decryptCredentials(blobs)
-
-      const matchedCredentials = this.walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
-
-      result = result.concat(matchedCredentials)
-    }
-
-    return result
-  }
-
-  /**
-   * @description Delete credential by id if found in given range
-   * @param id - id of the credential
-   * @param credentialIndex - credential to remove
-   */
-  async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
-    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
-      throw new __dangerous.SdkError('COR-1', {
-        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
-      })
-    }
-
-    if (credentialIndex) {
-      return this.deleteCredentialByIndex(credentialIndex.toString())
-    }
-
-    let allBlobs: any[] = []
-
-    for await (const blobs of this.walletStorageService.fetchAllEncryptedCredentialsInBatches()) {
-      allBlobs = allBlobs.concat(blobs)
-    }
-
-    await this.walletStorageService.decryptCredentials(allBlobs)
-
-    const credentialIndexToDelete = this.walletStorageService.findCredentialIndexById(id)
-
-    return this.deleteCredentialByIndex(credentialIndexToDelete)
+    return allCredentials
   }
 }

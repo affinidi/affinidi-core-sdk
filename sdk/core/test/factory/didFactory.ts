@@ -1,6 +1,6 @@
 const cryptoRandomString = require('crypto-random-string')
 
-import { CommonNetworkMember } from '../../src'
+import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 import { KeysService, DidDocumentService } from '@affinidi/common'
 
 interface TestDid {
