@@ -96,12 +96,13 @@ import {
   PROD_METRICS_URL,
 } from './_defaultConfig'
 
-type Constructor<T> = new (
+type GenericConstructor<T> = new (
   password: string,
   encryptedSeed: string,
   options?: SdkOptions,
   component?: EventComponent,
 ) => T
+type Constructor<T> = GenericConstructor<T> & GenericConstructor<CommonNetworkMember>
 type AbstractStaticMethods<T> = {
   afterConfirmSignUp: (networkMember: T, originalOptions: SdkOptions) => Promise<void>
 }
@@ -109,7 +110,7 @@ type ConstructorKeys<T> = {
   [P in keyof T]: T[P] extends new (...args: unknown[]) => unknown ? P : never
 }[keyof T]
 type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
-type DerivedThis<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructor<typeof CommonNetworkMember>
+type DerivedType<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructor<typeof CommonNetworkMember>
 
 /**
  * This class is abstract.
@@ -380,12 +381,12 @@ export abstract class CommonNetworkMember {
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */
-  static async fromSeed<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async fromSeed<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     seedHexWithMethod: string,
     options: SdkOptions = {},
     password: string = null,
-  ): Promise<T> {
+  ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: seedHexWithMethod },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -453,8 +454,8 @@ export abstract class CommonNetworkMember {
    *
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
-  static async register<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async register<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     password: string,
     options: SdkOptions = {},
   ): Promise<{ did: string; encryptedSeed: string }> {
@@ -712,12 +713,12 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async completeLoginChallenge<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async completeLoginChallenge<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-  ): Promise<T> {
+  ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
@@ -867,12 +868,12 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async fromLoginAndPassword<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async fromLoginAndPassword<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     username: string,
     password: string,
     options: SdkOptions = {},
-  ): Promise<T> {
+  ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
@@ -925,14 +926,14 @@ export abstract class CommonNetworkMember {
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUpWithExistsEntity<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async signUpWithExistsEntity<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     keyParams: KeyParams,
     username: string,
     password?: string,
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
-  ): Promise<string | T> {
+  ): Promise<string | InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: KeyParams, isRequired: true, value: keyParams }])
 
     CommonNetworkMember._validateKeys(keyParams)
@@ -995,13 +996,13 @@ export abstract class CommonNetworkMember {
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUp<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async signUp<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     username: string,
     password?: string,
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
-  ): Promise<string | T> {
+  ): Promise<string | InstanceType<T>> {
     const { token, isUsername } = await CommonNetworkMember._signUp(username, password, options, messageParameters)
 
     if (!isUsername) {
@@ -1024,13 +1025,13 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUpWithExistsEntity<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async confirmSignUpWithExistsEntity<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     keyParams: KeyParams,
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-  ): Promise<T> {
+  ): Promise<InstanceType<T>> {
     const [username] = token.split('::')
 
     const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
@@ -1073,13 +1074,13 @@ export abstract class CommonNetworkMember {
     return cognitoService
   }
 
-  private static async _confirmSignUp<T extends CommonNetworkMember>(
-    self: DerivedThis<T>,
+  private static async _confirmSignUp<T extends DerivedType<InstanceType<T>>>(
+    self: T,
     token: string,
     confirmationCode: string,
     keyParams: KeyParams = {},
     options: SdkOptions = {},
-  ): Promise<T> {
+  ): Promise<InstanceType<T>> {
     const parts = token.split('::')
     const username = parts[0]
     let password = parts[1]
@@ -1132,12 +1133,12 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUp<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async confirmSignUp<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-  ): Promise<T> {
+  ): Promise<InstanceType<T>> {
     const [username] = token.split('::')
 
     const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
@@ -1210,12 +1211,12 @@ export abstract class CommonNetworkMember {
    * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
-  static async signIn<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async signIn<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     username: string,
     options: SdkOptions = {},
     messageParameters?: MessageParameters,
-  ): Promise<string | T> {
+  ): Promise<string | InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -1243,12 +1244,12 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
-  static async confirmSignIn<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async confirmSignIn<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     token: string,
     confirmationCode: string,
     options: SdkOptions = {},
-  ): Promise<{ isNew: boolean; commonNetworkMember: T }> {
+  ): Promise<{ isNew: boolean; commonNetworkMember: InstanceType<T> }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
@@ -2229,11 +2230,11 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for AffinityWallet initialization
    * @returns initialized instance of SDK
    */
-  static async fromAccessToken<T extends CommonNetworkMember>(
-    this: DerivedThis<T>,
+  static async fromAccessToken<T extends DerivedType<InstanceType<T>>>(
+    this: T,
     accessToken: string,
     options: SdkOptions = {},
-  ): Promise<T> {
+  ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: false, value: accessToken },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
@@ -2253,7 +2254,10 @@ export abstract class CommonNetworkMember {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init<T extends CommonNetworkMember>(this: DerivedThis<T>, options: SdkOptions = {}): Promise<T> {
+  static async init<T extends DerivedType<InstanceType<T>>>(
+    this: T,
+    options: SdkOptions = {},
+  ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
     const { keyStorageUrl, userPoolId } = CommonNetworkMember.setEnvironmentVarialbles(options)
