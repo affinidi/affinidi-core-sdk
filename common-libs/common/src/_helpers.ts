@@ -1,7 +1,9 @@
 import { SUPPORTED_DID_METHODS } from './_defaultConfig'
 
-export const validateDidMethodSupported = (didMethod: string) => {
-  if (!SUPPORTED_DID_METHODS.includes(didMethod)) {
+export function validateDidMethodSupported(
+  didMethod: string,
+): asserts didMethod is typeof SUPPORTED_DID_METHODS[number] {
+  if (!(SUPPORTED_DID_METHODS as readonly string[]).includes(didMethod)) {
     throw new Error(`${didMethod} is not supported did method, supported: ${SUPPORTED_DID_METHODS.toString()}`)
   }
 }
