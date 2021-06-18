@@ -1,6 +1,8 @@
 # release 5.0.1 (2021-06-18)
-  * Improved type inference
-  * `CommonNetworkMember._affinity` made protected
+  * Improved type inference.
+  * `CommonNetworkMember._affinity` made protected.
+  * Breaking changes:
+    * `CommonNetworkMember._sdkOptions` is now declared as its actual type instead of `SdkOptions`.
 # release 5.0.0 (2021-06-16)
   * Implemented `WalletStorageService.fetchAllBlobs`.
   * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries.

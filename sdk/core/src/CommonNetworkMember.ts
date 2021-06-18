@@ -34,7 +34,6 @@ import {
   JwtOptions,
   SdkOptions,
   CognitoUserTokens,
-  SdkOptionsWithCongitoSetup,
   MessageParameters,
   KeyParams,
 } from './dto/shared.dto'
@@ -56,44 +55,8 @@ import { normalizeUsername } from './shared/normalizeUsername'
 import { clearUserTokensFromSessionStorage, readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
 import { isW3cCredential } from './_helpers'
 
-import {
-  DEV_REVOCATION_URL,
-  PROD_REVOCATION_URL,
-  STAGING_REVOCATION_URL,
-  DEFAULT_DID_METHOD,
-  DEV_COGNITO_CLIENT_ID,
-  DEV_COGNITO_USER_POOL_ID,
-  DEV_REGISTRY_URL,
-  DEV_ISSUER_URL,
-  DEV_VERIFIER_URL,
-  DEV_KEY_STORAGE_URL,
-  DEV_VAULT_URL,
-  DEV_PHONE_ISSUER_BASE_PATH,
-  DEV_EMAIL_ISSUER_BASE_PATH,
-  STAGING_COGNITO_CLIENT_ID,
-  STAGING_COGNITO_USER_POOL_ID,
-  STAGING_REGISTRY_URL,
-  STAGING_ISSUER_URL,
-  STAGING_VERIFIER_URL,
-  STAGING_KEY_STORAGE_URL,
-  STAGING_VAULT_URL,
-  STAGING_PHONE_ISSUER_BASE_PATH,
-  STAGING_EMAIL_ISSUER_BASE_PATH,
-  PROD_COGNITO_CLIENT_ID,
-  PROD_COGNITO_USER_POOL_ID,
-  PROD_REGISTRY_URL,
-  PROD_ISSUER_URL,
-  PROD_VERIFIER_URL,
-  PROD_KEY_STORAGE_URL,
-  PROD_VAULT_URL,
-  PROD_PHONE_ISSUER_BASE_PATH,
-  PROD_EMAIL_ISSUER_BASE_PATH,
-  ELEM_DID_METHOD,
-  SUPPORTED_DID_METHODS,
-  DEV_METRICS_URL,
-  STAGING_METRICS_URL,
-  PROD_METRICS_URL,
-} from './_defaultConfig'
+import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
+import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -145,7 +108,7 @@ export abstract class CommonNetworkMember {
   private readonly _metricsService: MetricsService
   private readonly _didDocumentService: DidDocumentService
   protected readonly _affinity: Affinity
-  protected readonly _sdkOptions: SdkOptionsWithCongitoSetup
+  protected readonly _sdkOptions
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
   private _didDocumentKeyId: string
@@ -176,7 +139,7 @@ export abstract class CommonNetworkMember {
       throw new Error('`platformEncryptionTools` must be provided!')
     }
 
-    this._sdkOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
+    this._sdkOptions = getOptionsFromEnvironment(options)
 
     const {
       issuerUrl,
@@ -217,116 +180,11 @@ export abstract class CommonNetworkMember {
     this._emailIssuer = new EmailIssuerService({ basePath: emailIssuerBasePath })
   }
 
-  private static _setAccessApiKey(options: SdkOptions) {
-    let apiKey
-    let accessApiKey
-    let apiKeyBuffer
-
-    accessApiKey = options.accessApiKey
-
-    const useTestApiKey = !options.apiKey && !options.accessApiKey
-
-    if (useTestApiKey) {
-      apiKey = 'testApiKey'
-
-      apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
-      accessApiKey = apiKeyBuffer.toString('hex')
-    }
-
-    if (options.apiKey) {
-      apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
-
-      accessApiKey = apiKeyBuffer.toString('hex')
-    }
-
-    return accessApiKey
-  }
-
+  /**
+   * @deprecated
+   */
   protected static setEnvironmentVarialbles(options: SdkOptions) {
-    const env = options.env || 'staging'
-
-    let vaultUrl
-    let issuerUrl
-    let registryUrl
-    let verifierUrl
-    let keyStorageUrl
-    let clientId
-    let userPoolId
-    let revocationUrl
-    let phoneIssuerBasePath
-    let emailIssuerBasePath
-    let metricsUrl
-
-    switch (env) {
-      /* istanbul ignore next */
-      case 'dev':
-        issuerUrl = options.issuerUrl || DEV_ISSUER_URL
-        registryUrl = options.registryUrl || DEV_REGISTRY_URL
-        verifierUrl = options.verifierUrl || DEV_VERIFIER_URL
-        vaultUrl = options.vaultUrl || DEV_VAULT_URL
-        keyStorageUrl = options.keyStorageUrl || DEV_KEY_STORAGE_URL
-        clientId = DEV_COGNITO_CLIENT_ID
-        userPoolId = DEV_COGNITO_USER_POOL_ID
-        clientId = DEV_COGNITO_CLIENT_ID
-        userPoolId = DEV_COGNITO_USER_POOL_ID
-        phoneIssuerBasePath = options.phoneIssuerBasePath || DEV_PHONE_ISSUER_BASE_PATH
-        emailIssuerBasePath = options.emailIssuerBasePath || DEV_EMAIL_ISSUER_BASE_PATH
-        metricsUrl = DEV_METRICS_URL
-        revocationUrl = options.revocationUrl || DEV_REVOCATION_URL
-
-        break
-
-      /* istanbul ignore next */
-      case 'prod':
-        issuerUrl = options.issuerUrl || PROD_ISSUER_URL
-        registryUrl = options.registryUrl || PROD_REGISTRY_URL
-        verifierUrl = options.verifierUrl || PROD_VERIFIER_URL
-        vaultUrl = options.vaultUrl || PROD_VAULT_URL
-        keyStorageUrl = options.keyStorageUrl || PROD_KEY_STORAGE_URL
-        clientId = PROD_COGNITO_CLIENT_ID
-        userPoolId = PROD_COGNITO_USER_POOL_ID
-        phoneIssuerBasePath = options.phoneIssuerBasePath || PROD_PHONE_ISSUER_BASE_PATH
-        emailIssuerBasePath = options.emailIssuerBasePath || PROD_EMAIL_ISSUER_BASE_PATH
-        metricsUrl = PROD_METRICS_URL
-        revocationUrl = options.revocationUrl || PROD_REVOCATION_URL
-
-        break
-
-      case 'staging':
-        issuerUrl = options.issuerUrl || STAGING_ISSUER_URL
-        registryUrl = options.registryUrl || STAGING_REGISTRY_URL
-        verifierUrl = options.verifierUrl || STAGING_VERIFIER_URL
-        vaultUrl = options.vaultUrl || STAGING_VAULT_URL
-        keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-        clientId = STAGING_COGNITO_CLIENT_ID
-        userPoolId = STAGING_COGNITO_USER_POOL_ID
-        phoneIssuerBasePath = options.phoneIssuerBasePath || STAGING_PHONE_ISSUER_BASE_PATH
-        emailIssuerBasePath = options.emailIssuerBasePath || STAGING_EMAIL_ISSUER_BASE_PATH
-        metricsUrl = STAGING_METRICS_URL
-        revocationUrl = options.revocationUrl || STAGING_REVOCATION_URL
-
-        break
-    }
-
-    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
-    const { storageRegion } = options
-
-    return {
-      env,
-      storageRegion,
-      accessApiKey,
-      issuerUrl,
-      registryUrl,
-      verifierUrl,
-      vaultUrl,
-      keyStorageUrl,
-      userPoolId,
-      clientId,
-      phoneIssuerBasePath,
-      emailIssuerBasePath,
-      metricsUrl,
-      revocationUrl,
-    }
+    return getOptionsFromEnvironment(options)
   }
 
   /**
@@ -365,7 +223,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
     const normalizedUsername = normalizeUsername(username)
@@ -463,7 +321,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    // const { registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    // const { registryUrl } = getOptionsFromEnvironment(options)
     /* istanbul ignore next: seems options is {} if not passed to the method */
     options = options || {}
 
@@ -493,9 +351,7 @@ export abstract class CommonNetworkMember {
     nonce: number,
     options: SdkOptions = {},
   ) {
-    const { registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
-
-    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
+    const { registryUrl, accessApiKey } = getOptionsFromEnvironment(options)
 
     const api = new API(registryUrl, null, null, { accessApiKey })
 
@@ -685,7 +541,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const fullOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const fullOptions = getOptionsFromEnvironment(options)
     const { userPoolId, clientId } = fullOptions
 
     if (messageParameters) {
@@ -724,7 +580,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl, userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { keyStorageUrl, userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     /* istanbul ignore next: seems options is {} if not passed to the method */
     options = options || {}
@@ -763,7 +619,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl, registryUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { keyStorageUrl, registryUrl } = getOptionsFromEnvironment(options)
 
     const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
@@ -781,7 +637,7 @@ export abstract class CommonNetworkMember {
   async signOut(options: SdkOptions = {}): Promise<void> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
     if (this.cognitoUserTokens) {
@@ -797,7 +653,7 @@ export abstract class CommonNetworkMember {
 
   /* istanbul ignore next: private method */
   private async _refreshCognitoUserTokens(options: SdkOptions = {}): Promise<void> {
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
@@ -826,7 +682,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
@@ -853,7 +709,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
@@ -879,7 +735,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl, userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { keyStorageUrl, userPoolId, clientId, accessApiKey } = getOptionsFromEnvironment(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
@@ -887,8 +743,6 @@ export abstract class CommonNetworkMember {
     options.cognitoUserTokens = await cognitoService.signIn(username, password)
 
     const { accessToken } = options.cognitoUserTokens
-
-    const accessApiKey = CommonNetworkMember._setAccessApiKey(options)
 
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
@@ -974,7 +828,7 @@ export abstract class CommonNetworkMember {
 
     password = normalizeShortPassword(password, username)
 
-    const { userPoolId, clientId, keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId, keyStorageUrl } = getOptionsFromEnvironment(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
     await cognitoService.signUp(username, password, messageParameters, { ...options, keyStorageUrl })
@@ -1059,7 +913,7 @@ export abstract class CommonNetworkMember {
 
     const { isUsername } = validateUsername(username)
 
-    const fullOptions = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const fullOptions = getOptionsFromEnvironment(options)
     const { userPoolId, clientId } = fullOptions
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
@@ -1195,7 +1049,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const cognitoService = new CognitoService({ userPoolId, clientId })
 
@@ -1276,7 +1130,7 @@ export abstract class CommonNetworkMember {
       return this.cognitoUserTokens
     }
 
-    const { userPoolId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId } = getOptionsFromEnvironment(options)
 
     this.cognitoUserTokens = readUserTokensFromSessionStorage(userPoolId)
 
@@ -1296,7 +1150,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
@@ -1323,7 +1177,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
@@ -1344,7 +1198,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
 
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
@@ -2239,7 +2093,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { keyStorageUrl } = getOptionsFromEnvironment(options)
 
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
@@ -2259,7 +2113,7 @@ export abstract class CommonNetworkMember {
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
-    const { keyStorageUrl, userPoolId } = CommonNetworkMember.setEnvironmentVarialbles(options)
+    const { keyStorageUrl, userPoolId } = getOptionsFromEnvironment(options)
     const { accessToken } = readUserTokensFromSessionStorage(userPoolId)
 
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
