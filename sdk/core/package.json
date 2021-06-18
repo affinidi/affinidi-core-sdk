@@ -43,7 +43,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "^0.0.25",
-    "@affinidi/common": "^1.9.0",
+    "@affinidi/common": "^1.9.1",
     "@affinidi/issuer-email-ses-client": "^0.1.1",
     "@affinidi/issuer-phone-twilio-client": "^0.1.1",
     "@affinidi/vc-common": "^1.3.0",
