@@ -309,7 +309,7 @@ export default class WalletStorageService {
     }
   }
 
-  async deleteCredentialByIndex(index: string): Promise<void> {
+  public async deleteCredentialByIndex(index: string): Promise<void> {
     const token = await this.authorizeVcVault()
 
     const headers: any = {
@@ -567,7 +567,18 @@ export default class WalletStorageService {
     return credentials
   }
 
-  async findCredentialIndexById(id: string) {
+  async getCredentialByIndex(credentialIndex: number): Promise<any> {
+    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
+    const credentials = await this.fetchDecryptedCredentials(paginationOptions)
+
+    if (!credentials[0]) {
+      throw new SdkError('COR-14')
+    }
+
+    return credentials[0]
+  }
+
+  private async findCredentialIndexById(id: string) {
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const allBlobs = await this.fetchAllBlobs()
     for (const blob of allBlobs) {
@@ -585,6 +596,17 @@ export default class WalletStorageService {
     }
 
     throw new SdkError('COR-23', { id })
+  }
+
+  async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
+    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
+      throw new SdkError('COR-1', {
+        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
+      })
+    }
+
+    const credentialIndexToDelete = credentialIndex ?? (await this.findCredentialIndexById(id))
+    return this.deleteCredentialByIndex(credentialIndexToDelete.toString())
   }
 }
 

@@ -37,7 +37,6 @@ import {
   SdkOptionsWithCongitoSetup,
   MessageParameters,
   KeyParams,
-  FetchCredentialsPaginationOptions,
 } from './dto/shared.dto'
 
 import { validateUsername } from './shared/validateUsername'
@@ -2293,14 +2292,7 @@ export abstract class CommonNetworkMember {
    * @returns a single VC
    */
   async getCredentialByIndex(credentialIndex: number): Promise<any> {
-    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
-    const credentials = await this._walletStorageService.fetchDecryptedCredentials(paginationOptions)
-
-    if (!credentials[0]) {
-      throw new SdkError('COR-14')
-    }
-
-    return credentials[0]
+    return this._walletStorageService.getCredentialByIndex(credentialIndex)
   }
 
   /**
@@ -2309,13 +2301,6 @@ export abstract class CommonNetworkMember {
    * @param credentialIndex - credential to remove
    */
   async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
-    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
-      throw new SdkError('COR-1', {
-        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
-      })
-    }
-
-    const credentialIndexToDelete = credentialIndex ?? (await this._walletStorageService.findCredentialIndexById(id))
-    return this.deleteCredentialByIndex(credentialIndexToDelete.toString())
+    return this._walletStorageService.deleteCredential(id, credentialIndex)
   }
 }
