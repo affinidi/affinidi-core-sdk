@@ -145,7 +145,7 @@ export abstract class CommonNetworkMember {
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
   private readonly _didDocumentService: DidDocumentService
-  private readonly _affinity: Affinity
+  protected readonly _affinity: Affinity
   protected readonly _sdkOptions: SdkOptionsWithCongitoSetup
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
