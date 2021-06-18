@@ -14,6 +14,7 @@ describe('VCEmployeePersonV1', () => {
         organizationName: 'Affinidi',
         title: 'Software Engineer',
         employmentType: 'Full-time',
+        employeeID: '12345',
         dateOfJoining: '15-02-2021',
         personalEmail: 'bob@gmail.com',
         phoneNumber: '123456789',
@@ -59,6 +60,11 @@ describe('VCEmployeePersonV1', () => {
                 "https://schema.org/employeeAddress": Array [
                   Object {
                     "@value": "9, 9th street, Koramangala, Bangalore",
+                  },
+                ],
+                "https://schema.org/employeeID": Array [
+                  Object {
+                    "@value": "12345",
                   },
                 ],
                 "https://schema.org/employmentType": Array [

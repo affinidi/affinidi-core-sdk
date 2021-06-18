@@ -15,6 +15,7 @@ describe('VCKudosPersonV1', () => {
         message: 'Kudos to you',
         awardedDate: '17-06-2021',
         awardedBy: 'Sridharan Jayabal',
+        awarderTitle: 'Software Engineer',
         expiryDate: '17-06-2022',
         certificate: 'link here',
       },
@@ -45,6 +46,11 @@ describe('VCKudosPersonV1', () => {
                 "https://schema.org/awardedDate": Array [
                   Object {
                     "@value": "17-06-2021",
+                  },
+                ],
+                "https://schema.org/awarderTitle": Array [
+                  Object {
+                    "@value": "Software Engineer",
                   },
                 ],
                 "https://schema.org/certificate": Array [

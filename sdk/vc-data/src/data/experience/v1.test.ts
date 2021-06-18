@@ -12,8 +12,9 @@ describe('VCExperiencePersonV1', () => {
         name: 'Bob Belcher',
         officialEmail: 'bob.b@affinidi.com',
         organizationName: 'Affinidi',
-        title: 'Software Engineer',
+        titlesHeld: ['Software Engineer', 'Lead Engineer'],
         employmentType: 'Full-time',
+        employeeID: '12345',
         dateOfJoining: '15-02-2021',
         personalEmail: 'bob@gmail.com',
         phoneNumber: '123456789',
@@ -59,6 +60,11 @@ describe('VCExperiencePersonV1', () => {
                 "https://schema.org/dateOfRelieving": Array [
                   Object {
                     "@value": "relieving date here",
+                  },
+                ],
+                "https://schema.org/employeeID": Array [
+                  Object {
+                    "@value": "12345",
                   },
                 ],
                 "https://schema.org/employmentType": Array [
@@ -120,9 +126,12 @@ describe('VCExperiencePersonV1', () => {
                     "@value": "gde",
                   },
                 ],
-                "https://schema.org/title": Array [
+                "https://schema.org/titlesHeld": Array [
                   Object {
                     "@value": "Software Engineer",
+                  },
+                  Object {
+                    "@value": "Lead Engineer",
                   },
                 ],
               },

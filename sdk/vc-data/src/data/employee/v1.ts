@@ -12,6 +12,7 @@ type EmployeePersonV1Mixin = CreateThing<
     title: string
     employmentType: 'Full-time' | 'Part-time' | 'Contractor' | 'Intern'
     dateOfJoining: string
+    employeeID?: string
     personalEmail?: string
     phoneNumber?: string
     employeeAddress?: string

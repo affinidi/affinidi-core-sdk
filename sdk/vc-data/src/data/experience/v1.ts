@@ -1,7 +1,15 @@
 import { VCV1, VCV1Subject } from '@affinidi/vc-common'
 
 import { PersonEV1, getBaseV1ContextEntries } from '../base/v1'
-import { CreateThing, ExtendThing, Type, ExpandThing, createContextEntry, createVCContextEntry } from '../util'
+import {
+  CreateThing,
+  MaybeArray,
+  ExtendThing,
+  Type,
+  ExpandThing,
+  createContextEntry,
+  createVCContextEntry,
+} from '../util'
 
 type ExperiencePersonV1Mixin = CreateThing<
   'ExperiencePerson',
@@ -9,9 +17,10 @@ type ExperiencePersonV1Mixin = CreateThing<
     name: string
     officialEmail: string
     organizationName: string
-    title: string
+    titlesHeld: MaybeArray<string>
     employmentType: 'Full-time' | 'Part-time' | 'Contractor' | 'Intern'
     dateOfJoining: string
+    employeeID?: string
     personalEmail?: string
     phoneNumber?: string
     EmployeeAddress?: string

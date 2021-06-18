@@ -12,6 +12,7 @@ type KudosPersonV1Mixin = CreateThing<
     message: string
     awardedDate: string
     awardedBy: string
+    awarderTitle?: string
     expiryDate?: string
     certificate?: string
   }
