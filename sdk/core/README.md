@@ -1,5 +1,11 @@
 # Affinity Core SDK - Affinity network DID solution
 
+> Please note that versions `>=4.2.6 <=5.0.0` might not work properly (see [this PR](https://github.com/affinityproject/affinidi-core-sdk/pull/105)).
+> 
+> For `v5`, please use versions `>=5.0.1`.
+> 
+> For `v4`, please use version `4.2.5` or, even better, update to `v5`.
+
 ## Table of contents
 
 - [Affinity Core SDK - Affinity network DID solution](#affinidi-core-sdk---affinity-network-did-solution)
