@@ -6,4 +6,3 @@ export { SdkOptions, CognitoUserTokens } from './dto'
 export { SdkError, validateUsername, ParametersValidator, readUserTokensFromSessionStorage } from './shared'
 
 export { isW3cCredential } from './_helpers'
-export { TestmailInbox } from './test-helpers/TestmailInbox'

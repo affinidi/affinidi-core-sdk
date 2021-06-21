@@ -4,6 +4,7 @@ import '../env'
 
 import { expect } from 'chai'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
+import { TestmailInbox } from '@affinidi/wallet-core-sdk/dist/test-helpers'
 import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
 import { AffinityWallet } from '../../../src/AffinityWallet'
 
@@ -36,12 +37,12 @@ const messageParameters: MessageParameters = {
   subject: `Verification code`,
 }
 
-const waitForOtpCode = async (inbox: __dangerous.TestmailInbox): Promise<string> => {
+const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   const { body } = await inbox.waitForNewEmail()
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: 'otp.browser' })
+const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.browser' })
 
 function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
