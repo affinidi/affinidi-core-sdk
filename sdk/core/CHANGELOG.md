@@ -1,3 +1,5 @@
+# release 5.0.1 (2021-06-21)
+  * Removed TestmailInbox from `__dangerous`
 # release 5.0.0 (2021-06-16)
   * Implemented `WalletStorageService.fetchAllBlobs`.
   * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries.
