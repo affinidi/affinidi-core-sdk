@@ -1,5 +1,4 @@
 import uniq from 'lodash.uniq'
-import { validate as uuidValidate } from 'uuid'
 
 import { Affinity, JwtService, DidDocumentService, DigestService, KeysService } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
@@ -8,30 +7,24 @@ import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { stripParamsFromDidUrl } from '../_helpers'
 
+type ConstructorOptions = {
+  registryUrl: string
+  metricsUrl: string
+  accessApiKey: string
+}
+
 @profile()
 export default class HolderService {
-  private _didMap: any = {}
-  private _accessApiKey: string
+  private _didMap: Record<string, any> = {}
   private readonly _affinityService: Affinity
   private readonly _digestService: DigestService
 
-  constructor(options: any, component?: EventComponent) {
-    const { registryUrl, metricsUrl } = options
-
-    this._accessApiKey = options.accessApiKey
-
-    const isApiKeyAValidUuid = options.apiKey && uuidValidate(options.apiKey)
-
-    if (isApiKeyAValidUuid) {
-      const apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
-      this._accessApiKey = apiKeyBuffer.toString('hex')
-    }
-
+  constructor({ registryUrl, metricsUrl, accessApiKey }: ConstructorOptions, component: EventComponent) {
     this._affinityService = new Affinity({
-      apiKey: this._accessApiKey,
-      registryUrl: registryUrl,
-      metricsUrl: metricsUrl,
-      component: component,
+      apiKey: accessApiKey,
+      registryUrl,
+      metricsUrl,
+      component,
     })
     this._digestService = new DigestService()
   }
@@ -102,7 +95,7 @@ export default class HolderService {
 
   /* istanbul ignore next: private method */
   private async _validateCredentials(
-    credentials: any,
+    credentials: any[],
     holderKey?: string,
   ): Promise<{ result: boolean; error: string }[]> {
     const signatureValidationResults = []

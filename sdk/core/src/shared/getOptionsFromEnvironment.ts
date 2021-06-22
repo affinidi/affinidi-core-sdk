@@ -37,19 +37,38 @@ import {
   PROD_METRICS_URL,
 } from '../_defaultConfig'
 
-export const getAccessApiKeyFromOptions = (options: SdkOptions) => {
-  if (options.accessApiKey && !options.apiKey) {
-    return options.accessApiKey
-  }
-
-  const apiKey = options.apiKey || 'testApiKey'
-
-  const apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
-  return apiKeyBuffer.toString('hex')
+type AccessApiKeyOptions = {
+  accessApiKey?: string
+  apiKey?: string
 }
 
-function getBasicOptionsFromEnvironment(options: SdkOptions) {
-  const env = options.env || 'staging'
+export const getAccessApiKeyFromOptions = ({ accessApiKey, apiKey }: AccessApiKeyOptions) => {
+  if (!accessApiKey && !apiKey) {
+    throw new Error('Neither accessApiKey nor apiKey is contained in options')
+  }
+
+  if (apiKey) {
+    const apiKeyBuffer = KeysService.sha256(Buffer.from(apiKey))
+    return apiKeyBuffer.toString('hex')
+  }
+
+  return accessApiKey
+}
+
+type EnvironmentOptions = {
+  env: Env
+  issuerUrl?: string
+  registryUrl?: string
+  verifierUrl?: string
+  vaultUrl?: string
+  keyStorageUrl?: string
+  phoneIssuerBasePath?: string
+  emailIssuerBasePath?: string
+  revocationUrl?: string
+}
+
+function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
+  const env = options.env
 
   switch (env) {
     /* istanbul ignore next */
@@ -104,13 +123,56 @@ function getBasicOptionsFromEnvironment(options: SdkOptions) {
   }
 }
 
-export const getOptionsFromEnvironment = (options: SdkOptions) => {
-  const accessApiKey = getAccessApiKeyFromOptions(options)
-  const { storageRegion } = options
+const splitOptions = (options: SdkOptions) => {
+  const {
+    accessApiKey,
+    apiKey,
+    env,
+    issuerUrl,
+    registryUrl,
+    verifierUrl,
+    vaultUrl,
+    keyStorageUrl,
+    phoneIssuerBasePath,
+    emailIssuerBasePath,
+    revocationUrl,
+    storageRegion,
+    cognitoUserTokens,
+    ...otherOptions
+  } = options
 
   return {
-    ...getBasicOptionsFromEnvironment(options),
+    accessApiKeyOptions: {
+      accessApiKey,
+      apiKey,
+    },
+    environmentOptions: {
+      env,
+      issuerUrl,
+      registryUrl,
+      verifierUrl,
+      vaultUrl,
+      keyStorageUrl,
+      phoneIssuerBasePath,
+      emailIssuerBasePath,
+      revocationUrl,
+    },
     storageRegion,
-    accessApiKey,
+    cognitoUserTokens,
+    otherOptions,
+  }
+}
+
+export const getOptionsFromEnvironment = (options: SdkOptions) => {
+  const { accessApiKeyOptions, environmentOptions, storageRegion, cognitoUserTokens, otherOptions } = splitOptions(
+    options,
+  )
+
+  return {
+    basicOptions: getBasicOptionsFromEnvironment(environmentOptions),
+    accessApiKey: getAccessApiKeyFromOptions(accessApiKeyOptions),
+    storageRegion,
+    cognitoUserTokens,
+    otherOptions,
   }
 }

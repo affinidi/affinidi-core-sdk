@@ -26,7 +26,17 @@ const fetchCredentialsBase = '/data/'
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
-  return new WalletStorageService(keysService, testPlatformTools)
+  return new WalletStorageService(keysService, testPlatformTools, {
+    keyStorageUrl: STAGING_KEY_STORAGE_URL,
+    vaultUrl: STAGING_VAULT_URL,
+    accessApiKey: undefined,
+    clientId: undefined,
+    issuerUrl: undefined,
+    registryUrl: undefined,
+    storageRegion: undefined,
+    userPoolId: undefined,
+    verifierUrl: undefined,
+  })
 }
 
 describe('WalletStorageService', () => {
@@ -70,7 +80,9 @@ describe('WalletStorageService', () => {
       .get(readMyKeyPath)
       .reply(200, { encryptedSeed })
 
-    const response = await WalletStorageService.pullEncryptedSeed('accessToken')
+    const response = await WalletStorageService.pullEncryptedSeed('accessToken', STAGING_KEY_STORAGE_URL, {
+      accessApiKey: undefined,
+    })
 
     expect(response).to.include(encryptedSeed)
   })
@@ -342,7 +354,10 @@ describe('WalletStorageService', () => {
       .post(adminConfirmUserPath)
       .reply(200, {})
 
-    const response = await WalletStorageService.adminConfirmUser(username)
+    const response = await WalletStorageService.adminConfirmUser(username, {
+      keyStorageUrl: STAGING_KEY_STORAGE_URL,
+      accessApiKey: undefined,
+    })
 
     expect(response).to.not.exist
   })
@@ -356,7 +371,7 @@ describe('WalletStorageService', () => {
       .get(getCredentialOfferPath)
       .reply(200, { offerToken: 'offerToken' })
 
-    const returnedOffer = await WalletStorageService.getCredentialOffer(idToken)
+    const returnedOffer = await WalletStorageService.getCredentialOffer(idToken, STAGING_KEY_STORAGE_URL, {} as any)
 
     expect(returnedOffer).to.eq('offerToken')
   })

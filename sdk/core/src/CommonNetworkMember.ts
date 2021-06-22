@@ -61,7 +61,7 @@ import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
 type GenericConstructor<T> = new (
   password: string,
   encryptedSeed: string,
-  options?: SdkOptions,
+  options: SdkOptions,
   component?: EventComponent,
 ) => T
 type Constructor<T> = GenericConstructor<T> & GenericConstructor<CommonNetworkMember>
@@ -97,7 +97,6 @@ type DerivedType<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructo
 export abstract class CommonNetworkMember {
   private readonly _api: API
   private _did: string
-  private readonly _accessApiKey: string
   private readonly _encryptedSeed: string
   private _password: string
   protected readonly _walletStorageService: WalletStorageService
@@ -119,8 +118,8 @@ export abstract class CommonNetworkMember {
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
-    options: SdkOptions = {},
-    component?: EventComponent,
+    inputOptions: SdkOptions,
+    component: EventComponent,
   ) {
     // await ParametersValidator.validateSync(
     //   [
@@ -139,52 +138,54 @@ export abstract class CommonNetworkMember {
       throw new Error('`platformEncryptionTools` must be provided!')
     }
 
-    this._sdkOptions = getOptionsFromEnvironment(options)
+    const { accessApiKey, basicOptions, storageRegion, cognitoUserTokens, otherOptions } = getOptionsFromEnvironment(
+      inputOptions,
+    )
 
-    const {
-      issuerUrl,
-      metricsUrl,
-      registryUrl,
-      verifierUrl,
-      phoneIssuerBasePath,
-      emailIssuerBasePath,
-    } = this._sdkOptions
+    const { issuerUrl, metricsUrl, registryUrl, verifierUrl, phoneIssuerBasePath, emailIssuerBasePath } = basicOptions
 
-    this._accessApiKey = this._sdkOptions.accessApiKey
-
-    this._component = component || EventComponent.AffinidiCore
+    const keysService = new KeysService(encryptedSeed, password)
     this._metricsService = new MetricsService({
       metricsUrl,
-      accessApiKey: this._accessApiKey,
-      component: this._component,
+      accessApiKey: accessApiKey,
+      component: component,
     })
-    this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey: this._accessApiKey })
-    this._keysService = new KeysService(encryptedSeed, password)
-    this._walletStorageService = new WalletStorageService(this._keysService, platformEncryptionTools, this._sdkOptions)
-    this._revocationService = new RevocationService(this._sdkOptions)
+    this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey })
+    this._walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
+      ...basicOptions,
+      accessApiKey,
+      storageRegion,
+    })
+    this._revocationService = new RevocationService({ ...basicOptions, accessApiKey })
     this._jwtService = new JwtService()
-    this._holderService = new HolderService(this._sdkOptions, this._component)
-    this._didDocumentService = new DidDocumentService(this._keysService)
+    this._holderService = new HolderService({ ...basicOptions, accessApiKey }, component)
+    this._didDocumentService = new DidDocumentService(keysService)
     this._affinity = new Affinity({
-      apiKey: this._accessApiKey,
+      apiKey: accessApiKey,
       registryUrl: registryUrl,
       metricsUrl: metricsUrl,
-      component: this._component,
+      component: component,
     })
-    this._encryptedSeed = encryptedSeed
-    this._password = password
-    this.cognitoUserTokens = options && options.cognitoUserTokens ? options.cognitoUserTokens : undefined
-    this._did = null
-    this._didDocumentKeyId = null
     this._phoneIssuer = new PhoneIssuerService({ basePath: phoneIssuerBasePath })
     this._emailIssuer = new EmailIssuerService({ basePath: emailIssuerBasePath })
+    this._keysService = keysService
+
+    const sdkOptions = { ...basicOptions, accessApiKey, storageRegion, otherOptions }
+    this._sdkOptions = sdkOptions
+    this._component = component
+    this._encryptedSeed = encryptedSeed
+    this._password = password
+    this.cognitoUserTokens = cognitoUserTokens
+    this._did = null
+    this._didDocumentKeyId = null
   }
 
   /**
    * @deprecated
    */
   protected static setEnvironmentVarialbles(options: SdkOptions) {
-    return getOptionsFromEnvironment(options)
+    const { accessApiKey, basicOptions, storageRegion, otherOptions } = getOptionsFromEnvironment(options)
+    return { ...basicOptions, accessApiKey, storageRegion, otherOptions }
   }
 
   /**
@@ -223,9 +224,8 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
-
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const { basicOptions } = getOptionsFromEnvironment(options)
+    const cognitoService = new CognitoService(basicOptions)
     const normalizedUsername = normalizeUsername(username)
 
     return cognitoService.isUserUnconfirmed(normalizedUsername)
@@ -241,7 +241,7 @@ export abstract class CommonNetworkMember {
   static async fromSeed<T extends DerivedType<InstanceType<T>>>(
     this: T,
     seedHexWithMethod: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
     password: string = null,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
@@ -314,7 +314,7 @@ export abstract class CommonNetworkMember {
   static async register<T extends DerivedType<InstanceType<T>>>(
     this: T,
     password: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
@@ -322,8 +322,6 @@ export abstract class CommonNetworkMember {
     ])
 
     // const { registryUrl } = getOptionsFromEnvironment(options)
-    /* istanbul ignore next: seems options is {} if not passed to the method */
-    options = options || {}
 
     const didMethod = options.didMethod || DEFAULT_DID_METHOD
 
@@ -349,9 +347,12 @@ export abstract class CommonNetworkMember {
     password: string,
     didDocument: any,
     nonce: number,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ) {
-    const { registryUrl, accessApiKey } = getOptionsFromEnvironment(options)
+    const {
+      basicOptions: { registryUrl },
+      accessApiKey,
+    } = getOptionsFromEnvironment(options)
 
     const api = new API(registryUrl, null, null, { accessApiKey })
 
@@ -532,7 +533,7 @@ export abstract class CommonNetworkMember {
    */
   static async passwordlessLogin(
     username: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
@@ -541,11 +542,10 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const fullOptions = getOptionsFromEnvironment(options)
-    const { userPoolId, clientId } = fullOptions
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
 
     if (messageParameters) {
-      const customMessageTemplateService = new CustomMessageTemplatesService(fullOptions)
+      const customMessageTemplateService = new CustomMessageTemplatesService({ ...basicOptions, accessApiKey })
       await customMessageTemplateService.storeTemplate({
         username: username,
         template: messageParameters.message,
@@ -554,7 +554,7 @@ export abstract class CommonNetworkMember {
       })
     }
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
     const token = await cognitoService.signInWithUsername(username, messageParameters)
 
     // prettier-ignore
@@ -572,7 +572,7 @@ export abstract class CommonNetworkMember {
     this: T,
     token: string,
     confirmationCode: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -580,17 +580,16 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl, userPoolId, clientId } = getOptionsFromEnvironment(options)
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
 
-    /* istanbul ignore next: seems options is {} if not passed to the method */
-    options = options || {}
-
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
     options.cognitoUserTokens = await cognitoService.completeLoginChallenge(token, confirmationCode)
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, basicOptions.keyStorageUrl, {
+      accessApiKey,
+    })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -613,15 +612,21 @@ export abstract class CommonNetworkMember {
    * @param idToken - idToken received from cognito
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
-  async getSignupCredentials(idToken: string, options: SdkOptions = {}): Promise<SignedCredential[]> {
+  async getSignupCredentials(idToken: string, options: SdkOptions): Promise<SignedCredential[]> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: idToken },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl, registryUrl } = getOptionsFromEnvironment(options)
+    const {
+      basicOptions: { env, keyStorageUrl, registryUrl },
+      accessApiKey,
+    } = getOptionsFromEnvironment(options)
 
-    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
+    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, {
+      env,
+      accessApiKey,
+    })
 
     const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferToken)
 
@@ -634,11 +639,11 @@ export abstract class CommonNetworkMember {
   /**
    * @description Signs out current user
    */
-  async signOut(options: SdkOptions = {}): Promise<void> {
+  async signOut(options: SdkOptions): Promise<void> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const { basicOptions } = getOptionsFromEnvironment(options)
+    const cognitoService = new CognitoService(basicOptions)
 
     if (this.cognitoUserTokens) {
       await this._refreshCognitoUserTokens(options)
@@ -648,14 +653,14 @@ export abstract class CommonNetworkMember {
       await cognitoService.signOut(accessToken)
     }
 
-    clearUserTokensFromSessionStorage(userPoolId)
+    clearUserTokensFromSessionStorage(basicOptions.userPoolId)
   }
 
   /* istanbul ignore next: private method */
-  private async _refreshCognitoUserTokens(options: SdkOptions = {}): Promise<void> {
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
+  private async _refreshCognitoUserTokens(options: SdkOptions): Promise<void> {
+    const { basicOptions } = getOptionsFromEnvironment(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
 
     const { expiresIn, refreshToken } = this.cognitoUserTokens
 
@@ -674,7 +679,7 @@ export abstract class CommonNetworkMember {
    */
   static async forgotPassword(
     username: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<void> {
     await ParametersValidator.validate([
@@ -682,9 +687,9 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
+    const { basicOptions } = getOptionsFromEnvironment(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
 
     await cognitoService.forgotPassword(username, messageParameters)
   }
@@ -700,7 +705,7 @@ export abstract class CommonNetworkMember {
     username: string,
     confirmationCode: string,
     newPassword: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
@@ -709,9 +714,9 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
+    const { basicOptions } = getOptionsFromEnvironment(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
 
     await cognitoService.forgotPasswordSubmit(username, confirmationCode, newPassword)
   }
@@ -727,7 +732,7 @@ export abstract class CommonNetworkMember {
     this: T,
     username: string,
     password: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
@@ -735,16 +740,18 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl, userPoolId, clientId, accessApiKey } = getOptionsFromEnvironment(options)
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
 
     password = normalizeShortPassword(password, username)
     options.cognitoUserTokens = await cognitoService.signIn(username, password)
 
     const { accessToken } = options.cognitoUserTokens
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, basicOptions.keyStorageUrl, {
+      accessApiKey,
+    })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -783,8 +790,8 @@ export abstract class CommonNetworkMember {
     this: T,
     keyParams: KeyParams,
     username: string,
-    password?: string,
-    options: SdkOptions = {},
+    password: string,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: KeyParams, isRequired: true, value: keyParams }])
@@ -802,8 +809,8 @@ export abstract class CommonNetworkMember {
 
   private static async _signUp(
     username: string,
-    password?: string,
-    options: SdkOptions = {},
+    password: string,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<{ token: string; isUsername: boolean }> {
     const { isUsername } = validateUsername(username)
@@ -828,10 +835,13 @@ export abstract class CommonNetworkMember {
 
     password = normalizeShortPassword(password, username)
 
-    const { userPoolId, clientId, keyStorageUrl } = getOptionsFromEnvironment(options)
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
-    await cognitoService.signUp(username, password, messageParameters, { ...options, keyStorageUrl })
+    const cognitoService = new CognitoService(basicOptions)
+    await cognitoService.signUp(username, password, messageParameters, {
+      accessApiKey,
+      keyStorageUrl: basicOptions.keyStorageUrl,
+    })
 
     const token = `${username}::${password}`
 
@@ -852,8 +862,8 @@ export abstract class CommonNetworkMember {
   static async signUp<T extends DerivedType<InstanceType<T>>>(
     this: T,
     username: string,
-    password?: string,
-    options: SdkOptions = {},
+    password: string,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { token, isUsername } = await CommonNetworkMember._signUp(username, password, options, messageParameters)
@@ -883,7 +893,7 @@ export abstract class CommonNetworkMember {
     keyParams: KeyParams,
     token: string,
     confirmationCode: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     const [username] = token.split('::')
 
@@ -907,19 +917,18 @@ export abstract class CommonNetworkMember {
   private static async _confirmSignUpUser(
     token: string,
     confirmationCode: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<CognitoService> {
     const [username] = token.split('::')
 
     const { isUsername } = validateUsername(username)
 
-    const fullOptions = getOptionsFromEnvironment(options)
-    const { userPoolId, clientId } = fullOptions
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
 
     if (isUsername) {
-      await WalletStorageService.adminConfirmUser(username, fullOptions)
+      await WalletStorageService.adminConfirmUser(username, { ...basicOptions, accessApiKey })
     } else {
       await cognitoService.confirmSignUp(username, confirmationCode)
     }
@@ -931,8 +940,8 @@ export abstract class CommonNetworkMember {
     self: T,
     token: string,
     confirmationCode: string,
-    keyParams: KeyParams = {},
-    options: SdkOptions = {},
+    keyParams: KeyParams,
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     const parts = token.split('::')
     const username = parts[0]
@@ -940,7 +949,7 @@ export abstract class CommonNetworkMember {
 
     let passwordHash
     let encryptedSeed
-    if (keyParams.encryptedSeed) {
+    if (keyParams?.encryptedSeed) {
       encryptedSeed = keyParams.encryptedSeed
       passwordHash = keyParams.password
     } else {
@@ -990,7 +999,7 @@ export abstract class CommonNetworkMember {
     this: T,
     token: string,
     confirmationCode: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     const [username] = token.split('::')
 
@@ -1040,7 +1049,7 @@ export abstract class CommonNetworkMember {
    */
   static async resendSignUpConfirmationCode(
     username: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<void> {
     await ParametersValidator.validate([
@@ -1049,9 +1058,9 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
+    const { basicOptions } = getOptionsFromEnvironment(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
 
     await cognitoService.resendSignUp(username, messageParameters)
   }
@@ -1067,7 +1076,7 @@ export abstract class CommonNetworkMember {
   static async signIn<T extends DerivedType<InstanceType<T>>>(
     this: T,
     username: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     await ParametersValidator.validate([
@@ -1101,7 +1110,7 @@ export abstract class CommonNetworkMember {
     this: T,
     token: string,
     confirmationCode: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<{ isNew: boolean; commonNetworkMember: InstanceType<T> }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -1125,12 +1134,14 @@ export abstract class CommonNetworkMember {
   }
 
   /* istanbul ignore next */
-  protected _getCognitoUserTokensForUser(options: SdkOptions = {}) {
+  protected _getCognitoUserTokensForUser(options: SdkOptions) {
     if (this.cognitoUserTokens) {
       return this.cognitoUserTokens
     }
 
-    const { userPoolId } = getOptionsFromEnvironment(options)
+    const {
+      basicOptions: { userPoolId },
+    } = getOptionsFromEnvironment(options)
 
     this.cognitoUserTokens = readUserTokensFromSessionStorage(userPoolId)
 
@@ -1143,18 +1154,18 @@ export abstract class CommonNetworkMember {
    * @param newPassword
    * @param options - optional parameters with specified environment
    */
-  async changePassword(oldPassword: string, newPassword: string, options: SdkOptions = {}): Promise<void> {
+  async changePassword(oldPassword: string, newPassword: string, options: SdkOptions): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: oldPassword },
       { isArray: false, type: 'string', isRequired: true, value: newPassword },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
+    const { basicOptions } = getOptionsFromEnvironment(options)
 
-    const { accessToken } = await this._getCognitoUserTokensForUser(options)
+    const { accessToken } = await this._getCognitoUserTokensForUser(basicOptions)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
     await cognitoService.changePassword(accessToken, oldPassword, newPassword)
   }
 
@@ -1166,22 +1177,18 @@ export abstract class CommonNetworkMember {
    */
   // NOTE: operation is used for change the attribute, not username. Consider renaming
   //       New email/phoneNumber can be useded as a username to login.
-  async changeUsername(
-    newUsername: string,
-    options: SdkOptions = {},
-    messageParameters?: MessageParameters,
-  ): Promise<void> {
+  async changeUsername(newUsername: string, options: SdkOptions, messageParameters?: MessageParameters): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newUsername },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
+    const { basicOptions } = getOptionsFromEnvironment(options)
 
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
     await cognitoService.changeUsername(accessToken, newUsername, messageParameters)
   }
 
@@ -1191,18 +1198,18 @@ export abstract class CommonNetworkMember {
    * @param confirmationCode - OTP sent by AWS Cognito/SES
    * @param options - optional parameters with specified environment
    */
-  async confirmChangeUsername(newUsername: string, confirmationCode: string, options: SdkOptions = {}): Promise<void> {
+  async confirmChangeUsername(newUsername: string, confirmationCode: string, options: SdkOptions): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newUsername },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { userPoolId, clientId } = getOptionsFromEnvironment(options)
+    const { basicOptions } = getOptionsFromEnvironment(options)
 
     const { accessToken } = await this._getCognitoUserTokensForUser(options)
 
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoService = new CognitoService(basicOptions)
     await cognitoService.confirmChangeUsername(accessToken, newUsername, confirmationCode)
   }
 
@@ -2086,16 +2093,19 @@ export abstract class CommonNetworkMember {
   static async fromAccessToken<T extends DerivedType<InstanceType<T>>>(
     this: T,
     accessToken: string,
-    options: SdkOptions = {},
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: false, value: accessToken },
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const { keyStorageUrl } = getOptionsFromEnvironment(options)
+    const {
+      basicOptions: { keyStorageUrl },
+      accessApiKey,
+    } = getOptionsFromEnvironment(options)
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
@@ -2107,16 +2117,16 @@ export abstract class CommonNetworkMember {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init<T extends DerivedType<InstanceType<T>>>(
-    this: T,
-    options: SdkOptions = {},
-  ): Promise<InstanceType<T>> {
+  static async init<T extends DerivedType<InstanceType<T>>>(this: T, options: SdkOptions): Promise<InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
-    const { keyStorageUrl, userPoolId } = getOptionsFromEnvironment(options)
+    const {
+      basicOptions: { keyStorageUrl, userPoolId },
+      accessApiKey,
+    } = getOptionsFromEnvironment(options)
     const { accessToken } = readUserTokensFromSessionStorage(userPoolId)
 
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
+    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)

@@ -2,7 +2,7 @@
 
 import { expect } from 'chai'
 import request from 'supertest'
-import * as jwt from 'jsonwebtoken'
+import { decode as jwtDecode } from 'jsonwebtoken'
 import { Affinity } from '@affinidi/common'
 import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
@@ -10,11 +10,14 @@ import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 import CognitoService from '../../src/services/CognitoService'
 
-import { SdkOptions } from '../../src/dto/shared.dto'
+import {
+  generateUsername,
+  generateEmail,
+  getAllOptionsForEnvironment,
+  getBasicOptionsForEnvironment,
+  testSecrets,
+} from '../helpers'
 
-import { generateUsername, generateEmail, getOptionsForEnvironment } from '../helpers'
-
-const { TEST_SECRETS } = process.env
 const {
   PASSWORD,
   COGNITO_PASSWORD,
@@ -34,7 +37,7 @@ const {
   UPDATING_ENCRYPTED_SEED,
   UPDATING_DID,
   ISSUER_ELEM_SEED,
-} = JSON.parse(TEST_SECRETS)
+} = testSecrets
 
 const password = PASSWORD
 const encryptedSeed = ENCRYPTED_SEED_JOLO
@@ -54,7 +57,7 @@ const cognitoPassword = COGNITO_PASSWORD
 const userWithoutKey = COGNITO_USERNAME_NO_KEY
 const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 
-const options: SdkOptions = getOptionsForEnvironment()
+const options = getBasicOptionsForEnvironment()
 
 describe('CommonNetworkMember', () => {
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
@@ -223,7 +226,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.register (elem did method)', async () => {
-    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod })
+    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod } as const)
 
     const { did, encryptedSeed } = await CommonNetworkMember.register(password, optionsWithElemDid)
 
@@ -234,7 +237,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.register (jolo did method)', async () => {
-    const optionsWithJoloDid = Object.assign({}, options, { didMethod: joloDidMethod })
+    const optionsWithJoloDid = Object.assign({}, options, { didMethod: joloDidMethod } as const)
 
     const { did, encryptedSeed } = await CommonNetworkMember.register(password, optionsWithJoloDid)
 
@@ -255,7 +258,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#resolveDid (elem)', async () => {
-    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod })
+    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod } as const)
 
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, optionsWithElemDid)
     const didDocument = await commonNetworkMember.resolveDid(didElem)
@@ -303,7 +306,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#resolveDid ignores extra parameter', async () => {
-    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod })
+    const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod } as const)
 
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, optionsWithElemDid)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -341,7 +344,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#buildRevocationListStatus, #revokeCredential', async () => {
-    const fullOptions: SdkOptions = getOptionsForEnvironment(true)
+    const fullOptions = getAllOptionsForEnvironment()
     const commonNetworkMember = new CommonNetworkMember(password, ISSUER_ELEM_SEED, fullOptions)
     const holderDid = commonNetworkMember.did
     const didAuthRequestParams = {
@@ -914,7 +917,7 @@ describe('CommonNetworkMember', () => {
     expect(signUpNetworkMember.did).to.exist
     expect(signUpNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
-    await signUpNetworkMember.signOut()
+    await signUpNetworkMember.signOut(options)
 
     const fromLoginNetworkMember = await CommonNetworkMember.fromLoginAndPassword(
       cognitoUsername,
@@ -971,7 +974,7 @@ describe('CommonNetworkMember', () => {
     let responseError
 
     try {
-      await networkMember.changeUsername(cognitoUsername, newCognitoUsername)
+      await networkMember.changeUsername(newCognitoUsername, options)
     } catch (error) {
       responseError = error
     }
@@ -1039,7 +1042,7 @@ describe('CommonNetworkMember', () => {
     // NOTE: Get full options because CognitoService will use staging variables
     //       and `options` has only accessApiKey and env
     //       This is important for testing against different environments
-    const fullOptions: SdkOptions = getOptionsForEnvironment(true)
+    const fullOptions = getAllOptionsForEnvironment()
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const { clientId, userPoolId } = fullOptions
@@ -1048,7 +1051,7 @@ describe('CommonNetworkMember', () => {
 
     const { idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
 
-    const decoded = jwt.decode(idToken)
+    const decoded = jwtDecode(idToken)
 
     if (typeof decoded === 'string') {
       throw Error

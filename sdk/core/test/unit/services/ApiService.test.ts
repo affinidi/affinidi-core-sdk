@@ -19,7 +19,7 @@ describe('ApiService', () => {
   it('#execute', async () => {
     nock(STAGING_REGISTRY_URL).post('/api/v1/did/resolve-did').reply(200, {})
 
-    const apiService = new ApiService()
+    const apiService = new ApiService(STAGING_REGISTRY_URL, undefined, undefined, { accessApiKey: undefined })
 
     const { body, status } = await apiService.execute('registry.ResolveDid')
 

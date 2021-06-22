@@ -1,5 +1,4 @@
 import { toRpcSig, ecsign } from 'ethereumjs-util'
-import { validate as uuidValidate } from 'uuid'
 import CognitoService from './CognitoService'
 import API from './ApiService'
 import SdkError from '../shared/SdkError'
@@ -36,59 +35,57 @@ const publicToAddress = (publicKey: Buffer): Buffer => {
   return keccak256(publicKey).slice(-20)
 }
 
-const sha256 = (data: any) => {
+const sha256 = (data: unknown) => {
   return createHash('sha256').update(data).digest()
 }
 
-import {
-  STAGING_KEY_STORAGE_URL,
-  STAGING_VAULT_URL,
-  STAGING_COGNITO_CLIENT_ID,
-  STAGING_COGNITO_USER_POOL_ID,
-} from '../_defaultConfig'
+import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
 
 import { SignedCredential } from '../dto/shared.dto'
 import { ParametersValidator } from '../shared'
 
+type ConstructorOptions = {
+  keyStorageUrl: string
+  vaultUrl: string
+  clientId: string
+  userPoolId: string
+  registryUrl: string
+  issuerUrl: string
+  verifierUrl: string
+  storageRegion: string
+  accessApiKey: string
+}
+
+type AdminOptions = { keyStorageUrl: string; accessApiKey: string }
+
 @profile()
 export default class WalletStorageService {
-  _keyStorageUrl: string
-  _vaultUrl: string
-  _clientId: string
-  _userPoolId: string
-  _storageRegion: string
-  _keysService: KeysService
-  _platformEncryptionTools: IPlatformEncryptionTools
-  _api: API
-  _accessApiKey: string
+  private _keyStorageUrl: string
+  private _vaultUrl: string
+  private _clientId: string
+  private _userPoolId: string
+  private _storageRegion: string
+  private _keysService: KeysService
+  private _platformEncryptionTools: IPlatformEncryptionTools
+  private _api: API
+  private _accessApiKey: string
 
   constructor(
     keysService: KeysService,
     platformEncryptionTools: IPlatformEncryptionTools,
-    options: Record<string, any> = {},
+    options: ConstructorOptions,
   ) {
     this._keysService = keysService
     this._platformEncryptionTools = platformEncryptionTools
 
-    this._keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-    this._vaultUrl = options.vaultUrl || STAGING_VAULT_URL
-    this._clientId = options.clientId || STAGING_COGNITO_CLIENT_ID
-    this._userPoolId = options.userPoolId || STAGING_COGNITO_USER_POOL_ID
-
-    const { registryUrl, issuerUrl, verifierUrl, storageRegion } = options
-
-    this._storageRegion = storageRegion
-
+    this._keyStorageUrl = options.keyStorageUrl
+    this._vaultUrl = options.vaultUrl
+    this._clientId = options.clientId
+    this._userPoolId = options.userPoolId
+    this._storageRegion = options.storageRegion
     this._accessApiKey = options.accessApiKey
 
-    const isApiKeyAValidUuid = options.apiKey && uuidValidate(options.apiKey)
-
-    if (isApiKeyAValidUuid) {
-      const apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
-      this._accessApiKey = apiKeyBuffer.toString('hex')
-    }
-
-    this._api = new API(registryUrl, issuerUrl, verifierUrl, options)
+    this._api = new API(options.registryUrl, options.issuerUrl, options.verifierUrl, options)
   }
 
   async pullEncryptedSeed(username: string, password: string, token: string = undefined): Promise<string> {
@@ -110,9 +107,11 @@ export default class WalletStorageService {
     return encryptedSeed
   }
 
-  static async pullEncryptedSeed(accessToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
-    keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
-
+  static async pullEncryptedSeed(
+    accessToken: string,
+    keyStorageUrl: string,
+    options: { accessApiKey: string },
+  ): Promise<string> {
     const url = `${keyStorageUrl}/api/v1/keys/readMyKey`
 
     const headers = {
@@ -187,12 +186,9 @@ export default class WalletStorageService {
   }
 
   async authorizeVcVault(region?: string) {
-    const headers: any = {}
-
     const storageRegion = region || this._storageRegion
-
-    if (storageRegion) {
-      headers['X-DST-REGION'] = storageRegion
+    const headers = {
+      ...(storageRegion && { 'X-DST-REGION': storageRegion }),
     }
 
     const { addressHex, privateKeyHex } = this.getVaultKeys()
@@ -228,7 +224,7 @@ export default class WalletStorageService {
 
     const storageRegion = region || this._storageRegion
 
-    const headers: any = {
+    const headers = {
       Authorization: `Bearer ${token}`,
       ...(storageRegion ? { ['X-DST-REGION']: storageRegion } : {}),
     }
@@ -256,7 +252,7 @@ export default class WalletStorageService {
   }
 
   /* istanbul ignore next: there is test with NULL, but that did not count */
-  filterCredentials(credentialShareRequestToken: string = null, credentials: any) {
+  filterCredentials(credentialShareRequestToken: string, credentials: any[]) {
     if (credentialShareRequestToken) {
       const request = JwtService.fromJWT(credentialShareRequestToken)
 
@@ -270,7 +266,7 @@ export default class WalletStorageService {
       const requirementTypes =
         credentialRequirements.map((credentialRequirement: any) => credentialRequirement.type)
 
-      return credentials.filter((credential: any) => {
+      return credentials.filter((credential) => {
         if (isW3cCredential(credential)) {
           for (const requirementType of requirementTypes) {
             const isTypeMatchRequirements = this.isTypeMatchRequirements(credential.type, requirementType)
@@ -289,7 +285,7 @@ export default class WalletStorageService {
   async deleteAllCredentials(): Promise<void> {
     const token = await this.authorizeVcVault()
 
-    const headers: any = {
+    const headers = {
       Authorization: `Bearer ${token}`,
       ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
@@ -341,7 +337,9 @@ export default class WalletStorageService {
     return blobs.filter((blob) => blob.cyphertext !== null)
   }
 
-  async fetchEncryptedCredentials(fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions): Promise<any> {
+  async fetchEncryptedCredentials(
+    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
+  ): Promise<any[]> {
     await ParametersValidator.validate([
       {
         isArray: false,
@@ -401,7 +399,7 @@ export default class WalletStorageService {
     paginationOptions: PaginationOptions,
     token: string,
   ): Promise<any[]> {
-    const headers: any = {
+    const headers = {
       Authorization: `Bearer ${token}`,
       ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
@@ -431,7 +429,7 @@ export default class WalletStorageService {
     return `${this._vaultUrl}/data/${skip}/${skip + limit - 1}`
   }
 
-  static async adminConfirmUser(username: string, options: any = {}): Promise<void> {
+  static async adminConfirmUser(username: string, options: AdminOptions): Promise<void> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
 
     const url = `${keyStorageUrl}/api/v1/userManagement/adminConfirmUser`
@@ -445,7 +443,7 @@ export default class WalletStorageService {
     })
   }
 
-  static async adminDeleteUnconfirmedUser(username: string, options: any = {}): Promise<void> {
+  static async adminDeleteUnconfirmedUser(username: string, options: AdminOptions): Promise<void> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
 
     const url = `${keyStorageUrl}/api/v1/userManagement/adminDeleteUnconfirmedUser`
@@ -459,7 +457,11 @@ export default class WalletStorageService {
     })
   }
 
-  static async getCredentialOffer(idToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
+  static async getCredentialOffer(
+    idToken: string,
+    keyStorageUrl: string,
+    options: { env: Env; accessApiKey: string },
+  ): Promise<string> {
     keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
 
     const env: Env = options.env

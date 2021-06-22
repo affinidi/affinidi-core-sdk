@@ -2,16 +2,23 @@ import API from './ApiService'
 
 import { RevocationListOutput, RevocationListParamsInput } from '../dto/revocation.dto'
 
-import { STAGING_REVOCATION_URL } from '../_defaultConfig'
 import { profile } from '@affinidi/common'
+
+type ConstructorOptions = {
+  revocationUrl: string
+  registryUrl: string
+  issuerUrl: string
+  verifierUrl: string
+  accessApiKey: string
+}
 
 @profile()
 export default class RevocationService {
   _revocationUrl: string
   _api: API
 
-  constructor(options: any = {}) {
-    this._revocationUrl = options.revocationUrl || STAGING_REVOCATION_URL
+  constructor(options: ConstructorOptions) {
+    this._revocationUrl = options.revocationUrl
 
     const { registryUrl, issuerUrl, verifierUrl } = options
     this._api = new API(registryUrl, issuerUrl, verifierUrl, options)

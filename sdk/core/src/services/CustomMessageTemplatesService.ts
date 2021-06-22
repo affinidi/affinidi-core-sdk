@@ -4,10 +4,16 @@ import { CreateMessageTemplateInput, DeleteMessageTemplateInput } from '../dto/c
 export type CustomMessageTemplatesServiceOptions = {
   url: string
 }
+
+type ConstructorOptions = {
+  keyStorageUrl: string
+  accessApiKey: string
+}
+
 export class CustomMessageTemplatesService {
-  protected readonly _options: any
+  protected readonly _options
   private readonly _serviceBaseUrl: string
-  constructor(options: any) {
+  constructor(options: ConstructorOptions) {
     this._options = options
     this._serviceBaseUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
   }

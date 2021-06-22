@@ -8,16 +8,12 @@ import WalletStorageService from '../../../src/services/WalletStorageService'
 import CognitoService from '../../../src/services/CognitoService'
 import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
 
-import { SdkOptions } from '../../../src/dto/shared.dto'
-import { getOptionsForEnvironment } from '../../helpers'
+import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
 
-const { TEST_SECRETS } = process.env
+const options = getAllOptionsForEnvironment()
 
-const returnAllOptionsForEnvironment = true
-const options: SdkOptions = getOptionsForEnvironment(returnAllOptionsForEnvironment)
-
-const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, SEED_JOLO, ENCRYPTED_SEED_JOLO } = JSON.parse(TEST_SECRETS)
+const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, SEED_JOLO, ENCRYPTED_SEED_JOLO } = testSecrets
 
 const seed = SEED_JOLO
 const password = PASSWORD
@@ -33,7 +29,12 @@ let cognitoService: CognitoService
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, password)
-  return new WalletStorageService(keysService, testPlatformTools, options)
+  return new WalletStorageService(keysService, testPlatformTools, {
+    issuerUrl: undefined,
+    verifierUrl: undefined,
+    storageRegion: undefined,
+    ...options,
+  })
 }
 
 describe('WalletStorageService', () => {

@@ -5,11 +5,11 @@ import {
   clearUserTokensFromSessionStorage,
 } from '../../../src/shared/sessionStorageHandler'
 
-import { getOptionsForEnvironment } from '../../helpers'
+import { getAllOptionsForEnvironment } from '../../helpers'
 
 const cognitoUserTokens = require('../../factory/cognitoUserTokens')
 
-const { userPoolId } = getOptionsForEnvironment()
+const { userPoolId } = getAllOptionsForEnvironment()
 
 describe('SessionStorageHandler', () => {
   it('Saves cognito user tokens to sessionStorage', () => {

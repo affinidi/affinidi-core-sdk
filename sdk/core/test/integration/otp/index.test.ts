@@ -6,13 +6,13 @@ import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 import SdkError from '../../../src/shared/SdkError'
 
-import { generateUsername, getOptionsForEnvironment } from '../../helpers'
+import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
 import { __dangerous } from '../../../dist'
 
-const { COGNITO_PASSWORD } = JSON.parse(process.env.TEST_SECRETS)
+const { COGNITO_PASSWORD } = testSecrets
 
-const options: SdkOptions = getOptionsForEnvironment()
+const options = getBasicOptionsForEnvironment()
 const { env } = options
 
 const messageParameters: MessageParameters = {
@@ -80,7 +80,7 @@ describe('CommonNetworkMember [OTP]', () => {
     commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
 
     await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     const signInToken2 = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken2)
@@ -119,16 +119,16 @@ describe('CommonNetworkMember [OTP]', () => {
 
     const newInbox = createInbox()
 
-    await commonNetworkMember.changeUsername(newInbox.email, {}, messageParameters)
+    await commonNetworkMember.changeUsername(newInbox.email, options, messageParameters)
     const changeUsernameCode = await waitForOtpCode(newInbox)
 
-    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
+    await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
 
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     await CommonNetworkMember.forgotPassword(newInbox.email, options, messageParameters)
     const forgotPasswordCode = await waitForOtpCode(newInbox)
@@ -150,7 +150,7 @@ describe('CommonNetworkMember [OTP]', () => {
     let commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     await CommonNetworkMember.forgotPassword(inbox.email, options, messageParameters)
     const forgotPasswordCode = await waitForOtpCode(inbox)
@@ -163,11 +163,11 @@ describe('CommonNetworkMember [OTP]', () => {
 
     const newInbox = createInbox()
 
-    await commonNetworkMember.changeUsername(newInbox.email, {}, messageParameters)
+    await commonNetworkMember.changeUsername(newInbox.email, options, messageParameters)
     const changeUsernameCode = await waitForOtpCode(newInbox)
 
-    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
+    await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
@@ -187,7 +187,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, newSignUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken)
@@ -219,7 +219,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
 
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     const loginToken = await CommonNetworkMember.signIn(inbox.email, options)
     checkIsString(loginToken)
@@ -266,7 +266,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const changeUsernameCode = await waitForOtpCode(inbox)
 
     await commonNetworkMember.confirmChangeUsername(inbox.email, changeUsernameCode, options)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
@@ -274,7 +274,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const newPassword = `${password}_updated`
 
     await commonNetworkMember.changePassword(password, newPassword, options)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, newPassword, options)
     expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)

@@ -1,7 +1,4 @@
 import keyBy from 'lodash.keyby'
-import { validate as uuidValidate } from 'uuid'
-
-import { KeysService } from '@affinidi/common'
 
 import { STAGING_REGISTRY_URL, STAGING_ISSUER_URL, STAGING_VERIFIER_URL } from '../_defaultConfig'
 import SdkError from '../shared/SdkError'
@@ -18,6 +15,8 @@ import issuerSpec from '../_issuer.json'
 import verifierSpec from '../_verifier.json'
 import { profile } from '@affinidi/common'
 
+type ConstructorOptions = { accessApiKey: string }
+
 @profile()
 export default class ApiService {
   _registryUrl: string
@@ -26,27 +25,12 @@ export default class ApiService {
   _accessApiKey: string
   _specGroupByOperationId: any
 
-  constructor(registryUrl?: string, issuerUrl?: string, verifierUrl?: string, options: any = {}) {
+  constructor(registryUrl: string, issuerUrl: string, verifierUrl: string, options: ConstructorOptions) {
     this._issuerUrl = issuerUrl || STAGING_ISSUER_URL
     this._registryUrl = registryUrl || STAGING_REGISTRY_URL
     this._verifierUrl = verifierUrl || STAGING_VERIFIER_URL
-
     this._accessApiKey = options.accessApiKey
-
-    const isApiKeyAValidUuid = options.apiKey && uuidValidate(options.apiKey)
-
-    if (isApiKeyAValidUuid) {
-      const apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
-      this._accessApiKey = apiKeyBuffer.toString('hex')
-    }
-
-    if (!this._accessApiKey) {
-      const apiKeyBuffer = KeysService.sha256(Buffer.from('testApiKey'))
-      this._accessApiKey = apiKeyBuffer.toString('hex')
-    }
-
     this._specGroupByOperationId = {}
-
     this._parseSpecs()
   }
 

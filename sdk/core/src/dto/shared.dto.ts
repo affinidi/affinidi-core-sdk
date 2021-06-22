@@ -64,9 +64,8 @@ export class SdkOptions {
   @IsIn(SUPPORTED_DID_METHODS)
   didMethod?: DidMethod
 
-  @IsOptional()
   @IsIn(SUPPORTED_ENVIRONMENTS)
-  env?: Env
+  env: Env
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   @IsUrl({ require_tld: false })

@@ -7,7 +7,7 @@ if (!fetch) {
   ;(global as any).fetch = require('node-fetch')
 }
 
-const AWS = require('aws-sdk')
+import { CognitoIdentityServiceProvider } from 'aws-sdk'
 
 import WalletStorageService from './WalletStorageService'
 import SdkError from '../shared/SdkError'
@@ -15,38 +15,35 @@ import { CognitoUserTokens } from '../dto/shared.dto'
 import { saveUserTokensToSessionStorage } from '../shared/sessionStorageHandler'
 import { MessageParameters } from '../dto'
 
-import { DEFAULT_COGNITO_REGION, STAGING_COGNITO_CLIENT_ID, STAGING_COGNITO_USER_POOL_ID } from '../_defaultConfig'
+import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
 
 import { validateUsername } from '../shared/validateUsername'
 import { normalizeUsername } from '../shared/normalizeUsername'
 
-const tempSession: any = {}
+const tempSession: Record<string, string> = {}
 
-type CognitoAuthenticationResult = {
-  AccessToken: string
-  IdToken: string
-  RefreshToken: string
-  ExpiresIn: number
+type ConstructorOptions = {
+  clientId: string
+  userPoolId: string
 }
 
 @profile()
 export default class CognitoService {
-  protected cognitoOptions: any
+  protected cognitoOptions
   private readonly cognitoOptionKeys: string[] = ['clientId', 'userPoolId']
-  private authenticationFlowType: string = 'USER_PASSWORD_AUTH'
-  private readonly cognitoidentityserviceprovider: any = new AWS.CognitoIdentityServiceProvider({
+  private readonly cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
     region: DEFAULT_COGNITO_REGION,
     apiVersion: '2016-04-18',
   })
 
-  constructor(options: any = {}) {
+  constructor(options: ConstructorOptions) {
     this._validateCognitoOptions(options)
-
-    this.cognitoOptions = {
-      region: options.region || DEFAULT_COGNITO_REGION,
-      clientId: options.clientId || STAGING_COGNITO_CLIENT_ID,
-      userPoolId: options.userPoolId || STAGING_COGNITO_USER_POOL_ID,
+    const cognitoOptions = {
+      region: DEFAULT_COGNITO_REGION,
+      clientId: options.clientId,
+      userPoolId: options.userPoolId,
     }
+    this.cognitoOptions = cognitoOptions
   }
 
   async refreshUserSessionTokens(refreshToken: string) {
@@ -59,7 +56,7 @@ export default class CognitoService {
     }
   }
 
-  async signIn(username: string, password: string): Promise<any> {
+  async signIn(username: string, password: string): Promise<CognitoUserTokens> {
     try {
       const response = await this._signIn(username, password)
 
@@ -95,7 +92,10 @@ export default class CognitoService {
     }
   }
 
-  static setTempSession(ChallengeParameters: any, Session: string): void {
+  static setTempSession(
+    ChallengeParameters: CognitoIdentityServiceProvider.ChallengeParametersType,
+    Session: string,
+  ): void {
     const { USERNAME } = ChallengeParameters
 
     tempSession[USERNAME] = Session
@@ -165,7 +165,10 @@ export default class CognitoService {
     this.cognitoidentityserviceprovider.globalSignOut({ AccessToken })
   }
 
-  async forgotPassword(Username: string, messageParameters?: MessageParameters): Promise<any> {
+  async forgotPassword(
+    Username: string,
+    messageParameters?: MessageParameters,
+  ): Promise<AWS.CognitoIdentityServiceProvider.ForgotPasswordResponse> {
     this._usernameShouldBeEmailOrPhoneNumber(Username)
 
     const { clientId: ClientId } = this.cognitoOptions
@@ -192,7 +195,7 @@ export default class CognitoService {
     }
   }
 
-  async forgotPasswordSubmit(username: string, ConfirmationCode: string, Password: string): Promise<any> {
+  async forgotPasswordSubmit(username: string, ConfirmationCode: string, Password: string) {
     this._usernameShouldBeEmailOrPhoneNumber(username)
 
     const { clientId: ClientId } = this.cognitoOptions
@@ -231,9 +234,9 @@ export default class CognitoService {
   async signUp(
     Username: string,
     Password: string,
-    messageParameters?: MessageParameters,
-    options: any = {},
-  ): Promise<any> {
+    messageParameters: MessageParameters,
+    options: { keyStorageUrl: string; accessApiKey: string },
+  ): Promise<CognitoIdentityServiceProvider.SignUpResponse> {
     const UserAttributes = this._buildUserAttributes(Username)
 
     const normalizedUsername = normalizeUsername(Username)
@@ -256,9 +259,7 @@ export default class CognitoService {
             // NOTE: this will remove unconfirmed user so we won't get here 2nd time
             await WalletStorageService.adminDeleteUnconfirmedUser(normalizedUsername, options)
 
-            await this.signUp(Username, Password, messageParameters, options)
-
-            break
+            return this.signUp(Username, Password, messageParameters, options)
           }
 
           throw new SdkError('COR-7', { username: normalizedUsername })
@@ -273,7 +274,7 @@ export default class CognitoService {
     }
   }
 
-  async resendSignUp(Username: string, messageParameters?: MessageParameters): Promise<any> {
+  async resendSignUp(Username: string, messageParameters?: MessageParameters) {
     Username = normalizeUsername(Username)
 
     const { clientId: ClientId } = this.cognitoOptions
@@ -299,7 +300,7 @@ export default class CognitoService {
     }
   }
 
-  async confirmSignUp(Username: string, ConfirmationCode: string): Promise<any> {
+  async confirmSignUp(Username: string, ConfirmationCode: string) {
     Username = normalizeUsername(Username)
 
     const { clientId: ClientId } = this.cognitoOptions
@@ -327,13 +328,13 @@ export default class CognitoService {
     }
   }
 
-  async changePassword(AccessToken: string, PreviousPassword: string, ProposedPassword: string): Promise<any> {
+  async changePassword(AccessToken: string, PreviousPassword: string, ProposedPassword: string) {
     const params = { AccessToken, PreviousPassword, ProposedPassword }
 
     return this.cognitoidentityserviceprovider.changePassword(params).promise()
   }
 
-  async changeUsername(AccessToken: string, attribute: string, messageParameters?: MessageParameters): Promise<any> {
+  async changeUsername(AccessToken: string, attribute: string, messageParameters?: MessageParameters) {
     const userExists = await this._userExists(attribute)
 
     if (userExists) {
@@ -348,7 +349,7 @@ export default class CognitoService {
     return this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
   }
 
-  async confirmChangeUsername(AccessToken: string, attribute: string, confirmationCode: string): Promise<any> {
+  async confirmChangeUsername(AccessToken: string, attribute: string, confirmationCode: string) {
     const Code = confirmationCode
 
     const { isPhoneNumberValid } = validateUsername(attribute)
@@ -390,8 +391,8 @@ export default class CognitoService {
     const optionKeys = Object.keys(options)
 
     if (optionKeys.length > 0) {
-      optionKeys.every((value) => {
-        if (!this.cognitoOptionKeys.includes(value)) {
+      this.cognitoOptionKeys.every((value) => {
+        if (!optionKeys.includes(value)) {
           throw new Error(`All or none Cognito parameters must be provided: ${this.cognitoOptionKeys}`)
         }
       })
@@ -408,38 +409,35 @@ export default class CognitoService {
   }
 
   /* istanbul ignore next: private method */
+  private _getAuthParametersObject(authFlow: string, username: string, password: string, refreshToken: string) {
+    switch (authFlow) {
+      case 'USER_PASSWORD_AUTH':
+        return {
+          USERNAME: username,
+          PASSWORD: password,
+        }
+
+      case 'CUSTOM_AUTH':
+        return {
+          USERNAME: username,
+        }
+
+      case 'REFRESH_TOKEN_AUTH':
+        return {
+          REFRESH_TOKEN: refreshToken,
+        }
+    }
+  }
+
+  /* istanbul ignore next: private method */
   private _getCognitoAuthParametersObject(
     AuthFlow: string,
     username: string = null,
     password: string = null,
     refreshToken: string = null,
   ) {
-    let AuthParameters: any = {}
-
-    switch (AuthFlow) {
-      case 'USER_PASSWORD_AUTH':
-        AuthParameters = {
-          USERNAME: username,
-          PASSWORD: password,
-        }
-
-        break
-
-      case 'CUSTOM_AUTH':
-        AuthParameters = {
-          USERNAME: username,
-        }
-
-        break
-
-      case 'REFRESH_TOKEN_AUTH':
-        AuthParameters = {
-          REFRESH_TOKEN: refreshToken,
-        }
-    }
-
+    const AuthParameters = this._getAuthParametersObject(AuthFlow, username, password, refreshToken)
     const { clientId: ClientId } = this.cognitoOptions
-
     return { AuthFlow, ClientId, AuthParameters }
   }
 
@@ -470,7 +468,7 @@ export default class CognitoService {
 
   /* istanbul ignore next: private method */
   private _normalizeTokensFromCognitoAuthenticationResult(
-    AuthenticationResult: CognitoAuthenticationResult,
+    AuthenticationResult: AWS.CognitoIdentityServiceProvider.AuthenticationResultType,
   ): CognitoUserTokens {
     const { AccessToken: accessToken, IdToken: idToken, RefreshToken: refreshToken, ExpiresIn } = AuthenticationResult
 
@@ -481,7 +479,7 @@ export default class CognitoService {
   }
 
   /* istanbul ignore next: private method */
-  private async _signInWithUsername(username: string, messageParameters?: MessageParameters): Promise<any> {
+  private async _signInWithUsername(username: string, messageParameters?: MessageParameters) {
     const authFlow = 'CUSTOM_AUTH'
     const params = this._getCognitoAuthParametersObject(authFlow, username)
 
@@ -515,27 +513,14 @@ export default class CognitoService {
   private _buildUserAttributes(username: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
 
-    const attributes: any = []
-
-    if (isEmailValid) {
-      attributes.push({
-        Name: 'email',
-        Value: username,
-      })
-    }
-
-    if (isPhoneNumberValid) {
-      attributes.push({
-        Name: 'phone_number',
-        Value: username,
-      })
-    }
-
-    return attributes
+    return [
+      ...(isEmailValid ? [{ Name: 'email', Value: username }] : []),
+      ...(isPhoneNumberValid ? [{ Name: 'phone_number', Value: username }] : []),
+    ]
   }
 
   /* istanbul ignore next: private function */
-  private async _signInWithInvalidPassword(username: string): Promise<any> {
+  private async _signInWithInvalidPassword(username: string) {
     let errorCode
     let userExists = true
     let isUnconfirmed = false

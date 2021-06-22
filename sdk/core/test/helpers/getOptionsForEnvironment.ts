@@ -1,3 +1,4 @@
+import { Env } from '../../src/dto/shared.dto'
 import {
   DEV_VAULT_URL,
   PROD_VAULT_URL,
@@ -19,61 +20,58 @@ import {
   STAGING_COGNITO_USER_POOL_ID,
 } from '../../src/_defaultConfig'
 
-const { TEST_SECRETS, TEST_AGAINST } = process.env
-const { DEV_API_KEY_HASH, PROD_API_KEY_HASH, STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
+import { TEST_AGAINST, testSecrets } from './testSecrets'
+const { DEV_API_KEY_HASH, PROD_API_KEY_HASH, STAGING_API_KEY_HASH } = testSecrets
 
-let clientId
-let vaultUrl
-let userPoolId
-let registryUrl
-let accessApiKey
-let keyStorageUrl
-let revocationUrl // NOTE: ISSUER_URL is used
-
-let environment = 'staging'
+let environment: Env = 'staging'
 
 if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
   environment = TEST_AGAINST
 }
 
-export const getOptionsForEnvironment = (returnAllOptionsForEnvironment = false): any => {
+export const getAllOptionsForEnvironment = () => {
   const env = environment
 
-  switch (environment) {
+  switch (env) {
     case 'dev':
-      clientId = DEV_COGNITO_CLIENT_ID
-      vaultUrl = DEV_VAULT_URL
-      userPoolId = DEV_COGNITO_USER_POOL_ID
-      registryUrl = DEV_REGISTRY_URL
-      accessApiKey = DEV_API_KEY_HASH
-      revocationUrl = DEV_REVOCATION_URL
-      keyStorageUrl = DEV_KEY_STORAGE_URL
-      break
+      return {
+        env,
+        clientId: DEV_COGNITO_CLIENT_ID,
+        vaultUrl: DEV_VAULT_URL,
+        userPoolId: DEV_COGNITO_USER_POOL_ID,
+        registryUrl: DEV_REGISTRY_URL,
+        accessApiKey: DEV_API_KEY_HASH,
+        revocationUrl: DEV_REVOCATION_URL,
+        keyStorageUrl: DEV_KEY_STORAGE_URL,
+      }
 
     case 'prod':
-      clientId = PROD_COGNITO_CLIENT_ID
-      vaultUrl = PROD_VAULT_URL
-      userPoolId = PROD_COGNITO_USER_POOL_ID
-      registryUrl = PROD_REGISTRY_URL
-      accessApiKey = PROD_API_KEY_HASH
-      revocationUrl = PROD_REVOCATION_URL
-      keyStorageUrl = PROD_KEY_STORAGE_URL
-      break
+      return {
+        env,
+        clientId: PROD_COGNITO_CLIENT_ID,
+        vaultUrl: PROD_VAULT_URL,
+        userPoolId: PROD_COGNITO_USER_POOL_ID,
+        registryUrl: PROD_REGISTRY_URL,
+        accessApiKey: PROD_API_KEY_HASH,
+        revocationUrl: PROD_REVOCATION_URL,
+        keyStorageUrl: PROD_KEY_STORAGE_URL,
+      }
 
-    default:
-      vaultUrl = STAGING_VAULT_URL
-      clientId = STAGING_COGNITO_CLIENT_ID
-      userPoolId = STAGING_COGNITO_USER_POOL_ID
-      registryUrl = STAGING_REGISTRY_URL
-      accessApiKey = STAGING_API_KEY_HASH
-      revocationUrl = STAGING_REVOCATION_URL
-      keyStorageUrl = STAGING_KEY_STORAGE_URL
-      break
+    case 'staging':
+      return {
+        env,
+        vaultUrl: STAGING_VAULT_URL,
+        clientId: STAGING_COGNITO_CLIENT_ID,
+        userPoolId: STAGING_COGNITO_USER_POOL_ID,
+        registryUrl: STAGING_REGISTRY_URL,
+        accessApiKey: STAGING_API_KEY_HASH,
+        revocationUrl: STAGING_REVOCATION_URL,
+        keyStorageUrl: STAGING_KEY_STORAGE_URL,
+      }
   }
+}
 
-  if (returnAllOptionsForEnvironment) {
-    return { env, revocationUrl, vaultUrl, clientId, accessApiKey, userPoolId, registryUrl, keyStorageUrl }
-  }
-
-  return { env, accessApiKey }
+export const getBasicOptionsForEnvironment = () => {
+  const { accessApiKey, env } = getAllOptionsForEnvironment()
+  return { accessApiKey, env }
 }
