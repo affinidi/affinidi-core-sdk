@@ -23,7 +23,7 @@ type ExperiencePersonV1Mixin = CreateThing<
     employeeID?: string
     personalEmail?: string
     phoneNumber?: string
-    EmployeeAddress?: string
+    employeeAddress?: string
     organizationAddress?: string
     organizationLogo?: string
     dateOfRelieving?: string

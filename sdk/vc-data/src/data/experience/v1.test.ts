@@ -18,7 +18,7 @@ describe('VCExperiencePersonV1', () => {
         dateOfJoining: '15-02-2021',
         personalEmail: 'bob@gmail.com',
         phoneNumber: '123456789',
-        EmployeeAddress: '9, 9th street, Koramangala, Bangalore',
+        employeeAddress: '9, 9th street, Koramangala, Bangalore',
         organizationAddress: '9, 9th street, Koramangala, Bangalore',
         organizationLogo: 'logo url here',
         dateOfRelieving: 'relieving date here',
@@ -47,11 +47,6 @@ describe('VCExperiencePersonV1', () => {
                   "https://schema.affinity-project.org/PersonE",
                   "https://schema.affinity-project.org/ExperiencePerson",
                 ],
-                "https://schema.org/EmployeeAddress": Array [
-                  Object {
-                    "@value": "9, 9th street, Koramangala, Bangalore",
-                  },
-                ],
                 "https://schema.org/dateOfJoining": Array [
                   Object {
                     "@value": "15-02-2021",
@@ -60,6 +55,11 @@ describe('VCExperiencePersonV1', () => {
                 "https://schema.org/dateOfRelieving": Array [
                   Object {
                     "@value": "relieving date here",
+                  },
+                ],
+                "https://schema.org/employeeAddress": Array [
+                  Object {
+                    "@value": "9, 9th street, Koramangala, Bangalore",
                   },
                 ],
                 "https://schema.org/employeeID": Array [
