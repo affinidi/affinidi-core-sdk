@@ -16,12 +16,9 @@ describe('VCEmployeePersonV1', () => {
         employmentType: 'Full-time',
         employeeID: '12345',
         dateOfJoining: '15-02-2021',
-        personalEmail: 'bob@gmail.com',
-        phoneNumber: '123456789',
         employeeAddress: '9, 9th street, Koramangala, Bangalore',
         organizationAddress: '9, 9th street, Koramangala, Bangalore',
         organizationLogo: 'logo url here',
-        dateOfRelieving: 'relieving date here',
         team: 'gde',
         responsibilities: 'writing code',
         otherDetails: {
@@ -50,11 +47,6 @@ describe('VCEmployeePersonV1', () => {
                 "https://schema.org/dateOfJoining": Array [
                   Object {
                     "@value": "15-02-2021",
-                  },
-                ],
-                "https://schema.org/dateOfRelieving": Array [
-                  Object {
-                    "@value": "relieving date here",
                   },
                 ],
                 "https://schema.org/employeeAddress": Array [
@@ -104,16 +96,6 @@ describe('VCEmployeePersonV1', () => {
                         "@value": "onboarding",
                       },
                     ],
-                  },
-                ],
-                "https://schema.org/personalEmail": Array [
-                  Object {
-                    "@value": "bob@gmail.com",
-                  },
-                ],
-                "https://schema.org/phoneNumber": Array [
-                  Object {
-                    "@value": "123456789",
                   },
                 ],
                 "https://schema.org/responsibilities": Array [

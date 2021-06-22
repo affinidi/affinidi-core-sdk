@@ -15,12 +15,10 @@ type ExperiencePersonV1Mixin = CreateThing<
   'ExperiencePerson',
   {
     name: string
-    officialEmail: string
     organizationName: string
     titlesHeld: MaybeArray<string>
     employmentType: 'Full-time' | 'Part-time' | 'Contractor' | 'Intern'
     dateOfJoining: string
-    employeeID?: string
     personalEmail?: string
     phoneNumber?: string
     employeeAddress?: string

@@ -10,11 +10,9 @@ describe('VCExperiencePersonV1', () => {
       data: {
         '@type': ['Person', 'PersonE', 'ExperiencePerson'],
         name: 'Bob Belcher',
-        officialEmail: 'bob.b@affinidi.com',
         organizationName: 'Affinidi',
         titlesHeld: ['Software Engineer', 'Lead Engineer'],
         employmentType: 'Full-time',
-        employeeID: '12345',
         dateOfJoining: '15-02-2021',
         personalEmail: 'bob@gmail.com',
         phoneNumber: '123456789',
@@ -62,11 +60,6 @@ describe('VCExperiencePersonV1', () => {
                     "@value": "9, 9th street, Koramangala, Bangalore",
                   },
                 ],
-                "https://schema.org/employeeID": Array [
-                  Object {
-                    "@value": "12345",
-                  },
-                ],
                 "https://schema.org/employmentType": Array [
                   Object {
                     "@value": "Full-time",
@@ -75,11 +68,6 @@ describe('VCExperiencePersonV1', () => {
                 "https://schema.org/name": Array [
                   Object {
                     "@value": "Bob Belcher",
-                  },
-                ],
-                "https://schema.org/officialEmail": Array [
-                  Object {
-                    "@value": "bob.b@affinidi.com",
                   },
                 ],
                 "https://schema.org/organizationAddress": Array [
