@@ -4,8 +4,8 @@ import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
 
-import ApiService from '../../../src/services/ApiService'
 import { STAGING_REGISTRY_URL } from '../../../src/_defaultConfig'
+import RegistryApiService from '../../../src/services/RegistryApiService'
 
 describe('ApiService', () => {
   after(() => {
@@ -19,9 +19,9 @@ describe('ApiService', () => {
   it('#execute', async () => {
     nock(STAGING_REGISTRY_URL).post('/api/v1/did/resolve-did').reply(200, {})
 
-    const apiService = new ApiService(STAGING_REGISTRY_URL, undefined, undefined, { accessApiKey: undefined })
+    const apiService = new RegistryApiService({ registryUrl: STAGING_REGISTRY_URL, accessApiKey: undefined })
 
-    const { body, status } = await apiService.execute('registry.ResolveDid')
+    const { body, status } = await apiService.execute('ResolveDid', {})
 
     expect(body).to.eql({})
     expect(status).to.eql(200)

@@ -31,11 +31,8 @@ const createWalletStorageService = () => {
     vaultUrl: STAGING_VAULT_URL,
     accessApiKey: undefined,
     clientId: undefined,
-    issuerUrl: undefined,
-    registryUrl: undefined,
     storageRegion: undefined,
     userPoolId: undefined,
-    verifierUrl: undefined,
   })
 }
 

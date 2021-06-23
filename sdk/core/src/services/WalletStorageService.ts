@@ -1,6 +1,5 @@
 import { toRpcSig, ecsign } from 'ethereumjs-util'
 import CognitoService from './CognitoService'
-import API from './ApiService'
 import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
@@ -43,15 +42,13 @@ import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
 
 import { SignedCredential } from '../dto/shared.dto'
 import { ParametersValidator } from '../shared'
+import GenericApiService from './GenericApiService'
 
 type ConstructorOptions = {
   keyStorageUrl: string
   vaultUrl: string
   clientId: string
   userPoolId: string
-  registryUrl: string
-  issuerUrl: string
-  verifierUrl: string
   storageRegion: string
   accessApiKey: string
 }
@@ -67,7 +64,6 @@ export default class WalletStorageService {
   private _storageRegion: string
   private _keysService: KeysService
   private _platformEncryptionTools: IPlatformEncryptionTools
-  private _api: API
   private _accessApiKey: string
 
   constructor(
@@ -84,8 +80,6 @@ export default class WalletStorageService {
     this._userPoolId = options.userPoolId
     this._storageRegion = options.storageRegion
     this._accessApiKey = options.accessApiKey
-
-    this._api = new API(options.registryUrl, options.issuerUrl, options.verifierUrl, options)
   }
 
   async pullEncryptedSeed(username: string, password: string, token: string = undefined): Promise<string> {
@@ -112,16 +106,10 @@ export default class WalletStorageService {
     keyStorageUrl: string,
     options: { accessApiKey: string },
   ): Promise<string> {
-    const url = `${keyStorageUrl}/api/v1/keys/readMyKey`
+    const headers = { authorization: accessToken }
+    const { accessApiKey } = options
 
-    const headers = {
-      authorization: accessToken,
-    }
-
-    const api = new API(null, null, null, options)
-
-    const { body } = await api.execute(null, {
-      url,
+    const { body } = await GenericApiService.executeByOptions(accessApiKey, `${keyStorageUrl}/api/v1/keys/readMyKey`, {
       headers,
       method: 'GET',
     })
@@ -148,8 +136,6 @@ export default class WalletStorageService {
   }
 
   async storeEncryptedSeed(accessToken: string, seedHex: string, encryptionKey: string): Promise<void> {
-    const url = `${this._keyStorageUrl}/api/v1/keys/storeMyKey`
-
     const encryptionKeyBuffer = Buffer.from(encryptionKey, 'hex')
     const encryptedSeed = await KeysService.encryptSeed(seedHex, encryptionKeyBuffer)
 
@@ -157,8 +143,7 @@ export default class WalletStorageService {
       authorization: accessToken,
     }
 
-    await this._api.execute(null, {
-      url,
+    await GenericApiService.executeByOptions(this._accessApiKey, `${this._keyStorageUrl}/api/v1/keys/storeMyKey`, {
       headers,
       params: { encryptedSeed },
       method: 'POST',
@@ -194,22 +179,18 @@ export default class WalletStorageService {
     const { addressHex, privateKeyHex } = this.getVaultKeys()
 
     const didEth = `did:ethr:0x${addressHex}`
-    const tokenChallengeUrl = `${this._vaultUrl}/auth/request-token?did=${didEth}`
 
     const {
       body: { token },
-    } = await this._api.execute(null, {
-      url: tokenChallengeUrl,
-      params: {},
-      method: 'POST',
-      headers,
-    })
+    } = await GenericApiService.executeByOptions(
+      this._accessApiKey,
+      `${this._vaultUrl}/auth/request-token?did=${didEth}`,
+      { params: {}, method: 'POST', headers },
+    )
 
     const signature = this.signByVaultKeys(token, privateKeyHex)
-    const tokenChallengeValidationUrl = `${this._vaultUrl}/auth/validate-token`
 
-    await this._api.execute(null, {
-      url: tokenChallengeValidationUrl,
+    await GenericApiService.executeByOptions(this._accessApiKey, `${this._vaultUrl}/auth/validate-token`, {
       params: { accessToken: token, signature, did: didEth },
       method: 'POST',
       headers,
@@ -229,12 +210,9 @@ export default class WalletStorageService {
       ...(storageRegion ? { ['X-DST-REGION']: storageRegion } : {}),
     }
 
-    const url = `${this._vaultUrl}/data`
-
     for (const cyphertext of data) {
       const params = { cyphertext }
-      const { body } = await this._api.execute(null, {
-        url,
+      const { body } = await GenericApiService.executeByOptions(this._accessApiKey, `${this._vaultUrl}/data`, {
         headers,
         params,
         method: 'POST',
@@ -293,13 +271,11 @@ export default class WalletStorageService {
     const url = `${this._vaultUrl}/data/0/99`
 
     try {
-      const response = await this._api.execute(null, {
+      await GenericApiService.executeByOptions(this._accessApiKey, `${this._vaultUrl}/data/0/99`, {
         url,
         headers,
         method: 'DELETE',
       })
-
-      return response
     } catch (error) {
       throw new SdkError('COR-0', {}, error)
     }
@@ -318,16 +294,12 @@ export default class WalletStorageService {
     //       https://github.com/hellobloom/bloom-vault#delete-datastartend
     const start = index
     const end = index
-    const url = `${this._vaultUrl}/data/${start}/${end}`
 
     try {
-      const response = await this._api.execute(null, {
-        url,
+      await GenericApiService.executeByOptions(this._accessApiKey, `${this._vaultUrl}/data/${start}/${end}`, {
         headers,
         method: 'DELETE',
       })
-
-      return response
     } catch (error) {
       throw new SdkError('COR-0', {}, error)
     }
@@ -404,14 +376,12 @@ export default class WalletStorageService {
       ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
     }
 
-    const url = this._buildVaultFetchEncryptedCredentialsUrl(paginationOptions)
-
     try {
-      const { body: blobs } = await this._api.execute(null, {
-        url,
-        headers,
-        method: 'GET',
-      })
+      const { body: blobs } = await GenericApiService.executeByOptions(
+        this._accessApiKey,
+        this._buildVaultFetchEncryptedCredentialsUrl(paginationOptions),
+        { headers, method: 'GET' },
+      )
 
       return blobs
     } catch (error) {
@@ -431,30 +401,21 @@ export default class WalletStorageService {
 
   static async adminConfirmUser(username: string, options: AdminOptions): Promise<void> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-
-    const url = `${keyStorageUrl}/api/v1/userManagement/adminConfirmUser`
-
-    const api = new API(null, null, null, options)
-
-    await api.execute(null, {
-      url,
-      params: { username },
-      method: 'POST',
-    })
+    await GenericApiService.executeByOptions(
+      options.accessApiKey,
+      `${keyStorageUrl}/api/v1/userManagement/adminConfirmUser`,
+      { params: { username }, method: 'POST' },
+    )
   }
 
   static async adminDeleteUnconfirmedUser(username: string, options: AdminOptions): Promise<void> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
 
-    const url = `${keyStorageUrl}/api/v1/userManagement/adminDeleteUnconfirmedUser`
-
-    const api = new API(null, null, null, options)
-
-    await api.execute(null, {
-      url,
-      params: { username },
-      method: 'POST',
-    })
+    await GenericApiService.executeByOptions(
+      options.accessApiKey,
+      `${keyStorageUrl}/api/v1/userManagement/adminDeleteUnconfirmedUser`,
+      { params: { username }, method: 'POST' },
+    )
   }
 
   static async getCredentialOffer(
@@ -466,18 +427,15 @@ export default class WalletStorageService {
 
     const env: Env = options.env
 
-    const url = `${keyStorageUrl}/api/v1/issuer/getCredentialOffer?env=${env}`
-
     const headers = {
       authorization: idToken,
     }
 
-    const api = new API(null, null, null, options)
-    const { body } = await api.execute(null, {
-      url,
-      headers,
-      method: 'GET',
-    })
+    const { body } = await GenericApiService.executeByOptions(
+      options.accessApiKey,
+      `${keyStorageUrl}/api/v1/issuer/getCredentialOffer?env=${env}`,
+      { headers, method: 'GET' },
+    )
 
     const { offerToken } = body
     return offerToken
@@ -490,7 +448,6 @@ export default class WalletStorageService {
   ): Promise<SignedCredential[]> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
 
-    const url = `${keyStorageUrl}/api/v1/issuer/getSignedCredential`
     const headers = {
       authorization: idToken,
     }
@@ -514,8 +471,11 @@ export default class WalletStorageService {
       params.options = options
     }
 
-    const api = new API(null, null, null, options)
-    const { body } = await api.execute(null, { url, headers, params, method })
+    const { body } = await GenericApiService.executeByOptions(
+      options.accessApiKey,
+      `${keyStorageUrl}/api/v1/issuer/getSignedCredential`,
+      { headers, params, method },
+    )
 
     const { signedCredentials } = body
 

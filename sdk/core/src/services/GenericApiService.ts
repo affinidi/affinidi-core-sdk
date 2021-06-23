@@ -104,6 +104,10 @@ export default class GenericApiService<OperationIdType extends string> {
   }
 
   async execute(serviceOperationId: OperationIdType, options: Record<string, any>) {
+    if (!this._serviceUrl) {
+      throw new Error('Service URL is empty')
+    }
+
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
     return GenericApiService.executeByOptions(this._accessApiKey, `${this._serviceUrl}${path}`, { ...options, method })

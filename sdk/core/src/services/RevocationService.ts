@@ -1,8 +1,7 @@
-import API from './ApiService'
-
 import { RevocationListOutput, RevocationListParamsInput } from '../dto/revocation.dto'
 
 import { profile } from '@affinidi/common'
+import GenericApiService from './GenericApiService'
 
 type ConstructorOptions = {
   revocationUrl: string
@@ -15,33 +14,28 @@ type ConstructorOptions = {
 @profile()
 export default class RevocationService {
   _revocationUrl: string
-  _api: API
+  _accessApiKey: string
 
   constructor(options: ConstructorOptions) {
     this._revocationUrl = options.revocationUrl
-
-    const { registryUrl, issuerUrl, verifierUrl } = options
-    this._api = new API(registryUrl, issuerUrl, verifierUrl, options)
+    this._accessApiKey = options.accessApiKey
   }
 
   async buildRevocationListStatus(
     { credentialId, subjectDid }: RevocationListParamsInput,
     accessToken: string,
   ): Promise<RevocationListOutput> {
-    const url = `${this._revocationUrl}/api/v1/revocation/build-revocation-list-2020-status`
-
     const headers = {
       authorization: accessToken,
     }
 
     const {
       body: { credentialStatus, revocationListCredential },
-    } = await this._api.execute(null, {
-      url,
-      headers,
-      params: { credentialId, subjectDid },
-      method: 'POST',
-    })
+    } = await GenericApiService.executeByOptions(
+      this._accessApiKey,
+      `${this._revocationUrl}/api/v1/revocation/build-revocation-list-2020-status`,
+      { headers, params: { credentialId, subjectDid }, method: 'POST' },
+    )
 
     const isPublisRequired = !!revocationListCredential
 
@@ -49,18 +43,15 @@ export default class RevocationService {
   }
 
   async publishRevocationListCredential(revocationListCredential: any, accessToken: string): Promise<void> {
-    const url = `${this._revocationUrl}/api/v1/revocation/publish-revocation-list-credential`
-
     const headers = {
       authorization: accessToken,
     }
 
-    await this._api.execute(null, {
-      url,
-      headers,
-      params: revocationListCredential,
-      method: 'POST',
-    })
+    await GenericApiService.executeByOptions(
+      this._accessApiKey,
+      `${this._revocationUrl}/api/v1/revocation/publish-revocation-list-credential`,
+      { headers, params: revocationListCredential, method: 'POST' },
+    )
   }
 
   async revokeCredential(
@@ -68,20 +59,17 @@ export default class RevocationService {
     revocationReason: string,
     accessToken: string,
   ): Promise<{ revocationListCredential: any }> {
-    const url = `${this._revocationUrl}/api/v1/revocation/revoke-credential`
-
     const headers = {
       authorization: accessToken,
     }
 
     const {
       body: { revocationListCredential },
-    } = await this._api.execute(null, {
-      url,
-      headers,
-      params: { id: credentialId, revocationReason },
-      method: 'POST',
-    })
+    } = await GenericApiService.executeByOptions(
+      this._accessApiKey,
+      `${this._revocationUrl}/api/v1/revocation/revoke-credential`,
+      { headers, params: { id: credentialId, revocationReason }, method: 'POST' },
+    )
 
     return { revocationListCredential }
   }

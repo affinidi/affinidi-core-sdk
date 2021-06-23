@@ -6,7 +6,6 @@ import { parse } from 'did-resolver'
 
 import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 
-import API from './services/ApiService'
 import CognitoService from './services/CognitoService'
 import SdkError from './shared/SdkError'
 
@@ -57,6 +56,9 @@ import { isW3cCredential } from './_helpers'
 
 import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
 import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
+import RegistryApiService from './services/RegistryApiService'
+import IssuerApiService from './services/IssuerApiService'
+import VerifierApiService from './services/VerifierApiService'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -95,7 +97,6 @@ type DerivedType<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructo
  */
 @profile()
 export abstract class CommonNetworkMember {
-  private readonly _api: API
   private _did: string
   private readonly _encryptedSeed: string
   private _password: string
@@ -106,6 +107,9 @@ export abstract class CommonNetworkMember {
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
   private readonly _didDocumentService: DidDocumentService
+  private readonly _issuerApiService
+  private readonly _verifierApiService
+  private readonly _registryApiService
   protected readonly _affinity: Affinity
   protected readonly _sdkOptions
   private readonly _phoneIssuer: PhoneIssuerService
@@ -150,7 +154,10 @@ export abstract class CommonNetworkMember {
       accessApiKey: accessApiKey,
       component: component,
     })
-    this._api = new API(registryUrl, issuerUrl, verifierUrl, { accessApiKey })
+    const apiOptions = { registryUrl, issuerUrl, verifierUrl, accessApiKey }
+    this._registryApiService = new RegistryApiService(apiOptions)
+    this._issuerApiService = new IssuerApiService(apiOptions)
+    this._verifierApiService = new VerifierApiService(apiOptions)
     this._walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
       ...basicOptions,
       accessApiKey,
@@ -354,7 +361,7 @@ export abstract class CommonNetworkMember {
       accessApiKey,
     } = getOptionsFromEnvironment(options)
 
-    const api = new API(registryUrl, null, null, { accessApiKey })
+    const api = new RegistryApiService({ registryUrl, accessApiKey })
 
     const did = didDocument.id
 
@@ -366,14 +373,14 @@ export abstract class CommonNetworkMember {
     if (didMethod !== ELEM_DID_METHOD) {
       const signedDidDocument = await keysService.signDidDocument(didDocument)
 
-      const { body: bodyDidDocument } = await api.execute('registry.PutDocumentInIpfs', {
+      const { body: bodyDidDocument } = await api.execute('PutDocumentInIpfs', {
         params: { document: signedDidDocument },
       })
       const didDocumentAddress = bodyDidDocument.hash
 
       const {
         body: { digestHex },
-      } = await api.execute('registry.CreateAnchorTransaction', { params: { nonce, did, didDocumentAddress } })
+      } = await api.execute('CreateAnchorTransaction', { params: { nonce, did, didDocumentAddress } })
 
       let transactionSignatureJson = ''
       if (digestHex && digestHex !== '') {
@@ -383,7 +390,7 @@ export abstract class CommonNetworkMember {
       const transactionPublicKey = KeysService.getAnchorTransactionPublicKey(seedHex, didMethod)
       const ethereumPublicKeyHex = transactionPublicKey.toString('hex')
 
-      await api.execute('registry.AnchorDid', {
+      await api.execute('AnchorDid', {
         params: { did, didDocumentAddress, ethereumPublicKeyHex, transactionSignatureJson, nonce },
       })
     }
@@ -391,7 +398,7 @@ export abstract class CommonNetworkMember {
     // NOTE: for metrics purpose in case of ELEM method
     if (didMethod === ELEM_DID_METHOD) {
       try {
-        await api.execute('registry.AnchorDid', {
+        await api.execute('AnchorDid', {
           params: { did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' },
         })
       } catch (error) {
@@ -409,7 +416,7 @@ export abstract class CommonNetworkMember {
     await ParametersValidator.validate([{ isArray: false, type: 'did', isRequired: true, value: did }])
 
     const params = { did }
-    const { body } = await this._api.execute('registry.ResolveDid', { params })
+    const { body } = await this._registryApiService.execute('ResolveDid', { params })
     const { didDocument } = body
 
     return didDocument
@@ -443,7 +450,7 @@ export abstract class CommonNetworkMember {
 
     const {
       body: { transactionCount },
-    } = await this._api.execute('registry.TransactionCount', {
+    } = await this._registryApiService.execute('TransactionCount', {
       params: { ethereumPublicKeyHex },
     })
 
@@ -1288,7 +1295,7 @@ export abstract class CommonNetworkMember {
 
     const {
       body: { credentialOffer },
-    } = await this._api.execute('issuer.BuildCredentialOffer', { params })
+    } = await this._issuerApiService.execute('BuildCredentialOffer', { params })
 
     const signedObject = this._keysService.signJWT(credentialOffer, this.didDocumentKeyId)
 
@@ -1339,7 +1346,7 @@ export abstract class CommonNetworkMember {
 
     const {
       body: { credentialShareRequest },
-    } = await this._api.execute('verifier.BuildCredentialRequest', { params })
+    } = await this._verifierApiService.execute('BuildCredentialRequest', { params })
 
     const signedObject = this._keysService.signJWT(credentialShareRequest, this.didDocumentKeyId)
 
@@ -1945,7 +1952,7 @@ export abstract class CommonNetworkMember {
 
     const params = { credentialOfferResponseToken, credentialOfferRequestToken }
 
-    const res = await this._api.execute('issuer.VerifyCredentialOfferResponse', { params })
+    const res = await this._issuerApiService.execute('VerifyCredentialOfferResponse', { params })
 
     const { isValid, issuer, jti, selectedCredentials, errors } = res.body
 
@@ -1998,7 +2005,7 @@ export abstract class CommonNetworkMember {
 
     const {
       body: { credentialShareRequest },
-    } = await this._api.execute('verifier.BuildCredentialRequest', { params })
+    } = await this._verifierApiService.execute('BuildCredentialRequest', { params })
 
     const signedObject = this._keysService.signJWT(credentialShareRequest)
 

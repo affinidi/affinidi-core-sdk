@@ -30,8 +30,6 @@ let cognitoService: CognitoService
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, password)
   return new WalletStorageService(keysService, testPlatformTools, {
-    issuerUrl: undefined,
-    verifierUrl: undefined,
     storageRegion: undefined,
     ...options,
   })
