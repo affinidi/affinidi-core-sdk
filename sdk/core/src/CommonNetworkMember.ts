@@ -373,14 +373,12 @@ export abstract class CommonNetworkMember {
     if (didMethod !== ELEM_DID_METHOD) {
       const signedDidDocument = await keysService.signDidDocument(didDocument)
 
-      const { body: bodyDidDocument } = await api.execute('PutDocumentInIpfs', {
-        params: { document: signedDidDocument },
-      })
+      const { body: bodyDidDocument } = await api.putDocumentInIpfs({ document: signedDidDocument })
       const didDocumentAddress = bodyDidDocument.hash
 
       const {
         body: { digestHex },
-      } = await api.execute('CreateAnchorTransaction', { params: { nonce, did, didDocumentAddress } })
+      } = await api.createAnchorTransaction({ nonce, did, didDocumentAddress })
 
       let transactionSignatureJson = ''
       if (digestHex && digestHex !== '') {
@@ -390,17 +388,13 @@ export abstract class CommonNetworkMember {
       const transactionPublicKey = KeysService.getAnchorTransactionPublicKey(seedHex, didMethod)
       const ethereumPublicKeyHex = transactionPublicKey.toString('hex')
 
-      await api.execute('AnchorDid', {
-        params: { did, didDocumentAddress, ethereumPublicKeyHex, transactionSignatureJson, nonce },
-      })
+      await api.anchorDid({ did, didDocumentAddress, ethereumPublicKeyHex, transactionSignatureJson, nonce })
     }
 
     // NOTE: for metrics purpose in case of ELEM method
     if (didMethod === ELEM_DID_METHOD) {
       try {
-        await api.execute('AnchorDid', {
-          params: { did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' },
-        })
+        await api.anchorDid({ did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' })
       } catch (error) {
         console.log('to check logs at the backend', error)
       }
@@ -415,8 +409,7 @@ export abstract class CommonNetworkMember {
   async resolveDid(did: string) {
     await ParametersValidator.validate([{ isArray: false, type: 'did', isRequired: true, value: did }])
 
-    const params = { did }
-    const { body } = await this._registryApiService.execute('ResolveDid', { params })
+    const { body } = await this._registryApiService.resolveDid({ did })
     const { didDocument } = body
 
     return didDocument
@@ -450,9 +443,7 @@ export abstract class CommonNetworkMember {
 
     const {
       body: { transactionCount },
-    } = await this._registryApiService.execute('TransactionCount', {
-      params: { ethereumPublicKeyHex },
-    })
+    } = await this._registryApiService.transactionCount({ ethereumPublicKeyHex })
 
     const nonce = transactionCount
 
@@ -1281,21 +1272,18 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: JwtOptions, isRequired: false, value: options },
     ])
 
-    const params: any = { offeredCredentials }
-
-    /* istanbul ignore else: else not required */
-    if (options) {
-      const { audienceDid, expiresAt, nonce, callbackUrl } = options
-
-      params.audienceDid = audienceDid
-      params.expiresAt = expiresAt
-      params.nonce = nonce
-      params.callbackUrl = callbackUrl
+    const { audienceDid, expiresAt, nonce, callbackUrl } = options ?? {}
+    const params = {
+      offeredCredentials,
+      audienceDid,
+      expiresAt,
+      nonce,
+      callbackUrl,
     }
 
     const {
       body: { credentialOffer },
-    } = await this._issuerApiService.execute('BuildCredentialOffer', { params })
+    } = await this._issuerApiService.buildCredentialOffer(params)
 
     const signedObject = this._keysService.signJWT(credentialOffer, this.didDocumentKeyId)
 
@@ -1332,21 +1320,19 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: JwtOptions, isRequired: false, value: options },
     ])
 
-    const params: any = { credentialRequirements, issuerDid }
-
-    /* istanbul ignore else: else not required */
-    if (options) {
-      const { audienceDid, expiresAt, nonce, callbackUrl } = options
-
-      params.audienceDid = audienceDid
-      params.expiresAt = expiresAt
-      params.nonce = nonce
-      params.callbackUrl = callbackUrl
+    const { audienceDid, expiresAt, nonce, callbackUrl } = options ?? {}
+    const params = {
+      credentialRequirements,
+      issuerDid,
+      audienceDid,
+      expiresAt,
+      nonce,
+      callbackUrl,
     }
 
     const {
       body: { credentialShareRequest },
-    } = await this._verifierApiService.execute('BuildCredentialRequest', { params })
+    } = await this._verifierApiService.buildCredentialRequest(params)
 
     const signedObject = this._keysService.signJWT(credentialShareRequest, this.didDocumentKeyId)
 
@@ -1952,7 +1938,7 @@ export abstract class CommonNetworkMember {
 
     const params = { credentialOfferResponseToken, credentialOfferRequestToken }
 
-    const res = await this._issuerApiService.execute('VerifyCredentialOfferResponse', { params })
+    const res = await this._issuerApiService.verifyCredentialOfferResponse(params)
 
     const { isValid, issuer, jti, selectedCredentials, errors } = res.body
 
@@ -1991,21 +1977,19 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: JwtOptions, isRequired: false, value: options },
     ])
 
-    const params: any = { credentialRequirements, issuerDid }
-
-    /* istanbul ignore else: else not required */
-    if (options) {
-      const { audienceDid, expiresAt, nonce, callbackUrl } = options
-
-      params.audienceDid = audienceDid
-      params.expiresAt = expiresAt
-      params.nonce = nonce
-      params.callbackUrl = callbackUrl
+    const { audienceDid, expiresAt, nonce, callbackUrl } = options ?? {}
+    const params = {
+      credentialRequirements,
+      issuerDid,
+      audienceDid,
+      expiresAt,
+      nonce,
+      callbackUrl,
     }
 
     const {
       body: { credentialShareRequest },
-    } = await this._verifierApiService.execute('BuildCredentialRequest', { params })
+    } = await this._verifierApiService.buildCredentialRequest(params)
 
     const signedObject = this._keysService.signJWT(credentialShareRequest)
 

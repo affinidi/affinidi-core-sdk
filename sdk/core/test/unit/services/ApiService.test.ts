@@ -21,7 +21,7 @@ describe('ApiService', () => {
 
     const apiService = new RegistryApiService({ registryUrl: STAGING_REGISTRY_URL, accessApiKey: undefined })
 
-    const { body, status } = await apiService.execute('ResolveDid', {})
+    const { body, status } = await apiService.resolveDid({ did: 'abc' })
 
     expect(body).to.eql({})
     expect(status).to.eql(200)

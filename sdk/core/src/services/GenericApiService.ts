@@ -76,7 +76,7 @@ export default class GenericApiService<OperationIdType extends string> {
     return keyBy(spec, 'operationId') as Record<OperationIdType, typeof spec[number]>
   }
 
-  static async executeByOptions(accessApiKey: string, url: string, options: Record<string, any>) {
+  static async executeByOptions<TResponse>(accessApiKey: string, url: string, options: Record<string, any>) {
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const { params, url: _url, ...rest } = options
     const fetchOptions = {
@@ -100,16 +100,19 @@ export default class GenericApiService<OperationIdType extends string> {
     }
 
     const jsonResponse = status.toString() === '204' ? {} : await response.json()
-    return { body: jsonResponse, status }
+    return { body: jsonResponse as TResponse, status }
   }
 
-  async execute(serviceOperationId: OperationIdType, options: Record<string, any>) {
+  protected async execute<TResponse>(serviceOperationId: OperationIdType, options: { params: any }) {
     if (!this._serviceUrl) {
       throw new Error('Service URL is empty')
     }
 
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
-    return GenericApiService.executeByOptions(this._accessApiKey, `${this._serviceUrl}${path}`, { ...options, method })
+    return GenericApiService.executeByOptions<TResponse>(this._accessApiKey, `${this._serviceUrl}${path}`, {
+      ...options,
+      method,
+    })
   }
 }

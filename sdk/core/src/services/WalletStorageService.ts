@@ -109,12 +109,12 @@ export default class WalletStorageService {
     const headers = { authorization: accessToken }
     const { accessApiKey } = options
 
-    const { body } = await GenericApiService.executeByOptions(accessApiKey, `${keyStorageUrl}/api/v1/keys/readMyKey`, {
+    const {
+      body: { encryptedSeed },
+    } = await GenericApiService.executeByOptions(accessApiKey, `${keyStorageUrl}/api/v1/keys/readMyKey`, {
       headers,
       method: 'GET',
     })
-
-    const { encryptedSeed } = body
 
     return encryptedSeed
   }
@@ -377,7 +377,7 @@ export default class WalletStorageService {
     }
 
     try {
-      const { body: blobs } = await GenericApiService.executeByOptions(
+      const { body: blobs } = await GenericApiService.executeByOptions<any[]>(
         this._accessApiKey,
         this._buildVaultFetchEncryptedCredentialsUrl(paginationOptions),
         { headers, method: 'GET' },
@@ -431,7 +431,7 @@ export default class WalletStorageService {
       authorization: idToken,
     }
 
-    const { body } = await GenericApiService.executeByOptions(
+    const { body } = await GenericApiService.executeByOptions<any>(
       options.accessApiKey,
       `${keyStorageUrl}/api/v1/issuer/getCredentialOffer?env=${env}`,
       { headers, method: 'GET' },
@@ -471,7 +471,7 @@ export default class WalletStorageService {
       params.options = options
     }
 
-    const { body } = await GenericApiService.executeByOptions(
+    const { body } = await GenericApiService.executeByOptions<any>(
       options.accessApiKey,
       `${keyStorageUrl}/api/v1/issuer/getSignedCredential`,
       { headers, params, method },
