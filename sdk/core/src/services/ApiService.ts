@@ -6,6 +6,9 @@ import registrySpec from '../_registry'
 import issuerSpec from '../_issuer'
 import verifierSpec from '../_verifier'
 import GenericApiService from './GenericApiService'
+import IssuerApiService from './IssuerApiService'
+import RegistryApiService from './RegistryApiService'
+import VerifierApiService from './VerifierApiService'
 
 type ConstructorOptions = { accessApiKey: string }
 
@@ -14,22 +17,17 @@ export default class ApiService {
   private readonly services
 
   constructor(registryUrl: string, issuerUrl: string, verifierUrl: string, options: ConstructorOptions) {
+    const extendedOptions = {
+      ...options,
+      registryUrl: registryUrl || STAGING_REGISTRY_URL,
+      issuerUrl: issuerUrl || STAGING_ISSUER_URL,
+      verifierUrl: verifierUrl || STAGING_VERIFIER_URL,
+    }
+
     const services = {
-      [ApiService.getServiceName(issuerSpec.info.title)]: new GenericApiService(
-        issuerUrl || STAGING_ISSUER_URL,
-        options,
-        issuerSpec,
-      ),
-      [ApiService.getServiceName(registrySpec.info.title)]: new GenericApiService(
-        registryUrl || STAGING_REGISTRY_URL,
-        options,
-        registrySpec,
-      ),
-      [ApiService.getServiceName(verifierSpec.info.title)]: new GenericApiService(
-        verifierUrl || STAGING_VERIFIER_URL,
-        options,
-        verifierSpec,
-      ),
+      [ApiService.getServiceName(issuerSpec.info.title)]: new IssuerApiService(extendedOptions),
+      [ApiService.getServiceName(registrySpec.info.title)]: new RegistryApiService(extendedOptions),
+      [ApiService.getServiceName(verifierSpec.info.title)]: new VerifierApiService(extendedOptions),
       'default': new GenericApiService(undefined, options, { servers: [{ url: undefined }], paths: {} })
     }
 

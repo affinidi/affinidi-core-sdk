@@ -34,6 +34,8 @@ type SpecType<OperationIdType extends string> = {
   >
 }
 
+export type ExtractOperationIdTypes<T extends SpecType<string>> = T extends SpecType<infer U> ? U : never
+
 @profile()
 export default class GenericApiService<OperationIdType extends string> {
   private readonly _serviceUrl: string
@@ -61,11 +63,13 @@ export default class GenericApiService<OperationIdType extends string> {
 
         const { operationId } = operationForMethod
 
-        return [{
-          path,
-          method,
-          operationId,
-        }]
+        return [
+          {
+            path,
+            method,
+            operationId,
+          },
+        ]
       })
     })
 
