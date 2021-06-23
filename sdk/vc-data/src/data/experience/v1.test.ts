@@ -12,6 +12,7 @@ describe('VCExperiencePersonV1', () => {
         name: 'Bob Belcher',
         organizationName: 'Affinidi',
         titlesHeld: ['Software Engineer', 'Lead Engineer'],
+        titleAtExit: 'Lead Engineer',
         employmentType: 'Full-time',
         dateOfJoining: '15-02-2021',
         personalEmail: 'bob@gmail.com',
@@ -112,6 +113,11 @@ describe('VCExperiencePersonV1', () => {
                 "https://schema.org/team": Array [
                   Object {
                     "@value": "gde",
+                  },
+                ],
+                "https://schema.org/titleAtExit": Array [
+                  Object {
+                    "@value": "Lead Engineer",
                   },
                 ],
                 "https://schema.org/titlesHeld": Array [
