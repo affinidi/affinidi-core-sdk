@@ -1,4 +1,5 @@
-{
+/* eslint-disable */
+export default {
   "components": {
     "examples": {},
     "headers": {},
@@ -258,4 +259,4 @@
       "url": "/api/v1"
     }
   ]
-}
+} as const

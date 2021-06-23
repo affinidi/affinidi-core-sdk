@@ -1,0 +1,2 @@
+# old prettier versions do not support template literal types and crash on this file
+src/services/ApiService.ts
