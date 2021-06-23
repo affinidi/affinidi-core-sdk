@@ -15,6 +15,7 @@ type ConstructorOptions = { accessApiKey: string }
 @profile()
 export default class ApiService {
   private readonly services
+  private readonly accessApiKey
 
   constructor(registryUrl: string, issuerUrl: string, verifierUrl: string, options: ConstructorOptions) {
     const extendedOptions = {
@@ -28,10 +29,10 @@ export default class ApiService {
       [ApiService.getServiceName(issuerSpec.info.title)]: new IssuerApiService(extendedOptions),
       [ApiService.getServiceName(registrySpec.info.title)]: new RegistryApiService(extendedOptions),
       [ApiService.getServiceName(verifierSpec.info.title)]: new VerifierApiService(extendedOptions),
-      'default': new GenericApiService(undefined, options, { servers: [{ url: undefined }], paths: {} })
     }
 
     this.services = services
+    this.accessApiKey = options.accessApiKey
   }
 
   private static getServiceName<T extends string>(title: `affinity-${T}`): T {
@@ -51,7 +52,7 @@ export default class ApiService {
     options: any = {},
   ) {
     if (options.url) {
-      return this.services.default.executeByOptions(options)
+      return GenericApiService.executeByOptions(this.accessApiKey, options.url, options)
     }
 
     const [serviceName, operationId] = serviceOperation.split('.') as [TService, string]

@@ -76,49 +76,36 @@ export default class GenericApiService<OperationIdType extends string> {
     return keyBy(spec, 'operationId') as Record<OperationIdType, typeof spec[number]>
   }
 
-  async executeByOptions(options: any = {}) {
-    options.headers = options.headers || {}
-    options.headers['Accept'] = 'application/json'
-    options.headers['Content-Type'] = 'application/json'
-    options.headers['Api-Key'] = this._accessApiKey
-
-    if (options.params) {
-      let { params: body } = options
-
-      body = JSON.stringify(body, null, 2)
-      options.body = body
+  static async executeByOptions(accessApiKey: string, url: string, options: Record<string, any>) {
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    const { params, url: _url, ...rest } = options
+    const fetchOptions = {
+      ...rest,
+      headers: {
+        ...options.headers,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Api-Key': accessApiKey,
+      },
+      ...(params && { body: JSON.stringify(params, null, 2) }),
     }
 
-    const { url } = options
-
-    delete options.params
-    delete options.url
-
-    const response = await fetch(url, options)
+    const response = await fetch(url, fetchOptions)
     const { status } = response
 
-    let jsonResponse
-
-    if (status.toString().startsWith('2')) {
-      jsonResponse = status.toString() === '204' ? {} : await response.json()
-    } else {
+    if (!status.toString().startsWith('2')) {
       const error = await response.json()
-
       const { code, message, context } = error
-
       throw new SdkError({ code, message }, context, Object.assign({}, error, { httpStatusCode: status }))
     }
 
+    const jsonResponse = status.toString() === '204' ? {} : await response.json()
     return { body: jsonResponse, status }
   }
 
-  async execute(serviceOperationId: OperationIdType, options: any = {}) {
+  async execute(serviceOperationId: OperationIdType, options: Record<string, any>) {
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
-
-    options.url = `${this._serviceUrl}${path}`
-    options.method = method
-
-    return this.executeByOptions(options)
+    return GenericApiService.executeByOptions(this._accessApiKey, `${this._serviceUrl}${path}`, { ...options, method })
   }
 }
