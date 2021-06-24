@@ -10,8 +10,6 @@ import CognitoService from './services/CognitoService'
 import SdkError from './shared/SdkError'
 
 import WalletStorageService from './services/WalletStorageService'
-import { CustomMessageTemplatesService } from './services/CustomMessageTemplatesService'
-import RevocationService from './services/RevocationService'
 import HolderService from './services/HolderService'
 import {
   PhoneIssuerService,
@@ -59,6 +57,8 @@ import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
 import RegistryApiService from './services/RegistryApiService'
 import IssuerApiService from './services/IssuerApiService'
 import VerifierApiService from './services/VerifierApiService'
+import KeyStorageApiService from './services/KeyStorageApiService'
+import RevocationApiService from './services/RevocationApiService'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -101,7 +101,6 @@ export abstract class CommonNetworkMember {
   private readonly _encryptedSeed: string
   private _password: string
   protected readonly _walletStorageService: WalletStorageService
-  private readonly _revocationService: RevocationService
   protected readonly _keysService: KeysService
   private readonly _jwtService: JwtService
   private readonly _holderService: HolderService
@@ -110,6 +109,8 @@ export abstract class CommonNetworkMember {
   private readonly _issuerApiService
   private readonly _verifierApiService
   private readonly _registryApiService
+  private readonly _revocationApiService
+  private readonly _keyStorageApiService
   protected readonly _affinity: Affinity
   protected readonly _sdkOptions
   private readonly _phoneIssuer: PhoneIssuerService
@@ -146,7 +147,16 @@ export abstract class CommonNetworkMember {
       inputOptions,
     )
 
-    const { issuerUrl, metricsUrl, registryUrl, verifierUrl, phoneIssuerBasePath, emailIssuerBasePath } = basicOptions
+    const {
+      issuerUrl,
+      keyStorageUrl,
+      revocationUrl,
+      metricsUrl,
+      registryUrl,
+      verifierUrl,
+      phoneIssuerBasePath,
+      emailIssuerBasePath,
+    } = basicOptions
 
     const keysService = new KeysService(encryptedSeed, password)
     this._metricsService = new MetricsService({
@@ -154,16 +164,16 @@ export abstract class CommonNetworkMember {
       accessApiKey: accessApiKey,
       component: component,
     })
-    const apiOptions = { registryUrl, issuerUrl, verifierUrl, accessApiKey }
-    this._registryApiService = new RegistryApiService(apiOptions)
-    this._issuerApiService = new IssuerApiService(apiOptions)
-    this._verifierApiService = new VerifierApiService(apiOptions)
+    this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey })
+    this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey })
+    this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey })
+    this._keyStorageApiService = new KeyStorageApiService({ keyStorageUrl, accessApiKey })
+    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey })
     this._walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
       ...basicOptions,
       accessApiKey,
       storageRegion,
     })
-    this._revocationService = new RevocationService({ ...basicOptions, accessApiKey })
     this._jwtService = new JwtService()
     this._holderService = new HolderService({ ...basicOptions, accessApiKey }, component)
     this._didDocumentService = new DidDocumentService(keysService)
@@ -543,7 +553,7 @@ export abstract class CommonNetworkMember {
     const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
 
     if (messageParameters) {
-      const customMessageTemplateService = new CustomMessageTemplatesService({ ...basicOptions, accessApiKey })
+      const customMessageTemplateService = new KeyStorageApiService({ ...basicOptions, accessApiKey })
       await customMessageTemplateService.storeTemplate({
         username: username,
         template: messageParameters.message,
@@ -1245,7 +1255,7 @@ export abstract class CommonNetworkMember {
    * @description Deletes credential by index
    */
   /* istanbul ignore next: protected method */
-  protected async deleteCredentialByIndex(index: string): Promise<void> {
+  protected async deleteCredentialByIndex(index: number): Promise<void> {
     return this._walletStorageService.deleteCredentialByIndex(index)
   }
 
@@ -1501,26 +1511,28 @@ export abstract class CommonNetworkMember {
     const subjectDid = unsignedCredential.holder?.id
 
     const {
-      credentialStatus,
-      isPublisRequired,
-      revocationListCredential,
-    } = await this._revocationService.buildRevocationListStatus(
-      { credentialId, subjectDid },
-      revocationServiceAccessToken,
-    )
+      body: { credentialStatus, revocationListCredential },
+    } = await this._revocationApiService.buildRevocationListStatus({
+      credentialId,
+      subjectDid,
+      accessToken: revocationServiceAccessToken,
+    })
 
     const revokableUnsignedCredential = Object.assign({}, unsignedCredential, { credentialStatus })
     revokableUnsignedCredential['@context'].push('https://w3id.org/vc-revocation-list-2020/v1')
 
-    if (isPublisRequired) {
-      const signedListCredential = await this._affinity.signCredential(
+    if (revocationListCredential) {
+      const revocationSignedListCredential = await this._affinity.signCredential(
         revocationListCredential,
         this._encryptedSeed,
         this._password,
       )
-      signedListCredential.issuanceDate = new Date().toISOString()
+      revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
-      await this._revocationService.publishRevocationListCredential(signedListCredential, revocationServiceAccessToken)
+      await this._revocationApiService.publishRevocationListCredential({
+        accessToken: revocationServiceAccessToken,
+        revocationSignedListCredential,
+      })
     }
 
     return revokableUnsignedCredential
@@ -1531,20 +1543,20 @@ export abstract class CommonNetworkMember {
     revocationReason: string,
     revocationServiceAccessToken: string,
   ): Promise<void> {
-    const { revocationListCredential } = await this._revocationService.revokeCredential(
-      credentialId,
-      revocationReason,
-      revocationServiceAccessToken,
-    )
+    const accessToken = revocationServiceAccessToken
 
-    const signedListCredential = await this._affinity.signCredential(
+    const {
+      body: { revocationListCredential },
+    } = await this._revocationApiService.revokeCredential({ id: credentialId, revocationReason, accessToken })
+
+    const revocationSignedListCredential = await this._affinity.signCredential(
       revocationListCredential,
       this._encryptedSeed,
       this._password,
     )
-    signedListCredential.issuanceDate = new Date().toISOString()
+    revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
-    await this._revocationService.publishRevocationListCredential(signedListCredential, revocationServiceAccessToken)
+    await this._revocationApiService.publishRevocationListCredential({ revocationSignedListCredential, accessToken })
   }
 
   /**

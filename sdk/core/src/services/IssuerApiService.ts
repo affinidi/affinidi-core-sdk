@@ -1,7 +1,7 @@
 import { profile } from '@affinidi/common'
 import { OfferedCredential } from '../dto/shared.dto'
 
-import issuerSpec from '../_issuer'
+import issuerSpec from '../openapi/_issuer'
 import GenericApiService, { ExtractOperationIdTypes } from './GenericApiService'
 
 type ConstructorOptions = { issuerUrl: string; accessApiKey: string }

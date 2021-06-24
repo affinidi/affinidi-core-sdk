@@ -1,7 +1,7 @@
 import { profile } from '@affinidi/common'
 
 import { CredentialRequirement } from '../dto/shared.dto'
-import verifierSpec from '../_verifier'
+import verifierSpec from '../openapi/_verifier'
 import GenericApiService, { ExtractOperationIdTypes } from './GenericApiService'
 
 type ConstructorOptions = { verifierUrl: string; accessApiKey: string }

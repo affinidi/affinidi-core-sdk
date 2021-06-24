@@ -76,9 +76,9 @@ export default class GenericApiService<OperationIdType extends string> {
     return keyBy(spec, 'operationId') as Record<OperationIdType, typeof spec[number]>
   }
 
-  static async executeByOptions<TResponse>(accessApiKey: string, url: string, options: Record<string, any>) {
+  private static async executeByOptions<TResponse>(accessApiKey: string, url: string, options: Record<string, any>) {
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    const { params, url: _url, ...rest } = options
+    const { params, urlPostfix, url: _url, ...rest } = options
     const fetchOptions = {
       ...rest,
       headers: {
@@ -90,7 +90,7 @@ export default class GenericApiService<OperationIdType extends string> {
       ...(params && { body: JSON.stringify(params, null, 2) }),
     }
 
-    const response = await fetch(url, fetchOptions)
+    const response = await fetch(`${url}${urlPostfix ?? ''}`, fetchOptions)
     const { status } = response
 
     if (!status.toString().startsWith('2')) {
@@ -103,7 +103,10 @@ export default class GenericApiService<OperationIdType extends string> {
     return { body: jsonResponse as TResponse, status }
   }
 
-  protected async execute<TResponse>(serviceOperationId: OperationIdType, options: { params: any }) {
+  protected async execute<TResponse = undefined>(
+    serviceOperationId: OperationIdType,
+    options: { headers?: any; params?: any; urlPostfix?: string },
+  ) {
     if (!this._serviceUrl) {
       throw new Error('Service URL is empty')
     }

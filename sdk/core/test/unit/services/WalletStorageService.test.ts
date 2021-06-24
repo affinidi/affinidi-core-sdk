@@ -63,7 +63,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
 
-    const response = await walletStorageService.saveCredentials([{}])
+    const response = await walletStorageService.saveCredentials(['encrypted'])
 
     expect(response).to.be.an('array')
   })
