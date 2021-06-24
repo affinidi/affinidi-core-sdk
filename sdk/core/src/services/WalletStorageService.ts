@@ -375,29 +375,33 @@ export default class WalletStorageService {
   static async getSignedCredentials(
     accessToken: string,
     credentialOfferResponseToken: string,
-    options: any = {},
+    options: { keyStorageUrl?: string; issuerUrl?: string; accessApiKey?: string; apiKey?: string } = {},
   ): Promise<SignedCredential[]> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
 
-    /* istanbul ignore next: manual test */
-    if (Object.entries(options).length !== 0) {
-      delete options.cognitoUser // not required
-      delete options.cognitoUserTokens // not required
-      delete options.skipBackupEncryptedSeed // not required
-      delete options.skipBackupCredentials // not required
-      delete options.issueSignupCredential // not required
-      delete options.metricsUrl // not required
-      delete options.apiKey // not required
-      delete options.storageRegion // not required
-      delete options.clientId // not required
-      delete options.userPoolId // not required
+    // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
+    // getSignedCredential there only uses options to create a new instance of its own CommonNetworkMember,
+    // and then it only calls networkMember.verifyCredentialOfferResponseToken and networkMember.signCredentials
+    const remoteOptions = {
+      // For remote IssuerApiService (used by networkMember.verifyCredentialOfferResponseToken)
+      issuerUrl: options.issuerUrl,
+      accessApiKey: options.accessApiKey,
+      apiKey: options.apiKey,
+      // Remote networkMember.signCredentials calls Affinity.signCredential.
+      // It only uses metrics service which only needs metricsUrl and component,
+      // but we removed metricsUrl from options in the original version of this code,
+      // and component is always passed separately.
+      // Affinity.signCredential also gets passed encryptedSeed and encryptionKey,
+      // but CommonNetworkMember in affinidi-common-backend is already initialized with
+      // KEYSTONE_VC_ISSUER_ENCRYPTED_SEED and KEYSTONE_VC_ISSUER_PASSWORD (used as encryptionKey),
+      // so no further fields are needed.
     }
 
     const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey: options.accessApiKey })
     const { body } = await service.getSignedCredential({
       credentialOfferResponseToken,
       accessToken,
-      options,
+      options: remoteOptions,
     })
 
     const { signedCredentials } = body
