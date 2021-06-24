@@ -8,7 +8,7 @@ import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
-import CognitoService from '../../src/services/CognitoService'
+import UserManagementService from '../../src/services/UserManagementService'
 
 import {
   generateUsername,
@@ -173,17 +173,8 @@ describe('CommonNetworkMember', () => {
 
     await CommonNetworkMember.signUp(email, cognitoPassword, options)
 
-    let token
-    let responseError
-
-    try {
-      token = await CommonNetworkMember.signUp(email, cognitoPassword, options)
-    } catch (error) {
-      responseError = error
-    }
-
+    const token = await CommonNetworkMember.signUp(email, cognitoPassword, options)
     expect(token).to.exist
-    expect(responseError).to.not.exist
   })
 
   it('#throws `COR-4 / 400` when UNCONFIRMED user login', async () => {
@@ -405,14 +396,8 @@ describe('CommonNetworkMember', () => {
     const sucessResult = await affinity.validateCredential(createdCredential)
     expect(sucessResult.result).to.equal(true)
 
-    let revocationError
-    try {
-      await commonNetworkMember.revokeCredential(revokableUnsignedCredential.id, 'Status changed', accessToken)
-    } catch (error) {
-      revocationError = error
-    }
+    await commonNetworkMember.revokeCredential(revokableUnsignedCredential.id, 'Status changed', accessToken)
 
-    expect(revocationError).to.not.exist
     const failResult = await affinity.validateCredential(createdCredential)
     expect(failResult.result).to.equal(false)
   })
@@ -1039,17 +1024,13 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#getSignupCredentials', async () => {
-    // NOTE: Get full options because CognitoService will use staging variables
+    // NOTE: Get full options because UserManagementService will use staging variables
     //       and `options` has only accessApiKey and env
     //       This is important for testing against different environments
     const fullOptions = getAllOptionsForEnvironment()
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const { clientId, userPoolId } = fullOptions
+    const userManagementService = new UserManagementService(fullOptions)
 
-    const cognitoService = new CognitoService({ clientId, userPoolId })
-
-    const { idToken } = await cognitoService.signIn(cognitoUsername, cognitoPassword)
+    const { idToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
 
     const decoded = jwtDecode(idToken)
 

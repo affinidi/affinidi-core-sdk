@@ -1,5 +1,4 @@
 import { toRpcSig, ecsign } from 'ethereumjs-util'
-import CognitoService from './CognitoService'
 import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
@@ -48,19 +47,13 @@ import BloomVaultApiService, { BlobType } from './BloomVaultApiService'
 type ConstructorOptions = {
   keyStorageUrl: string
   vaultUrl: string
-  clientId: string
-  userPoolId: string
   storageRegion: string
   accessApiKey: string
 }
 
-type AdminOptions = { keyStorageUrl: string; accessApiKey: string }
-
 @profile()
 export default class WalletStorageService {
   private _keyStorageUrl: string
-  private _clientId: string
-  private _userPoolId: string
   private _storageRegion: string
   private _keysService: KeysService
   private _platformEncryptionTools: IPlatformEncryptionTools
@@ -79,23 +72,11 @@ export default class WalletStorageService {
     this._keyStorageApiService = new KeyStorageApiService(options)
 
     this._keyStorageUrl = options.keyStorageUrl
-    this._clientId = options.clientId
-    this._userPoolId = options.userPoolId
     this._storageRegion = options.storageRegion
     this._accessApiKey = options.accessApiKey
   }
 
-  async pullEncryptedSeed(username: string, password: string, token: string = undefined): Promise<string> {
-    let accessToken = token
-
-    /* istanbul ignore else: code simplicity */
-    if (!token) {
-      const cognitoService = new CognitoService({ clientId: this._clientId, userPoolId: this._userPoolId })
-      const response = await cognitoService.signIn(username, password)
-
-      accessToken = response.accessToken
-    }
-
+  async pullEncryptedSeed(accessToken: string): Promise<string> {
     const accessApiKey = this._accessApiKey
 
     const keyStorageUrl = this._keyStorageUrl
@@ -347,18 +328,6 @@ export default class WalletStorageService {
     }
   }
 
-  static async adminConfirmUser(username: string, options: AdminOptions): Promise<void> {
-    const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey: options.accessApiKey })
-    await service.adminConfirmUser({ username })
-  }
-
-  static async adminDeleteUnconfirmedUser(username: string, options: AdminOptions): Promise<void> {
-    const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey: options.accessApiKey })
-    await service.adminDeleteUnconfirmedUser({ username })
-  }
-
   static async getCredentialOffer(
     accessToken: string,
     keyStorageUrl: string,
@@ -378,30 +347,12 @@ export default class WalletStorageService {
     options: { keyStorageUrl?: string; issuerUrl?: string; accessApiKey?: string; apiKey?: string } = {},
   ): Promise<SignedCredential[]> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-
-    // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
-    // getSignedCredential there only uses options to create a new instance of its own CommonNetworkMember,
-    // and then it only calls networkMember.verifyCredentialOfferResponseToken and networkMember.signCredentials
-    const remoteOptions = {
-      // For remote IssuerApiService (used by networkMember.verifyCredentialOfferResponseToken)
-      issuerUrl: options.issuerUrl,
-      accessApiKey: options.accessApiKey,
-      apiKey: options.apiKey,
-      // Remote networkMember.signCredentials calls Affinity.signCredential.
-      // It only uses metrics service which only needs metricsUrl and component,
-      // but we removed metricsUrl from options in the original version of this code,
-      // and component is always passed separately.
-      // Affinity.signCredential also gets passed encryptedSeed and encryptionKey,
-      // but CommonNetworkMember in affinidi-common-backend is already initialized with
-      // KEYSTONE_VC_ISSUER_ENCRYPTED_SEED and KEYSTONE_VC_ISSUER_PASSWORD (used as encryptionKey),
-      // so no further fields are needed.
-    }
-
-    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey: options.accessApiKey })
+    const { issuerUrl, accessApiKey, apiKey } = options
+    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey })
     const { body } = await service.getSignedCredential({
       credentialOfferResponseToken,
       accessToken,
-      options: remoteOptions,
+      options: { issuerUrl, accessApiKey, apiKey },
     })
 
     const { signedCredentials } = body

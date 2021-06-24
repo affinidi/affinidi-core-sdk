@@ -6,6 +6,7 @@
     * `SdkOptions` parameters are now non-optional.
     * `SdkOptions.env` field is now required.
     * Code targets ES2019 now.
+    * Removed internal `CognitoService`, use `CommonNetworkMember` instead, or `UserManagementService` or `CognitoIdentityService` in case of need.
 # release 5.0.0 (2021-06-16)
   * Implemented `WalletStorageService.fetchAllBlobs`.
   * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries.

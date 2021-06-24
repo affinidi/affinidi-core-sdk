@@ -9,7 +9,6 @@ if (!fetch) {
 
 import { CognitoIdentityServiceProvider } from 'aws-sdk'
 
-import WalletStorageService from './WalletStorageService'
 import SdkError from '../shared/SdkError'
 import { CognitoUserTokens } from '../dto/shared.dto'
 import { saveUserTokensToSessionStorage } from '../shared/sessionStorageHandler'
@@ -27,8 +26,25 @@ type ConstructorOptions = {
   userPoolId: string
 }
 
+export enum SignUpResult {
+  Success,
+  UnconfirmedUsernameExists,
+  ConfirmedUsernameExists,
+  InvalidPassword,
+}
+
+export enum SignInResult {
+  Success,
+  UserNotFound,
+  UserNotConfirmed,
+}
+
+type SignInResponse =
+  | { result: Exclude<SignInResult, SignInResult.Success> }
+  | { result: SignInResult.Success; cognitoTokens: CognitoUserTokens }
+
 @profile()
-export default class CognitoService {
+export default class CognitoIdentityService {
   protected cognitoOptions
   private readonly cognitoOptionKeys: string[] = ['clientId', 'userPoolId']
   private readonly cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
@@ -56,20 +72,29 @@ export default class CognitoService {
     }
   }
 
-  async signIn(username: string, password: string): Promise<CognitoUserTokens> {
-    try {
-      const response = await this._signIn(username, password)
+  async trySignIn(username: string, password: string): Promise<SignInResponse> {
+    const authFlow = 'USER_PASSWORD_AUTH'
 
-      return response
+    try {
+      const params = this._getCognitoAuthParametersObject(authFlow, username, password)
+
+      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
+
+      const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
+
+      const { userPoolId } = this.cognitoOptions
+      saveUserTokensToSessionStorage(userPoolId, cognitoTokens)
+
+      return {
+        result: SignInResult.Success,
+        cognitoTokens,
+      }
     } catch (error) {
       switch (error.code) {
-        case 'COR-4':
         case 'UserNotFoundException':
-          throw new SdkError('COR-4', { username })
-
+          return { result: SignInResult.UserNotFound }
         case 'UserNotConfirmedException':
-          throw new SdkError('COR-16', { username })
-
+          return { result: SignInResult.UserNotConfirmed }
         default:
           throw error
       }
@@ -129,7 +154,7 @@ export default class CognitoService {
         .respondToAuthChallenge(params)
         .promise()
 
-      CognitoService.setTempSession(ChallengeParameters, result.Session)
+      CognitoIdentityService.setTempSession(ChallengeParameters, result.Session)
 
       // NOTE: respondToAuthChallenge for the custom auth flow do not return
       //       error, but if response has `ChallengeName` - it is an error
@@ -231,42 +256,36 @@ export default class CognitoService {
     }
   }
 
-  async signUp(
-    Username: string,
-    Password: string,
+  async trySignUp(
+    username: string,
+    password: string,
     messageParameters: MessageParameters,
-    options: { keyStorageUrl: string; accessApiKey: string },
-  ): Promise<CognitoIdentityServiceProvider.SignUpResponse> {
-    const UserAttributes = this._buildUserAttributes(Username)
+  ): Promise<{ result: SignUpResult; normalizedUsername: string }> {
+    const normalizedUsername = normalizeUsername(username)
 
-    const normalizedUsername = normalizeUsername(Username)
-
-    const { clientId: ClientId } = this.cognitoOptions
-    const ClientMetadata = messageParameters || {}
-
-    const params = { ClientId, Password, Username: normalizedUsername, UserAttributes, ClientMetadata }
+    const params = {
+      ClientId: this.cognitoOptions.clientId,
+      Password: password,
+      Username: normalizedUsername,
+      UserAttributes: this._buildUserAttributes(username),
+      ClientMetadata: messageParameters ?? {},
+    }
 
     try {
-      const response = await this.cognitoidentityserviceprovider.signUp(params).promise()
-
-      return response
+      await this.cognitoidentityserviceprovider.signUp(params).promise()
+      return { result: SignUpResult.Success, normalizedUsername }
     } catch (error) {
       switch (error.code) {
         case 'UsernameExistsException': {
           const isUserUnconfirmed = await this.isUserUnconfirmed(normalizedUsername)
-
-          if (isUserUnconfirmed) {
-            // NOTE: this will remove unconfirmed user so we won't get here 2nd time
-            await WalletStorageService.adminDeleteUnconfirmedUser(normalizedUsername, options)
-
-            return this.signUp(Username, Password, messageParameters, options)
+          return {
+            result: isUserUnconfirmed ? SignUpResult.UnconfirmedUsernameExists : SignUpResult.ConfirmedUsernameExists,
+            normalizedUsername,
           }
-
-          throw new SdkError('COR-7', { username: normalizedUsername })
         }
 
         case 'InvalidPasswordException':
-          throw new SdkError('COR-6')
+          return { result: SignUpResult.InvalidPassword, normalizedUsername }
 
         default:
           throw error
@@ -442,31 +461,6 @@ export default class CognitoService {
   }
 
   /* istanbul ignore next: private method */
-  private async _signIn(attribute: string, password: string): Promise<CognitoUserTokens> {
-    const username = attribute
-    const authFlow = 'USER_PASSWORD_AUTH'
-
-    try {
-      const params = this._getCognitoAuthParametersObject(authFlow, username, password)
-
-      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
-
-      const cognitoUserTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
-
-      const { userPoolId } = this.cognitoOptions
-      saveUserTokensToSessionStorage(userPoolId, cognitoUserTokens)
-
-      return cognitoUserTokens
-    } catch (error) {
-      if (error.code === 'UserNotFoundException') {
-        throw new SdkError('COR-4', { username })
-      }
-
-      throw error
-    }
-  }
-
-  /* istanbul ignore next: private method */
   private _normalizeTokensFromCognitoAuthenticationResult(
     AuthenticationResult: AWS.CognitoIdentityServiceProvider.AuthenticationResultType,
   ): CognitoUserTokens {
@@ -521,30 +515,24 @@ export default class CognitoService {
 
   /* istanbul ignore next: private function */
   private async _signInWithInvalidPassword(username: string) {
-    let errorCode
-    let userExists = true
-    let isUnconfirmed = false
-
     const { userPoolId, clientId } = this.cognitoOptions
 
     const invalidPassword = '1'
-    const cognitoService = new CognitoService({ userPoolId, clientId })
+    const cognitoIdentityService = new CognitoIdentityService({ userPoolId, clientId })
 
     try {
-      await cognitoService.signIn(username, invalidPassword)
+      const response = await cognitoIdentityService.trySignIn(username, invalidPassword)
+      switch (response.result) {
+        case SignInResult.UserNotFound:
+          return { userExists: false, isUnconfirmed: false }
+        case SignInResult.UserNotConfirmed:
+          return { userExists: true, isUnconfirmed: true }
+        default:
+          return { userExists: true, isUnconfirmed: false }
+      }
     } catch (error) {
-      errorCode = error.code
-
-      if (errorCode === 'UserNotConfirmedException' || errorCode === 'COR-16') {
-        isUnconfirmed = true
-      }
-
-      if (errorCode === 'UserNotFoundException' || errorCode === 'COR-4') {
-        userExists = false
-      }
+      return { userExists: true, isUnconfirmed: false }
     }
-
-    return { isUnconfirmed, userExists, errorCode }
   }
 
   /* istanbul ignore next: private function */

@@ -6,6 +6,7 @@ import { expect } from 'chai'
 
 import { JwtService, KeysService } from '@affinidi/common'
 import { authorizeVault } from './../../helpers'
+import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
@@ -30,9 +31,7 @@ const createWalletStorageService = () => {
     keyStorageUrl: STAGING_KEY_STORAGE_URL,
     vaultUrl: STAGING_VAULT_URL,
     accessApiKey: undefined,
-    clientId: undefined,
     storageRegion: undefined,
-    userPoolId: undefined,
   })
 }
 
@@ -351,12 +350,13 @@ describe('WalletStorageService', () => {
       .post(adminConfirmUserPath)
       .reply(200, {})
 
-    const response = await WalletStorageService.adminConfirmUser(username, {
+    const keyStorageApiService = new KeyStorageApiService({
       keyStorageUrl: STAGING_KEY_STORAGE_URL,
       accessApiKey: undefined,
     })
+    const response = await keyStorageApiService.adminConfirmUser({ username })
 
-    expect(response).to.not.exist
+    expect(response).to.exist
   })
 
   it('#getCredentialOffer', async () => {

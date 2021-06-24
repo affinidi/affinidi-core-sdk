@@ -1,2 +1,2 @@
-require('./CognitoService.test')
+require('./UserManagementService.test')
 require('./WalletStorageService.test')

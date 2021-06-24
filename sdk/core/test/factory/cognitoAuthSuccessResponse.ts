@@ -1,4 +1,4 @@
-const cognitoAuthSuccessResponse: any = {
+const cognitoAuthSuccessResponse = {
   AuthenticationResult: {
     AccessToken: 'dummy_token',
     IdToken: 'dummy_token',
@@ -7,4 +7,4 @@ const cognitoAuthSuccessResponse: any = {
   },
 }
 
-module.exports = cognitoAuthSuccessResponse
+export default cognitoAuthSuccessResponse
