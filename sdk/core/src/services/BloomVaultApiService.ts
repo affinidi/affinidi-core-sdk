@@ -37,9 +37,7 @@ export default class BloomVaultApiService extends GenericApiService<ExtractOpera
 
   async requestAuthToken({ did, storageRegion }: { did: string; storageRegion: string }) {
     return this.execute<{ token: string }>('RequestAuthToken', {
-      headers: {
-        ...(storageRegion && { 'X-DST-REGION': storageRegion }),
-      },
+      storageRegion,
       urlPostfix: `?did=${did}`,
     })
   }
@@ -47,9 +45,7 @@ export default class BloomVaultApiService extends GenericApiService<ExtractOpera
   async validateAuthToken(params: { accessToken: string; signature: string; did: string; storageRegion: string }) {
     const { accessToken, signature, did, storageRegion } = params
     return this.execute('ValidateAuthToken', {
-      headers: {
-        ...(storageRegion && { 'X-DST-REGION': storageRegion }),
-      },
+      storageRegion,
       params: { accessToken, signature, did },
     })
   }
@@ -57,10 +53,8 @@ export default class BloomVaultApiService extends GenericApiService<ExtractOpera
   async postCredential(params: { accessToken: string; cyphertext: string; storageRegion: string }) {
     const { accessToken, cyphertext, storageRegion } = params
     return this.execute('PostCredential', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ...(storageRegion && { 'X-DST-REGION': storageRegion }),
-      },
+      authorization: `Bearer ${accessToken}`,
+      storageRegion,
       params: { cyphertext },
     })
   }
@@ -68,10 +62,8 @@ export default class BloomVaultApiService extends GenericApiService<ExtractOpera
   async deleteCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
     return this.execute('DeleteCredentials', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ...(storageRegion && { 'X-DST-REGION': storageRegion }),
-      },
+      authorization: `Bearer ${accessToken}`,
+      storageRegion,
       urlPostfix: `/${start}/${end}`,
     })
   }
@@ -79,10 +71,8 @@ export default class BloomVaultApiService extends GenericApiService<ExtractOpera
   async getCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
     return this.execute<BlobType[]>('GetCredentials', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ...(storageRegion && { 'X-DST-REGION': storageRegion }),
-      },
+      authorization: `Bearer ${accessToken}`,
+      storageRegion,
       urlPostfix: `/${start}/${end}`,
     })
   }

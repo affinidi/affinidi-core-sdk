@@ -11,6 +11,13 @@ if (!fetch) {
   fetch = require('node-fetch')
 }
 
+type RequestOptions = {
+  authorization?: string
+  storageRegion?: string
+  urlPostfix?: string
+  params?: Record<string, any>
+}
+
 type ConstructorOptions = { accessApiKey: string }
 
 type SpecMethodType<OperationIdType extends string> = {
@@ -76,17 +83,22 @@ export default class GenericApiService<OperationIdType extends string> {
     return keyBy(spec, 'operationId') as Record<OperationIdType, typeof spec[number]>
   }
 
-  private static async executeByOptions<TResponse>(accessApiKey: string, url: string, options: Record<string, any>) {
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    const { params, urlPostfix, url: _url, ...rest } = options
+  private static async executeByOptions<TResponse>(
+    accessApiKey: string,
+    method: string,
+    url: string,
+    options: RequestOptions,
+  ) {
+    const { authorization, storageRegion, params, urlPostfix } = options
     const fetchOptions = {
-      ...rest,
       headers: {
-        ...options.headers,
         Accept: 'application/json',
         'Content-Type': 'application/json',
         'Api-Key': accessApiKey,
+        ...(authorization && { Authorization: authorization }),
+        ...(storageRegion && { 'X-DST-REGION': storageRegion }),
       },
+      method,
       ...(params && { body: JSON.stringify(params, null, 2) }),
     }
 
@@ -103,19 +115,14 @@ export default class GenericApiService<OperationIdType extends string> {
     return { body: jsonResponse as TResponse, status }
   }
 
-  protected async execute<TResponse = undefined>(
-    serviceOperationId: OperationIdType,
-    options: { headers?: any; params?: any; urlPostfix?: string },
-  ) {
+  protected async execute<TResponse = undefined>(serviceOperationId: OperationIdType, options: RequestOptions) {
     if (!this._serviceUrl) {
       throw new Error('Service URL is empty')
     }
 
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
-    return GenericApiService.executeByOptions<TResponse>(this._accessApiKey, `${this._serviceUrl}${path}`, {
-      ...options,
-      method,
-    })
+    const url = `${this._serviceUrl}${path}`
+    return GenericApiService.executeByOptions<TResponse>(this._accessApiKey, method, url, options)
   }
 }

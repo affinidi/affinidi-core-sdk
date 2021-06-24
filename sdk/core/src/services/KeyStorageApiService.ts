@@ -17,14 +17,12 @@ export default class KeyStorageApiService extends GenericApiService<ExtractOpera
   }
 
   async readMyKey({ accessToken }: { accessToken: string }) {
-    return this.execute<{ encryptedSeed: string }>('ReadMyKey', {
-      headers: { authorization: accessToken },
-    })
+    return this.execute<{ encryptedSeed: string }>('ReadMyKey', { authorization: accessToken })
   }
 
   async storeMyKey({ accessToken, encryptedSeed }: { accessToken: string; encryptedSeed: string }) {
     return this.execute('StoreMyKey', {
-      headers: { authorization: accessToken },
+      authorization: accessToken,
       params: { encryptedSeed },
     })
   }
@@ -39,7 +37,7 @@ export default class KeyStorageApiService extends GenericApiService<ExtractOpera
 
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {
     return this.execute<{ offerToken: string }>('GetCredentialOffer', {
-      headers: { authorization: accessToken },
+      authorization: accessToken,
       urlPostfix: `?env=${env}`,
     })
   }
@@ -47,7 +45,7 @@ export default class KeyStorageApiService extends GenericApiService<ExtractOpera
   async getSignedCredential(params: { credentialOfferResponseToken: string; accessToken: string; options: any }) {
     const { credentialOfferResponseToken, accessToken, options } = params
     return this.execute<{ signedCredentials: SignedCredential[] }>('GetSignedCredential', {
-      headers: { authorization: accessToken },
+      authorization: accessToken,
       params: { credentialOfferResponseToken, options },
     })
   }

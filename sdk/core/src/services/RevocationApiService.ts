@@ -18,7 +18,7 @@ export default class RevocationApiService extends GenericApiService<ExtractOpera
       credentialStatus: CredentialStatus
       revocationListCredential: any
     }>('BuildRevocationListStatus', {
-      headers: { authorization: accessToken },
+      authorization: accessToken,
       params: { credentialId, subjectDid },
     })
   }
@@ -26,7 +26,7 @@ export default class RevocationApiService extends GenericApiService<ExtractOpera
   async publishRevocationListCredential(params: { accessToken: string; revocationSignedListCredential: any }) {
     const { accessToken, revocationSignedListCredential } = params
     return this.execute('PublishRevocationListCredential', {
-      headers: { authorization: accessToken },
+      authorization: accessToken,
       params: revocationSignedListCredential,
     })
   }
@@ -34,7 +34,7 @@ export default class RevocationApiService extends GenericApiService<ExtractOpera
   async revokeCredential(params: { accessToken: string; id: string; revocationReason: string }) {
     const { accessToken, id, revocationReason } = params
     return this.execute<{ revocationListCredential: any }>('RevokeCredential', {
-      headers: { authorization: accessToken },
+      authorization: accessToken,
       params: { id, revocationReason },
     })
   }
