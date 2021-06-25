@@ -12,6 +12,7 @@ interface TestDid {
   didDocument: { id: string }
   publicKey: string
   publicRSAKey?: string
+  publicBBSKey?: string
 }
 
 interface TestJoloDid extends TestDid {
@@ -23,6 +24,7 @@ export const generateTestDIDs = async (): Promise<{
   jolo: TestJoloDid
   elem: TestDid
   elemWithRSA: TestDid
+  elemWithBBS: TestDid
 }> => {
   let keysService
   let didDocumentService
@@ -122,6 +124,36 @@ export const generateTestDIDs = async (): Promise<{
 
   const elemRSAPublicKey = KeysService.getPublicKey(elemRSASeedHex, 'elem').toString('hex')
 
+  const bbsKeys = [
+    {
+      type: 'bbs',
+      permissions: ['authentication', 'assertionMethod'],
+      private: '5D6Pa8dSwApdnfg7EZR8WnGfvLDCZPZGsZ5Y1ELL9VDj',
+      public:
+        'oqpWYKaZD9M1Kbe94BVXpr8WTdFBNZyKv48cziTiQUeuhm7sBhCABMyYG4kcMrseC68YTFFgyhiNeBKjzdKk9MiRWuLv5H4FFujQsQK2KTAtzU8qTBiZqBHMmnLF4PL7Ytu',
+    },
+  ]
+
+  const bbskeysBase64 = base64url.encode(JSON.stringify(bbsKeys))
+  const elemBBSSeed = await CommonNetworkMember.generateSeed('elem')
+  const elemBBSSeedHex = elemBBSSeed.toString('hex')
+  const elemBBSSeedWithMethod = `${elemBBSSeedHex}++${'elem'}++${bbskeysBase64}`
+
+  const { encryptedSeed: elemBBSEncryptedSeed } = await CommonNetworkMember.fromSeed(
+    elemBBSSeedWithMethod,
+    {},
+    password,
+  )
+
+  keysService = new KeysService(elemBBSEncryptedSeed, password)
+  const elemBBSPublicKeyBBS = keysService.getExternalPublicKey('bbs').toString()
+
+  didDocumentService = new DidDocumentService(keysService)
+  const elemBBSDidDocument = await didDocumentService.buildDidDocument()
+  const elemBBSDid = await didDocumentService.getMyDid()
+
+  const elemBBSPublicKey = KeysService.getPublicKey(elemBBSSeedHex, 'elem').toString('hex')
+
   return {
     password,
     jolo: {
@@ -149,6 +181,15 @@ export const generateTestDIDs = async (): Promise<{
       didDocument: elemRSADidDocument,
       publicKey: elemRSAPublicKey,
       publicRSAKey: elemRSAPublicKeyRSA,
+    },
+    elemWithBBS: {
+      seed: elemBBSSeed,
+      encryptedSeed: elemBBSEncryptedSeed,
+      seedHex: elemBBSSeedHex,
+      did: elemBBSDid,
+      didDocument: elemBBSDidDocument,
+      publicKey: elemBBSPublicKey,
+      publicBBSKey: elemBBSPublicKeyBBS,
     },
   }
 }

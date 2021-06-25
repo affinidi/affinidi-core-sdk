@@ -47,6 +47,33 @@ export default class ElemDidDocument {
             }
           }
         }
+
+        if (externalKey.type === 'bbs') {
+          const bbsPubKeyId = 'bbs'
+
+          const bbsPubKey = {
+            id: `#${bbsPubKeyId}`,
+            type: 'Bls12381G2Key2020',
+            usage: 'signing',
+            // controller:
+            publicKeyBase58: externalKey.public,
+          }
+
+          initialDidDocumentModel.publicKey.push(bbsPubKey)
+
+          const { permissions } = externalKey
+          if (permissions && permissions.length > 0) {
+            for (const permission of permissions) {
+              if (permission === 'authentication') {
+                authentication.push(`#${bbsPubKeyId}`)
+              }
+
+              if (permission === 'assertionMethod') {
+                assertionMethod.push(`#${bbsPubKeyId}`)
+              }
+            }
+          }
+        }
       }
     }
   }

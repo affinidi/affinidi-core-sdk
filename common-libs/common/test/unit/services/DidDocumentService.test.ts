@@ -82,11 +82,13 @@ const elemDidLongkey = `${elemDid}#primary`
 describe('DidDocumentService', () => {
   let password: string
   let elemRSAEncryptedSeed: string
+  let elemBBSEncryptedSeed: string
 
   before(async () => {
     const testDids = await generateTestDIDs()
     password = testDids.password
     elemRSAEncryptedSeed = testDids.elemWithRSA.encryptedSeed
+    elemBBSEncryptedSeed = testDids.elemWithBBS.encryptedSeed
   })
 
   it('!parseDid', async () => {
@@ -125,8 +127,7 @@ describe('DidDocumentService', () => {
     expect(did).to.be.equal(elemDid)
   })
 
-  it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys)', async () => {
-    console.log('elemRSAEncryptedSeed!!!', elemRSAEncryptedSeed)
+  it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys RSA)', async () => {
     const keyService = new KeyService(elemRSAEncryptedSeed, password)
     const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
@@ -142,6 +143,24 @@ describe('DidDocumentService', () => {
     expect(rsaPublicKey.publicKeyPem).to.exist
     expect(publicKey).to.exist
     expect(publicKey).to.be.equal(rsaPublicKey.publicKeyPem)
+  })
+
+  it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys BBS)', async () => {
+    const keyService = new KeyService(elemBBSEncryptedSeed, password)
+    const didDocumentService = new DidDocumentService(keyService)
+    const did = didDocumentService.getMyDid()
+    const didDocument = await didDocumentService.buildDidDocument()
+    const bbsPublicKey = didDocument.publicKey.find((key: any) => key.type === 'Bls12381G2Key2020')
+
+    const bbsKeyId = `${didDocument.id}#bbs`
+    const publicKeyBuffer = DidDocumentService.getPublicKey('', didDocument, bbsKeyId)
+    const publicKey = publicKeyBuffer.toString()
+
+    expect(did).to.exist
+    expect(bbsPublicKey).to.exist
+    expect(bbsPublicKey.publicKeyBase58).to.exist
+    expect(publicKey).to.exist
+    expect(publicKey).to.be.equal(bbsPublicKey.publicKeyBase58)
   })
 
   it('#getKeyId (jolo)', async () => {
