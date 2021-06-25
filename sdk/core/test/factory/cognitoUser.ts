@@ -32,4 +32,4 @@ const cognitoUser = {
   setAuthenticationFlowType: (): undefined => undefined,
 }
 
-module.exports = cognitoUser
+export default cognitoUser

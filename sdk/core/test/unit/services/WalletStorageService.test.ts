@@ -13,10 +13,10 @@ import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaul
 import { generateTestDIDs } from '../../factory/didFactory'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
 
-const signedCredential = require('../../factory/signedCredential')
+import signedCredential from '../../factory/signedCredential'
 
-const credentialShareRequestToken = require('../../factory/credentialShareRequestToken')
-const parsedCredentialShareRequestToken = require('../../factory/parsedCredentialShareRequestToken')
+import credentialShareRequestToken from '../../factory/credentialShareRequestToken'
+import parsedCredentialShareRequestToken from '../../factory/parsedCredentialShareRequestToken'
 
 let walletPassword: string
 

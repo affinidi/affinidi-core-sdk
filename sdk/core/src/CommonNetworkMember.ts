@@ -46,7 +46,6 @@ import {
 } from './dto/verifier.dto'
 
 import { randomBytes } from './shared/randomBytes'
-import { readUserTokensFromSessionStorage } from './shared/sessionStorageHandler'
 import { isW3cCredential } from './_helpers'
 
 import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
@@ -2011,10 +2010,11 @@ export abstract class CommonNetworkMember {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
     const {
-      basicOptions: { keyStorageUrl, userPoolId },
+      basicOptions: { keyStorageUrl },
       accessApiKey,
     } = getOptionsFromEnvironment(options)
-    const { accessToken } = readUserTokensFromSessionStorage(userPoolId)
+    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const { accessToken } = userManagementService.readUserTokensFromSessionStorage()
 
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)

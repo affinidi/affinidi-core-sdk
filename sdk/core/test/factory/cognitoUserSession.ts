@@ -57,4 +57,4 @@ const cognitoUserSession = {
   clockDrift: 0,
 }
 
-module.exports = cognitoUserSession
+export default cognitoUserSession

@@ -1,3 +1,4 @@
+import { CognitoIdentityServiceProvider } from 'aws-sdk'
 import { profile } from '@affinidi/common'
 
 let fetch: any
@@ -7,24 +8,9 @@ if (!fetch) {
   ;(global as any).fetch = require('node-fetch')
 }
 
-import { CognitoIdentityServiceProvider } from 'aws-sdk'
-
-import SdkError from '../shared/SdkError'
-import { CognitoUserTokens } from '../dto/shared.dto'
-import { saveUserTokensToSessionStorage } from '../shared/sessionStorageHandler'
-import { MessageParameters } from '../dto'
-
 import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
-
-import { validateUsername } from '../shared/validateUsername'
-import { normalizeUsername } from '../shared/normalizeUsername'
-
-const tempSession: Record<string, string> = {}
-
-type ConstructorOptions = {
-  clientId: string
-  userPoolId: string
-}
+import { CognitoUserTokens, MessageParameters } from '../dto'
+import { normalizeUsername, validateUsername } from '../shared'
 
 export enum SignUpResult {
   Success,
@@ -43,47 +29,98 @@ type SignInResponse =
   | { result: Exclude<SignInResult, SignInResult.Success> }
   | { result: SignInResult.Success; cognitoTokens: CognitoUserTokens }
 
+export enum CompleteLoginChallengeResult {
+  Success,
+  AttemptsExceeded,
+  ConfirmationCodeExpired,
+  ConfirmationCodeWrong,
+}
+
+type CompleteLoginChallengeResponse =
+  | { result: Exclude<CompleteLoginChallengeResult, CompleteLoginChallengeResult.Success> }
+  | { result: CompleteLoginChallengeResult.Success; cognitoTokens: CognitoUserTokens }
+
+export enum SignInWithUsernameResult {
+  Success,
+  UserNotFound,
+}
+
+type SignInWithUsernameResponse =
+  | { result: Exclude<SignInWithUsernameResult, SignInWithUsernameResult.Success> }
+  | { result: SignInWithUsernameResult.Success; token: string }
+
+export enum ForgotPasswordResult {
+  Success,
+  UserNotFound,
+}
+
+export enum ForgotPasswordConfirmResult {
+  Success,
+  UserNotFound,
+  ConfirmationCodeExpired,
+  ConfirmationCodeWrong,
+  NewPasswordInvalid,
+}
+
+export enum ResendSignUpResult {
+  Success,
+  UserNotFound,
+  UserAlreadyConfirmed,
+}
+
+type ResendSignUpResponse = { result: ResendSignUpResult; normalizedUsername: string }
+
+export enum ConfirmSignUpResult {
+  Success,
+  UserNotFound,
+  ConfirmationCodeExpired,
+  ConfirmationCodeWrong,
+}
+
+type ConfirmSignUpResponse = { result: ConfirmSignUpResult; normalizedUsername: string }
+
+export enum ChangeUsernameResult {
+  Success,
+  NewUsernameExists,
+}
+
+export enum ConfirmChangeUsernameResult {
+  Success,
+  ConfirmationCodeExpired,
+  ConfirmationCodeWrong,
+}
+
+enum AuthFlow {
+  UserPassword = 'USER_PASSWORD_AUTH',
+  Custom = 'CUSTOM_AUTH',
+  RefreshToken = 'REFRESH_TOKEN_AUTH',
+}
+
+const getAdditionalParameters = (messageParameters?: MessageParameters) => {
+  return messageParameters ? { ClientMetadata: messageParameters as Record<string, any> } : {}
+}
+
+const tempSession: Record<string, string> = {}
+const INVALID_PASSWORD = '1'
+
 @profile()
 export default class CognitoIdentityService {
-  protected cognitoOptions
-  private readonly cognitoOptionKeys: string[] = ['clientId', 'userPoolId']
-  private readonly cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
-    region: DEFAULT_COGNITO_REGION,
-    apiVersion: '2016-04-18',
-  })
+  private readonly clientId
+  private readonly cognitoidentityserviceprovider
 
-  constructor(options: ConstructorOptions) {
-    this._validateCognitoOptions(options)
-    const cognitoOptions = {
+  constructor({ clientId }: { clientId: string }) {
+    this.clientId = clientId
+    this.cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
       region: DEFAULT_COGNITO_REGION,
-      clientId: options.clientId,
-      userPoolId: options.userPoolId,
-    }
-    this.cognitoOptions = cognitoOptions
-  }
-
-  async refreshUserSessionTokens(refreshToken: string) {
-    try {
-      const response = await this._signInWithRefreshToken(refreshToken)
-
-      return response
-    } catch (error) {
-      throw new SdkError('COR-9')
-    }
+      apiVersion: '2016-04-18',
+    })
   }
 
   async trySignIn(username: string, password: string): Promise<SignInResponse> {
-    const authFlow = 'USER_PASSWORD_AUTH'
-
     try {
-      const params = this._getCognitoAuthParametersObject(authFlow, username, password)
-
+      const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, username, password)
       const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
-
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
-
-      const { userPoolId } = this.cognitoOptions
-      saveUserTokensToSessionStorage(userPoolId, cognitoTokens)
 
       return {
         result: SignInResult.Success,
@@ -101,45 +138,36 @@ export default class CognitoIdentityService {
     }
   }
 
-  async signInWithUsername(username: string, messageParameters?: MessageParameters): Promise<string> {
-    this._usernameShouldBeEmailOrPhoneNumber(username)
+  async signInWithUsername(
+    username: string,
+    messageParameters?: MessageParameters,
+  ): Promise<SignInWithUsernameResponse> {
+    const params = {
+      ...this._getCognitoAuthParametersObject(AuthFlow.Custom, username),
+      ...getAdditionalParameters(messageParameters),
+    }
 
     try {
-      const token = await this._signInWithUsername(username, messageParameters)
-
-      return token
+      const response = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
+      const token = JSON.stringify(response)
+      return { result: SignInWithUsernameResult.Success, token }
     } catch (error) {
       if (error.code === 'UserNotFoundException') {
-        throw new SdkError('COR-4', { username })
+        return { result: SignInWithUsernameResult.UserNotFound }
       } else {
         throw error
       }
     }
   }
 
-  static setTempSession(
-    ChallengeParameters: CognitoIdentityServiceProvider.ChallengeParametersType,
-    Session: string,
-  ): void {
-    const { USERNAME } = ChallengeParameters
-
-    tempSession[USERNAME] = Session
-  }
-
-  async completeLoginChallenge(token: string, confirmationCode: string): Promise<CognitoUserTokens> {
+  async completeLoginChallenge(token: string, confirmationCode: string): Promise<CompleteLoginChallengeResponse> {
     const { Session: tokenSession, ChallengeName, ChallengeParameters } = JSON.parse(token)
 
-    let Session = tokenSession
     const { USERNAME } = ChallengeParameters
-
-    if (tempSession[USERNAME]) {
-      Session = tempSession[USERNAME]
-    }
-
-    const { clientId: ClientId } = this.cognitoOptions
+    const Session = tempSession[USERNAME] || tokenSession
 
     const params = {
-      ClientId,
+      ClientId: this.clientId,
       ChallengeName,
       ChallengeResponses: {
         ...ChallengeParameters,
@@ -149,33 +177,25 @@ export default class CognitoIdentityService {
     }
 
     try {
-      // prettier-ignore
-      const result = await this.cognitoidentityserviceprovider
-        .respondToAuthChallenge(params)
-        .promise()
-
-      CognitoIdentityService.setTempSession(ChallengeParameters, result.Session)
+      const result = await this.cognitoidentityserviceprovider.respondToAuthChallenge(params).promise()
+      tempSession[USERNAME] = result.Session
 
       // NOTE: respondToAuthChallenge for the custom auth flow do not return
       //       error, but if response has `ChallengeName` - it is an error
       if (result.ChallengeName === 'CUSTOM_CHALLENGE') {
-        throw new SdkError('COR-5')
+        return { result: CompleteLoginChallengeResult.ConfirmationCodeWrong }
       }
 
-      const cognitoUserTokens = this._normalizeTokensFromCognitoAuthenticationResult(result.AuthenticationResult)
-
-      const { userPoolId } = this.cognitoOptions
-      saveUserTokensToSessionStorage(userPoolId, cognitoUserTokens)
-
-      return cognitoUserTokens
+      const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(result.AuthenticationResult)
+      return { result: CompleteLoginChallengeResult.Success, cognitoTokens }
     } catch (error) {
       // NOTE: Incorrect username or password. -> Corresponds to custom auth challenge
       //       error when OTP was entered incorrectly 3 times.
       if (error.message === 'Incorrect username or password.') {
-        throw new SdkError('COR-13')
+        return { result: CompleteLoginChallengeResult.AttemptsExceeded }
       } else if (error.code === 'NotAuthorizedException') {
         // Throw when OTP is expired (3 min)
-        throw new SdkError('COR-17', { confirmationCode })
+        return { result: CompleteLoginChallengeResult.ConfirmationCodeExpired }
       } else {
         throw error
       }
@@ -190,66 +210,52 @@ export default class CognitoIdentityService {
     this.cognitoidentityserviceprovider.globalSignOut({ AccessToken })
   }
 
-  async forgotPassword(
-    Username: string,
-    messageParameters?: MessageParameters,
-  ): Promise<AWS.CognitoIdentityServiceProvider.ForgotPasswordResponse> {
-    this._usernameShouldBeEmailOrPhoneNumber(Username)
-
-    const { clientId: ClientId } = this.cognitoOptions
-
+  async forgotPassword(username: string, messageParameters?: MessageParameters): Promise<ForgotPasswordResult> {
     const params = {
-      ClientId,
-      Username,
-    }
-
-    if (messageParameters) {
-      Object.assign(params, { ClientMetadata: messageParameters })
+      ClientId: this.clientId,
+      Username: username,
+      ...getAdditionalParameters(messageParameters),
     }
 
     try {
-      const response = await this.cognitoidentityserviceprovider.forgotPassword(params).promise()
+      await this.cognitoidentityserviceprovider.forgotPassword(params).promise()
 
-      return response
+      return ForgotPasswordResult.Success
     } catch (error) {
       if (error.code === 'UserNotFoundException') {
-        throw new SdkError('COR-4', { username: Username })
+        return ForgotPasswordResult.UserNotFound
       } else {
         throw error
       }
     }
   }
 
-  async forgotPasswordSubmit(username: string, ConfirmationCode: string, Password: string) {
-    this._usernameShouldBeEmailOrPhoneNumber(username)
-
-    const { clientId: ClientId } = this.cognitoOptions
-
+  async forgotPasswordSubmit(
+    username: string,
+    confirmationCode: string,
+    password: string,
+  ): Promise<ForgotPasswordConfirmResult> {
     const params = {
-      ClientId,
-      Password,
+      ClientId: this.clientId,
+      Password: password,
       Username: username,
-      ConfirmationCode,
+      ConfirmationCode: confirmationCode,
     }
 
     try {
-      const response = await this.cognitoidentityserviceprovider.confirmForgotPassword(params).promise()
+      await this.cognitoidentityserviceprovider.confirmForgotPassword(params).promise()
 
-      return response
+      return ForgotPasswordConfirmResult.Success
     } catch (error) {
       switch (error.code) {
         case 'ExpiredCodeException':
-          throw new SdkError('COR-2', { username, confirmationCode: ConfirmationCode })
-
+          return ForgotPasswordConfirmResult.ConfirmationCodeExpired
         case 'UserNotFoundException':
-          throw new SdkError('COR-4', { username })
-
+          return ForgotPasswordConfirmResult.UserNotFound
         case 'CodeMismatchException':
-          throw new SdkError('COR-5', { username, confirmationCode: ConfirmationCode })
-
+          return ForgotPasswordConfirmResult.ConfirmationCodeWrong
         case 'InvalidPasswordException':
-          throw new SdkError('COR-6')
-
+          return ForgotPasswordConfirmResult.NewPasswordInvalid
         default:
           throw error
       }
@@ -264,11 +270,11 @@ export default class CognitoIdentityService {
     const normalizedUsername = normalizeUsername(username)
 
     const params = {
-      ClientId: this.cognitoOptions.clientId,
+      ClientId: this.clientId,
       Password: password,
       Username: normalizedUsername,
       UserAttributes: this._buildUserAttributes(username),
-      ClientMetadata: messageParameters ?? {},
+      ...getAdditionalParameters(messageParameters),
     }
 
     try {
@@ -293,54 +299,48 @@ export default class CognitoIdentityService {
     }
   }
 
-  async resendSignUp(Username: string, messageParameters?: MessageParameters) {
-    Username = normalizeUsername(Username)
-
-    const { clientId: ClientId } = this.cognitoOptions
-
-    const ClientMetadata = messageParameters || {}
-    const params = { ClientId, Username, ClientMetadata }
+  async resendSignUp(username: string, messageParameters?: MessageParameters): Promise<ResendSignUpResponse> {
+    const normalizedUsername = normalizeUsername(username)
+    const params = {
+      ClientId: this.clientId,
+      Username: normalizedUsername,
+      ...getAdditionalParameters(messageParameters),
+    }
 
     try {
-      const response = await this.cognitoidentityserviceprovider.resendConfirmationCode(params).promise()
-
-      return response
+      await this.cognitoidentityserviceprovider.resendConfirmationCode(params).promise()
+      return { result: ResendSignUpResult.Success, normalizedUsername }
     } catch (error) {
       switch (error.code) {
         case 'UserNotFoundException':
-          throw new SdkError('COR-4', { username: Username })
-
+          return { result: ResendSignUpResult.UserNotFound, normalizedUsername }
         case 'InvalidParameterException':
-          throw new SdkError('COR-8', { username: Username })
-
+          return { result: ResendSignUpResult.UserAlreadyConfirmed, normalizedUsername }
         default:
           throw error
       }
     }
   }
 
-  async confirmSignUp(Username: string, ConfirmationCode: string) {
-    Username = normalizeUsername(Username)
-
-    const { clientId: ClientId } = this.cognitoOptions
-
-    const params = { ClientId, Username, ConfirmationCode }
+  async confirmSignUp(username: string, confirmationCode: string): Promise<ConfirmSignUpResponse> {
+    const normalizedUsername = normalizeUsername(username)
+    const params = {
+      ClientId: this.clientId,
+      Username: normalizedUsername,
+      ConfirmationCode: confirmationCode,
+    }
 
     try {
-      const response = await this.cognitoidentityserviceprovider.confirmSignUp(params).promise()
-
-      return response
+      await this.cognitoidentityserviceprovider.confirmSignUp(params).promise()
+      return { result: ConfirmSignUpResult.Success, normalizedUsername }
     } catch (error) {
       switch (error.code) {
         case 'UserNotFoundException':
-          throw new SdkError('COR-4', { username: Username })
-
+          return { result: ConfirmSignUpResult.UserNotFound, normalizedUsername }
         case 'ExpiredCodeException':
-          throw new SdkError('COR-2', { username: Username, confirmationCode: ConfirmationCode })
-
+          return { result: ConfirmSignUpResult.ConfirmationCodeExpired, normalizedUsername }
         case 'CodeMismatchException':
-          throw new SdkError('COR-5', { username: Username, confirmationCode: ConfirmationCode })
-
+          return { result: ConfirmSignUpResult.ConfirmationCodeWrong, normalizedUsername }
         default:
           throw error
       }
@@ -353,22 +353,30 @@ export default class CognitoIdentityService {
     return this.cognitoidentityserviceprovider.changePassword(params).promise()
   }
 
-  async changeUsername(AccessToken: string, attribute: string, messageParameters?: MessageParameters) {
+  async changeUsername(
+    AccessToken: string,
+    attribute: string,
+    messageParameters?: MessageParameters,
+  ): Promise<ChangeUsernameResult> {
     const userExists = await this._userExists(attribute)
 
     if (userExists) {
-      throw new SdkError('COR-7', { username: attribute })
+      return ChangeUsernameResult.NewUsernameExists
     }
 
     const UserAttributes = this._buildUserAttributes(attribute)
 
-    const ClientMetadata = messageParameters || {}
-    const params = { AccessToken, UserAttributes, ClientMetadata }
+    const params = { AccessToken, UserAttributes, ...getAdditionalParameters(messageParameters) }
 
-    return this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
+    await this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
+    return ChangeUsernameResult.Success
   }
 
-  async confirmChangeUsername(AccessToken: string, attribute: string, confirmationCode: string) {
+  async confirmChangeUsername(
+    AccessToken: string,
+    attribute: string,
+    confirmationCode: string,
+  ): Promise<ConfirmChangeUsernameResult> {
     const Code = confirmationCode
 
     const { isPhoneNumberValid } = validateUsername(attribute)
@@ -382,17 +390,14 @@ export default class CognitoIdentityService {
     const params = { AccessToken, AttributeName, Code }
 
     try {
-      const response = await this.cognitoidentityserviceprovider.verifyUserAttribute(params).promise()
-
-      return response
+      await this.cognitoidentityserviceprovider.verifyUserAttribute(params).promise()
+      return ConfirmChangeUsernameResult.Success
     } catch (error) {
       switch (error.code) {
         case 'ExpiredCodeException':
-          throw new SdkError('COR-2', { attribute: AttributeName, confirmationCode })
-
+          return ConfirmChangeUsernameResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
-          throw new SdkError('COR-5', { attribute: AttributeName, confirmationCode })
-
+          return ConfirmChangeUsernameResult.ConfirmationCodeWrong
         default:
           throw error
       }
@@ -405,62 +410,30 @@ export default class CognitoIdentityService {
     return isUnconfirmed
   }
 
-  /* istanbul ignore next: private function */
-  private _validateCognitoOptions(options: any = {}) {
-    const optionKeys = Object.keys(options)
-
-    if (optionKeys.length > 0) {
-      this.cognitoOptionKeys.every((value) => {
-        if (!optionKeys.includes(value)) {
-          throw new Error(`All or none Cognito parameters must be provided: ${this.cognitoOptionKeys}`)
-        }
-      })
-    }
-  }
-
-  /* istanbul ignore next: private function */
-  private _usernameShouldBeEmailOrPhoneNumber(username: string) {
-    const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
-
-    if (!isEmailValid && !isPhoneNumberValid) {
-      throw new SdkError('COR-3', { username })
-    }
-  }
-
-  /* istanbul ignore next: private method */
-  private _getAuthParametersObject(authFlow: string, username: string, password: string, refreshToken: string) {
+  private _getAuthParametersObject(authFlow: AuthFlow, username: string, password: string, refreshToken: string) {
     switch (authFlow) {
-      case 'USER_PASSWORD_AUTH':
-        return {
-          USERNAME: username,
-          PASSWORD: password,
-        }
-
-      case 'CUSTOM_AUTH':
-        return {
-          USERNAME: username,
-        }
-
-      case 'REFRESH_TOKEN_AUTH':
-        return {
-          REFRESH_TOKEN: refreshToken,
-        }
+      case AuthFlow.UserPassword:
+        return { USERNAME: username, PASSWORD: password }
+      case AuthFlow.Custom:
+        return { USERNAME: username }
+      case AuthFlow.RefreshToken:
+        return { REFRESH_TOKEN: refreshToken }
     }
   }
 
-  /* istanbul ignore next: private method */
   private _getCognitoAuthParametersObject(
-    AuthFlow: string,
+    authFlow: AuthFlow,
     username: string = null,
     password: string = null,
     refreshToken: string = null,
   ) {
-    const AuthParameters = this._getAuthParametersObject(AuthFlow, username, password, refreshToken)
-    const { clientId: ClientId } = this.cognitoOptions
-    return { AuthFlow, ClientId, AuthParameters }
+    return {
+      AuthFlow: authFlow as string,
+      ClientId: this.clientId,
+      AuthParameters: this._getAuthParametersObject(authFlow, username, password, refreshToken),
+    }
   }
 
-  /* istanbul ignore next: private method */
   private _normalizeTokensFromCognitoAuthenticationResult(
     AuthenticationResult: AWS.CognitoIdentityServiceProvider.AuthenticationResultType,
   ): CognitoUserTokens {
@@ -472,38 +445,14 @@ export default class CognitoIdentityService {
     return { accessToken, idToken, refreshToken, expiresIn }
   }
 
-  /* istanbul ignore next: private method */
-  private async _signInWithUsername(username: string, messageParameters?: MessageParameters) {
-    const authFlow = 'CUSTOM_AUTH'
-    const params = this._getCognitoAuthParametersObject(authFlow, username)
-
-    if (messageParameters) {
-      Object.assign(params, { ClientMetadata: messageParameters })
-    }
-
-    const response = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
-    const token = JSON.stringify(response)
-
-    // prettier-ignore
-    return token
-  }
-
-  /* istanbul ignore next: private method */
-  private async _signInWithRefreshToken(token: string): Promise<CognitoUserTokens> {
-    const authFlow = 'REFRESH_TOKEN_AUTH'
-    const params = this._getCognitoAuthParametersObject(authFlow, token)
-
+  public async signInWithRefreshToken(token: string): Promise<CognitoUserTokens> {
+    const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, token)
+    console.log('params', params)
     const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
-
     const cognitoUserTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
-
-    const { userPoolId } = this.cognitoOptions
-    saveUserTokensToSessionStorage(userPoolId, cognitoUserTokens)
-
     return cognitoUserTokens
   }
 
-  /* istanbul ignore next: private function */
   private _buildUserAttributes(username: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
 
@@ -513,15 +462,9 @@ export default class CognitoIdentityService {
     ]
   }
 
-  /* istanbul ignore next: private function */
   private async _signInWithInvalidPassword(username: string) {
-    const { userPoolId, clientId } = this.cognitoOptions
-
-    const invalidPassword = '1'
-    const cognitoIdentityService = new CognitoIdentityService({ userPoolId, clientId })
-
     try {
-      const response = await cognitoIdentityService.trySignIn(username, invalidPassword)
+      const response = await this.trySignIn(username, INVALID_PASSWORD)
       switch (response.result) {
         case SignInResult.UserNotFound:
           return { userExists: false, isUnconfirmed: false }
@@ -535,7 +478,6 @@ export default class CognitoIdentityService {
     }
   }
 
-  /* istanbul ignore next: private function */
   private async _userExists(username: string): Promise<boolean> {
     const { userExists } = await this._signInWithInvalidPassword(username)
 

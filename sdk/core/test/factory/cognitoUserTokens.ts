@@ -5,4 +5,4 @@ const cognitoUserTokens = {
   expiresIn: 1591890477,
 }
 
-module.exports = cognitoUserTokens
+export default cognitoUserTokens

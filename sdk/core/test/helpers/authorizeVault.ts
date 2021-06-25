@@ -4,10 +4,10 @@ import sinon from 'sinon'
 import * as ethereumjsUtils from 'ethereumjs-util'
 import { KeysService } from '@affinidi/common'
 import { STAGING_VAULT_URL, DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
+import bip32fromSeedResponse from '../factory/bip32fromSeedResponse'
 
 const bip32 = require('bip32')
 const secp256k1 = require('secp256k1')
-const bip32fromSeedResponse = require('../factory/bip32fromSeedResponse')
 
 const didMethod = DEFAULT_DID_METHOD
 const seed = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'

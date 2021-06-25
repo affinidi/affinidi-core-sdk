@@ -254,4 +254,4 @@ const medicalCredential = {
   },
 }
 
-module.exports = medicalCredential
+export default medicalCredential
