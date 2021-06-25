@@ -4,6 +4,7 @@
   * Breaking changes:
     * More specific type declarations.
     * `SdkOptions` parameters are now non-optional.
+    * `SdkOptions` parameters are no longer modified.
     * `SdkOptions.env` field is now required.
     * Code targets ES2019 now.
     * Removed internal `CognitoService`, use `CommonNetworkMember` instead, or `UserManagementService` or `CognitoIdentityService` in case of need.

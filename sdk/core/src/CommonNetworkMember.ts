@@ -563,27 +563,29 @@ export abstract class CommonNetworkMember {
     this: T,
     token: string,
     confirmationCode: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: false, value: inputOptions },
     ])
 
-    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(inputOptions)
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    options.cognitoUserTokens = await userManagementService.completeLoginChallenge(token, confirmationCode)
-
-    const { accessToken } = options.cognitoUserTokens
+    const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
+    const cognitoUserTokens = await userManagementService.completeLoginChallenge(token, confirmationCode)
+    const { accessToken } = cognitoUserTokens
 
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, basicOptions.keyStorageUrl, {
       accessApiKey,
     })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
-    return new this(encryptionKey, encryptedSeed, options)
+    return new this(encryptionKey, encryptedSeed, {
+      ...inputOptions,
+      cognitoUserTokens,
+    })
   }
 
   getShareCredential(credentialShareRequestToken: string, options: FreeFormObject): SignedCredential[] {
@@ -610,7 +612,7 @@ export abstract class CommonNetworkMember {
     ])
 
     const {
-      basicOptions: { env, keyStorageUrl, registryUrl },
+      basicOptions: { env, keyStorageUrl },
       accessApiKey,
     } = getOptionsFromEnvironment(options)
 
@@ -621,10 +623,10 @@ export abstract class CommonNetworkMember {
 
     const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferToken)
 
-    options.keyStorageUrl = keyStorageUrl
-    options.registryUrl = registryUrl
-
-    return WalletStorageService.getSignedCredentials(idToken, credentialOfferResponseToken, options)
+    return WalletStorageService.getSignedCredentials(idToken, credentialOfferResponseToken, {
+      ...options,
+      keyStorageUrl,
+    })
   }
 
   /**
@@ -693,27 +695,26 @@ export abstract class CommonNetworkMember {
     this: T,
     username: string,
     password: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: false, value: inputOptions },
     ])
 
-    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(inputOptions)
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    options.cognitoUserTokens = await userManagementService.signIn(username, password)
-
-    const { accessToken } = options.cognitoUserTokens
+    const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
+    const cognitoUserTokens = await userManagementService.signIn(username, password)
+    const { accessToken } = cognitoUserTokens
 
     const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, basicOptions.keyStorageUrl, {
       accessApiKey,
     })
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
-    return new this(encryptionKey, encryptedSeed, options)
+    return new this(encryptionKey, encryptedSeed, { ...inputOptions, cognitoUserTokens })
   }
 
   private static _validateKeys(keyParams: KeyParams) {
@@ -857,10 +858,11 @@ export abstract class CommonNetworkMember {
     token: string,
     confirmationCode: string,
     keyParams: KeyParams,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
-    const userManagementService = this._createUserManagementService(options)
+    const userManagementService = this._createUserManagementService(inputOptions)
     const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUp(token, confirmationCode)
+    const { accessToken } = cognitoTokens
 
     let passwordHash
     let encryptedSeed
@@ -869,12 +871,9 @@ export abstract class CommonNetworkMember {
       passwordHash = keyParams.password
     } else {
       passwordHash = WalletStorageService.hashFromString(shortPassword)
-      const registerResult = await self.register(passwordHash, options)
+      const registerResult = await self.register(passwordHash, inputOptions)
       encryptedSeed = registerResult.encryptedSeed
     }
-
-    options.cognitoUserTokens = cognitoTokens
-    const { accessToken } = cognitoTokens
 
     const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
 
@@ -884,15 +883,14 @@ export abstract class CommonNetworkMember {
       encryptionKey,
     )
 
-    const commonNetworkMember = new self(encryptionKey, updatedEncryptedSeed, options)
+    const commonNetworkMember = new self(encryptionKey, updatedEncryptedSeed, {
+      ...inputOptions,
+      cognitoUserTokens: cognitoTokens,
+    })
 
-    const skipBackupEncryptedSeed = options && options.skipBackupEncryptedSeed
-
-    if (skipBackupEncryptedSeed) {
-      return commonNetworkMember
+    if (!inputOptions.skipBackupEncryptedSeed) {
+      await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
     }
-
-    await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
 
     return commonNetworkMember
   }
