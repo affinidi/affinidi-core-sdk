@@ -6,6 +6,7 @@ import { expect } from 'chai'
 
 import { JwtService, KeysService } from '@affinidi/common'
 import { authorizeVault } from './../../helpers'
+import KeyManagementService from '../../../src/services/KeyManagementService'
 import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
@@ -28,10 +29,16 @@ const fetchCredentialsBase = '/data/'
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
   return new WalletStorageService(keysService, testPlatformTools, {
-    keyStorageUrl: STAGING_KEY_STORAGE_URL,
     vaultUrl: STAGING_VAULT_URL,
     accessApiKey: undefined,
     storageRegion: undefined,
+  })
+}
+
+const createKeyManagementService = () => {
+  return new KeyManagementService({
+    keyStorageUrl: STAGING_KEY_STORAGE_URL,
+    accessApiKey: undefined,
   })
 }
 
@@ -71,16 +78,16 @@ describe('WalletStorageService', () => {
     const encryptedSeed = 'encryptedSeed'
     const readMyKeyPath = '/api/v1/keys/readMyKey'
 
+    sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey')
     nock(STAGING_KEY_STORAGE_URL)
       .filteringPath(() => readMyKeyPath)
       .get(readMyKeyPath)
       .reply(200, { encryptedSeed })
 
-    const response = await WalletStorageService.pullEncryptedSeed('accessToken', STAGING_KEY_STORAGE_URL, {
-      accessApiKey: undefined,
-    })
+    const keyManagementService = createKeyManagementService()
+    const response = await keyManagementService.pullKeyAndSeed('accessToken')
 
-    expect(response).to.include(encryptedSeed)
+    expect(response.encryptedSeed).to.include(encryptedSeed)
   })
 
   it('#filterCredentials', () => {

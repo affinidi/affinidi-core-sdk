@@ -2,13 +2,16 @@
   * Improved type inference.
   * `CommonNetworkMember._affinity` made protected.
   * Breaking changes:
+    * Code targets ES2019 now.
     * More specific type declarations.
     * `SdkOptions` parameters are now non-optional.
-    * `SdkOptions` parameters are no longer modified.
     * `SdkOptions.env` field is now required.
-    * Code targets ES2019 now.
+  * Additional breaking changes:
+    * `SdkOptions` parameters are no longer modified.
     * Removed internal `CognitoService`, use `CommonNetworkMember` instead, or `UserManagementService` or `CognitoIdentityService` in case of need.
-    * Some internal methods moved out from internal `WalletStorageService` to `KeyStorageApiService`
+    * Some internal methods moved out from internal `WalletStorageService` to `KeyStorageApiService` or `KeyManagementService`.
+    * These changes do not affect projects that did not directly use internal `CognitoService` or `WalletStorageService` classes,
+      and that did not rely on `CommonNetworkMember` methods having an undocumented side effect of modifying the options parameter.
 # release 5.0.0 (2021-06-16)
   * Implemented `WalletStorageService.fetchAllBlobs`.
   * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries.

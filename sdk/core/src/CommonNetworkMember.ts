@@ -1,4 +1,3 @@
-import retry from 'async-retry'
 import { profile, DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affinidi/vc-common'
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
@@ -55,6 +54,7 @@ import IssuerApiService from './services/IssuerApiService'
 import VerifierApiService from './services/VerifierApiService'
 import RevocationApiService from './services/RevocationApiService'
 import UserManagementService from './services/UserManagementService'
+import KeyManagementService from './services/KeyManagementService'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -107,6 +107,7 @@ export abstract class CommonNetworkMember {
   private readonly _registryApiService
   private readonly _revocationApiService
   private readonly _userManagementService
+  private readonly _keyManagementService
   protected readonly _affinity: Affinity
   protected readonly _sdkOptions
   private readonly _phoneIssuer: PhoneIssuerService
@@ -168,8 +169,8 @@ export abstract class CommonNetworkMember {
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey })
     this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey })
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
+    this._keyManagementService = new KeyManagementService({ keyStorageUrl, accessApiKey })
     this._walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
-      keyStorageUrl,
       vaultUrl,
       accessApiKey,
       storageRegion,
@@ -232,6 +233,11 @@ export abstract class CommonNetworkMember {
   private static _createUserManagementService = (options: SdkOptions) => {
     const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
     return new UserManagementService({ ...basicOptions, accessApiKey })
+  }
+
+  private static _createKeyManagementService = (options: SdkOptions) => {
+    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
+    return new KeyManagementService({ ...basicOptions, accessApiKey })
   }
 
   /**
@@ -477,7 +483,7 @@ export abstract class CommonNetworkMember {
     ])
 
     const { accessToken } = await this._userManagementService.signIn(username, password)
-    const encryptedSeed = await this._walletStorageService.pullEncryptedSeed(accessToken)
+    const { encryptedSeed } = await this._keyManagementService.pullKeyAndSeed(accessToken)
 
     return encryptedSeed
   }
@@ -506,28 +512,7 @@ export abstract class CommonNetworkMember {
     }
 
     const { seedHexWithMethod } = this._keysService.decryptSeed()
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
-    await retry(
-      async (bail: (e: Error) => void) => {
-        const errorCodes = ['COR-1', 'WAL-2']
-
-        try {
-          await this._walletStorageService.storeEncryptedSeed(accessToken, seedHexWithMethod, encryptionKey)
-        } catch (error) {
-          if (errorCodes.indexOf(error.code) >= 0) {
-            // If it's a known error we can bail out of the retry and that error will be what's thrown
-            bail(error)
-            return
-          } else {
-            // Otherwise we wrap the error and throw that,
-            // this will trigger a retry until "retries" count is met
-            throw new SdkError('COR-18', { accessToken }, error)
-          }
-        }
-      },
-      { retries: 3 },
-    )
+    await this._keyManagementService.pullEncryptionKeyAndStoreEncryptedSeed(accessToken, seedHexWithMethod)
   }
 
   /**
@@ -571,16 +556,11 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: inputOptions },
     ])
 
-    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(inputOptions)
-
     const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
+    const keyManagementService = CommonNetworkMember._createKeyManagementService(inputOptions)
     const cognitoUserTokens = await userManagementService.completeLoginChallenge(token, confirmationCode)
     const { accessToken } = cognitoUserTokens
-
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, basicOptions.keyStorageUrl, {
-      accessApiKey,
-    })
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
 
     return new this(encryptionKey, encryptedSeed, {
       ...inputOptions,
@@ -703,17 +683,11 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: inputOptions },
     ])
 
-    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(inputOptions)
-
     const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
+    const keyManagementService = CommonNetworkMember._createKeyManagementService(inputOptions)
     const cognitoUserTokens = await userManagementService.signIn(username, password)
     const { accessToken } = cognitoUserTokens
-
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, basicOptions.keyStorageUrl, {
-      accessApiKey,
-    })
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
+    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
     return new this(encryptionKey, encryptedSeed, { ...inputOptions, cognitoUserTokens })
   }
 
@@ -864,35 +838,24 @@ export abstract class CommonNetworkMember {
     const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUp(token, confirmationCode)
     const { accessToken } = cognitoTokens
 
-    let passwordHash
-    let encryptedSeed
-    if (keyParams?.encryptedSeed) {
-      encryptedSeed = keyParams.encryptedSeed
-      passwordHash = keyParams.password
-    } else {
-      passwordHash = WalletStorageService.hashFromString(shortPassword)
+    if (!keyParams?.encryptedSeed) {
+      const passwordHash = WalletStorageService.hashFromString(shortPassword)
       const registerResult = await self.register(passwordHash, inputOptions)
-      encryptedSeed = registerResult.encryptedSeed
+      const encryptedSeed = registerResult.encryptedSeed
+      keyParams = { password: passwordHash, encryptedSeed }
     }
 
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
-    const updatedEncryptedSeed = await CommonNetworkMember.reencryptSeedWithEncryptionKey(
-      encryptedSeed,
-      passwordHash,
-      encryptionKey,
+    const keyManagementService = this._createKeyManagementService(inputOptions)
+    const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
+      accessToken,
+      keyParams,
+      !inputOptions.skipBackupEncryptedSeed,
     )
 
-    const commonNetworkMember = new self(encryptionKey, updatedEncryptedSeed, {
+    return new self(encryptionKey, updatedEncryptedSeed, {
       ...inputOptions,
       cognitoUserTokens: cognitoTokens,
     })
-
-    if (!inputOptions.skipBackupEncryptedSeed) {
-      await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
-    }
-
-    return commonNetworkMember
   }
 
   /**
@@ -929,26 +892,6 @@ export abstract class CommonNetworkMember {
     const result = await CommonNetworkMember._confirmSignUp(this, token, confirmationCode, undefined, options)
     await this.afterConfirmSignUp(result, options)
     return result
-  }
-
-  /* To cover scenario when registration failed and private key is not saved:
-   *    1. seed is generated before user is confirmed in Cognito
-   *    2. encrypt seed with user's password
-   *    3. confirm user in Cognito, if registration is successful
-   *    4. get user's encryptionKey
-   *    5. re-encrypt user's seed with encryptionKey
-   */
-  /* istanbul ignore next: private method */
-  private static async reencryptSeedWithEncryptionKey(
-    encryptedSeed: string,
-    password: string,
-    encryptionKey: string,
-  ): Promise<string> {
-    const { seedHexWithMethod } = KeysService.decryptSeed(encryptedSeed, password)
-
-    const encryptionKeyBuffer = KeysService.normalizePassword(encryptionKey)
-
-    return KeysService.encryptSeed(seedHexWithMethod, encryptionKeyBuffer)
   }
 
   /**
@@ -1987,14 +1930,8 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: false, value: options },
     ])
 
-    const {
-      basicOptions: { keyStorageUrl },
-      accessApiKey,
-    } = getOptionsFromEnvironment(options)
-
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
+    const keyManagementService = await CommonNetworkMember._createKeyManagementService(options)
+    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
     return new this(encryptionKey, encryptedSeed, options)
   }
 
@@ -2007,15 +1944,10 @@ export abstract class CommonNetworkMember {
   static async init<T extends DerivedType<InstanceType<T>>>(this: T, options: SdkOptions): Promise<InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
-    const {
-      basicOptions: { keyStorageUrl },
-      accessApiKey,
-    } = getOptionsFromEnvironment(options)
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
     const { accessToken } = userManagementService.readUserTokensFromSessionStorage()
-
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
+    const keyManagementService = CommonNetworkMember._createKeyManagementService(options)
+    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)
   }

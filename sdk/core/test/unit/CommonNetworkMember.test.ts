@@ -10,9 +10,11 @@ import {
   getVCEmailPersonV1Context,
 } from '@affinidi/vc-data'
 
-import WalletStorageService from '../../src/services/WalletStorageService'
 import { PhoneIssuerService } from '../../src/services/PhoneIssuerService'
 import { EmailIssuerService } from '../../src/services/EmailIssuerService'
+import KeyManagementService from '../../src/services/KeyManagementService'
+import KeyStorageApiService from '../../src/services/KeyStorageApiService'
+import WalletStorageService from '../../src/services/WalletStorageService'
 import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 
 import { getAllOptionsForEnvironment } from '../helpers'
@@ -21,7 +23,6 @@ import cognitoSignInWithUsernameResponseToken from '../factory/cognitoSignInWith
 import { generateTestDIDs } from '../factory/didFactory'
 import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
 import SdkError from '../../src/shared/SdkError'
-import KeyStorageApiService from '../../src/services/KeyStorageApiService'
 import CognitoIdentityService, {
   CompleteLoginChallengeResult,
   ConfirmSignUpResult,
@@ -113,7 +114,7 @@ const idToken =
   'tYXJ5In0.3c1068e2ce500f768eb6ad5090b2442fbf0a36ddee7d66d451779d71fe3d9793' +
   '3a36ceb13aa49b5403e3ed73a1c88718fed3531753d60173f0155fc0ef5aa1d1'
 
-let walletStub: sinon.SinonStub
+let saveSeedStub: sinon.SinonStub
 
 const options = getAllOptionsForEnvironment()
 const { registryUrl } = options
@@ -129,7 +130,7 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
     result: SignInResult.Success,
     cognitoTokens: {},
   })
-  sinon.stub(WalletStorageService, 'pullEncryptionKey').resolves(opts.password)
+  sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey').resolves(opts.password)
   sinon.stub(KeysService, 'normalizePassword').returns(Buffer.from(opts.password))
   sinon.stub(KeysService, 'encryptSeed').resolves(opts.seedHex)
   sinon.stub(DidDocumentService.prototype, 'getMyDid').resolves(did)
@@ -157,7 +158,7 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
     seedHexWithMethod: `${seedHex}++${didMethod}`,
     externalKeys: null,
   })
-  walletStub = sinon.stub(WalletStorageService.prototype, 'storeEncryptedSeed')
+  saveSeedStub = sinon.stub(KeyStorageApiService.prototype, 'storeMyKey')
 }
 
 describe('CommonNetworkMember', () => {
@@ -279,8 +280,10 @@ describe('CommonNetworkMember', () => {
       result: CompleteLoginChallengeResult.Success,
       cognitoTokens: cognitoUserTokens,
     })
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
-    sinon.stub(WalletStorageService, 'pullEncryptionKey').resolves(walletPassword)
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: walletPassword,
+    })
 
     const response = await CommonNetworkMember.completeLoginChallenge('token', '123456', options)
 
@@ -439,7 +442,10 @@ describe('CommonNetworkMember', () => {
       result: CompleteLoginChallengeResult.Success,
       cognitoTokens: cognitoUserTokens,
     })
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: undefined,
+    })
 
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
       signInResponseToken,
@@ -459,7 +465,10 @@ describe('CommonNetworkMember', () => {
       result: CompleteLoginChallengeResult.Success,
       cognitoTokens: cognitoUserTokens,
     })
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: undefined,
+    })
 
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
       signInResponseToken,
@@ -768,7 +777,7 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    walletStub.onCall(0).throws({ code: 'COR-1' })
+    saveSeedStub.onCall(0).throws({ code: 'COR-1' })
 
     let errorCode
 
@@ -780,7 +789,7 @@ describe('CommonNetworkMember', () => {
     }
 
     expect(errorCode).to.eq('COR-1')
-    expect(walletStub.callCount).to.eql(1)
+    expect(saveSeedStub.callCount).to.eql(1)
   })
 
   it('retries storeEncryptedSeed method until successful when an unkown error occurs during confirm signup', async () => {
@@ -788,13 +797,13 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    walletStub.onCall(0).throws('UNKNOWN')
-    walletStub.onCall(1).throws('UNKNOWN')
-    walletStub.onCall(2).throws('UNKNOWN')
+    saveSeedStub.onCall(0).throws('UNKNOWN')
+    saveSeedStub.onCall(1).throws('UNKNOWN')
+    saveSeedStub.onCall(2).throws('UNKNOWN')
 
     await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
 
-    expect(walletStub.callCount).to.eql(4)
+    expect(saveSeedStub.callCount).to.eql(4)
   })
 
   it('retries storeEncryptedSeed method until successful when an unkown error occurs during confirm signup, but only 3 times', async () => {
@@ -802,11 +811,11 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    walletStub.onCall(0).throws('UNKNOWN')
-    walletStub.onCall(1).throws('UNKNOWN')
-    walletStub.onCall(2).throws('UNKNOWN')
-    walletStub.onCall(3).throws('UNKNOWN')
-    walletStub.onCall(4).throws('UNKNOWN')
+    saveSeedStub.onCall(0).throws('UNKNOWN')
+    saveSeedStub.onCall(1).throws('UNKNOWN')
+    saveSeedStub.onCall(2).throws('UNKNOWN')
+    saveSeedStub.onCall(3).throws('UNKNOWN')
+    saveSeedStub.onCall(4).throws('UNKNOWN')
 
     let errorCode
 
@@ -817,7 +826,7 @@ describe('CommonNetworkMember', () => {
     }
 
     expect(errorCode).to.eq('COR-18')
-    expect(walletStub.callCount).to.eql(4)
+    expect(saveSeedStub.callCount).to.eql(4)
   })
 
   it('throws error when multiple parameters have wrong format for static method', async () => {
@@ -851,8 +860,10 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#getSignedCredentials', async () => {
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
-    sinon.stub(WalletStorageService, 'pullEncryptionKey').resolves(walletPassword)
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: walletPassword,
+    })
     sinon.stub(WalletStorageService, 'getCredentialOffer').resolves(credentialOfferToken)
     sinon.stub(WalletStorageService, 'getSignedCredentials').resolves([signedCredential])
 

@@ -45,7 +45,6 @@ import KeyStorageApiService from './KeyStorageApiService'
 import BloomVaultApiService, { BlobType } from './BloomVaultApiService'
 
 type ConstructorOptions = {
-  keyStorageUrl: string
   vaultUrl: string
   storageRegion: string
   accessApiKey: string
@@ -53,13 +52,10 @@ type ConstructorOptions = {
 
 @profile()
 export default class WalletStorageService {
-  private _keyStorageUrl: string
   private _storageRegion: string
   private _keysService: KeysService
   private _platformEncryptionTools: IPlatformEncryptionTools
   private _bloomVaultApiService
-  private _keyStorageApiService
-  private _accessApiKey: string
 
   constructor(
     keysService: KeysService,
@@ -69,60 +65,13 @@ export default class WalletStorageService {
     this._keysService = keysService
     this._platformEncryptionTools = platformEncryptionTools
     this._bloomVaultApiService = new BloomVaultApiService(options)
-    this._keyStorageApiService = new KeyStorageApiService(options)
-
-    this._keyStorageUrl = options.keyStorageUrl
     this._storageRegion = options.storageRegion
-    this._accessApiKey = options.accessApiKey
-  }
-
-  async pullEncryptedSeed(accessToken: string): Promise<string> {
-    const accessApiKey = this._accessApiKey
-
-    const keyStorageUrl = this._keyStorageUrl
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
-
-    return encryptedSeed
-  }
-
-  static async pullEncryptedSeed(
-    accessToken: string,
-    keyStorageUrl: string,
-    options: { accessApiKey: string },
-  ): Promise<string> {
-    const { accessApiKey } = options
-    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey })
-    const {
-      body: { encryptedSeed },
-    } = await service.readMyKey({ accessToken })
-
-    return encryptedSeed
   }
 
   static hashFromString(data: string): string {
     const buffer = sha256(Buffer.from(data))
 
     return buffer.toString('hex')
-  }
-
-  static async pullEncryptionKey(accessToken: string): Promise<string> {
-    // TODO: must use key provider, its just a mock at this point
-    const { payload } = JwtService.fromJWT(accessToken)
-    const userId = payload.sub
-
-    const encryptionKey = WalletStorageService.hashFromString(userId)
-
-    return encryptionKey
-  }
-
-  async storeEncryptedSeed(accessToken: string, seedHex: string, encryptionKey: string): Promise<void> {
-    const encryptionKeyBuffer = Buffer.from(encryptionKey, 'hex')
-    const encryptedSeed = await KeysService.encryptSeed(seedHex, encryptionKeyBuffer)
-
-    await this._keyStorageApiService.storeMyKey({
-      accessToken,
-      encryptedSeed,
-    })
   }
 
   /* istanbul ignore next: private function */

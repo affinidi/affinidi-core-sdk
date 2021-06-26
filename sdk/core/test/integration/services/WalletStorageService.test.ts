@@ -2,21 +2,19 @@
 
 import { expect } from 'chai'
 import { decode as jwtDecode } from 'jsonwebtoken'
-import { KeysService } from '@affinidi/common'
 
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import UserManagementService from '../../../src/services/UserManagementService'
 import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
 
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
-import { testPlatformTools } from '../../helpers/testPlatformTools'
 import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
+import KeyManagementService from '../../../src/services/KeyManagementService'
 
 const options = getAllOptionsForEnvironment()
 
-const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, SEED_JOLO, ENCRYPTED_SEED_JOLO } = testSecrets
+const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, ENCRYPTED_SEED_JOLO } = testSecrets
 
-const seed = SEED_JOLO
 const password = PASSWORD
 const encryptedSeed = ENCRYPTED_SEED_JOLO
 
@@ -28,12 +26,8 @@ const cognitoUsername = cognitoUsernameStaging
 const { keyStorageUrl } = options
 let userManagementService: UserManagementService
 
-const createWalletStorageService = () => {
-  const keysService = new KeysService(encryptedSeed, password)
-  return new WalletStorageService(keysService, testPlatformTools, {
-    storageRegion: undefined,
-    ...options,
-  })
+const createKeyManagementService = () => {
+  return new KeyManagementService(options)
 }
 
 describe('WalletStorageService', () => {
@@ -44,13 +38,13 @@ describe('WalletStorageService', () => {
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {
     const { accessToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
 
-    const walletStorageService = createWalletStorageService()
+    const keyStorageApiService = new KeyStorageApiService(options)
 
     let responseError
 
     try {
-      await walletStorageService.storeEncryptedSeed(accessToken, seed, password)
-      await walletStorageService.storeEncryptedSeed(accessToken, seed, password)
+      await keyStorageApiService.storeMyKey({ accessToken, encryptedSeed })
+      await keyStorageApiService.storeMyKey({ accessToken, encryptedSeed })
     } catch (error) {
       responseError = error
     }
@@ -59,21 +53,21 @@ describe('WalletStorageService', () => {
   })
 
   it('#pullEncryptedSeed', async () => {
-    const walletStorageService = createWalletStorageService()
+    const keyManagementService = createKeyManagementService()
     const { accessToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
-    const pulledEncryptedSeed = await walletStorageService.pullEncryptedSeed(accessToken)
+    const { encryptedSeed } = await keyManagementService.pullKeyAndSeed(accessToken)
 
-    expect(pulledEncryptedSeed).to.exist
+    expect(encryptedSeed).to.exist
   })
 
   it('#pullEncryptedSeed throws exception WHEN key for userId does not exist', async () => {
-    const walletStorageService = createWalletStorageService()
+    const keyManagementService = createKeyManagementService()
 
     let responseError
 
     try {
       const { accessToken } = await userManagementService.signIn(nonExistingUser, cognitoPassword)
-      await walletStorageService.pullEncryptedSeed(accessToken)
+      await keyManagementService.pullKeyAndSeed(accessToken)
     } catch (error) {
       responseError = error
     }
@@ -84,12 +78,12 @@ describe('WalletStorageService', () => {
   it.skip('#storeEncryptedSeed throws exception WHEN userId does not exists', async () => {
     const { accessToken } = await userManagementService.signIn(nonExistingUser, cognitoPassword)
 
-    const walletStorageService = createWalletStorageService()
+    const keyStorageApiService = new KeyStorageApiService(options)
 
     let responseError
 
     try {
-      await walletStorageService.storeEncryptedSeed(accessToken, seed, password)
+      await keyStorageApiService.storeMyKey({ accessToken, encryptedSeed })
     } catch (error) {
       responseError = error
     }
@@ -174,18 +168,13 @@ describe('WalletStorageService', () => {
   })
 
   it('#getSignedCredential', async () => {
+    const keyManagementService = createKeyManagementService()
+
     const { accessToken, idToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
-
     const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
-
-    const returnedEncryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, options)
-
-    const encryptionKey = await WalletStorageService.pullEncryptionKey(accessToken)
-
-    const networkMember = new CommonNetworkMember(encryptionKey, returnedEncryptedSeed, options)
-
+    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
+    const networkMember = new CommonNetworkMember(encryptionKey, encryptedSeed, options)
     const offerResponse = await networkMember.createCredentialOfferResponseToken(offerToken)
-
     const signedCredentials = await WalletStorageService.getSignedCredentials(idToken, offerResponse, options)
 
     expect(signedCredentials).to.exist
