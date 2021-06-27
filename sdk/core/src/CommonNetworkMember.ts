@@ -56,21 +56,26 @@ import RevocationApiService from './services/RevocationApiService'
 import UserManagementService from './services/UserManagementService'
 import KeyManagementService from './services/KeyManagementService'
 
-type GenericConstructor<T> = new (
+type GenericConstructor<T, TOptions> = new (
   password: string,
   encryptedSeed: string,
-  options: SdkOptions,
+  options: TOptions,
   component?: EventComponent,
 ) => T
-type Constructor<T> = GenericConstructor<T> & GenericConstructor<CommonNetworkMember>
-type AbstractStaticMethods<T> = {
-  afterConfirmSignUp: (networkMember: T, originalOptions: SdkOptions) => Promise<void>
+type Constructor<T, TOptions extends SdkOptions> = GenericConstructor<T, TOptions> &
+  GenericConstructor<CommonNetworkMember<TOptions>, TOptions>
+type AbstractStaticMethods<T, TOptions> = {
+  afterConfirmSignUp: (networkMember: T, originalOptions: TOptions) => Promise<void>
 }
 type ConstructorKeys<T> = {
   [P in keyof T]: T[P] extends new (...args: unknown[]) => unknown ? P : never
 }[keyof T]
 type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
-type DerivedType<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructor<typeof CommonNetworkMember>
+type DerivedTypeForOptions<TInstance, TOptions extends SdkOptions> = Constructor<TInstance, TOptions> &
+  AbstractStaticMethods<TInstance, TOptions> &
+  OmitConstructor<typeof CommonNetworkMember>
+type ExtractOptionsType<T extends new (...args: unknown[]) => unknown> = SdkOptions & ConstructorParameters<T>[2]
+type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<T>, ExtractOptionsType<T>>
 
 /**
  * This class is abstract.
@@ -92,7 +97,7 @@ type DerivedType<T> = Constructor<T> & AbstractStaticMethods<T> & OmitConstructo
  * You can leave the method body empty if you don't need it.
  */
 @profile()
-export abstract class CommonNetworkMember {
+export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptions> {
   private _did: string
   private readonly _encryptedSeed: string
   private _password: string
@@ -120,7 +125,7 @@ export abstract class CommonNetworkMember {
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
-    inputOptions: SdkOptions,
+    inputOptions: TOptions,
     component: EventComponent,
   ) {
     // await ParametersValidator.validateSync(
@@ -263,10 +268,10 @@ export abstract class CommonNetworkMember {
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */
-  static async fromSeed<T extends DerivedType<InstanceType<T>>>(
+  static async fromSeed<T extends DerivedType<T>>(
     this: T,
     seedHexWithMethod: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
     password: string = null,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
@@ -336,10 +341,10 @@ export abstract class CommonNetworkMember {
    *
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
-  static async register<T extends DerivedType<InstanceType<T>>>(
+  static async register<T extends DerivedType<T>>(
     this: T,
     password: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
   ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
@@ -544,11 +549,11 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async completeLoginChallenge<T extends DerivedType<InstanceType<T>>>(
+  static async completeLoginChallenge<T extends DerivedType<T>>(
     this: T,
     token: string,
     confirmationCode: string,
-    inputOptions: SdkOptions,
+    inputOptions: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -671,11 +676,11 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async fromLoginAndPassword<T extends DerivedType<InstanceType<T>>>(
+  static async fromLoginAndPassword<T extends DerivedType<T>>(
     this: T,
     username: string,
     password: string,
-    inputOptions: SdkOptions,
+    inputOptions: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
@@ -720,12 +725,12 @@ export abstract class CommonNetworkMember {
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUpWithExistsEntity<T extends DerivedType<InstanceType<T>>>(
+  static async signUpWithExistsEntity<T extends DerivedType<T>>(
     this: T,
     keyParams: KeyParams,
     username: string,
     password: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: KeyParams, isRequired: true, value: keyParams }])
@@ -772,11 +777,11 @@ export abstract class CommonNetworkMember {
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUp<T extends DerivedType<InstanceType<T>>>(
+  static async signUp<T extends DerivedType<T>>(
     this: T,
     username: string,
     password: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { token, isUsername } = await CommonNetworkMember._signUp(username, password, options, messageParameters)
@@ -801,12 +806,12 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUpWithExistsEntity<T extends DerivedType<InstanceType<T>>>(
+  static async confirmSignUpWithExistsEntity<T extends DerivedType<T>>(
     this: T,
     keyParams: KeyParams,
     token: string,
     confirmationCode: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
     const [username] = token.split('::')
 
@@ -827,12 +832,12 @@ export abstract class CommonNetworkMember {
     return CommonNetworkMember._confirmSignUp(this, token, confirmationCode, keyParams, options)
   }
 
-  private static async _confirmSignUp<T extends DerivedType<InstanceType<T>>>(
+  private static async _confirmSignUp<T extends DerivedType<T>>(
     self: T,
     token: string,
     confirmationCode: string,
     keyParams: KeyParams,
-    inputOptions: SdkOptions,
+    inputOptions: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
     const userManagementService = this._createUserManagementService(inputOptions)
     const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUp(token, confirmationCode)
@@ -868,11 +873,11 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUp<T extends DerivedType<InstanceType<T>>>(
+  static async confirmSignUp<T extends DerivedType<T>>(
     this: T,
     token: string,
     confirmationCode: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
     const [username] = token.split('::')
 
@@ -923,10 +928,10 @@ export abstract class CommonNetworkMember {
    * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
-  static async signIn<T extends DerivedType<InstanceType<T>>>(
+  static async signIn<T extends DerivedType<T>>(
     this: T,
     username: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     await ParametersValidator.validate([
@@ -956,11 +961,11 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
-  static async confirmSignIn<T extends DerivedType<InstanceType<T>>>(
+  static async confirmSignIn<T extends DerivedType<T>>(
     this: T,
     token: string,
     confirmationCode: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
   ): Promise<{ isNew: boolean; commonNetworkMember: InstanceType<T> }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -1920,10 +1925,10 @@ export abstract class CommonNetworkMember {
    * @param options - optional parameters for AffinityWallet initialization
    * @returns initialized instance of SDK
    */
-  static async fromAccessToken<T extends DerivedType<InstanceType<T>>>(
+  static async fromAccessToken<T extends DerivedType<T>>(
     this: T,
     accessToken: string,
-    options: SdkOptions,
+    options: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: false, value: accessToken },
@@ -1941,7 +1946,7 @@ export abstract class CommonNetworkMember {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init<T extends DerivedType<InstanceType<T>>>(this: T, options: SdkOptions): Promise<InstanceType<T>> {
+  static async init<T extends DerivedType<T>>(this: T, options: ExtractOptionsType<T>): Promise<InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)

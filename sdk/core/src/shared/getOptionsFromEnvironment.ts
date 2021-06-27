@@ -123,7 +123,7 @@ function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
   }
 }
 
-const splitOptions = (options: SdkOptions) => {
+const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
   const {
     accessApiKey,
     apiKey,
@@ -163,7 +163,7 @@ const splitOptions = (options: SdkOptions) => {
   }
 }
 
-export const getOptionsFromEnvironment = (options: SdkOptions) => {
+export const getOptionsFromEnvironment = <TOptions extends SdkOptions>(options: TOptions) => {
   const { accessApiKeyOptions, environmentOptions, storageRegion, cognitoUserTokens, otherOptions } = splitOptions(
     options,
   )
