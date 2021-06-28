@@ -8,7 +8,7 @@ import SdkError from '../../../src/shared/SdkError'
 
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
-import { __dangerous } from '../../../dist'
+import { TestmailInbox } from '../../../dist/test-helpers'
 
 const { COGNITO_PASSWORD } = testSecrets
 
@@ -20,12 +20,12 @@ const messageParameters: MessageParameters = {
   subject: `Verification code`,
 }
 
-const waitForOtpCode = async (inbox: __dangerous.TestmailInbox): Promise<string> => {
+const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   const { body } = await inbox.waitForNewEmail()
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new __dangerous.TestmailInbox({ prefix: env, suffix: 'otp.core' })
+const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.core' })
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function checkIsString(value: string | unknown): asserts value is string {
@@ -281,7 +281,7 @@ describe('CommonNetworkMember [OTP]', () => {
   })
 
   describe('[with existing user]', () => {
-    let inbox: __dangerous.TestmailInbox
+    let inbox: TestmailInbox
 
     before(async () => {
       inbox = createInbox()

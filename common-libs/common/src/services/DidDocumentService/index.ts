@@ -55,6 +55,10 @@ export default class DidDocumentService {
       return Buffer.from(keySection.publicKeyPem)
     }
 
+    if (keySection.publicKeyBase58) {
+      return Buffer.from(keySection.publicKeyBase58)
+    }
+
     return Buffer.from(keySection.publicKeyHex, 'hex')
   }
 

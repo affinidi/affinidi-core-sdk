@@ -1,4 +1,4 @@
-# release 5.0.1 (2021-06-18)
+# release 6.0.0-beta.1 (2021-06-29)
   * Improved type inference.
   * `CommonNetworkMember._affinity` made protected.
   * Breaking changes:
@@ -12,6 +12,8 @@
     * Some internal methods moved out from internal `WalletStorageService` to `KeyStorageApiService` or `KeyManagementService`.
     * These changes do not affect projects that did not directly use internal `CognitoService` or `WalletStorageService` classes,
       and that did not rely on `CommonNetworkMember` methods having an undocumented side effect of modifying the options parameter.
+# release 5.0.1 (2021-06-21)
+  * Removed TestmailInbox from `__dangerous` to fix unnecessary `crypto-random-string` import
 # release 5.0.0 (2021-06-16)
   * Implemented `WalletStorageService.fetchAllBlobs`.
   * Fixed `WalletStorageServices.fetchAllEncryptedCredentialsInBatches` stopping on batches with deleted entries.
