@@ -1,9 +1,8 @@
 import { expect } from 'chai'
 
-import { __dangerous } from '@affinidi/wallet-core-sdk'
 import { getOptionsForEnvironment, waitForConfirmationCodeInput } from '../helpers'
 
-import { AffinityWallet } from '../../src/AffinityWallet'
+import { AffinityWallet, SdkOptions } from '../../src/AffinityWallet'
 
 const signedCredential = require('../factory/signedCredential')
 
@@ -49,7 +48,7 @@ const credentialShareRequestToken =
   'y0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9c44eac73f3' +
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
-const options: __dangerous.SdkOptions = getOptionsForEnvironment()
+const options: SdkOptions = getOptionsForEnvironment()
 
 function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
@@ -145,7 +144,7 @@ describe('AffinityWallet', () => {
 
   it.skip('#signUp, #confirmSignUp', async () => {
     const emailDev = 'PLACEHOLDER'
-    const token = await AffinityWallet.signUp(emailDev, cognitoPassword)
+    const token = await AffinityWallet.signUp(emailDev, cognitoPassword, options)
     checkIsString(token)
 
     const confirmationCode = await waitForConfirmationCodeInput()
@@ -184,7 +183,7 @@ describe('AffinityWallet', () => {
     const networkMemberSignUp = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
     checkIsAffinityWallet(networkMemberSignUp)
     expect(networkMemberSignUp.did).to.exist
-    await networkMemberSignUp.signOut()
+    await networkMemberSignUp.signOut(options)
 
     const networkMemberFromLoginAndPassword = await AffinityWallet.fromLoginAndPassword(
       cognitoUsername,

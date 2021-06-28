@@ -1,12 +1,13 @@
 'use strict'
 
 import sinon from 'sinon'
-import * as chai from 'chai'
+import { expect, use as chaiUse } from 'chai'
 import sinonChai from 'sinon-chai'
 import { CommonNetworkMember, __dangerous } from '@affinidi/wallet-core-sdk'
+import KeyManagementService from '@affinidi/wallet-core-sdk/dist/services/KeyManagementService'
+import UserManagementService from '@affinidi/wallet-core-sdk/dist/services/UserManagementService'
 
-const expect = chai.expect
-chai.use(sinonChai)
+chaiUse(sinonChai)
 
 import { AffinityWallet, SdkOptions } from '../../src/AffinityWallet'
 import { generateTestDIDs } from '../factory/didFactory'
@@ -25,26 +26,31 @@ const signUpWithEmailResponseToken = `${email}::${walletPassword}`
 const accessToken = 'dummy_token'
 const idToken = 'dummy_token'
 
-const stubConfirmAuthRequests = async (opts: { walletPassword: string; encryptedSeed: string }) => {
-  const spys: { [key: string]: any } = {}
-  spys.confirmSignUp = sinon
-    .stub(CommonNetworkMember as any, '_confirmSignUp')
-    // eslint-disable-next-line no-unused-vars
-    .callsFake((_self, _token, _confirmationCode, _keyParams, options: SdkOptions) => {
-      const result = new AffinityWallet(opts.walletPassword, opts.encryptedSeed, {
-        cognitoUserTokens: { accessToken, idToken },
-        ...options,
-      })
-      return result
-    })
-  spys.getSignupCredentials = sinon
-    .stub(CommonNetworkMember.prototype, 'getSignupCredentials')
-    .resolves([signedCredential])
-  spys.pullEncryptionKey = sinon.stub(WalletStorageService, 'pullEncryptionKey').resolves(opts.walletPassword)
-  spys.pullEncryptedSeed = sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(opts.encryptedSeed)
-  spys.saveCredentials = sinon.stub(AffinityWallet.prototype, 'saveCredentials')
+const sdkOptions = { env: 'dev', apiKey: 'fakeApiKey' } as const
 
-  return spys
+const stubConfirmAuthRequests = async (opts: { walletPassword: string; encryptedSeed: string }) => {
+  return {
+    confirmSignUp: sinon.stub(UserManagementService.prototype, 'confirmSignUp').resolves({
+      cognitoTokens: { accessToken, idToken },
+      shortPassword: opts.walletPassword,
+    }),
+    reencryptSeed: sinon.stub(KeyManagementService.prototype, 'reencryptSeed').resolves({
+      encryptionKey: opts.walletPassword,
+      updatedEncryptedSeed: opts.encryptedSeed,
+    }),
+
+    getSignupCredentials: sinon
+      .stub(CommonNetworkMember.prototype, 'getSignupCredentials')
+      .resolves([signedCredential]),
+    pullEncryptionKey: sinon
+      .stub(KeyManagementService.prototype as any, '_pullEncryptionKey')
+      .resolves(opts.walletPassword),
+    pullKeyAndSeed: sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: opts.encryptedSeed,
+      encryptionKey: opts.walletPassword,
+    }),
+    saveCredentials: sinon.stub(AffinityWallet.prototype, 'saveCredentials'),
+  }
 }
 
 describe('AffinityWallet', () => {
@@ -61,7 +67,7 @@ describe('AffinityWallet', () => {
     it('throws COR-14 if there are no credentials for the user', async () => {
       sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').resolves([])
 
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
       let responseError
 
@@ -81,7 +87,7 @@ describe('AffinityWallet', () => {
 
       sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: error })
 
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
       let responseError
 
@@ -99,7 +105,7 @@ describe('AffinityWallet', () => {
 
   describe('#deleteCredential', () => {
     it('should throw if both parameters are given', async () => {
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
       let responseError
 
@@ -115,7 +121,7 @@ describe('AffinityWallet', () => {
     })
 
     it('should throw if neither parameters are given', async () => {
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
       let responseError
 
@@ -135,7 +141,7 @@ describe('AffinityWallet', () => {
 
       sinon.stub(CommonNetworkMember.prototype as any, 'deleteCredentialByIndex').resolves(undefined)
 
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
       const result = await affinityWallet.deleteCredential(undefined, credentialIndex)
 
@@ -146,7 +152,7 @@ describe('AffinityWallet', () => {
   it('#getCredentials returns [] if there are no credentials for the user', async () => {
     sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: 'COR-14' })
 
-    const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+    const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
     const response = await affinityWallet.getCredentials()
 
     expect(response).to.eql([])
@@ -157,7 +163,7 @@ describe('AffinityWallet', () => {
 
     sinon.stub(WalletStorageService.prototype, 'fetchAllDecryptedCredentials').rejects({ code: error })
 
-    const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+    const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
     let responseError
 
@@ -175,19 +181,19 @@ describe('AffinityWallet', () => {
   it('#saveCredentials', async () => {
     const credentials = [signedCredential]
 
-    sinon.stub(WalletStorageService.prototype, 'encryptAndSaveCredentials').resolves(['token'])
+    sinon.stub(WalletStorageService.prototype, 'encryptAndSaveCredentials').resolves([])
 
-    const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed)
+    const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
     const token = await affinityWallet.saveCredentials(credentials)
 
     expect(token).to.exist
   })
 
-  it('#confirmSignUp without VC issuance', async () => {
+  it('#confirmSignIn without VC issuance', async () => {
     const spys = await stubConfirmAuthRequests({ walletPassword, encryptedSeed })
 
-    const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, undefined)
+    const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, sdkOptions)
 
     expect(response.did).to.exist
     expect(response).to.be.an.instanceof(AffinityWallet)
@@ -196,7 +202,7 @@ describe('AffinityWallet', () => {
 
   it('#confirmSignUp with VC issuance', async () => {
     const spys = await stubConfirmAuthRequests({ walletPassword, encryptedSeed })
-    const options: SdkOptions = { issueSignupCredential: true }
+    const options: SdkOptions = { ...sdkOptions, issueSignupCredential: true }
 
     const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
 
@@ -211,6 +217,7 @@ describe('AffinityWallet', () => {
     const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
       signUpWithEmailResponseToken,
       confirmationCode,
+      sdkOptions,
     )
 
     expect(isNew).to.be.true
@@ -221,7 +228,7 @@ describe('AffinityWallet', () => {
 
   it('#confirmSignIn signUp scenario with VC issuance', async () => {
     const spys = await stubConfirmAuthRequests({ walletPassword, encryptedSeed })
-    const options: SdkOptions = { issueSignupCredential: true }
+    const options: SdkOptions = { ...sdkOptions, issueSignupCredential: true }
 
     const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
       signUpWithEmailResponseToken,

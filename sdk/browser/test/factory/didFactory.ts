@@ -16,6 +16,8 @@ interface TestJoloDid extends TestDid {
   publicEthereumKey: string
 }
 
+const options = { env: 'dev', apiKey: 'fakeApiKey' } as const
+
 export const generateTestDIDs = async (): Promise<{
   password: string
   jolo: TestJoloDid
@@ -30,7 +32,7 @@ export const generateTestDIDs = async (): Promise<{
   const joloSeedHex = joloSeed.toString('hex')
   const joloSeedWithMethod = `${joloSeedHex}++${'jolo'}`
 
-  const { encryptedSeed: joloEncryptedSeed } = await AffinidiWallet.fromSeed(joloSeedWithMethod, {}, password)
+  const { encryptedSeed: joloEncryptedSeed } = await AffinidiWallet.fromSeed(joloSeedWithMethod, options, password)
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
@@ -45,7 +47,7 @@ export const generateTestDIDs = async (): Promise<{
   const elemSeedHex = elemSeed.toString('hex')
   const elemSeedWithMethod = `${elemSeedHex}++${'elem'}`
 
-  const { encryptedSeed: elemEncryptedSeed } = await AffinidiWallet.fromSeed(elemSeedWithMethod, {}, password)
+  const { encryptedSeed: elemEncryptedSeed } = await AffinidiWallet.fromSeed(elemSeedWithMethod, options, password)
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
@@ -59,7 +61,11 @@ export const generateTestDIDs = async (): Promise<{
   const elemAltSeedHex = elemSeed.toString('hex')
   const elemAltSeedWithMethod = `${elemAltSeedHex}++${'elem'}`
 
-  const { encryptedSeed: elemAltEncryptedSeed } = await AffinidiWallet.fromSeed(elemAltSeedWithMethod, {}, password)
+  const { encryptedSeed: elemAltEncryptedSeed } = await AffinidiWallet.fromSeed(
+    elemAltSeedWithMethod,
+    options,
+    password,
+  )
 
   keysService = new KeysService(elemAltEncryptedSeed, password)
 
