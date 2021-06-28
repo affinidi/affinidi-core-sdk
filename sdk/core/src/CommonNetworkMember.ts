@@ -132,7 +132,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     //   [
     //     { isArray: false, type: 'string', isRequired: true, value: password },
     //     { isArray: false, type: 'string', isRequired: true, value: encryptedSeed },
-    //     { isArray: false, type: SdkOptions, isRequired: false, value: options }
+    //     { isArray: false, type: SdkOptions, isRequired: true, value: options }
     //   ]
     // )
 
@@ -276,7 +276,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: seedHexWithMethod },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
       { isArray: false, type: 'string', isRequired: false, value: password },
     ])
 
@@ -348,7 +348,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     // const { registryUrl } = getOptionsFromEnvironment(options)
@@ -534,7 +534,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
@@ -558,7 +558,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
-      { isArray: false, type: SdkOptions, isRequired: false, value: inputOptions },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
@@ -593,7 +593,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   async getSignupCredentials(idToken: string, options: SdkOptions): Promise<SignedCredential[]> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: idToken },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     const {
@@ -618,7 +618,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @description Signs out current user
    */
   async signOut(options: SdkOptions): Promise<void> {
-    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
+    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
     const newTokens = await userManagementService.signOut(this.cognitoUserTokens)
@@ -638,7 +638,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
@@ -662,7 +662,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
       { isArray: false, type: 'string', isRequired: true, value: newPassword },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     const userManagementService = this._createUserManagementService(options)
@@ -685,7 +685,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: false, value: inputOptions },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
@@ -758,7 +758,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: passwordMustBeProvided, value: password },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
@@ -820,7 +820,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     const parametersToValidate = [
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
       { isArray: false, type: 'string', isRequired: true, value: token },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ]
 
     if (isEmailValid || isPhoneNumberValid) {
@@ -885,7 +885,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
 
     const parametersToValidate = [
       { isArray: false, type: 'string', isRequired: true, value: token },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ]
 
     if (isEmailValid || isPhoneNumberValid) {
@@ -912,7 +912,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
@@ -936,7 +936,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<string | InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
@@ -970,7 +970,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     // NOTE: loginToken = '{"ChallengeName":"CUSTOM_CHALLENGE","Session":"...","ChallengeParameters":{"USERNAME":"...","email":"..."}}'
@@ -998,7 +998,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: oldPassword },
       { isArray: false, type: 'string', isRequired: true, value: newPassword },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
@@ -1020,7 +1020,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   async changeUsername(newUsername: string, options: SdkOptions, messageParameters?: MessageParameters): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newUsername },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
@@ -1042,7 +1042,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newUsername },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
@@ -1932,7 +1932,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: false, value: accessToken },
-      { isArray: false, type: SdkOptions, isRequired: false, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
     const keyManagementService = await CommonNetworkMember._createKeyManagementService(options)
@@ -1947,7 +1947,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * if user is not logged in.
    */
   static async init<T extends DerivedType<T>>(this: T, options: ExtractOptionsType<T>): Promise<InstanceType<T>> {
-    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: false, value: options }])
+    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
     const { accessToken } = userManagementService.readUserTokensFromSessionStorage()
