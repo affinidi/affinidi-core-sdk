@@ -3,6 +3,7 @@ import FetchType from 'node-fetch'
 import { profile } from '@affinidi/common'
 
 import SdkError from '../shared/SdkError'
+import { GenericApiSpec, ExtractAllOperationIds, ExtractRequestType, ExtractResponseType } from './SwaggerTypes'
 
 let fetch: typeof FetchType
 
@@ -11,52 +12,32 @@ if (!fetch) {
   fetch = require('node-fetch')
 }
 
-type RequestOptions = {
+type BasicRequestOptions = {
   authorization?: string
   storageRegion?: string
   urlPostfix?: string
-  params?: Record<string, any>
 }
+
+type RequestOptions<TParams extends Record<string, any>> = TParams extends undefined
+  ? BasicRequestOptions
+  : BasicRequestOptions & { params: TParams }
 
 type ConstructorOptions = { accessApiKey: string }
 
-type SpecMethodType<OperationIdType extends string> = {
-  operationId: OperationIdType
-}
-
-type SpecType<OperationIdType extends string> = {
-  servers: Readonly<
-    {
-      url: string
-    }[]
-  >
-  paths: Record<
-    string,
-    {
-      get?: SpecMethodType<OperationIdType>
-      post?: SpecMethodType<OperationIdType>
-      put?: SpecMethodType<OperationIdType>
-      delete?: SpecMethodType<OperationIdType>
-    }
-  >
-}
-
-export type ExtractOperationIdTypes<T extends SpecType<string>> = T extends SpecType<infer U> ? U : never
-
 @profile()
-export default class GenericApiService<OperationIdType extends string> {
+export default class GenericApiService<TApiSpec extends GenericApiSpec> {
   private readonly _serviceUrl: string
   private readonly _accessApiKey: string
   private readonly _specGroupByOperationId
 
-  constructor(serviceUrl: string, options: ConstructorOptions, rawSpec: SpecType<OperationIdType>) {
+  constructor(serviceUrl: string, options: ConstructorOptions, rawSpec: TApiSpec) {
     this._serviceUrl = serviceUrl
     this._accessApiKey = options.accessApiKey
     const specGroupByOperationId = GenericApiService.parseSpec(rawSpec)
     this._specGroupByOperationId = specGroupByOperationId
   }
 
-  private static parseSpec<OperationIdType extends string>(rawSpec: SpecType<OperationIdType>) {
+  private static parseSpec<TApiSpec extends GenericApiSpec>(rawSpec: TApiSpec) {
     const basePath = rawSpec.servers[0].url
 
     const spec = Object.entries(rawSpec.paths).flatMap(([operationPath, operation]) => {
@@ -68,7 +49,7 @@ export default class GenericApiService<OperationIdType extends string> {
           return []
         }
 
-        const { operationId } = operationForMethod
+        const { operationId }: { operationId: ExtractAllOperationIds<TApiSpec> } = operationForMethod
 
         return [
           {
@@ -80,14 +61,14 @@ export default class GenericApiService<OperationIdType extends string> {
       })
     })
 
-    return keyBy(spec, 'operationId') as Record<OperationIdType, typeof spec[number]>
+    return keyBy(spec, 'operationId') as Record<ExtractAllOperationIds<TApiSpec>, typeof spec[number]>
   }
 
   private static async executeByOptions<TResponse>(
     accessApiKey: string,
     method: string,
     url: string,
-    options: RequestOptions,
+    options: BasicRequestOptions & { params?: unknown },
   ) {
     const { authorization, storageRegion, params, urlPostfix } = options
     const fetchOptions = {
@@ -115,7 +96,10 @@ export default class GenericApiService<OperationIdType extends string> {
     return { body: jsonResponse as TResponse, status }
   }
 
-  protected async execute<TResponse = undefined>(serviceOperationId: OperationIdType, options: RequestOptions) {
+  protected async execute<TOperationId extends ExtractAllOperationIds<TApiSpec>>(
+    serviceOperationId: TOperationId,
+    options: RequestOptions<ExtractRequestType<TApiSpec, TOperationId>>,
+  ): Promise<{ body: ExtractResponseType<TApiSpec, TOperationId>; status: number }> {
     if (!this._serviceUrl) {
       throw new Error('Service URL is empty')
     }
@@ -123,6 +107,11 @@ export default class GenericApiService<OperationIdType extends string> {
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
     const url = `${this._serviceUrl}${path}`
-    return GenericApiService.executeByOptions<TResponse>(this._accessApiKey, method, url, options)
+    return GenericApiService.executeByOptions<ExtractResponseType<TApiSpec, TOperationId>>(
+      this._accessApiKey,
+      method,
+      url,
+      options,
+    )
   }
 }

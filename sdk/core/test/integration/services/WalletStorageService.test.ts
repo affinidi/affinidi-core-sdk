@@ -43,8 +43,8 @@ describe('WalletStorageService', () => {
     let responseError
 
     try {
-      await keyStorageApiService.storeMyKey({ accessToken, encryptedSeed })
-      await keyStorageApiService.storeMyKey({ accessToken, encryptedSeed })
+      await keyStorageApiService.storeMyKey(accessToken, { encryptedSeed })
+      await keyStorageApiService.storeMyKey(accessToken, { encryptedSeed })
     } catch (error) {
       responseError = error
     }
@@ -83,7 +83,7 @@ describe('WalletStorageService', () => {
     let responseError
 
     try {
-      await keyStorageApiService.storeMyKey({ accessToken, encryptedSeed })
+      await keyStorageApiService.storeMyKey(accessToken, { encryptedSeed })
     } catch (error) {
       responseError = error
     }

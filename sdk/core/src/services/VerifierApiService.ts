@@ -1,25 +1,20 @@
 import { profile } from '@affinidi/common'
 
-import { CredentialRequirement } from '../dto/shared.dto'
 import verifierSpec from '../openapi/_verifier'
-import GenericApiService, { ExtractOperationIdTypes } from './GenericApiService'
+import GenericApiService from './GenericApiService'
+import { ExtractRequestType } from './SwaggerTypes'
 
 type ConstructorOptions = { verifierUrl: string; accessApiKey: string }
 
+type ApiSpec = typeof verifierSpec
+
 @profile()
-export default class VerifierApiService extends GenericApiService<ExtractOperationIdTypes<typeof verifierSpec>> {
+export default class VerifierApiService extends GenericApiService<ApiSpec> {
   constructor(options: ConstructorOptions) {
     super(options.verifierUrl, options, verifierSpec)
   }
 
-  async buildCredentialRequest(params: {
-    credentialRequirements: CredentialRequirement[]
-    issuerDid: string
-    audienceDid?: string
-    expiresAt?: string
-    nonce?: string
-    callbackUrl?: string
-  }) {
-    return this.execute<{ credentialShareRequest: any }>('BuildCredentialRequest', { params })
+  async buildCredentialRequest(params: ExtractRequestType<ApiSpec, 'BuildCredentialRequest'>) {
+    return this.execute('BuildCredentialRequest', { params })
   }
 }

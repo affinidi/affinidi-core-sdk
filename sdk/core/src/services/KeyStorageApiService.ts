@@ -1,8 +1,9 @@
 import { profile } from '@affinidi/common'
 
-import { Env, SignedCredential } from '../dto/shared.dto'
+import { Env } from '../dto/shared.dto'
 import keyStorageSpec from '../openapi/_keyStorage'
-import GenericApiService, { ExtractOperationIdTypes } from './GenericApiService'
+import GenericApiService from './GenericApiService'
+import { ExtractRequestType } from './SwaggerTypes'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
 // getSignedCredential there only uses options to create a new instance of its own CommonNetworkMember,
@@ -22,53 +23,46 @@ type GetSignedCredentialOptions = {
   // so no further fields are needed.
 }
 
+type GetSignedCredentialRequest = {
+  credentialOfferResponseToken: string
+  options: GetSignedCredentialOptions
+}
+
 type ConstructorOptions = { keyStorageUrl: string; accessApiKey: string }
 
+type ApiSpec = typeof keyStorageSpec
+
 @profile()
-export default class KeyStorageApiService extends GenericApiService<ExtractOperationIdTypes<typeof keyStorageSpec>> {
+export default class KeyStorageApiService extends GenericApiService<ApiSpec> {
   constructor(options: ConstructorOptions) {
     super(options.keyStorageUrl, options, keyStorageSpec)
   }
 
-  async storeTemplate(params: { username: string; template: string; subject?: string; htmlTemplate?: string }) {
+  async storeTemplate(params: ExtractRequestType<ApiSpec, 'StoreTemplate'>) {
     return this.execute('StoreTemplate', { params })
   }
 
   async readMyKey({ accessToken }: { accessToken: string }) {
-    return this.execute<{ encryptedSeed: string }>('ReadMyKey', { authorization: accessToken })
+    return this.execute('ReadMyKey', { authorization: accessToken })
   }
 
-  async storeMyKey({ accessToken, encryptedSeed }: { accessToken: string; encryptedSeed: string }) {
-    return this.execute('StoreMyKey', {
-      authorization: accessToken,
-      params: { encryptedSeed },
-    })
+  async storeMyKey(accessToken: string, params: ExtractRequestType<ApiSpec, 'StoreMyKey'>) {
+    return this.execute('StoreMyKey', { authorization: accessToken, params })
   }
 
-  async adminConfirmUser(params: { username: string }) {
+  async adminConfirmUser(params: ExtractRequestType<ApiSpec, 'AdminConfirmUser'>) {
     return this.execute('AdminConfirmUser', { params })
   }
 
-  async adminDeleteUnconfirmedUser(params: { username: string }) {
+  async adminDeleteUnconfirmedUser(params: ExtractRequestType<ApiSpec, 'AdminDeleteUnconfirmedUser'>) {
     return this.execute('AdminDeleteUnconfirmedUser', { params })
   }
 
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {
-    return this.execute<{ offerToken: string }>('GetCredentialOffer', {
-      authorization: accessToken,
-      urlPostfix: `?env=${env}`,
-    })
+    return this.execute('GetCredentialOffer', { authorization: accessToken, urlPostfix: `?env=${env}` })
   }
 
-  async getSignedCredential(params: {
-    credentialOfferResponseToken: string
-    accessToken: string
-    options: GetSignedCredentialOptions
-  }) {
-    const { credentialOfferResponseToken, accessToken, options } = params
-    return this.execute<{ signedCredentials: SignedCredential[] }>('GetSignedCredential', {
-      authorization: accessToken,
-      params: { credentialOfferResponseToken, options },
-    })
+  async getSignedCredential(accessToken: string, params: GetSignedCredentialRequest) {
+    return this.execute('GetSignedCredential', { authorization: accessToken, params })
   }
 }

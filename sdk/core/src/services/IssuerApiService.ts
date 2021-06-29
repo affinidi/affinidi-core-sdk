@@ -1,37 +1,24 @@
 import { profile } from '@affinidi/common'
-import { OfferedCredential } from '../dto/shared.dto'
 
 import issuerSpec from '../openapi/_issuer'
-import GenericApiService, { ExtractOperationIdTypes } from './GenericApiService'
+import GenericApiService from './GenericApiService'
+import { ExtractRequestType } from './SwaggerTypes'
 
 type ConstructorOptions = { issuerUrl: string; accessApiKey: string }
 
+type ApiSpec = typeof issuerSpec
+
 @profile()
-export default class IssuerApiService extends GenericApiService<ExtractOperationIdTypes<typeof issuerSpec>> {
+export default class IssuerApiService extends GenericApiService<ApiSpec> {
   constructor(options: ConstructorOptions) {
     super(options.issuerUrl, options, issuerSpec)
   }
 
-  async buildCredentialOffer(params: {
-    offeredCredentials: OfferedCredential[]
-    audienceDid?: string
-    expiresAt?: string
-    nonce?: string
-    callbackUrl?: string
-  }) {
-    return this.execute<{ credentialOffer: any }>('BuildCredentialOffer', { params })
+  async buildCredentialOffer(params: ExtractRequestType<ApiSpec, 'BuildCredentialOffer'>) {
+    return this.execute('BuildCredentialOffer', { params })
   }
 
-  async verifyCredentialOfferResponse(params: {
-    credentialOfferResponseToken: string
-    credentialOfferRequestToken: string
-  }) {
-    return this.execute<{
-      isValid: boolean
-      issuer: string
-      jti: string
-      selectedCredentials: OfferedCredential[]
-      errors: string[]
-    }>('VerifyCredentialOfferResponse', { params })
+  async verifyCredentialOfferResponse(params: ExtractRequestType<ApiSpec, 'VerifyCredentialOfferResponse'>) {
+    return this.execute('VerifyCredentialOfferResponse', { params })
   }
 }

@@ -1,41 +1,40 @@
 import { profile } from '@affinidi/common'
-import { CredentialStatus } from '../dto/revocation.dto'
 
 import revocationSpec from '../openapi/_revocation'
-import GenericApiService, { ExtractOperationIdTypes } from './GenericApiService'
+import GenericApiService from './GenericApiService'
+import { ExtractRequestType } from './SwaggerTypes'
 
 type ConstructorOptions = { revocationUrl: string; accessApiKey: string }
 
+type ApiSpec = typeof revocationSpec
+
+type ReplaceFieldsWithAny<T> = {
+  [key in keyof T]: any
+}
+
 @profile()
-export default class RevocationApiService extends GenericApiService<ExtractOperationIdTypes<typeof revocationSpec>> {
+export default class RevocationApiService extends GenericApiService<ApiSpec> {
   constructor(options: ConstructorOptions) {
     super(options.revocationUrl, options, revocationSpec)
   }
 
-  async buildRevocationListStatus(params: { accessToken: string; credentialId: string; subjectDid: string }) {
-    const { accessToken, credentialId, subjectDid } = params
-    return this.execute<{
-      credentialStatus: CredentialStatus
-      revocationListCredential: any
-    }>('BuildRevocationListStatus', {
-      authorization: accessToken,
-      params: { credentialId, subjectDid },
-    })
+  async buildRevocationListStatus(
+    accessToken: string,
+    params: ExtractRequestType<ApiSpec, 'BuildRevocationListStatus'>,
+  ) {
+    return this.execute('BuildRevocationListStatus', { authorization: accessToken, params })
   }
 
-  async publishRevocationListCredential(params: { accessToken: string; revocationSignedListCredential: any }) {
-    const { accessToken, revocationSignedListCredential } = params
-    return this.execute('PublishRevocationListCredential', {
-      authorization: accessToken,
-      params: revocationSignedListCredential,
-    })
+  async publishRevocationListCredential(
+    accessToken: string,
+    params: ReplaceFieldsWithAny<ExtractRequestType<ApiSpec, 'PublishRevocationListCredential'>>,
+  ) {
+    return this.execute('PublishRevocationListCredential', { authorization: accessToken, params })
   }
 
-  async revokeCredential(params: { accessToken: string; id: string; revocationReason: string }) {
-    const { accessToken, id, revocationReason } = params
-    return this.execute<{ revocationListCredential: any }>('RevokeCredential', {
-      authorization: accessToken,
-      params: { id, revocationReason },
-    })
+  async revokeCredential(accessToken: string, params: ExtractRequestType<ApiSpec, 'RevokeCredential'>) {
+    const response = await this.execute('RevokeCredential', { authorization: accessToken, params })
+
+    return response as { body: { revocationListCredential: any } }
   }
 }

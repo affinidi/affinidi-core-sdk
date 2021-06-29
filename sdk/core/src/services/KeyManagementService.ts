@@ -51,10 +51,7 @@ export default class KeyManagementService {
     const encryptionKeyBuffer = Buffer.from(encryptionKey, 'hex')
     const encryptedSeed = await KeysService.encryptSeed(seedHex, encryptionKeyBuffer)
 
-    await this._keyStorageApiService.storeMyKey({
-      accessToken,
-      encryptedSeed,
-    })
+    await this._keyStorageApiService.storeMyKey(accessToken, { encryptedSeed })
   }
 
   public async pullKeyAndSeed(accessToken: string) {

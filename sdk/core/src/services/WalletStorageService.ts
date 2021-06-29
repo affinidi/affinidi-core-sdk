@@ -298,15 +298,14 @@ export default class WalletStorageService {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
     const { issuerUrl, accessApiKey, apiKey } = options
     const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey })
-    const { body } = await service.getSignedCredential({
+    const { body } = await service.getSignedCredential(accessToken, {
       credentialOfferResponseToken,
-      accessToken,
       options: { issuerUrl, accessApiKey, apiKey },
     })
 
     const { signedCredentials } = body
 
-    return signedCredentials
+    return signedCredentials as SignedCredential[]
   }
 
   private static _getPaginationOptionsWithDefault(

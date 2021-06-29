@@ -1127,7 +1127,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       body: { credentialOffer },
     } = await this._issuerApiService.buildCredentialOffer(params)
 
-    const signedObject = this._keysService.signJWT(credentialOffer, this.didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialOffer as any, this.didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -1176,7 +1176,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest, this.didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialShareRequest as any, this.didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -1344,10 +1344,9 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
 
     const {
       body: { credentialStatus, revocationListCredential },
-    } = await this._revocationApiService.buildRevocationListStatus({
+    } = await this._revocationApiService.buildRevocationListStatus(revocationServiceAccessToken, {
       credentialId,
       subjectDid,
-      accessToken: revocationServiceAccessToken,
     })
 
     const revokableUnsignedCredential = Object.assign({}, unsignedCredential, { credentialStatus })
@@ -1355,16 +1354,16 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
 
     if (revocationListCredential) {
       const revocationSignedListCredential = await this._affinity.signCredential(
-        revocationListCredential,
+        revocationListCredential as any,
         this._encryptedSeed,
         this._password,
       )
       revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
-      await this._revocationApiService.publishRevocationListCredential({
-        accessToken: revocationServiceAccessToken,
+      await this._revocationApiService.publishRevocationListCredential(
+        revocationServiceAccessToken,
         revocationSignedListCredential,
-      })
+      )
     }
 
     return revokableUnsignedCredential
@@ -1379,7 +1378,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
 
     const {
       body: { revocationListCredential },
-    } = await this._revocationApiService.revokeCredential({ id: credentialId, revocationReason, accessToken })
+    } = await this._revocationApiService.revokeCredential(accessToken, { id: credentialId, revocationReason })
 
     const revocationSignedListCredential = await this._affinity.signCredential(
       revocationListCredential,
@@ -1388,7 +1387,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     )
     revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
-    await this._revocationApiService.publishRevocationListCredential({ revocationSignedListCredential, accessToken })
+    await this._revocationApiService.publishRevocationListCredential(accessToken, revocationSignedListCredential)
   }
 
   /**
@@ -1835,7 +1834,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest)
+    const signedObject = this._keysService.signJWT(credentialShareRequest as any)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }

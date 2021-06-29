@@ -1,6 +1,7 @@
 import { profile } from '@affinidi/common'
 
-import GenericApiService, { ExtractOperationIdTypes } from './GenericApiService'
+import bloomVaultSpec from '../openapi/_bloomVault'
+import GenericApiService from './GenericApiService'
 
 type ConstructorOptions = { vaultUrl: string; accessApiKey: string }
 
@@ -9,34 +10,16 @@ export type BlobType = {
   id: number
 }
 
-const createOperation = <T extends string>(operationId: T) => ({ operationId })
-
-// Swagger documentation is unavailable for bloom vault
-const bloomVaultSpec = {
-  servers: [{ url: '' }],
-  paths: {
-    '/auth/request-token': {
-      post: createOperation('RequestAuthToken'),
-    },
-    '/auth/validate-token': {
-      post: createOperation('ValidateAuthToken'),
-    },
-    '/data': {
-      post: createOperation('PostCredential'),
-      get: createOperation('GetCredentials'),
-      delete: createOperation('DeleteCredentials'),
-    },
-  },
-} as const
+type ApiSpec = typeof bloomVaultSpec
 
 @profile()
-export default class BloomVaultApiService extends GenericApiService<ExtractOperationIdTypes<typeof bloomVaultSpec>> {
+export default class BloomVaultApiService extends GenericApiService<ApiSpec> {
   constructor(options: ConstructorOptions) {
     super(options.vaultUrl, options, bloomVaultSpec)
   }
 
   async requestAuthToken({ did, storageRegion }: { did: string; storageRegion: string }) {
-    return this.execute<{ token: string }>('RequestAuthToken', {
+    return this.execute('RequestAuthToken', {
       storageRegion,
       urlPostfix: `?did=${did}`,
     })
@@ -70,7 +53,7 @@ export default class BloomVaultApiService extends GenericApiService<ExtractOpera
 
   async getCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
-    return this.execute<BlobType[]>('GetCredentials', {
+    return this.execute('GetCredentials', {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       urlPostfix: `/${start}/${end}`,
