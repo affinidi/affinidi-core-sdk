@@ -101,7 +101,7 @@ describe('UserManagementService', () => {
   it('#isUserUnconfirmed returns `true` WHEN user is UNCONFIRMED', async () => {
     const cognitoUsername = existingUnconfirmedCognitoUser
     const userManagementService = new UserManagementService(constructorOptions)
-    const isUserUnconfirmed = await userManagementService.isUserUnconfirmed(cognitoUsername)
+    const isUserUnconfirmed = await userManagementService.doesUnconfirmedUserExist(cognitoUsername)
 
     expect(isUserUnconfirmed).to.equal(true)
   })
@@ -109,7 +109,7 @@ describe('UserManagementService', () => {
   it('#isUserUnconfirmed returns `false` WHEN user not UNCONFIRMED', async () => {
     const cognitoUsername = existingConfirmedCognitoUser
     const userManagementService = new UserManagementService(constructorOptions)
-    const isUserUnconfirmed = await userManagementService.isUserUnconfirmed(cognitoUsername)
+    const isUserUnconfirmed = await userManagementService.doesUnconfirmedUserExist(cognitoUsername)
 
     expect(isUserUnconfirmed).to.equal(false)
   })

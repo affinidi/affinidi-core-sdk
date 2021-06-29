@@ -82,7 +82,7 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.signInWithUsername(email)
+      const response = await userManagementService.signInWithEmailOrPhone(email)
 
       expect(response).to.exist
     })
@@ -97,7 +97,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signInWithUsername(email)
+        await userManagementService.signInWithEmailOrPhone(email)
       } catch (error) {
         responseError = error
       }
@@ -118,7 +118,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signInWithUsername(email)
+        await userManagementService.signInWithEmailOrPhone(email)
       } catch (error) {
         responseError = error
       }
@@ -412,7 +412,7 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, null, error)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.isUserUnconfirmed(email)
+      const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.true
     })
@@ -423,7 +423,7 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, null, error)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.isUserUnconfirmed(email)
+      const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.false
     })
@@ -434,7 +434,7 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, null, error)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.isUserUnconfirmed(email)
+      const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.false
     })
@@ -715,7 +715,7 @@ describe('UserManagementService', () => {
         stubMethod(UPDATE_USER_ATTRIBUTES, {})
 
         const userManagementService = new UserManagementService(options)
-        const response = await userManagementService.changeUsername(cognitoTokens, email)
+        const response = await userManagementService.changeUsernameAndLogin(cognitoTokens, email)
 
         expect(response).to.exist
       })
@@ -733,7 +733,7 @@ describe('UserManagementService', () => {
         })
 
         const userManagementService = new UserManagementService(options)
-        const response = await userManagementService.changeUsername(cognitoTokens, email, messageParameters)
+        const response = await userManagementService.changeUsernameAndLogin(cognitoTokens, email, messageParameters)
         expect(response).to.exist
       })
     })
@@ -747,7 +747,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.changeUsername(cognitoTokens, email)
+        await userManagementService.changeUsernameAndLogin(cognitoTokens, email)
       } catch (error) {
         responseError = error
       }
@@ -764,7 +764,7 @@ describe('UserManagementService', () => {
       stubMethod(VERIFY_USER_ATTRIBUTE, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.confirmChangeUsername(cognitoTokens, email, confirmationCode)
+      const response = await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
 
       expect(response).to.exist
     })
@@ -779,7 +779,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmChangeUsername(cognitoTokens, email, confirmationCode)
+        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -800,7 +800,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmChangeUsername(cognitoTokens, email, confirmationCode)
+        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -821,7 +821,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmChangeUsername(cognitoTokens, email, confirmationCode)
+        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }

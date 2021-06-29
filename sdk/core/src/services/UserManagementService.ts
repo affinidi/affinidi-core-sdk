@@ -16,8 +16,9 @@ import CognitoIdentityService, {
   ForgotPasswordResult,
   ResendSignUpResult,
   SignInResult,
-  SignInWithUsernameResult,
+  SignInWithLoginResult,
   SignUpResult,
+  UsernameWithAttributes,
 } from './CognitoIdentityService'
 
 const generatePassword = async () => {
@@ -51,12 +52,13 @@ export default class UserManagementService {
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
   }
 
-  private async _signUp(username: string, password: string, messageParameters: MessageParameters): Promise<void> {
-    const { result, normalizedUsername } = await this._cognitoIdentityService.trySignUp(
-      username,
-      password,
-      messageParameters,
-    )
+  private async _signUp(
+    usernameWithAttributes: UsernameWithAttributes,
+    password: string,
+    messageParameters: MessageParameters,
+  ): Promise<void> {
+    const { normalizedUsername } = usernameWithAttributes
+    const result = await this._cognitoIdentityService.trySignUp(usernameWithAttributes, password, messageParameters)
 
     switch (result) {
       case SignUpResult.Success:
@@ -67,36 +69,32 @@ export default class UserManagementService {
         throw new SdkError('COR-7', { username: normalizedUsername })
       case SignUpResult.UnconfirmedUsernameExists:
         await this._keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizedUsername })
-        return this._signUp(username, password, messageParameters)
+        return this._signUp(usernameWithAttributes, password, messageParameters)
       default:
         throw new DefaultResultError(result)
     }
   }
 
-  async signUp(username: string, inputPassword: string, messageParameters: MessageParameters) {
-    const { isUsername } = validateUsername(username)
+  async signUp(login: string, inputPassword: string, messageParameters: MessageParameters) {
+    const usernameWithAttributes = this._buildUserAttributes(login)
+    const isUsername = !usernameWithAttributes.phoneNumber && !usernameWithAttributes.emailAddress
 
     if (isUsername && !inputPassword) {
-      throw new Error(`Expected non-empty password for '${username}'`)
+      throw new Error(`Expected non-empty password for '${login}'`)
     }
 
     const shortPassword = inputPassword || (await generatePassword())
-    const password = normalizeShortPassword(shortPassword, username)
-    await this._signUp(username, password, messageParameters)
-    const token = `${username}::${password}`
+    const password = normalizeShortPassword(shortPassword, login)
+    await this._signUp(usernameWithAttributes, password, messageParameters)
+    const signUpToken = `${login}::${password}`
 
-    return { token, isUsername }
+    return { signUpToken, isUsername }
   }
 
-  private async _confirmSignUpWithAdminOption(username: string, confirmationCode: string) {
-    const { isUsername } = validateUsername(username)
-
-    if (isUsername) {
-      await this._keyStorageApiService.adminConfirmUser({ username })
-      return
-    }
-
-    const { result, normalizedUsername } = await this._cognitoIdentityService.confirmSignUp(username, confirmationCode)
+  private async _confirmSignUp(login: string, confirmationCode: string) {
+    const usernameWithAttributes = this._buildUserAttributes(login)
+    const { normalizedUsername } = usernameWithAttributes
+    const result = await this._cognitoIdentityService.confirmSignUp(usernameWithAttributes, confirmationCode)
     switch (result) {
       case ConfirmSignUpResult.Success:
         return
@@ -111,55 +109,66 @@ export default class UserManagementService {
     }
   }
 
-  async signIn(username: string, shortPassword: string) {
-    const password = normalizeShortPassword(shortPassword, username)
-    const response = await this._cognitoIdentityService.trySignIn(username, password)
+  async signIn(login: string, shortPassword: string) {
+    const password = normalizeShortPassword(shortPassword, login)
+    const response = await this._cognitoIdentityService.trySignIn(login, password)
 
     switch (response.result) {
       case SignInResult.Success:
         this._sessionStorageService.saveUserTokens(response.cognitoTokens)
         return response.cognitoTokens
       case SignInResult.UserNotConfirmed:
-        throw new SdkError('COR-16', { username })
+        throw new SdkError('COR-16', { username: login })
       case SignInResult.UserNotFound:
-        throw new SdkError('COR-4', { username })
+        throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(response)
     }
   }
 
   async confirmSignUp(token: string, confirmationCode: string) {
-    const [username, shortPassword] = token.split('::')
+    const [login, shortPassword] = token.split('::')
 
-    await this._confirmSignUpWithAdminOption(username, confirmationCode)
-    const cognitoTokens = await this.signIn(username, shortPassword)
+    const { isUsername } = validateUsername(login)
+    if (isUsername) {
+      await this._keyStorageApiService.adminConfirmUser({ username: login })
+    } else {
+      await this._confirmSignUp(login, confirmationCode)
+    }
+
+    const cognitoTokens = await this.signIn(login, shortPassword)
 
     return { cognitoTokens, shortPassword }
   }
 
-  async isUserUnconfirmed(username: string) {
+  async doesUnconfirmedUserExist(username: string) {
     const normalizedUsername = normalizeUsername(username)
-    return this._cognitoIdentityService.isUserUnconfirmed(normalizedUsername)
+    return this._cognitoIdentityService.doesUnconfirmedUserExist(normalizedUsername)
   }
 
-  async signInWithUsername(username: string, messageParameters?: MessageParameters): Promise<string> {
-    this._usernameShouldBeEmailOrPhoneNumber(username)
+  async doesConfirmedUserExist(login: string) {
+    const normalizedUsername = normalizeUsername(login)
+    return this._cognitoIdentityService.doesConfirmedUserExist(normalizedUsername)
+  }
+
+  async signInWithEmailOrPhone(login: string, messageParameters?: MessageParameters): Promise<string> {
+    this._loginShouldBeEmailOrPhoneNumber(login)
 
     if (messageParameters) {
       await this._keyStorageApiService.storeTemplate({
-        username: username,
+        username: login,
         template: messageParameters.message,
         subject: messageParameters.subject,
         htmlTemplate: messageParameters.htmlMessage,
       })
     }
 
-    const response = await this._cognitoIdentityService.signInWithUsername(username, messageParameters)
+    const response = await this._cognitoIdentityService.signInWithEmailOrPhone(login, messageParameters)
     switch (response.result) {
-      case SignInWithUsernameResult.Success:
+      case SignInWithLoginResult.Success:
         return response.token
-      case SignInWithUsernameResult.UserNotFound:
-        throw new SdkError('COR-4', { username })
+      case SignInWithLoginResult.UserNotFound:
+        throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(response)
     }
@@ -214,40 +223,42 @@ export default class UserManagementService {
     return newTokens
   }
 
-  async forgotPassword(username: string, messageParameters?: MessageParameters): Promise<void> {
-    this._usernameShouldBeEmailOrPhoneNumber(username)
-    const result = await this._cognitoIdentityService.forgotPassword(username, messageParameters)
+  async forgotPassword(login: string, messageParameters?: MessageParameters): Promise<void> {
+    this._loginShouldBeEmailOrPhoneNumber(login)
+    const result = await this._cognitoIdentityService.forgotPassword(login, messageParameters)
     switch (result) {
       case ForgotPasswordResult.Success:
         return
       case ForgotPasswordResult.UserNotFound:
-        throw new SdkError('COR-4', { username })
+        throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
     }
   }
 
-  async forgotPasswordSubmit(username: string, confirmationCode: string, newPassword: string): Promise<void> {
-    this._usernameShouldBeEmailOrPhoneNumber(username)
-    const result = await this._cognitoIdentityService.forgotPasswordSubmit(username, confirmationCode, newPassword)
+  async forgotPasswordSubmit(login: string, confirmationCode: string, newPassword: string): Promise<void> {
+    this._loginShouldBeEmailOrPhoneNumber(login)
+    const result = await this._cognitoIdentityService.forgotPasswordSubmit(login, confirmationCode, newPassword)
     switch (result) {
       case ForgotPasswordConfirmResult.Success:
         return
       case ForgotPasswordConfirmResult.ConfirmationCodeExpired:
-        throw new SdkError('COR-2', { username, confirmationCode })
+        throw new SdkError('COR-2', { username: login, confirmationCode })
       case ForgotPasswordConfirmResult.ConfirmationCodeWrong:
-        throw new SdkError('COR-5', { username, confirmationCode })
+        throw new SdkError('COR-5', { username: login, confirmationCode })
       case ForgotPasswordConfirmResult.NewPasswordInvalid:
         throw new SdkError('COR-6')
       case ForgotPasswordConfirmResult.UserNotFound:
-        throw new SdkError('COR-4', { username })
+        throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
     }
   }
 
-  async resendSignUp(username: string, messageParameters?: MessageParameters): Promise<void> {
-    const { result, normalizedUsername } = await this._cognitoIdentityService.resendSignUp(username, messageParameters)
+  async resendSignUp(login: string, messageParameters?: MessageParameters): Promise<void> {
+    const usernameWithAttributes = this._buildUserAttributes(login)
+    const { normalizedUsername } = usernameWithAttributes
+    const result = await this._cognitoIdentityService.resendSignUp(usernameWithAttributes, messageParameters)
     switch (result) {
       case ResendSignUpResult.Success:
         return
@@ -275,23 +286,36 @@ export default class UserManagementService {
     })
   }
 
-  async changeUsername(cognitoTokens: CognitoUserTokens, attribute: string, messageParameters?: MessageParameters) {
+  async changeUsernameAndLogin(
+    cognitoTokens: CognitoUserTokens,
+    newLogin: string,
+    messageParameters?: MessageParameters,
+  ) {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
-      const result = await this._cognitoIdentityService.changeUsername(accessToken, attribute, messageParameters)
+      const result = await this._cognitoIdentityService.changeUsernameAndLogin(
+        accessToken,
+        this._buildUserAttributes(newLogin),
+        messageParameters,
+      )
       switch (result) {
         case ChangeUsernameResult.Success:
           return
         case ChangeUsernameResult.NewUsernameExists:
-          throw new SdkError('COR-7', { username: attribute })
+          throw new SdkError('COR-7', { username: newLogin })
         default:
           throw new DefaultResultError(result)
       }
     })
   }
 
-  async confirmChangeUsername(cognitoTokens: CognitoUserTokens, attribute: string, confirmationCode: string) {
+  async confirmChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, confirmationCode: string) {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
-      const result = await this._cognitoIdentityService.confirmChangeUsername(accessToken, attribute, confirmationCode)
+      this._loginShouldBeEmailOrPhoneNumber(newLogin)
+      const { isEmailValid } = validateUsername(newLogin)
+      const result = isEmailValid
+        ? await this._cognitoIdentityService._confirmChangeUsernameToEmail(accessToken, confirmationCode)
+        : await this._cognitoIdentityService._confirmChangeUsernameToPhone(accessToken, confirmationCode)
+
       switch (result) {
         case ConfirmChangeUsernameResult.Success:
           return
@@ -309,11 +333,23 @@ export default class UserManagementService {
     return this._sessionStorageService.readUserTokens()
   }
 
-  private _usernameShouldBeEmailOrPhoneNumber(username: string) {
-    const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
+  private _loginShouldBeEmailOrPhoneNumber(login: string) {
+    const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
 
     if (!isEmailValid && !isPhoneNumberValid) {
-      throw new SdkError('COR-3', { username })
+      throw new SdkError('COR-3', { username: login })
+    }
+  }
+
+  private _buildUserAttributes(login: string) {
+    const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
+    const normalizedUsername = normalizeUsername(login)
+
+    return {
+      normalizedUsername,
+      login,
+      emailAddress: isEmailValid ? login : undefined,
+      phoneNumber: isPhoneNumberValid ? login : undefined,
     }
   }
 }

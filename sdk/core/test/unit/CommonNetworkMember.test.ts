@@ -30,7 +30,7 @@ import CognitoIdentityService, {
   ForgotPasswordResult,
   ResendSignUpResult,
   SignInResult,
-  SignInWithUsernameResult,
+  SignInWithLoginResult,
   SignUpResult,
 } from '../../src/services/CognitoIdentityService'
 
@@ -122,10 +122,7 @@ const { registryUrl } = options
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {
   const { id: did } = opts.didDocument
 
-  sinon.stub(CognitoIdentityService.prototype, 'confirmSignUp').resolves({
-    result: ConfirmSignUpResult.Success,
-    normalizedUsername: undefined,
-  })
+  sinon.stub(CognitoIdentityService.prototype, 'confirmSignUp').resolves(ConfirmSignUpResult.Success)
   sinon.stub(CognitoIdentityService.prototype, 'trySignIn').resolves({
     result: SignInResult.Success,
     cognitoTokens: {},
@@ -265,8 +262,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.passwordlessLogin (with default SDK options)', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'signInWithUsername').resolves({
-      result: SignInWithUsernameResult.Success,
+    sinon.stub(CognitoIdentityService.prototype, 'signInWithEmailOrPhone').resolves({
+      result: SignInWithLoginResult.Success,
       token: cognitoSignInWithUsernameResponseToken,
     })
 
@@ -330,10 +327,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#signUp with username (with default SDK options)', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves({
-      result: SignUpResult.Success,
-      normalizedUsername: username,
-    })
+    sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves(SignUpResult.Success)
 
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
@@ -349,10 +343,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#resendSignUpConfirmationCode (with default SDK options)', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'resendSignUp').resolves({
-      result: ResendSignUpResult.Success,
-      normalizedUsername: undefined,
-    })
+    sinon.stub(CognitoIdentityService.prototype, 'resendSignUp').resolves(ResendSignUpResult.Success)
 
     const response = await CommonNetworkMember.resendSignUpConfirmationCode(username, options)
 
@@ -364,12 +355,9 @@ describe('CommonNetworkMember', () => {
     const signUpError = { foo: 'bar' }
 
     sinon.stub(CognitoIdentityService.prototype, 'trySignIn')
-    sinon.stub(CognitoIdentityService.prototype, 'signInWithUsername').resolves({
-      result: SignInWithUsernameResult.Success,
-      token: cognitoSignInWithUsernameResponseToken,
-    })
+    sinon.stub(CognitoIdentityService.prototype, 'doesConfirmedUserExist').resolves(false)
     sinon.stub(CognitoIdentityService.prototype, 'trySignUp').rejects(signUpError)
-    sinon.stub(CognitoIdentityService.prototype, 'isUserUnconfirmed').resolves(false)
+    sinon.stub(CognitoIdentityService.prototype, 'doesUnconfirmedUserExist').resolves(false)
     sinon.stub(KeyStorageApiService.prototype, 'adminDeleteUnconfirmedUser')
 
     let responseError
@@ -388,12 +376,12 @@ describe('CommonNetworkMember', () => {
     const signUpError = { code: 'COR-7' }
 
     sinon.stub(CognitoIdentityService.prototype, 'trySignIn')
-    sinon.stub(CognitoIdentityService.prototype, 'signInWithUsername').resolves({
-      result: SignInWithUsernameResult.Success,
+    sinon.stub(CognitoIdentityService.prototype, 'signInWithEmailOrPhone').resolves({
+      result: SignInWithLoginResult.Success,
       token: cognitoSignInWithUsernameResponseToken,
     })
     sinon.stub(CognitoIdentityService.prototype, 'trySignUp').rejects(signUpError)
-    sinon.stub(CognitoIdentityService.prototype, 'isUserUnconfirmed').resolves(false)
+    sinon.stub(CognitoIdentityService.prototype, 'doesUnconfirmedUserExist').resolves(false)
     sinon.stub(KeyStorageApiService.prototype, 'adminDeleteUnconfirmedUser')
 
     const response = await CommonNetworkMember.signIn(username, options)
