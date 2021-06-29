@@ -74,18 +74,20 @@ Extend `app.json` and add a postPublish hook:
 
 If you want to specify issuer's URL, pass it in the options.
 
-You can also specify the stack environment to be used in `env` variable.
-`env` - (optional) is enum which can be `dev` | `staging` | `prod` (`staging` is used by default).
+You should also specify the stack environment to be used in `env` variable.
+`env` - (required) is enum which can be `dev` | `staging` | `prod`.
+
+Either `apiKey` or `accessApiKey` should also be passed.
 
 ```ts
 const options = {
   issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
-}
+  env: 'staging',
+  apiKey: '<your sdk api key>',
+};
 
 const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
 ```
-
-`options` - (optional) if not defined, values posted above will be used.
 
 ### Initialize region for storing credentials
 
@@ -95,7 +97,9 @@ an Alpha-3 country code).
 
 ```ts
 const options = {
-  storageRegion: 'SGP'
+  storageRegion: 'SGP',
+  env: 'dev',
+  apiKey: '<your sdk api key>',
 }
 
 const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
@@ -147,12 +151,25 @@ Region should be a 3 character string correlating to an Alpha-3 country code.
 
 ### Pull credential from VC vault
 
+#### All Credentials Matching the shareRequestToken
 ```ts
 const credentials = await affinityWallet.getCredentials(shareRequestToken)
 ```
 
 `shareRequestToken` - optional parameter (if passed - returns VC,
 which match the request, if not - then returns all VCs).
+
+#### All Credentials
+```ts
+const credentials = await affinityWallet.getCredentials(null)
+```
+
+#### A Single Credential
+```ts
+const credential = await affinityWallet.getCredentialByIndex(credentialIndex)
+```
+
+`credentialIndex` is a required parameter which is type of number.
 
 ### Get credential issued during signup process
 
@@ -161,23 +178,21 @@ Behaves the same as the wallet-core-sdk `confirmSignIn` method, but with the add
 #### Confirm sign in (if using confirmSignIn for both sign up and login scenarios)
 
 ```ts
-const options = {env:'prod', apiKey:'<your_api_key>'}
-const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(
-  token,
-  confirmationCode,
-  options
-)
+const options = {
+   apiKey: '<your sdk api key>',
+   env: 'prod'
+ }
+const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.confirmSignIn(token, confirmationCode, options)
 ```
 
 `token` - AWS Cognito Access Token
 
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
 
-options` - used to specify  
-   * `env`(optional) environment stack (dev | staging | prod). if not defined set to staging. 
-   * `apiKey` (mandatory) [API Key](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key) 
+`options` - used to specify
+   * `env` (mandatory) environment stack (dev | staging | prod). if not defined set to staging.
+   * `apiKey` (mandatory) [API Key](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key)
    * `issueSignupCredential` (optional) if not defined, set to false
-
 
 Returns `isNew` flag, identifying whether new account was created, and
 initialized instance of SDK - `affinityWallet`.
@@ -193,7 +208,7 @@ const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCod
 
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
 
-options` - used to specify  
+`options` - used to specify
    * `env`(optional) environment stack (dev | staging | prod). if not defined set to staging. 
    * `apiKey` (mandatory) [API Key](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key) 
    * `issueSignupCredential` (optional) if not defined, set to false
