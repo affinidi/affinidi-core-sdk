@@ -1,3 +1,20 @@
+# release 6.0.0-beta.1 (2021-06-29)
+  * Improved type inference.
+  * `CommonNetworkMember._affinity` made protected.
+  * Breaking changes:
+    * Code targets ES2019 now.
+    * More specific type declarations.
+    * `SdkOptions` parameters are now non-optional.
+    * `SdkOptions.env` field is now required.
+    * `CommonNetworkMember.confirmSignUp` and `confirmSignUpWithExistsEntity` now throws an error when called for a username
+      (as opposed to email address or a phone number).
+      Signups with plain usernames never required any confirmation.
+  * Additional breaking changes:
+    * `SdkOptions` parameters are no longer modified.
+    * Removed internal `CognitoService`, use `CommonNetworkMember` instead, or `UserManagementService` or `CognitoIdentityService` in case of need.
+    * Some internal methods moved out from internal `WalletStorageService` to `KeyStorageApiService` or `KeyManagementService`.
+    * These changes do not affect projects that did not directly use internal `CognitoService` or `WalletStorageService` classes,
+      and that did not rely on `CommonNetworkMember` methods having an undocumented side effect of modifying the options parameter.
 # release 5.0.1 (2021-06-21)
   * Removed TestmailInbox from `__dangerous` to fix unnecessary `crypto-random-string` import
 # release 5.0.0 (2021-06-16)

@@ -16,4 +16,4 @@ const parsedCredentialShareRequestToken = {
   },
 }
 
-module.exports = parsedCredentialShareRequestToken
+export default parsedCredentialShareRequestToken

@@ -1,10 +1,10 @@
 'use strict'
 import { expect } from 'chai'
 import { randomBytes } from '../../../src/shared/randomBytes'
-import CognitoService from '../../../src/services/CognitoService'
+import UserManagementService from '../../../src/services/UserManagementService'
+import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 
-const { TEST_SECRETS } = process.env
-const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = JSON.parse(TEST_SECRETS)
+const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = testSecrets
 
 let username: string
 let randomPassword: string
@@ -16,8 +16,11 @@ const existingConfirmedCognitoUser = email
 const existingUnconfirmedCognitoUser = COGNITO_USERNAME_UNCONFIRMED
 const nonExistingCognitoUser = 'non_existing_user'
 
+const { clientId, userPoolId, keyStorageUrl, accessApiKey } = getAllOptionsForEnvironment()
+const constructorOptions = { clientId, userPoolId, keyStorageUrl, accessApiKey }
+
 // NOTE: consider having special pool for test users
-describe('CognitoService', () => {
+describe('UserManagementService', () => {
   beforeEach(async () => {
     const randomHex = (await randomBytes(32)).toString('hex')
     // Make first found letter uppercase because hex string doesn't meet password requirements
@@ -27,8 +30,8 @@ describe('CognitoService', () => {
   it('#signIn', async () => {
     username = email
 
-    const cognitoService = new CognitoService()
-    const accessToken = await cognitoService.signIn(username, password)
+    const userManagementService = new UserManagementService(constructorOptions)
+    const accessToken = await userManagementService.signIn(username, password)
 
     expect(accessToken).to.exist
   })
@@ -36,12 +39,12 @@ describe('CognitoService', () => {
   it('#signIn throws `COR-4 / 404` if user does not exists', async () => {
     username = nonExistingCognitoUser
 
-    const cognitoService = new CognitoService()
+    const userManagementService = new UserManagementService(constructorOptions)
 
     let responseError
 
     try {
-      await cognitoService.signIn(username, password)
+      await userManagementService.signIn(username, password)
     } catch (error) {
       responseError = error
     }
@@ -56,15 +59,15 @@ describe('CognitoService', () => {
     username = nonExistingCognitoUser
     const password = randomPassword
 
-    const cognitoService = new CognitoService()
-    const result = await cognitoService.signUp(username, password)
+    const userManagementService = new UserManagementService(constructorOptions)
+    const result = await userManagementService.signUpWithUsernameAndConfirm(username, password, undefined)
 
-    expect(result).to.be.undefined
+    expect(result).to.be.a('string')
 
     let responseError
 
     try {
-      await cognitoService.signUp(username, password)
+      await userManagementService.signUpWithUsernameAndConfirm(username, password, undefined)
     } catch (error) {
       responseError = error
     }
@@ -76,15 +79,15 @@ describe('CognitoService', () => {
   })
 
   it('#confirmSignUp throws `COR-4 / 404` if user not found', async () => {
-    username = 'non_existing@email.com'
+    const email = 'non_existing@email.com'
 
     const confirmationCode = '777777'
-    const cognitoService = new CognitoService()
+    const userManagementService = new UserManagementService(constructorOptions)
 
     let responseError
 
     try {
-      await cognitoService.confirmSignUp(username, confirmationCode)
+      await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
     } catch (error) {
       responseError = error
     }
@@ -97,16 +100,16 @@ describe('CognitoService', () => {
 
   it('#isUserUnconfirmed returns `true` WHEN user is UNCONFIRMED', async () => {
     const cognitoUsername = existingUnconfirmedCognitoUser
-    const cognitoService = new CognitoService()
-    const isUserUnconfirmed = await cognitoService.isUserUnconfirmed(cognitoUsername)
+    const userManagementService = new UserManagementService(constructorOptions)
+    const isUserUnconfirmed = await userManagementService.doesUnconfirmedUserExist(cognitoUsername)
 
     expect(isUserUnconfirmed).to.equal(true)
   })
 
   it('#isUserUnconfirmed returns `false` WHEN user not UNCONFIRMED', async () => {
     const cognitoUsername = existingConfirmedCognitoUser
-    const cognitoService = new CognitoService()
-    const isUserUnconfirmed = await cognitoService.isUserUnconfirmed(cognitoUsername)
+    const userManagementService = new UserManagementService(constructorOptions)
+    const isUserUnconfirmed = await userManagementService.doesUnconfirmedUserExist(cognitoUsername)
 
     expect(isUserUnconfirmed).to.equal(false)
   })

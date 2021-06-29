@@ -84,4 +84,4 @@ const didDocument = {
   ],
 }
 
-module.exports = didDocument
+export default didDocument

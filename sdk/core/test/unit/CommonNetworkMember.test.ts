@@ -10,26 +10,36 @@ import {
   getVCEmailPersonV1Context,
 } from '@affinidi/vc-data'
 
-import CognitoService from '../../src/services/CognitoService'
-import WalletStorageService from '../../src/services/WalletStorageService'
 import { PhoneIssuerService } from '../../src/services/PhoneIssuerService'
 import { EmailIssuerService } from '../../src/services/EmailIssuerService'
+import KeyManagementService from '../../src/services/KeyManagementService'
+import KeyStorageApiService from '../../src/services/KeyStorageApiService'
+import WalletStorageService from '../../src/services/WalletStorageService'
 import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 
-import { SdkOptions } from '../../src/dto/shared.dto'
+import { getAllOptionsForEnvironment } from '../helpers'
 
-import { getOptionsForEnvironment } from '../helpers'
-
+import cognitoSignInWithUsernameResponseToken from '../factory/cognitoSignInWithUsernameResponseToken'
 import { generateTestDIDs } from '../factory/didFactory'
 import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
 import SdkError from '../../src/shared/SdkError'
+import CognitoIdentityService, {
+  CompleteLoginChallengeResult,
+  ConfirmSignUpResult,
+  ForgotPasswordConfirmResult,
+  ForgotPasswordResult,
+  ResendSignUpResult,
+  SignInResult,
+  SignInWithLoginResult,
+  SignUpResult,
+} from '../../src/services/CognitoIdentityService'
 
-const signedCredential = require('../factory/signedCredential')
-const didDocument = require('../factory/didDocument')
-const credentialShareRequestToken = require('../factory/credentialShareRequestToken')
-const parsedCredentialShareRequestToken = require('../factory/parsedCredentialShareRequestToken')
-const parsedCredentialShareResponseToken = require('../factory/parsedCredentialShareResponseToken')
-const cognitoAuthSuccessResponse = require('../factory/cognitoAuthSuccessResponse')
+import signedCredential from '../factory/signedCredential'
+import didDocument from '../factory/didDocument'
+import cognitoUserTokens from '../factory/cognitoUserTokens'
+import credentialShareRequestToken from '../factory/credentialShareRequestToken'
+import parsedCredentialShareRequestToken from '../factory/parsedCredentialShareRequestToken'
+import parsedCredentialShareResponseToken from '../factory/parsedCredentialShareResponseToken'
 
 let walletPassword: string
 
@@ -104,18 +114,21 @@ const idToken =
   'tYXJ5In0.3c1068e2ce500f768eb6ad5090b2442fbf0a36ddee7d66d451779d71fe3d9793' +
   '3a36ceb13aa49b5403e3ed73a1c88718fed3531753d60173f0155fc0ef5aa1d1'
 
-let walletStub: sinon.SinonStub
+let saveSeedStub: sinon.SinonStub
 
-const returnAllOptionsForEnvironment = true
-const options: SdkOptions = getOptionsForEnvironment(returnAllOptionsForEnvironment)
+const options = getAllOptionsForEnvironment()
 const { registryUrl } = options
 
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {
   const { id: did } = opts.didDocument
 
-  sinon.stub(CognitoService.prototype, 'confirmSignUp')
-  sinon.stub(CognitoService.prototype, 'signIn').resolves(cognitoAuthSuccessResponse)
-  sinon.stub(WalletStorageService, 'pullEncryptionKey').resolves(opts.password)
+  sinon.stub(CognitoIdentityService.prototype, 'confirmSignUp').resolves(ConfirmSignUpResult.Success)
+  sinon.stub(CognitoIdentityService.prototype, 'trySignIn').resolves({
+    result: SignInResult.Success,
+    cognitoTokens: {},
+  })
+  sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves(SignUpResult.Success)
+  sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey').resolves(opts.password)
   sinon.stub(KeysService, 'normalizePassword').returns(Buffer.from(opts.password))
   sinon.stub(KeysService, 'encryptSeed').resolves(opts.seedHex)
   sinon.stub(DidDocumentService.prototype, 'getMyDid').resolves(did)
@@ -143,7 +156,7 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
     seedHexWithMethod: `${seedHex}++${didMethod}`,
     externalKeys: null,
   })
-  walletStub = sinon.stub(WalletStorageService.prototype, 'storeEncryptedSeed')
+  saveSeedStub = sinon.stub(KeyStorageApiService.prototype, 'storeMyKey')
 }
 
 describe('CommonNetworkMember', () => {
@@ -190,7 +203,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.updateDidDocument /COR-20 (not supported elem did method)', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
 
     const didDcoument = { id: 'did:elem:...' }
 
@@ -206,7 +219,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.updateDidDocument /COR-21 (did document has another did)', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     const didDcoument = { id: 'did:jolo:...' }
 
@@ -228,7 +241,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#fromSeed create instance of class by the seed when password is not provided', async () => {
-    const commonNetworkMember = await CommonNetworkMember.fromSeed(seedHex)
+    const commonNetworkMember = await CommonNetworkMember.fromSeed(seedHex, options)
 
     expect(commonNetworkMember.encryptedSeed).to.exist
   })
@@ -250,17 +263,25 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.passwordlessLogin (with default SDK options)', async () => {
-    sinon.stub(CognitoService.prototype, 'signInWithUsername').resolves(signUpResponseToken)
+    sinon.stub(CognitoIdentityService.prototype, 'signInWithEmailOrPhone').resolves({
+      result: SignInWithLoginResult.Success,
+      token: cognitoSignInWithUsernameResponseToken,
+    })
 
-    const response = await CommonNetworkMember.passwordlessLogin(username)
+    const response = await CommonNetworkMember.passwordlessLogin(email, options)
 
-    expect(response).to.eql(signUpResponseToken)
+    expect(response).to.eql(cognitoSignInWithUsernameResponseToken)
   })
 
   it('.completeLoginChallenge', async () => {
-    sinon.stub(CognitoService.prototype, 'completeLoginChallenge').resolves(cognitoAuthSuccessResponse)
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
-    sinon.stub(WalletStorageService, 'pullEncryptionKey').resolves(walletPassword)
+    sinon.stub(CognitoIdentityService.prototype, 'completeLoginChallenge').resolves({
+      result: CompleteLoginChallengeResult.Success,
+      cognitoTokens: cognitoUserTokens,
+    })
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: walletPassword,
+    })
 
     const response = await CommonNetworkMember.completeLoginChallenge('token', '123456', options)
 
@@ -281,70 +302,67 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#signOut', async () => {
-    sinon.stub(CognitoService.prototype, 'signOut')
+    sinon.stub(CognitoIdentityService.prototype, 'signOut')
 
     const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
-    const response = await networkMember.signOut()
+    const response = await networkMember.signOut(options)
 
     expect(response).to.be.undefined
   })
 
   it('#forgotPassword (with default SDK options)', async () => {
-    sinon.stub(CognitoService.prototype, 'forgotPassword')
+    sinon.stub(CognitoIdentityService.prototype, 'forgotPassword').resolves(ForgotPasswordResult.Success)
 
-    const response = await CommonNetworkMember.forgotPassword(username)
+    const response = await CommonNetworkMember.forgotPassword(email, options)
 
     expect(response).to.be.undefined
   })
 
   it('#forgotPasswordSubmit (with default SDK options)', async () => {
-    sinon.stub(CognitoService.prototype, 'forgotPasswordSubmit')
+    sinon.stub(CognitoIdentityService.prototype, 'forgotPasswordSubmit').resolves(ForgotPasswordConfirmResult.Success)
 
-    const response = await CommonNetworkMember.forgotPasswordSubmit(username, confirmationCode, walletPassword)
+    const response = await CommonNetworkMember.forgotPasswordSubmit(email, confirmationCode, walletPassword, options)
 
     expect(response).to.be.undefined
   })
 
   it('#signUp with username (with default SDK options)', async () => {
-    sinon.stub(CognitoService.prototype, 'signUp')
-
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(WalletStorageService, 'adminConfirmUser')
+    sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    const response = await CommonNetworkMember.signUp(username, walletPassword)
+    const response = await CommonNetworkMember.signUp(username, walletPassword, options)
     expect(response).to.be.an.instanceof(CommonNetworkMember)
     if (typeof response === 'string') {
       expect.fail('TS type guard')
     }
 
     expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(CommonNetworkMember)
   })
 
   it('#resendSignUpConfirmationCode (with default SDK options)', async () => {
-    sinon.stub(CognitoService.prototype, 'resendSignUp')
+    sinon.stub(CognitoIdentityService.prototype, 'resendSignUp').resolves(ResendSignUpResult.Success)
 
-    const response = await CommonNetworkMember.resendSignUpConfirmationCode(username)
+    const response = await CommonNetworkMember.resendSignUpConfirmationCode(username, options)
 
     expect(response).to.be.undefined
   })
 
-  it('#signIn when CognitoService throws error (with default SDK options)', async () => {
+  it('#signIn when CognitoIdentityService throws error (with default SDK options)', async () => {
     const username = email
     const signUpError = { foo: 'bar' }
 
-    sinon.stub(CognitoService.prototype, 'signIn')
-    sinon.stub(CognitoService.prototype, 'signInWithUsername').resolves(signUpResponseToken)
-    sinon.stub(CognitoService.prototype, 'signUp').rejects(signUpError)
-    sinon.stub(CognitoService.prototype, 'isUserUnconfirmed').resolves(false)
-    sinon.stub(WalletStorageService, 'adminDeleteUnconfirmedUser')
+    sinon.stub(CognitoIdentityService.prototype, 'trySignIn')
+    sinon.stub(CognitoIdentityService.prototype, 'doesConfirmedUserExist').resolves(false)
+    sinon.stub(CognitoIdentityService.prototype, 'trySignUp').rejects(signUpError)
+    sinon.stub(CognitoIdentityService.prototype, 'doesUnconfirmedUserExist').resolves(false)
+    sinon.stub(KeyStorageApiService.prototype, 'adminDeleteUnconfirmedUser')
 
     let responseError
 
     try {
-      await CommonNetworkMember.signIn(username)
+      await CommonNetworkMember.signIn(username, options)
     } catch (error) {
       responseError = error
     }
@@ -352,25 +370,28 @@ describe('CommonNetworkMember', () => {
     expect(responseError).to.eql(signUpError)
   })
 
-  it('#signIn when user exists, and CognitoService throws `COR-7`', async () => {
+  it('#signIn when user exists, and CognitoIdentityService throws `COR-7`', async () => {
     const username = email
     const signUpError = { code: 'COR-7' }
 
-    sinon.stub(CognitoService.prototype, 'signIn')
-    sinon.stub(CognitoService.prototype, 'signInWithUsername').resolves(signUpResponseToken)
-    sinon.stub(CognitoService.prototype, 'signUp').rejects(signUpError)
-    sinon.stub(CognitoService.prototype, 'isUserUnconfirmed').resolves(false)
-    sinon.stub(WalletStorageService, 'adminDeleteUnconfirmedUser')
+    sinon.stub(CognitoIdentityService.prototype, 'trySignIn')
+    sinon.stub(CognitoIdentityService.prototype, 'signInWithEmailOrPhone').resolves({
+      result: SignInWithLoginResult.Success,
+      token: cognitoSignInWithUsernameResponseToken,
+    })
+    sinon.stub(CognitoIdentityService.prototype, 'trySignUp').rejects(signUpError)
+    sinon.stub(CognitoIdentityService.prototype, 'doesUnconfirmedUserExist').resolves(false)
+    sinon.stub(KeyStorageApiService.prototype, 'adminDeleteUnconfirmedUser')
 
     const response = await CommonNetworkMember.signIn(username, options)
 
-    expect(response).to.eql(signUpResponseToken)
+    expect(response).to.eql(cognitoSignInWithUsernameResponseToken)
   })
 
   it('#confirmSignUp when username is email (with default SDK options)', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    const response = await CommonNetworkMember.confirmSignUp(signUpWithEmailResponseToken, confirmationCode)
+    const response = await CommonNetworkMember.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
 
     expect(response.did).to.exist
     expect(response).to.be.an.instanceof(CommonNetworkMember)
@@ -379,12 +400,14 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignUp with arbitrary username', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(WalletStorageService, 'adminConfirmUser')
+    sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    const response = await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
-
-    expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(CommonNetworkMember)
+    try {
+      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+      expect.fail()
+    } catch (err) {
+      expect(err.code).to.equal('COR-3')
+    }
   })
 
   it('#confirmSignIn signUp scenario', async () => {
@@ -404,8 +427,14 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignIn logIn scenario', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(CognitoService.prototype, 'completeLoginChallenge').resolves(cognitoAuthSuccessResponse)
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
+    sinon.stub(CognitoIdentityService.prototype, 'completeLoginChallenge').resolves({
+      result: CompleteLoginChallengeResult.Success,
+      cognitoTokens: cognitoUserTokens,
+    })
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: undefined,
+    })
 
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
       signInResponseToken,
@@ -421,12 +450,19 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignIn logIn scenario (with default SDK options)', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(CognitoService.prototype, 'completeLoginChallenge').resolves(cognitoAuthSuccessResponse)
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
+    sinon.stub(CognitoIdentityService.prototype, 'completeLoginChallenge').resolves({
+      result: CompleteLoginChallengeResult.Success,
+      cognitoTokens: cognitoUserTokens,
+    })
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: undefined,
+    })
 
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
       signInResponseToken,
       confirmationCode,
+      options,
     )
 
     expect(isNew).to.be.true
@@ -728,58 +764,58 @@ describe('CommonNetworkMember', () => {
   it("doesn't retry storeEncryptedSeed method when a known error occurs during confirm signup", async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(WalletStorageService, 'adminConfirmUser')
+    sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    walletStub.onCall(0).throws({ code: 'COR-1' })
+    saveSeedStub.onCall(0).throws({ code: 'COR-1' })
 
     let errorCode
 
     try {
-      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+      await CommonNetworkMember.signUp(username, walletPassword, options)
     } catch (error) {
       errorCode = error.code
       // catching error so the test doesn't throw
     }
 
     expect(errorCode).to.eq('COR-1')
-    expect(walletStub.callCount).to.eql(1)
+    expect(saveSeedStub.callCount).to.eql(1)
   })
 
   it('retries storeEncryptedSeed method until successful when an unkown error occurs during confirm signup', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(WalletStorageService, 'adminConfirmUser')
+    sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    walletStub.onCall(0).throws('UNKNOWN')
-    walletStub.onCall(1).throws('UNKNOWN')
-    walletStub.onCall(2).throws('UNKNOWN')
+    saveSeedStub.onCall(0).throws('UNKNOWN')
+    saveSeedStub.onCall(1).throws('UNKNOWN')
+    saveSeedStub.onCall(2).throws('UNKNOWN')
 
-    await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+    await CommonNetworkMember.signUp(username, walletPassword, options)
 
-    expect(walletStub.callCount).to.eql(4)
+    expect(saveSeedStub.callCount).to.eql(4)
   })
 
   it('retries storeEncryptedSeed method until successful when an unkown error occurs during confirm signup, but only 3 times', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(WalletStorageService, 'adminConfirmUser')
+    sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    walletStub.onCall(0).throws('UNKNOWN')
-    walletStub.onCall(1).throws('UNKNOWN')
-    walletStub.onCall(2).throws('UNKNOWN')
-    walletStub.onCall(3).throws('UNKNOWN')
-    walletStub.onCall(4).throws('UNKNOWN')
+    saveSeedStub.onCall(0).throws('UNKNOWN')
+    saveSeedStub.onCall(1).throws('UNKNOWN')
+    saveSeedStub.onCall(2).throws('UNKNOWN')
+    saveSeedStub.onCall(3).throws('UNKNOWN')
+    saveSeedStub.onCall(4).throws('UNKNOWN')
 
     let errorCode
 
     try {
-      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+      await CommonNetworkMember.signUp(username, walletPassword, options)
     } catch (error) {
       errorCode = error.code
     }
 
     expect(errorCode).to.eq('COR-18')
-    expect(walletStub.callCount).to.eql(4)
+    expect(saveSeedStub.callCount).to.eql(4)
   })
 
   it('throws error when multiple parameters have wrong format for static method', async () => {
@@ -813,20 +849,22 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#getSignedCredentials', async () => {
-    sinon.stub(WalletStorageService, 'pullEncryptedSeed').resolves(encryptedSeedJolo)
-    sinon.stub(WalletStorageService, 'pullEncryptionKey').resolves(walletPassword)
+    sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
+      encryptedSeed: encryptedSeedJolo,
+      encryptionKey: walletPassword,
+    })
     sinon.stub(WalletStorageService, 'getCredentialOffer').resolves(credentialOfferToken)
     sinon.stub(WalletStorageService, 'getSignedCredentials').resolves([signedCredential])
 
     const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
-    const returnedCredentials = await networkMember.getSignupCredentials(idToken)
+    const returnedCredentials = await networkMember.getSignupCredentials(idToken, options)
 
     expect(returnedCredentials[0]).to.equal(signedCredential)
   })
 
   it('#getSignedCredentials throws error when multiple parameters have wrong format', async () => {
-    const options = {}
+    const options = { env: 'dev', accessApiKey: 'fake' } as const
     const badToken = 12345678
 
     const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
@@ -881,7 +919,7 @@ describe('CommonNetworkMember', () => {
       }),
     ]
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
     const signedCredentials = await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
 
     expect(signedCredentials).to.exist
@@ -930,7 +968,7 @@ describe('CommonNetworkMember', () => {
 
     let responseError
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
     try {
       await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
     } catch (error) {
@@ -976,7 +1014,7 @@ describe('CommonNetworkMember', () => {
       }),
     ]
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
     const signedCredentials = await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
 
     expect(signedCredentials).to.exist
@@ -1022,7 +1060,7 @@ describe('CommonNetworkMember', () => {
       }),
     ]
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
     const signedCredentials = await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
 
     expect(signedCredentials).to.exist
@@ -1067,7 +1105,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       credentialOfferResponseToken,
@@ -1116,7 +1154,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       credentialOfferResponseToken,
@@ -1164,7 +1202,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       credentialOfferResponseToken,
@@ -1196,7 +1234,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       requesterDid: didElem,
@@ -1247,7 +1285,7 @@ describe('CommonNetworkMember', () => {
 
     const expiresAt = new Date(Date.now() - 10 * 60 * 1000).toISOString()
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     let responseError
 
@@ -1300,7 +1338,7 @@ describe('CommonNetworkMember', () => {
 
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     const credential = await commonNetworkMember.signCredential(
       credentialSubject,
@@ -1324,7 +1362,7 @@ describe('CommonNetworkMember', () => {
   it('#initiatePhoneCredential calls PhoneIssuerService.initiate with the correct params', async () => {
     const stub = sinon.stub(PhoneIssuerService.prototype, 'initiate')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.initiatePhoneCredential({
       apiKey: 'apiKey',
@@ -1347,7 +1385,7 @@ describe('CommonNetworkMember', () => {
   it('#verifyPhoneCredential calls PhoneIssuerService.verify with the correct params', async () => {
     const stub = sinon.stub(PhoneIssuerService.prototype, 'verify')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.verifyPhoneCredential({
       apiKey: 'apiKey',
@@ -1368,7 +1406,7 @@ describe('CommonNetworkMember', () => {
   it('#initiateEmailCredential calls EmailIssuerService.initiate with the correct params', async () => {
     const stub = sinon.stub(EmailIssuerService.prototype, 'initiate')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.initiateEmailCredential({
       apiKey: 'apiKey',
@@ -1389,7 +1427,7 @@ describe('CommonNetworkMember', () => {
   it('#verifyEmailCredential calls EmailIssuerService.verify with the correct params', async () => {
     const stub = sinon.stub(EmailIssuerService.prototype, 'verify')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo)
+    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.verifyEmailCredential({
       apiKey: 'apiKey',

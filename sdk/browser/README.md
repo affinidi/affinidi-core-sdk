@@ -22,19 +22,20 @@ Test credentials should be added to the top level `.env` file. These contain use
 
 If you want to specify issuer's URL, pass it in the options.
 
-You can also specify the stack environment to be used in `env` variable.
-`env` - (optional) is enum which can be `dev` | `staging` | `prod` (`staging` is used by default).
+You should also specify the stack environment to be used in `env` variable.
+`env` - (required) is enum which can be `dev` | `staging` | `prod`.
+
+Either `apiKey` or `accessApiKey` should also be passed.
 
 ```ts
 const options = {
   issuerUrl: 'https://affinity-issuer.staging.affinity-project.org',
-  apiKey: '<your sdk api key>'
+  env: 'staging',
+  apiKey: '<your sdk api key>',
 };
 
 const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
 ```
-
-`options` - (optional) if not defined, values posted above will be used.
 
 ### Initialize region for storing credentials
 
@@ -45,7 +46,8 @@ an Alpha-3 country code).
 ```ts
 const options = {
   storageRegion: 'SGP',
-  apiKey: '<your sdk api key>'
+  env: 'dev',
+  apiKey: '<your sdk api key>',
 }
 
 const affinityWallet = new AffinityWallet(password, encryptedSeed, options)
@@ -103,18 +105,12 @@ const credentials = await affinityWallet.getCredentials(shareRequestToken)
 ```
 
 `shareRequestToken` - optional parameter (if passed - returns VC,
-which match the request, if not provided - then returns credentials with pagination of `{ skip: 0, limit: 100 }`).
+which match the request, if not - then returns all VCs).
 
-#### Some Credentials With Pagination
+#### All Credentials
 ```ts
-const credentials = await affinityWallet.getCredentials(null, paginationOptions)
+const credentials = await affinityWallet.getCredentials(null)
 ```
-
-`paginationOptions` is an optional parameter in the format of: `{ skip: number, limit: number }`. If given, the wallet will only pull credentials in given subset. E.g. `{ skip: 2, limit: 3 }` means fetching the credentials at indexes `2,3,4`
-
-`skip` can be omitted and has a default value of 0.
-
-`limit` can be omitted and has a default value of 100.
 
 #### A Single Credential
 ```ts
@@ -130,7 +126,7 @@ Behaves the same as the wallet-core-sdk `confirmSignIn` method, but with the add
 #### Confirm sign in (if using confirmSignIn for both sign up and login scenarios)
 
 ```ts
-const options = { 
+const options = {
    apiKey: '<your sdk api key>',
    env: 'prod'
  }
@@ -141,7 +137,10 @@ const { isNew, commonNetworkMember: affinityWallet } = await AffinityWallet.conf
 
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
 
-`options` - (optional) if not defined defaults will be used.
+`options` - used to specify
+   * `env` (mandatory) environment stack (dev | staging | prod). if not defined set to staging.
+   * `apiKey` (mandatory) [API Key](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key)
+   * `issueSignupCredential` (optional) if not defined, set to false
 
 Returns `isNew` flag, identifying whether new account was created, and
 initialized instance of SDK - `affinityWallet`.
@@ -157,7 +156,7 @@ const affinityWallet = await AffinityWallet.confirmSignUp(token, confirmationCod
 
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
 
-`options` - used to specify  
+`options` - used to specify
    * `env`(optional) environment stack (dev | staging | prod). if not defined set to staging. 
    * `apiKey` (mandatory) [API Key](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key) 
    * `issueSignupCredential` (optional) if not defined, set to false

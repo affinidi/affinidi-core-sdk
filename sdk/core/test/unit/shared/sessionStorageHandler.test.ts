@@ -1,21 +1,18 @@
 import { expect } from 'chai'
-import {
-  saveUserTokensToSessionStorage,
-  readUserTokensFromSessionStorage,
-  clearUserTokensFromSessionStorage,
-} from '../../../src/shared/sessionStorageHandler'
+import { SessionStorageService } from '../../../src/shared/sessionStorageHandler'
 
-import { getOptionsForEnvironment } from '../../helpers'
+import { getAllOptionsForEnvironment } from '../../helpers'
 
-const cognitoUserTokens = require('../../factory/cognitoUserTokens')
+import cognitoUserTokens from '../../factory/cognitoUserTokens'
 
-const { userPoolId } = getOptionsForEnvironment()
+const { userPoolId } = getAllOptionsForEnvironment()
+const service = new SessionStorageService(userPoolId)
 
 describe('SessionStorageHandler', () => {
   it('Saves cognito user tokens to sessionStorage', () => {
-    saveUserTokensToSessionStorage(userPoolId, cognitoUserTokens)
+    service.saveUserTokens(cognitoUserTokens)
 
-    const tokens = readUserTokensFromSessionStorage(userPoolId)
+    const tokens = service.readUserTokens()
 
     expect(tokens).to.eql(cognitoUserTokens)
   })
@@ -23,10 +20,10 @@ describe('SessionStorageHandler', () => {
   it('Throws `COR-9 / 422` when user is not logged in (tokens not found in the sessionStorage)', () => {
     let responseError
 
-    clearUserTokensFromSessionStorage(userPoolId)
+    service.clearUserTokens()
 
     try {
-      readUserTokensFromSessionStorage(userPoolId)
+      service.readUserTokens()
     } catch (error) {
       responseError = error
     }

@@ -6,4 +6,4 @@ const fromSeed = {
   },
 }
 
-module.exports = fromSeed
+export default fromSeed

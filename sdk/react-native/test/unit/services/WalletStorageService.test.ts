@@ -34,7 +34,11 @@ describe('WalletStorageService', () => {
     sinon.stub(WalletStorageService.prototype, 'saveCredentials').resolves([])
 
     const keysService = new KeysService(encryptedSeed, password)
-    walletStorageService = new WalletStorageService(keysService, platformEncryptionTools)
+    walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
+      accessApiKey: undefined,
+      vaultUrl: undefined,
+      storageRegion: undefined,
+    })
   })
 
   afterEach(() => {

@@ -6,16 +6,18 @@ import { expect } from 'chai'
 
 import { JwtService, KeysService } from '@affinidi/common'
 import { authorizeVault } from './../../helpers'
+import KeyManagementService from '../../../src/services/KeyManagementService'
+import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
 import { generateTestDIDs } from '../../factory/didFactory'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
 
-const signedCredential = require('../../factory/signedCredential')
+import signedCredential from '../../factory/signedCredential'
 
-const credentialShareRequestToken = require('../../factory/credentialShareRequestToken')
-const parsedCredentialShareRequestToken = require('../../factory/parsedCredentialShareRequestToken')
+import credentialShareRequestToken from '../../factory/credentialShareRequestToken'
+import parsedCredentialShareRequestToken from '../../factory/parsedCredentialShareRequestToken'
 
 let walletPassword: string
 
@@ -26,7 +28,18 @@ const fetchCredentialsBase = '/data/'
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
-  return new WalletStorageService(keysService, testPlatformTools)
+  return new WalletStorageService(keysService, testPlatformTools, {
+    vaultUrl: STAGING_VAULT_URL,
+    accessApiKey: undefined,
+    storageRegion: undefined,
+  })
+}
+
+const createKeyManagementService = () => {
+  return new KeyManagementService({
+    keyStorageUrl: STAGING_KEY_STORAGE_URL,
+    accessApiKey: undefined,
+  })
 }
 
 describe('WalletStorageService', () => {
@@ -56,7 +69,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
 
-    const response = await walletStorageService.saveCredentials([{}])
+    const response = await walletStorageService.saveCredentials(['encrypted'])
 
     expect(response).to.be.an('array')
   })
@@ -65,14 +78,16 @@ describe('WalletStorageService', () => {
     const encryptedSeed = 'encryptedSeed'
     const readMyKeyPath = '/api/v1/keys/readMyKey'
 
+    sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey')
     nock(STAGING_KEY_STORAGE_URL)
       .filteringPath(() => readMyKeyPath)
       .get(readMyKeyPath)
       .reply(200, { encryptedSeed })
 
-    const response = await WalletStorageService.pullEncryptedSeed('accessToken')
+    const keyManagementService = createKeyManagementService()
+    const response = await keyManagementService.pullKeyAndSeed('accessToken')
 
-    expect(response).to.include(encryptedSeed)
+    expect(response.encryptedSeed).to.include(encryptedSeed)
   })
 
   it('#filterCredentials', () => {
@@ -342,9 +357,13 @@ describe('WalletStorageService', () => {
       .post(adminConfirmUserPath)
       .reply(200, {})
 
-    const response = await WalletStorageService.adminConfirmUser(username)
+    const keyStorageApiService = new KeyStorageApiService({
+      keyStorageUrl: STAGING_KEY_STORAGE_URL,
+      accessApiKey: undefined,
+    })
+    const response = await keyStorageApiService.adminConfirmUser({ username })
 
-    expect(response).to.not.exist
+    expect(response).to.exist
   })
 
   it('#getCredentialOffer', async () => {
@@ -356,7 +375,7 @@ describe('WalletStorageService', () => {
       .get(getCredentialOfferPath)
       .reply(200, { offerToken: 'offerToken' })
 
-    const returnedOffer = await WalletStorageService.getCredentialOffer(idToken)
+    const returnedOffer = await WalletStorageService.getCredentialOffer(idToken, STAGING_KEY_STORAGE_URL, {} as any)
 
     expect(returnedOffer).to.eq('offerToken')
   })

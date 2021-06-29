@@ -9,13 +9,8 @@ export type SdkOptions = __dangerous.SdkOptions & {
 
 const COMPONENT = EventComponent.AffinidiBrowserSDK
 
-export class AffinityWallet extends CoreNetwork {
-  constructor(
-    password: string,
-    encryptedSeed: string,
-    options: __dangerous.SdkOptions = {},
-    component: EventComponent = COMPONENT,
-  ) {
+export class AffinityWallet extends CoreNetwork<SdkOptions> {
+  constructor(password: string, encryptedSeed: string, options: SdkOptions, component: EventComponent = COMPONENT) {
     super(password, encryptedSeed, platformEncryptionTools, options, component)
   }
 
@@ -25,10 +20,7 @@ export class AffinityWallet extends CoreNetwork {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async afterConfirmSignUp(
-    affinityWallet: AffinityWallet,
-    originalOptions: SdkOptions = { issueSignupCredential: false },
-  ): Promise<void> {
+  static async afterConfirmSignUp(affinityWallet: AffinityWallet, originalOptions: SdkOptions): Promise<void> {
     const options = Object.assign({}, affinityWallet._sdkOptions, originalOptions)
     const { idToken } = affinityWallet.cognitoUserTokens
 

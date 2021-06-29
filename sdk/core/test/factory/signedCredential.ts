@@ -50,4 +50,4 @@ const credential = {
   name: 'Name',
 }
 
-module.exports = credential
+export default credential

@@ -2,6 +2,7 @@ const cryptoRandomString = require('crypto-random-string')
 
 import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 import { KeysService, DidDocumentService } from '@affinidi/common'
+import { getBasicOptionsForEnvironment } from '../helpers'
 
 interface TestDid {
   seed: string
@@ -15,6 +16,8 @@ interface TestDid {
 interface TestJoloDid extends TestDid {
   publicEthereumKey: string
 }
+
+const options = getBasicOptionsForEnvironment()
 
 export const generateTestDIDs = async (): Promise<{
   password: string
@@ -30,7 +33,7 @@ export const generateTestDIDs = async (): Promise<{
   const joloSeedHex = joloSeed.toString('hex')
   const joloSeedWithMethod = `${joloSeedHex}++${'jolo'}`
 
-  const { encryptedSeed: joloEncryptedSeed } = await CommonNetworkMember.fromSeed(joloSeedWithMethod, {}, password)
+  const { encryptedSeed: joloEncryptedSeed } = await CommonNetworkMember.fromSeed(joloSeedWithMethod, options, password)
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
@@ -45,7 +48,7 @@ export const generateTestDIDs = async (): Promise<{
   const elemSeedHex = elemSeed.toString('hex')
   const elemSeedWithMethod = `${elemSeedHex}++${'elem'}`
 
-  const { encryptedSeed: elemEncryptedSeed } = await CommonNetworkMember.fromSeed(elemSeedWithMethod, {}, password)
+  const { encryptedSeed: elemEncryptedSeed } = await CommonNetworkMember.fromSeed(elemSeedWithMethod, options, password)
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
@@ -61,7 +64,7 @@ export const generateTestDIDs = async (): Promise<{
 
   const { encryptedSeed: elemAltEncryptedSeed } = await CommonNetworkMember.fromSeed(
     elemAltSeedWithMethod,
-    {},
+    options,
     password,
   )
 

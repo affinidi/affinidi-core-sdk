@@ -174,7 +174,7 @@ describe('AffinityWallet [OTP]', () => {
     const sighUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, sighUpCode, options)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken)
@@ -196,7 +196,7 @@ describe('AffinityWallet [OTP]', () => {
     let commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
     expect(commonNetworkMember).to.be.instanceOf(AffinityWallet)
 
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     await AffinityWallet.forgotPassword(inbox.email, options, messageParameters)
     const forgotPasswordCode = await waitForOtpCode(inbox)
@@ -213,7 +213,7 @@ describe('AffinityWallet [OTP]', () => {
     const changeUsernameOtp = await waitForOtpCode(newInbox)
 
     await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameOtp, options)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await AffinityWallet.fromLoginAndPassword(newInbox.email, password, options)
     expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
@@ -332,7 +332,7 @@ describe('AffinityWallet [OTP]', () => {
     const signUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
-    await commonNetworkMember.signOut()
+    await commonNetworkMember.signOut(options)
 
     const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken)

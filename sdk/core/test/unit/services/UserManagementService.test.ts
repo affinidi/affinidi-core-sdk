@@ -5,14 +5,14 @@ import AWS from 'aws-sdk'
 import spies from 'chai-spies'
 import chai, { expect } from 'chai'
 
-import CognitoService from '../../../src/services/CognitoService'
+import UserManagementService from '../../../src/services/UserManagementService'
 import { normalizeUsername } from '../../../src/shared/normalizeUsername'
 import { MessageParameters } from '../../../src/dto'
 
-const cognitoAccessToken = require('../../factory/cognitoAccessToken')
-const cognitoAuthSuccessResponse = require('../../factory/cognitoAuthSuccessResponse')
-const cognitoInitiateCustomAuthResponse = require('../../factory/cognitoInitiateCustomAuthResponse')
-const cognitoSignInWithUsernameResponseToken = require('../../factory/cognitoSignInWithUsernameResponseToken')
+import cognitoAccessToken from '../../factory/cognitoAccessToken'
+import cognitoAuthSuccessResponse from '../../factory/cognitoAuthSuccessResponse'
+import cognitoInitiateCustomAuthResponse from '../../factory/cognitoInitiateCustomAuthResponse'
+import cognitoSignInWithUsernameResponseToken from '../../factory/cognitoSignInWithUsernameResponseToken'
 
 chai.use(spies)
 
@@ -45,9 +45,16 @@ const INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException'
 const INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException'
 const USER_NOT_CONFIRMED_EXCEPTION = 'UserNotConfirmedException'
 
-let cognitoException: string
+const options = {
+  clientId: 'fakeClientId',
+  userPoolId: 'fakePoolId' as string,
+  keyStorageUrl: undefined as string,
+  accessApiKey: undefined as string,
+}
 
-describe('CognitoService', () => {
+const cognitoTokens = { accessToken: cognitoAccessToken }
+
+describe('UserManagementService', () => {
   AWSMock.setSDKInstance(AWS)
 
   afterEach(() => {
@@ -74,8 +81,8 @@ describe('CognitoService', () => {
     it(successPathTestName, async () => {
       stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.signInWithUsername(email)
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.signInWithEmailOrPhone(email)
 
       expect(response).to.exist
     })
@@ -85,12 +92,12 @@ describe('CognitoService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.signInWithUsername(email)
+        await userManagementService.signInWithEmailOrPhone(email)
       } catch (error) {
         responseError = error
       }
@@ -106,12 +113,12 @@ describe('CognitoService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.signInWithUsername(email)
+        await userManagementService.signInWithEmailOrPhone(email)
       } catch (error) {
         responseError = error
       }
@@ -129,8 +136,8 @@ describe('CognitoService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.completeLoginChallenge(token, otp)
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.completeLoginChallenge(token, otp)
 
       expect(response.accessToken).to.exist
     })
@@ -142,12 +149,12 @@ describe('CognitoService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.completeLoginChallenge(token, otp)
+        await userManagementService.completeLoginChallenge(token, otp)
       } catch (error) {
         responseError = error
       }
@@ -159,7 +166,7 @@ describe('CognitoService', () => {
     })
 
     it('throws `COR-17 / 400` when OTP expired (> 3 min)', async () => {
-      cognitoException = 'NotAuthorizedException'
+      const cognitoException = 'NotAuthorizedException'
 
       const otp = '123456'
       const token = cognitoSignInWithUsernameResponseToken
@@ -167,12 +174,12 @@ describe('CognitoService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.completeLoginChallenge(token, otp)
+        await userManagementService.completeLoginChallenge(token, otp)
       } catch (error) {
         responseError = error
       }
@@ -192,12 +199,12 @@ describe('CognitoService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.completeLoginChallenge(token, otp)
+        await userManagementService.completeLoginChallenge(token, otp)
       } catch (error) {
         responseError = error
       }
@@ -212,10 +219,9 @@ describe('CognitoService', () => {
     it(successPathTestName, async () => {
       stubMethod(FORGOT_PASSWORD, {})
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.forgotPassword(email)
-
-      expect(response).to.exist
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.forgotPassword(email)
+      expect(response).to.not.exist
     })
 
     it('throws `COR-4 / 404` when user not found', async () => {
@@ -223,12 +229,12 @@ describe('CognitoService', () => {
 
       stubMethod(FORGOT_PASSWORD, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPassword(email)
+        await userManagementService.forgotPassword(email)
       } catch (error) {
         responseError = error
       }
@@ -244,12 +250,12 @@ describe('CognitoService', () => {
 
       stubMethod(FORGOT_PASSWORD, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPassword(email)
+        await userManagementService.forgotPassword(email)
       } catch (error) {
         responseError = error
       }
@@ -264,19 +270,18 @@ describe('CognitoService', () => {
     it(successPathTestName, async () => {
       stubMethod(CONFIRM_FORGOT_PASSWORD, {})
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
-
-      expect(response).to.exist
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+      expect(response).to.not.exist
     })
 
     it('throws `COR-3 / 400` when username is not email/phoneNumber', async () => {
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPasswordSubmit(username, confirmationCode, 'newPassword')
+        await userManagementService.forgotPasswordSubmit(username, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -292,12 +297,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -316,12 +321,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -339,12 +344,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -363,12 +368,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -384,12 +389,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -401,24 +406,13 @@ describe('CognitoService', () => {
   })
 
   describe('#isUserUnconfirmed', () => {
-    it('returns true when cognito.signIn returns COR-16', async () => {
-      const error = { code: 'COR-16' }
-
-      stubMethod(INITIATE_AUTH, null, error)
-
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.isUserUnconfirmed(email)
-
-      expect(response).to.be.true
-    })
-
     it('returns true when cognito.signIn returns UserNotConfirmedException', async () => {
       const error = { code: USER_NOT_CONFIRMED_EXCEPTION }
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.isUserUnconfirmed(email)
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.true
     })
@@ -428,8 +422,8 @@ describe('CognitoService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.isUserUnconfirmed(email)
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.false
     })
@@ -439,8 +433,8 @@ describe('CognitoService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.isUserUnconfirmed(email)
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.false
     })
@@ -450,10 +444,9 @@ describe('CognitoService', () => {
     it(successPathTestName, async () => {
       stubMethod(RESEND_CONFIRMATION_CODE, {})
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.resendSignUp(email)
-
-      expect(response).to.exist
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.resendSignUp(email)
+      expect(response).to.not.exist
     })
 
     it(userNotFoundErrorTestName, async () => {
@@ -461,12 +454,12 @@ describe('CognitoService', () => {
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.resendSignUp(email)
+        await userManagementService.resendSignUp(email)
       } catch (error) {
         responseError = error
       }
@@ -486,12 +479,12 @@ describe('CognitoService', () => {
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.resendSignUp(email)
+        await userManagementService.resendSignUp(email)
       } catch (error) {
         responseError = error
       }
@@ -511,12 +504,12 @@ describe('CognitoService', () => {
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.resendSignUp(email)
+        await userManagementService.resendSignUp(email)
       } catch (error) {
         responseError = error
       }
@@ -531,8 +524,8 @@ describe('CognitoService', () => {
     it(successPathTestName, async () => {
       stubMethod(SIGN_UP, {})
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.signUp(email, 'password')
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
 
       expect(response).to.exist
     })
@@ -543,12 +536,12 @@ describe('CognitoService', () => {
       stubMethod(SIGN_UP, null, error)
       stubMethod(INITIATE_AUTH, null, {})
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.signUp(email, 'password')
+        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -568,12 +561,12 @@ describe('CognitoService', () => {
 
       stubMethod(SIGN_UP, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.signUp(email, 'password')
+        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -589,12 +582,12 @@ describe('CognitoService', () => {
 
       stubMethod(SIGN_UP, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.signUp(email, 'password')
+        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -608,9 +601,10 @@ describe('CognitoService', () => {
   describe('#confirmSignUp', () => {
     it(successPathTestName, async () => {
       stubMethod(CONFIRM_SIGN_UP, {})
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.confirmSignUp(email, confirmationCode)
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.confirmSignUpForEmailOrPhone(`${email}::`, confirmationCode)
 
       expect(response).to.exist
     })
@@ -620,12 +614,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -645,12 +639,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -670,12 +664,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -695,12 +689,12 @@ describe('CognitoService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -720,8 +714,8 @@ describe('CognitoService', () => {
       it(successPathTestName, async () => {
         stubMethod(UPDATE_USER_ATTRIBUTES, {})
 
-        const cognitoService = new CognitoService()
-        const response = await cognitoService.changeUsername(cognitoAccessToken, email)
+        const userManagementService = new UserManagementService(options)
+        const response = await userManagementService.changeUsernameAndLogin(cognitoTokens, email)
 
         expect(response).to.exist
       })
@@ -738,8 +732,9 @@ describe('CognitoService', () => {
           callback(null, {})
         })
 
-        const cognitoService = new CognitoService()
-        await cognitoService.changeUsername(cognitoAccessToken, email, messageParameters)
+        const userManagementService = new UserManagementService(options)
+        const response = await userManagementService.changeUsernameAndLogin(cognitoTokens, email, messageParameters)
+        expect(response).to.exist
       })
     })
 
@@ -747,12 +742,12 @@ describe('CognitoService', () => {
       stubMethod(INITIATE_AUTH, null, {})
       stubMethod(UPDATE_USER_ATTRIBUTES, {})
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.changeUsername(cognitoAccessToken, email)
+        await userManagementService.changeUsernameAndLogin(cognitoTokens, email)
       } catch (error) {
         responseError = error
       }
@@ -768,8 +763,8 @@ describe('CognitoService', () => {
     it(successPathTestName, async () => {
       stubMethod(VERIFY_USER_ATTRIBUTE, {})
 
-      const cognitoService = new CognitoService()
-      const response = await cognitoService.confirmChangeUsername(cognitoAccessToken, email, confirmationCode)
+      const userManagementService = new UserManagementService(options)
+      const response = await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
 
       expect(response).to.exist
     })
@@ -779,14 +774,12 @@ describe('CognitoService', () => {
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
-      cognitoException = 'ExpiredCodeException'
-
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.confirmChangeUsername(cognitoAccessToken, email, confirmationCode)
+        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -802,12 +795,12 @@ describe('CognitoService', () => {
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.confirmChangeUsername(cognitoAccessToken, email, confirmationCode)
+        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -823,12 +816,12 @@ describe('CognitoService', () => {
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
-      const cognitoService = new CognitoService()
+      const userManagementService = new UserManagementService(options)
 
       let responseError
 
       try {
-        await cognitoService.confirmChangeUsername(cognitoAccessToken, email, confirmationCode)
+        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }

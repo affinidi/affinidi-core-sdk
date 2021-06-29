@@ -11,37 +11,28 @@ export type SdkOptions = __dangerous.SdkOptions & {
 const COMPONENT = EventComponent.AffinidiExpoSDK
 
 @profile()
-export class AffinityWallet extends CoreNetwork {
-  _skipBackupCredentials: boolean = false
+export class AffinityWallet extends CoreNetwork<SdkOptions> {
   _credentials: any[] = []
 
-  constructor(
-    password: string,
-    encryptedSeed: string,
-    options: __dangerous.SdkOptions = {},
-    component: EventComponent = COMPONENT,
-  ) {
+  constructor(password: string, encryptedSeed: string, options: SdkOptions, component: EventComponent = COMPONENT) {
     super(password, encryptedSeed, platformEncryptionTools, options, component)
 
     this.skipBackupCredentials = options.skipBackupCredentials
   }
 
   set skipBackupCredentials(value: boolean) {
-    this._skipBackupCredentials = value
+    this._sdkOptions.otherOptions.skipBackupCredentials = value
   }
 
   get skipBackupCredentials() {
-    return this._skipBackupCredentials
+    return this._sdkOptions.otherOptions.skipBackupCredentials
   }
 
   get credentials() {
     return this._credentials
   }
 
-  static async afterConfirmSignUp(
-    affinityWallet: AffinityWallet,
-    originalOptions: SdkOptions = { issueSignupCredential: false },
-  ): Promise<void> {
+  static async afterConfirmSignUp(affinityWallet: AffinityWallet, originalOptions: SdkOptions): Promise<void> {
     const options = Object.assign({}, affinityWallet._sdkOptions, originalOptions)
     const { idToken } = affinityWallet.cognitoUserTokens
 

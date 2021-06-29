@@ -4,7 +4,7 @@ import { SdkOptions } from '../../src/dto/shared.dto'
 import { testPlatformTools } from './testPlatformTools'
 
 export class CommonNetworkMember extends GenericCommonNetworkMember {
-  constructor(password: string, encryptedSeed: string, options: SdkOptions = {}, component?: EventComponent) {
+  constructor(password: string, encryptedSeed: string, options: SdkOptions, component?: EventComponent) {
     super(password, encryptedSeed, testPlatformTools, options, component)
   }
 

@@ -1,9 +1,13 @@
 import sinon from 'sinon'
 import * as chai from 'chai'
-import { SdkOptions } from '../../../../../../sdk/core/src/dto'
 import { profile, ProfileAction } from '../../../../src'
 import { ConsoleReporter } from '../../../../src/shared/profiler/ConsoleReporter'
 import { DefaultProfilerActivator } from '../../../../src/shared/profiler/DefaultProfilerActivator'
+
+class SdkOptions {
+  didMethod?: 'jolo' | 'elem'
+  isProfilerActive?: boolean
+}
 
 const expect = chai.expect
 

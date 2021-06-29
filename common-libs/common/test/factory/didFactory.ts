@@ -1,8 +1,8 @@
+import base64url from 'base64url'
 const cryptoRandomString = require('crypto-random-string')
 
-import { CommonNetworkMember } from './CommonNetworkMember'
+import { randomBytes } from '../../src/shared/randomBytes'
 import { KeysService, DidDocumentService } from '../../'
-import base64url from 'base64url'
 
 interface TestDid {
   seed: string
@@ -30,11 +30,11 @@ export const generateTestDIDs = async (): Promise<{
   let didDocumentService
   const password = cryptoRandomString({ length: 32, type: 'ascii-printable' })
 
-  const joloSeed = await CommonNetworkMember.generateSeed('jolo')
+  const joloSeed = await randomBytes(32)
   const joloSeedHex = joloSeed.toString('hex')
   const joloSeedWithMethod = `${joloSeedHex}++${'jolo'}`
-
-  const { encryptedSeed: joloEncryptedSeed } = await CommonNetworkMember.fromSeed(joloSeedWithMethod, {}, password)
+  const joloPasswordBuffer = KeysService.normalizePassword(password)
+  const joloEncryptedSeed = await KeysService.encryptSeed(joloSeedWithMethod, joloPasswordBuffer)
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
@@ -45,11 +45,11 @@ export const generateTestDIDs = async (): Promise<{
   const joloPublicKey = KeysService.getPublicKey(joloSeedHex, 'jolo').toString('hex')
   const joloEthereumPublicKey = KeysService.getAnchorTransactionPublicKey(joloSeedHex, 'jolo').toString('hex')
 
-  const elemSeed = await CommonNetworkMember.generateSeed('elem')
+  const elemSeed = await randomBytes(32)
   const elemSeedHex = elemSeed.toString('hex')
   const elemSeedWithMethod = `${elemSeedHex}++${'elem'}`
-
-  const { encryptedSeed: elemEncryptedSeed } = await CommonNetworkMember.fromSeed(elemSeedWithMethod, {}, password)
+  const elemPasswordBuffer = KeysService.normalizePassword(password)
+  const elemEncryptedSeed = await KeysService.encryptSeed(elemSeedWithMethod, elemPasswordBuffer)
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
@@ -105,15 +105,11 @@ export const generateTestDIDs = async (): Promise<{
   ]
 
   const keysBase64 = base64url.encode(JSON.stringify(keys))
-  const elemRSASeed = await CommonNetworkMember.generateSeed('elem')
+  const elemRSASeed = await randomBytes(32)
   const elemRSASeedHex = elemRSASeed.toString('hex')
   const elemRSASeedWithMethod = `${elemRSASeedHex}++${'elem'}++${keysBase64}`
-
-  const { encryptedSeed: elemRSAEncryptedSeed } = await CommonNetworkMember.fromSeed(
-    elemRSASeedWithMethod,
-    {},
-    password,
-  )
+  const elemRSAPasswordBuffer = KeysService.normalizePassword(password)
+  const elemRSAEncryptedSeed = await KeysService.encryptSeed(elemRSASeedWithMethod, elemRSAPasswordBuffer)
 
   keysService = new KeysService(elemRSAEncryptedSeed, password)
   const elemRSAPublicKeyRSA = keysService.getExternalPublicKey('rsa').toString()
@@ -135,15 +131,11 @@ export const generateTestDIDs = async (): Promise<{
   ]
 
   const bbskeysBase64 = base64url.encode(JSON.stringify(bbsKeys))
-  const elemBBSSeed = await CommonNetworkMember.generateSeed('elem')
+  const elemBBSSeed = await randomBytes(32)
   const elemBBSSeedHex = elemBBSSeed.toString('hex')
   const elemBBSSeedWithMethod = `${elemBBSSeedHex}++${'elem'}++${bbskeysBase64}`
-
-  const { encryptedSeed: elemBBSEncryptedSeed } = await CommonNetworkMember.fromSeed(
-    elemBBSSeedWithMethod,
-    {},
-    password,
-  )
+  const elemBBSPasswordBuffer = KeysService.normalizePassword(password)
+  const elemBBSEncryptedSeed = await KeysService.encryptSeed(elemBBSSeedWithMethod, elemBBSPasswordBuffer)
 
   keysService = new KeysService(elemBBSEncryptedSeed, password)
   const elemBBSPublicKeyBBS = keysService.getExternalPublicKey('bbs').toString()

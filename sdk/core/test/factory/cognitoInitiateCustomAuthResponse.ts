@@ -1,6 +1,6 @@
 const Session = 'dummy_session'
 
-const cognitoInitiateCustomAuthResponse: any = {
+const cognitoInitiateCustomAuthResponse = {
   ChallengeName: 'CUSTOM_CHALLENGE',
   Session,
   ChallengeParameters: {
@@ -9,4 +9,4 @@ const cognitoInitiateCustomAuthResponse: any = {
   },
 }
 
-module.exports = cognitoInitiateCustomAuthResponse
+export default cognitoInitiateCustomAuthResponse

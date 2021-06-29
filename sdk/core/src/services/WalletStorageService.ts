@@ -1,7 +1,4 @@
 import { toRpcSig, ecsign } from 'ethereumjs-util'
-import { validate as uuidValidate } from 'uuid'
-import CognitoService from './CognitoService'
-import API from './ApiService'
 import SdkError from '../shared/SdkError'
 import { profile } from '@affinidi/common'
 import { JwtService, KeysService } from '@affinidi/common'
@@ -9,7 +6,7 @@ import { JwtService, KeysService } from '@affinidi/common'
 import { Env, FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { isW3cCredential } from '../_helpers'
 
-import { FreeFormObject, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformEncryptionTools } from '../shared/interfaces'
 
 const keccak256 = require('keccak256')
 const createHash = require('create-hash')
@@ -36,134 +33,45 @@ const publicToAddress = (publicKey: Buffer): Buffer => {
   return keccak256(publicKey).slice(-20)
 }
 
-const sha256 = (data: any) => {
+const sha256 = (data: unknown) => {
   return createHash('sha256').update(data).digest()
 }
 
-import {
-  STAGING_KEY_STORAGE_URL,
-  STAGING_VAULT_URL,
-  STAGING_COGNITO_CLIENT_ID,
-  STAGING_COGNITO_USER_POOL_ID,
-} from '../_defaultConfig'
+import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
 
 import { SignedCredential } from '../dto/shared.dto'
 import { ParametersValidator } from '../shared'
+import KeyStorageApiService from './KeyStorageApiService'
+import BloomVaultApiService, { BlobType } from './BloomVaultApiService'
+
+type ConstructorOptions = {
+  vaultUrl: string
+  storageRegion: string
+  accessApiKey: string
+}
 
 @profile()
 export default class WalletStorageService {
-  _keyStorageUrl: string
-  _vaultUrl: string
-  _clientId: string
-  _userPoolId: string
-  _storageRegion: string
-  _keysService: KeysService
-  _platformEncryptionTools: IPlatformEncryptionTools
-  _api: API
-  _accessApiKey: string
+  private _storageRegion: string
+  private _keysService: KeysService
+  private _platformEncryptionTools: IPlatformEncryptionTools
+  private _bloomVaultApiService
 
   constructor(
     keysService: KeysService,
     platformEncryptionTools: IPlatformEncryptionTools,
-    options: Record<string, any> = {},
+    options: ConstructorOptions,
   ) {
     this._keysService = keysService
     this._platformEncryptionTools = platformEncryptionTools
-
-    this._keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-    this._vaultUrl = options.vaultUrl || STAGING_VAULT_URL
-    this._clientId = options.clientId || STAGING_COGNITO_CLIENT_ID
-    this._userPoolId = options.userPoolId || STAGING_COGNITO_USER_POOL_ID
-
-    const { registryUrl, issuerUrl, verifierUrl, storageRegion } = options
-
-    this._storageRegion = storageRegion
-
-    this._accessApiKey = options.accessApiKey
-
-    const isApiKeyAValidUuid = options.apiKey && uuidValidate(options.apiKey)
-
-    if (isApiKeyAValidUuid) {
-      const apiKeyBuffer = KeysService.sha256(Buffer.from(options.apiKey))
-      this._accessApiKey = apiKeyBuffer.toString('hex')
-    }
-
-    this._api = new API(registryUrl, issuerUrl, verifierUrl, options)
-  }
-
-  async pullEncryptedSeed(username: string, password: string, token: string = undefined): Promise<string> {
-    let accessToken = token
-
-    /* istanbul ignore else: code simplicity */
-    if (!token) {
-      const cognitoService = new CognitoService({ clientId: this._clientId, userPoolId: this._userPoolId })
-      const response = await cognitoService.signIn(username, password)
-
-      accessToken = response.accessToken
-    }
-
-    const accessApiKey = this._accessApiKey
-
-    const keyStorageUrl = this._keyStorageUrl
-    const encryptedSeed = await WalletStorageService.pullEncryptedSeed(accessToken, keyStorageUrl, { accessApiKey })
-
-    return encryptedSeed
-  }
-
-  static async pullEncryptedSeed(accessToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
-    keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
-
-    const url = `${keyStorageUrl}/api/v1/keys/readMyKey`
-
-    const headers = {
-      authorization: accessToken,
-    }
-
-    const api = new API(null, null, null, options)
-
-    const { body } = await api.execute(null, {
-      url,
-      headers,
-      method: 'GET',
-    })
-
-    const { encryptedSeed } = body
-
-    return encryptedSeed
+    this._bloomVaultApiService = new BloomVaultApiService(options)
+    this._storageRegion = options.storageRegion
   }
 
   static hashFromString(data: string): string {
     const buffer = sha256(Buffer.from(data))
 
     return buffer.toString('hex')
-  }
-
-  static async pullEncryptionKey(accessToken: string): Promise<string> {
-    // TODO: must use key provider, its just a mock at this point
-    const { payload } = JwtService.fromJWT(accessToken)
-    const userId = payload.sub
-
-    const encryptionKey = WalletStorageService.hashFromString(userId)
-
-    return encryptionKey
-  }
-
-  async storeEncryptedSeed(accessToken: string, seedHex: string, encryptionKey: string): Promise<void> {
-    const url = `${this._keyStorageUrl}/api/v1/keys/storeMyKey`
-
-    const encryptionKeyBuffer = Buffer.from(encryptionKey, 'hex')
-    const encryptedSeed = await KeysService.encryptSeed(seedHex, encryptionKeyBuffer)
-
-    const headers = {
-      authorization: accessToken,
-    }
-
-    await this._api.execute(null, {
-      url,
-      headers,
-      params: { encryptedSeed },
-      method: 'POST',
-    })
   }
 
   /* istanbul ignore next: private function */
@@ -187,63 +95,37 @@ export default class WalletStorageService {
   }
 
   async authorizeVcVault(region?: string) {
-    const headers: any = {}
-
     const storageRegion = region || this._storageRegion
 
-    if (storageRegion) {
-      headers['X-DST-REGION'] = storageRegion
-    }
-
     const { addressHex, privateKeyHex } = this.getVaultKeys()
-
     const didEth = `did:ethr:0x${addressHex}`
-    const tokenChallengeUrl = `${this._vaultUrl}/auth/request-token?did=${didEth}`
 
     const {
       body: { token },
-    } = await this._api.execute(null, {
-      url: tokenChallengeUrl,
-      params: {},
-      method: 'POST',
-      headers,
+    } = await this._bloomVaultApiService.requestAuthToken({
+      storageRegion,
+      did: didEth,
     })
 
     const signature = this.signByVaultKeys(token, privateKeyHex)
-    const tokenChallengeValidationUrl = `${this._vaultUrl}/auth/validate-token`
 
-    await this._api.execute(null, {
-      url: tokenChallengeValidationUrl,
-      params: { accessToken: token, signature, did: didEth },
-      method: 'POST',
-      headers,
+    await this._bloomVaultApiService.validateAuthToken({
+      storageRegion,
+      accessToken: token,
+      signature,
+      did: didEth,
     })
 
     return token
   }
 
-  async saveCredentials(data: unknown[], region?: string) {
+  async saveCredentials(data: string[], region?: string) {
     const responses = []
-    const token = await this.authorizeVcVault(region)
-
+    const accessToken = await this.authorizeVcVault(region)
     const storageRegion = region || this._storageRegion
 
-    const headers: any = {
-      Authorization: `Bearer ${token}`,
-      ...(storageRegion ? { ['X-DST-REGION']: storageRegion } : {}),
-    }
-
-    const url = `${this._vaultUrl}/data`
-
     for (const cyphertext of data) {
-      const params = { cyphertext }
-      const { body } = await this._api.execute(null, {
-        url,
-        headers,
-        params,
-        method: 'POST',
-      })
-
+      const { body } = await this._bloomVaultApiService.postCredential({ accessToken, storageRegion, cyphertext })
       responses.push(body)
     }
 
@@ -256,7 +138,7 @@ export default class WalletStorageService {
   }
 
   /* istanbul ignore next: there is test with NULL, but that did not count */
-  filterCredentials(credentialShareRequestToken: string = null, credentials: any) {
+  filterCredentials(credentialShareRequestToken: string, credentials: any[]) {
     if (credentialShareRequestToken) {
       const request = JwtService.fromJWT(credentialShareRequestToken)
 
@@ -270,7 +152,7 @@ export default class WalletStorageService {
       const requirementTypes =
         credentialRequirements.map((credentialRequirement: any) => credentialRequirement.type)
 
-      return credentials.filter((credential: any) => {
+      return credentials.filter((credential) => {
         if (isW3cCredential(credential)) {
           for (const requirementType of requirementTypes) {
             const isTypeMatchRequirements = this.isTypeMatchRequirements(credential.type, requirementType)
@@ -287,61 +169,37 @@ export default class WalletStorageService {
   }
 
   async deleteAllCredentials(): Promise<void> {
-    const token = await this.authorizeVcVault()
-
-    const headers: any = {
-      Authorization: `Bearer ${token}`,
-      ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
-    }
-
-    const url = `${this._vaultUrl}/data/0/99`
+    const accessToken = await this.authorizeVcVault()
+    const storageRegion = this._storageRegion
 
     try {
-      const response = await this._api.execute(null, {
-        url,
-        headers,
-        method: 'DELETE',
-      })
-
-      return response
+      await this._bloomVaultApiService.deleteCredentials({ accessToken, storageRegion, start: 0, end: 99 })
     } catch (error) {
       throw new SdkError('COR-0', {}, error)
     }
   }
 
-  async deleteCredentialByIndex(index: string): Promise<void> {
-    const token = await this.authorizeVcVault()
-
-    const headers: any = {
-      Authorization: `Bearer ${token}`,
-      ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
-    }
-
-    // NOTE: deletes the data objects associated with the included access token
-    //       and the included IDs starting with :start and ending with :end inclusive
-    //       https://github.com/hellobloom/bloom-vault#delete-datastartend
-    const start = index
-    const end = index
-    const url = `${this._vaultUrl}/data/${start}/${end}`
+  public async deleteCredentialByIndex(index: number): Promise<void> {
+    const accessToken = await this.authorizeVcVault()
+    const storageRegion = this._storageRegion
 
     try {
-      const response = await this._api.execute(null, {
-        url,
-        headers,
-        method: 'DELETE',
-      })
-
-      return response
+      // NOTE: deletes the data objects associated with the included access token
+      //       and the included IDs starting with :start and ending with :end inclusive
+      //       https://github.com/hellobloom/bloom-vault#delete-datastartend
+      await this._bloomVaultApiService.deleteCredentials({ accessToken, storageRegion, start: index, end: index })
     } catch (error) {
       throw new SdkError('COR-0', {}, error)
     }
   }
 
-  private _filterDeletedCredentials(blobs: any[]): any[] {
+  private _filterDeletedCredentials(blobs: BlobType[]): BlobType[] {
     return blobs.filter((blob) => blob.cyphertext !== null)
   }
 
-  async fetchEncryptedCredentials(fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions): Promise<any> {
+  async fetchEncryptedCredentials(
+    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
+  ): Promise<BlobType[]> {
     await ParametersValidator.validate([
       {
         isArray: false,
@@ -362,14 +220,14 @@ export default class WalletStorageService {
    * Start fetching all credentials inside the vault page by page
    * @param fetchCredentialsPaginationOptions starting and batch count for the credentials
    */
-  private async *fetchAllEncryptedCredentialsInBatches(): AsyncIterable<any[]> {
+  private async *fetchAllEncryptedCredentialsInBatches(): AsyncIterable<BlobType[]> {
     const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault()
     let lastCount = 0
 
     const token = await this.authorizeVcVault()
 
     do {
-      let blobs: any[] = []
+      let blobs: BlobType[] = []
 
       try {
         blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token)
@@ -389,7 +247,7 @@ export default class WalletStorageService {
   }
 
   public async fetchAllBlobs() {
-    let allBlobs: any[] = []
+    let allBlobs: BlobType[] = []
     for await (const blobs of this.fetchAllEncryptedCredentialsInBatches()) {
       allBlobs = [...allBlobs, ...blobs]
     }
@@ -399,20 +257,14 @@ export default class WalletStorageService {
 
   private async _fetchEncryptedCredentialsWithPagination(
     paginationOptions: PaginationOptions,
-    token: string,
-  ): Promise<any[]> {
-    const headers: any = {
-      Authorization: `Bearer ${token}`,
-      ...(this._storageRegion ? { ['X-DST-REGION']: this._storageRegion } : {}),
-    }
-
-    const url = this._buildVaultFetchEncryptedCredentialsUrl(paginationOptions)
-
+    accessToken: string,
+  ): Promise<BlobType[]> {
     try {
-      const { body: blobs } = await this._api.execute(null, {
-        url,
-        headers,
-        method: 'GET',
+      const { body: blobs } = await this._bloomVaultApiService.getCredentials({
+        accessToken,
+        storageRegion: this._storageRegion,
+        start: paginationOptions.skip,
+        end: paginationOptions.skip + paginationOptions.limit - 1,
       })
 
       return blobs
@@ -425,99 +277,35 @@ export default class WalletStorageService {
     }
   }
 
-  private _buildVaultFetchEncryptedCredentialsUrl(paginationOptions: PaginationOptions): string {
-    const { skip, limit } = paginationOptions
-
-    return `${this._vaultUrl}/data/${skip}/${skip + limit - 1}`
-  }
-
-  static async adminConfirmUser(username: string, options: any = {}): Promise<void> {
-    const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-
-    const url = `${keyStorageUrl}/api/v1/userManagement/adminConfirmUser`
-
-    const api = new API(null, null, null, options)
-
-    await api.execute(null, {
-      url,
-      params: { username },
-      method: 'POST',
-    })
-  }
-
-  static async adminDeleteUnconfirmedUser(username: string, options: any = {}): Promise<void> {
-    const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-
-    const url = `${keyStorageUrl}/api/v1/userManagement/adminDeleteUnconfirmedUser`
-
-    const api = new API(null, null, null, options)
-
-    await api.execute(null, {
-      url,
-      params: { username },
-      method: 'POST',
-    })
-  }
-
-  static async getCredentialOffer(idToken: string, keyStorageUrl?: string, options: any = {}): Promise<string> {
+  static async getCredentialOffer(
+    accessToken: string,
+    keyStorageUrl: string,
+    options: { env: Env; accessApiKey: string },
+  ): Promise<string> {
     keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
-
-    const env: Env = options.env
-
-    const url = `${keyStorageUrl}/api/v1/issuer/getCredentialOffer?env=${env}`
-
-    const headers = {
-      authorization: idToken,
-    }
-
-    const api = new API(null, null, null, options)
-    const { body } = await api.execute(null, {
-      url,
-      headers,
-      method: 'GET',
-    })
-
+    const { accessApiKey, env } = options
+    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey })
+    const { body } = await service.getCredentialOffer({ accessToken, env })
     const { offerToken } = body
     return offerToken
   }
 
   static async getSignedCredentials(
-    idToken: string,
+    accessToken: string,
     credentialOfferResponseToken: string,
-    options: any = {},
+    options: { keyStorageUrl?: string; issuerUrl?: string; accessApiKey?: string; apiKey?: string } = {},
   ): Promise<SignedCredential[]> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-
-    const url = `${keyStorageUrl}/api/v1/issuer/getSignedCredential`
-    const headers = {
-      authorization: idToken,
-    }
-
-    const params: FreeFormObject = { credentialOfferResponseToken }
-    const method = 'POST'
-
-    /* istanbul ignore next: manual test */
-    if (Object.entries(options).length !== 0) {
-      delete options.cognitoUser // not required
-      delete options.cognitoUserTokens // not required
-      delete options.skipBackupEncryptedSeed // not required
-      delete options.skipBackupCredentials // not required
-      delete options.issueSignupCredential // not required
-      delete options.metricsUrl // not required
-      delete options.apiKey // not required
-      delete options.storageRegion // not required
-      delete options.clientId // not required
-      delete options.userPoolId // not required
-
-      params.options = options
-    }
-
-    const api = new API(null, null, null, options)
-    const { body } = await api.execute(null, { url, headers, params, method })
+    const { issuerUrl, accessApiKey, apiKey } = options
+    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey })
+    const { body } = await service.getSignedCredential(accessToken, {
+      credentialOfferResponseToken,
+      options: { issuerUrl, accessApiKey, apiKey },
+    })
 
     const { signedCredentials } = body
 
-    return signedCredentials
+    return signedCredentials as SignedCredential[]
   }
 
   private static _getPaginationOptionsWithDefault(
@@ -567,7 +355,18 @@ export default class WalletStorageService {
     return credentials
   }
 
-  async findCredentialIndexById(id: string) {
+  async getCredentialByIndex(credentialIndex: number): Promise<any> {
+    const paginationOptions: FetchCredentialsPaginationOptions = { skip: credentialIndex, limit: 1 }
+    const credentials = await this.fetchDecryptedCredentials(paginationOptions)
+
+    if (!credentials[0]) {
+      throw new SdkError('COR-14')
+    }
+
+    return credentials[0]
+  }
+
+  private async findCredentialIndexById(id: string) {
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const allBlobs = await this.fetchAllBlobs()
     for (const blob of allBlobs) {
@@ -585,6 +384,17 @@ export default class WalletStorageService {
     }
 
     throw new SdkError('COR-23', { id })
+  }
+
+  async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
+    if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
+      throw new SdkError('COR-1', {
+        errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
+      })
+    }
+
+    const credentialIndexToDelete = credentialIndex ?? (await this.findCredentialIndexById(id))
+    return this.deleteCredentialByIndex(credentialIndexToDelete)
   }
 }
 

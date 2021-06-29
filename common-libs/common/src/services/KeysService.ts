@@ -22,13 +22,12 @@ const elemIdentityPrimaryKey = "m/44'/60'/0'/1/0" // eslint-disable-line
 
 const cachedSigningKey: Record<string, BIP32Interface> = {}
 
-type DocumentWithOptionalProof = { proof?: { signatureValue?: string } }
+// eslint-disable-next-line max-len, prettier/prettier
+type TypedArray = Uint8Array | Uint8ClampedArray | Uint16Array | Uint32Array | Int8Array | Int16Array | Int32Array | Float32Array | Float64Array
+type DocumentWithOptionalProof = { proof?: Record<string, unknown> }
 type JwtObject = {
   header?: unknown
-  payload?: Record<string, unknown> & {
-    kid?: string
-    iss?: string
-  }
+  payload: Record<string, unknown>
   signature?: string
 }
 
@@ -88,48 +87,33 @@ export default class KeysService {
     }
   }
 
-  static sha256(data: string | Buffer | createHash.TypedArray | DataView): Buffer {
+  static sha256(data: string | Buffer | TypedArray | DataView): Buffer {
     return createHash('sha256').update(data).digest()
   }
 
-  static getSigningKey(seedHex: string, deriviationPath: string) {
+  private static getDerivationPath(didMethod: 'jolo' | 'elem', isAnchoring: boolean) {
+    if (isAnchoring) {
+      return etheriumIdentityKey
+    }
+
+    switch (didMethod) {
+      case 'jolo':
+        return jolocomIdentityKey
+      case 'elem':
+        return elemIdentityPrimaryKey
+    }
+  }
+
+  private static getKey(seedHex: string, didMethod: string, isAnchoring = false) {
+    validateDidMethodSupported(didMethod)
+    const derivationPath = KeysService.getDerivationPath(didMethod, isAnchoring)
     const seed = Buffer.from(seedHex, 'hex')
-
-    const id = `${seedHex}::${deriviationPath}`
-
+    const id = `${seedHex}::${derivationPath}`
     if (!cachedSigningKey[id]) {
-      cachedSigningKey[id] = bip32FromSeed(seed).derivePath(deriviationPath)
+      cachedSigningKey[id] = bip32FromSeed(seed).derivePath(derivationPath)
     }
 
     return cachedSigningKey[id]
-  }
-
-  static getKey(seedHex: string, didMethod: string, isAnchoring = false) {
-    validateDidMethodSupported(didMethod)
-
-    let deriviationPath
-    switch (didMethod) {
-      case 'jolo':
-        deriviationPath = jolocomIdentityKey
-
-        if (isAnchoring) {
-          deriviationPath = etheriumIdentityKey
-        }
-
-        break
-      case 'elem':
-        deriviationPath = elemIdentityPrimaryKey
-
-        if (isAnchoring) {
-          deriviationPath = etheriumIdentityKey
-        }
-
-        break
-    }
-
-    const signingKey = KeysService.getSigningKey(seedHex, deriviationPath)
-
-    return signingKey
   }
 
   static getPublicAndPrivateKeys(seedHex: string, didMethod: string) {
@@ -278,14 +262,18 @@ export default class KeysService {
     return passwordBuffer
   }
 
-  async signDidDocument<T extends DocumentWithOptionalProof>(didDocument: T): Promise<T & DocumentWithOptionalProof> {
+  /**
+   * Note that this function modifies the source object for backwards compatibility reasons
+   */
+  async signDidDocument<T extends DocumentWithOptionalProof>(didDocument: T) {
     const { digest } = await this._digestService.getJsonLdDigest(didDocument)
 
     const signature = this.sign(digest)
-    didDocument.proof = didDocument.proof || {}
-    didDocument.proof.signatureValue = signature.toString('hex')
-
-    return didDocument
+    return Object.assign(didDocument, {
+      proof: Object.assign(didDocument.proof ?? {}, {
+        signatureValue: signature.toString('hex'),
+      }),
+    })
   }
 
   async createTransactionSignature(digestHex: string, seedHex: string) {
@@ -306,17 +294,24 @@ export default class KeysService {
     return JSON.stringify(serializedSignature)
   }
 
-  signJWT<T extends JwtObject>(jwtObject: T, keyId: string = null): T & JwtObject {
+  private getJWTAdditionalPayload(keyId?: string) {
     if (!keyId) {
       const didDocumentService = new DidDocumentService(this)
       const did = didDocumentService.getMyDid()
       keyId = didDocumentService.getKeyId()
 
-      jwtObject.payload.kid = keyId
-      jwtObject.payload.iss = did
+      return { kid: keyId, iss: did }
     } else {
-      jwtObject.payload.iss = keyId
+      return { iss: keyId }
     }
+  }
+
+  /**
+   * Note that this function modifies the source object for backwards compatibility reasons
+   */
+  signJWT<T extends JwtObject>(sourceObject: T, keyId: string = null) {
+    const payload = Object.assign(sourceObject.payload, this.getJWTAdditionalPayload(keyId))
+    const jwtObject = Object.assign(sourceObject, { payload })
 
     const toSign = [encode(JSON.stringify(jwtObject.header)), encode(JSON.stringify(jwtObject.payload))].join('.')
 
@@ -324,8 +319,6 @@ export default class KeysService {
 
     const signature = this.sign(digest)
 
-    jwtObject.signature = signature.toString('hex')
-
-    return jwtObject
+    return Object.assign(jwtObject, { signature: signature.toString('hex') })
   }
 }

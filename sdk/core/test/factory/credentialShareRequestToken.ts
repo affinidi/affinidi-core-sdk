@@ -11,4 +11,4 @@ const credentialShareRequestToken =
   'ZTYja2V5cy0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9' +
   'c44eac73f350b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
-module.exports = credentialShareRequestToken
+export default credentialShareRequestToken

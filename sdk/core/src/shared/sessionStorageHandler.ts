@@ -10,47 +10,50 @@ const isBrowser = typeof navigator !== 'undefined' && navigator.product !== 'Rea
 
 const isTestEnvironment = process.env.NODE_ENV === 'test'
 
-export function readUserTokensFromSessionStorage(userPoolId: string): CognitoUserTokens {
-  const sessionStorageKey = userPoolId
+export class SessionStorageService {
+  private readonly _sessionStorageKey
 
-  let sessionStorageObject
-
-  if (isBrowser) {
-    sessionStorageObject = window.sessionStorage.getItem(sessionStorageKey)
+  constructor(sessionStorageKey: string) {
+    this._sessionStorageKey = sessionStorageKey
   }
 
-  if (isTestEnvironment) {
-    sessionStorageObject = tempSessionStorage[sessionStorageKey]
+  readUserTokens(): CognitoUserTokens {
+    let sessionStorageObject
+
+    if (isBrowser) {
+      sessionStorageObject = window.sessionStorage.getItem(this._sessionStorageKey)
+    }
+
+    if (isTestEnvironment) {
+      sessionStorageObject = tempSessionStorage[this._sessionStorageKey]
+    }
+
+    if (!sessionStorageObject) {
+      throw new SdkError('COR-9')
+    }
+
+    return JSON.parse(sessionStorageObject)
   }
 
-  if (!sessionStorageObject) {
-    throw new SdkError('COR-9')
+  saveUserTokens(cognitoUserTokens: CognitoUserTokens): void {
+    const sessionStorageObject = JSON.stringify(cognitoUserTokens)
+
+    if (isBrowser) {
+      window.sessionStorage.setItem(this._sessionStorageKey, sessionStorageObject)
+    }
+
+    if (isTestEnvironment) {
+      tempSessionStorage[this._sessionStorageKey] = sessionStorageObject
+    }
   }
 
-  return JSON.parse(sessionStorageObject)
-}
+  clearUserTokens(): void {
+    if (isBrowser) {
+      window.sessionStorage.removeItem(this._sessionStorageKey)
+    }
 
-export function saveUserTokensToSessionStorage(userPoolId: string, cognitoUserTokens: CognitoUserTokens): void {
-  const sessionStorageKey = userPoolId
-  const sessionStorageObject = JSON.stringify(cognitoUserTokens)
-
-  if (isBrowser) {
-    window.sessionStorage.setItem(sessionStorageKey, sessionStorageObject)
-  }
-
-  if (isTestEnvironment) {
-    tempSessionStorage[sessionStorageKey] = sessionStorageObject
-  }
-}
-
-export function clearUserTokensFromSessionStorage(userPoolId: string): void {
-  const sessionStorageKey = userPoolId
-
-  if (isBrowser) {
-    window.sessionStorage.removeItem(sessionStorageKey)
-  }
-
-  if (isTestEnvironment) {
-    tempSessionStorage = {}
+    if (isTestEnvironment) {
+      tempSessionStorage = {}
+    }
   }
 }

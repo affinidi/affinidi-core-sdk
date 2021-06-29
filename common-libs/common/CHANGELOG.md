@@ -1,3 +1,13 @@
+# 2.0.0-beta.1 (2020-06-29)
+* Improved type declarations
+* Breaking changes
+  * `KeysService.getSigningKey` and `getKey` made private. Use one of the following alternatives instead:
+    * `getPublicKey`
+    * `getPrivateKey`
+    * `getPublicAndPrivateKeys`
+    * `getAnchorTransactionPublicKey`
+    * `getAnchorTransactionPrivateKey`
+    * `getAnchorTransactionPublicAndPrivateKeys`
 # 1.9.0 (2020-06-16)
 * Declared input and output types on `KeysService` methods
 * Implemented `KeysService.getOwnPublicKey` and `KeysService.getOwnPrivateKey`
