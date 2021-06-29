@@ -351,16 +351,12 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    // const { registryUrl } = getOptionsFromEnvironment(options)
-
     const didMethod = options.didMethod || DEFAULT_DID_METHOD
-
     const seed = await CommonNetworkMember.generateSeed(didMethod)
     const seedHex = seed.toString('hex')
     const seedWithMethod = `${seedHex}++${didMethod}`
-
-    const { encryptedSeed } = await this.fromSeed(seedWithMethod, options, password)
-
+    const passwordBuffer = KeysService.normalizePassword(password)
+    const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
 
     const didDocumentService = new DidDocumentService(keysService)
@@ -713,29 +709,6 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     }
   }
 
-  private static async _signUpWithExistsEntityByUsernameAutoConfirm<T extends DerivedType<T>>(
-    self: T,
-    keyParams: KeyParams,
-    username: string,
-    password: string,
-    options: ExtractOptionsType<T>,
-    messageParameters?: MessageParameters,
-  ): Promise<InstanceType<T>> {
-    await ParametersValidator.validate([
-      { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
-      { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: 'password', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
-      { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
-    ])
-
-    CommonNetworkMember._validateKeys(keyParams)
-
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    const { signUpToken } = await userManagementService.signUp(username, password, messageParameters)
-    return CommonNetworkMember._confirmSignUp(self, signUpToken, '', keyParams, options)
-  }
-
   /**
    * @description Initiates sign up flow to Affinity wallet with already created did
    * @param keyParams - { ecnryptedSeed, password } - previously created keys to be storead at wallet.
@@ -758,18 +731,28 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
 
-    if (isUsername) {
-      return CommonNetworkMember._signUpWithExistsEntityByUsernameAutoConfirm(
-        this,
-        keyParams,
-        login,
-        password,
-        options,
-        messageParameters,
-      )
-    } else {
+    if (!isUsername) {
       return CommonNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
     }
+
+    const username = login
+    await ParametersValidator.validate([
+      { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
+      { isArray: false, type: 'string', isRequired: true, value: username },
+      { isArray: false, type: 'password', isRequired: true, value: password },
+      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
+    ])
+
+    CommonNetworkMember._validateKeys(keyParams)
+
+    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
+      username,
+      password,
+      messageParameters,
+    )
+    return CommonNetworkMember._confirmSignUp(this, cognitoTokens, password, keyParams, options)
   }
 
   private static async _signUpByUsernameAutoConfirm<T extends DerivedType<T>>(
@@ -787,8 +770,14 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    const { signUpToken } = await userManagementService.signUp(username, password, messageParameters)
-    return self.confirmSignUp(signUpToken, '', options)
+    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
+      username,
+      password,
+      messageParameters,
+    )
+    const result = await CommonNetworkMember._confirmSignUp(self, cognitoTokens, password, undefined, options)
+    await self.afterConfirmSignUp(result, options)
+    return result
   }
 
   private static async _signUpByEmailOrPhone<T extends DerivedType<T>>(
@@ -805,13 +794,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    const { signUpToken, isUsername } = await userManagementService.signUp(login, password, messageParameters)
-
-    if (isUsername) {
-      throw new Error('Impossible')
-    }
-
-    return signUpToken
+    return userManagementService.signUpWithEmailOrPhone(login, password, messageParameters)
   }
 
   /**
@@ -834,11 +817,11 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
 
-    if (isUsername) {
-      return CommonNetworkMember._signUpByUsernameAutoConfirm(this, login, password, options, messageParameters)
-    } else {
+    if (!isUsername) {
       return CommonNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
     }
+
+    return CommonNetworkMember._signUpByUsernameAutoConfirm(this, login, password, options, messageParameters)
   }
 
   /**
@@ -846,49 +829,42 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    *       (as result created keys will be stored at the Affinity Wallet)
    * NOTE: no need calling this method in case of arbitrary username was given,
    *       as registration is already completed
+   * NOTE: This method will throw an error if called for arbitrary username
    * @param keyParams - { ecnryptedSeed, password } - previously created keys to be storead at wallet.
    * @param token - Token returned by signUpWithExistsEntity method.
    * @param confirmationCode - OTP sent by AWS Cognito/SES.
-   * NOTE: confirmationCode is required if email/phoneNumber was given
-   *       on #signUp as a username
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
   static async confirmSignUpWithExistsEntity<T extends DerivedType<T>>(
     this: T,
     keyParams: KeyParams,
-    token: string,
+    signUpToken: string,
     confirmationCode: string,
     options: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
-    const [username] = token.split('::')
-
-    const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
-
-    const parametersToValidate = [
+    ParametersValidator.validate([
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
-      { isArray: false, type: 'string', isRequired: true, value: token },
+      { isArray: false, type: 'string', isRequired: true, value: signUpToken },
+      { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
-    ]
+    ])
 
-    if (isEmailValid || isPhoneNumberValid) {
-      parametersToValidate.push({ isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode })
-    }
-
-    await ParametersValidator.validate(parametersToValidate)
-
-    return CommonNetworkMember._confirmSignUp(this, token, confirmationCode, keyParams, options)
+    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUpForEmailOrPhone(
+      signUpToken,
+      confirmationCode,
+    )
+    return CommonNetworkMember._confirmSignUp(this, cognitoTokens, shortPassword, keyParams, options)
   }
 
   private static async _confirmSignUp<T extends DerivedType<T>>(
     self: T,
-    token: string,
-    confirmationCode: string,
+    cognitoTokens: CognitoUserTokens,
+    shortPassword: string,
     keyParams: KeyParams,
     inputOptions: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
-    const userManagementService = this._createUserManagementService(inputOptions)
-    const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUp(token, confirmationCode)
     const { accessToken } = cognitoTokens
 
     if (!keyParams?.encryptedSeed) {
@@ -914,35 +890,30 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   /**
    * @description Completes sign up flow
    * NOTE: no need calling this method in case of arbitrary username was given,
-   *       as registration is already completed
+   *       as registration is already completed.
+   * NOTE: this method will throw an error if called for arbitrary username
    * @param confirmationCode - OTP sent by AWS Cognito/SES.
-   * NOTE: confirmationCode is required if email/phoneNumber was given
-   *       on #signUp as a username
    * @param options - optional parameters for CommonNetworkMember initialization
    * @returns initialized instance of SDK
    */
   static async confirmSignUp<T extends DerivedType<T>>(
     this: T,
-    token: string,
+    signUpToken: string,
     confirmationCode: string,
     options: ExtractOptionsType<T>,
   ): Promise<InstanceType<T>> {
-    const [username] = token.split('::')
-
-    const { isEmailValid, isPhoneNumberValid } = validateUsername(username)
-
-    const parametersToValidate = [
-      { isArray: false, type: 'string', isRequired: true, value: token },
+    await ParametersValidator.validate([
+      { isArray: false, type: 'string', isRequired: true, value: signUpToken },
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
-    ]
+      { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
+    ])
 
-    if (isEmailValid || isPhoneNumberValid) {
-      parametersToValidate.push({ isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode })
-    }
-
-    await ParametersValidator.validate(parametersToValidate)
-
-    const result = await CommonNetworkMember._confirmSignUp(this, token, confirmationCode, undefined, options)
+    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUpForEmailOrPhone(
+      signUpToken,
+      confirmationCode,
+    )
+    const result = await CommonNetworkMember._confirmSignUp(this, cognitoTokens, shortPassword, undefined, options)
     await this.afterConfirmSignUp(result, options)
     return result
   }
@@ -995,8 +966,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     if (doesConfirmedUserExist) {
       return userManagementService.signInWithEmailOrPhone(login, messageParameters)
     } else {
-      const { signUpToken } = await userManagementService.signUp(login, null, messageParameters)
-      return signUpToken
+      return userManagementService.signUpWithEmailOrPhone(login, null, messageParameters)
     }
   }
 

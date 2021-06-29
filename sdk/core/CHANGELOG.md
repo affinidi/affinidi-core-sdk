@@ -6,6 +6,9 @@
     * More specific type declarations.
     * `SdkOptions` parameters are now non-optional.
     * `SdkOptions.env` field is now required.
+    * `CommonNetworkMember.confirmSignUp` and `confirmSignUpWithExistsEntity` now throws an error when called for a username
+      (as opposed to email address or a phone number).
+      Signups with plain usernames never required any confirmation.
   * Additional breaking changes:
     * `SdkOptions` parameters are no longer modified.
     * Removed internal `CognitoService`, use `CommonNetworkMember` instead, or `UserManagementService` or `CognitoIdentityService` in case of need.

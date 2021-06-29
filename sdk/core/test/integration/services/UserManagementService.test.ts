@@ -60,14 +60,14 @@ describe('UserManagementService', () => {
     const password = randomPassword
 
     const userManagementService = new UserManagementService(constructorOptions)
-    const result = await userManagementService.signUp(username, password, undefined)
+    const result = await userManagementService.signUpWithUsernameAndConfirm(username, password, undefined)
 
     expect(result).to.be.a('string')
 
     let responseError
 
     try {
-      await userManagementService.signUp(username, password, undefined)
+      await userManagementService.signUpWithUsernameAndConfirm(username, password, undefined)
     } catch (error) {
       responseError = error
     }
@@ -79,7 +79,7 @@ describe('UserManagementService', () => {
   })
 
   it('#confirmSignUp throws `COR-4 / 404` if user not found', async () => {
-    username = 'non_existing@email.com'
+    const email = 'non_existing@email.com'
 
     const confirmationCode = '777777'
     const userManagementService = new UserManagementService(constructorOptions)
@@ -87,7 +87,7 @@ describe('UserManagementService', () => {
     let responseError
 
     try {
-      await userManagementService.confirmSignUp(username, confirmationCode)
+      await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
     } catch (error) {
       responseError = error
     }

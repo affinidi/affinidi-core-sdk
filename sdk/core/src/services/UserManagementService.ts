@@ -75,20 +75,31 @@ export default class UserManagementService {
     }
   }
 
-  async signUp(login: string, inputPassword: string, messageParameters: MessageParameters) {
-    const usernameWithAttributes = this._buildUserAttributes(login)
-    const isUsername = !usernameWithAttributes.phoneNumber && !usernameWithAttributes.emailAddress
+  async signUpWithUsernameAndConfirm(username: string, inputPassword: string, messageParameters: MessageParameters) {
+    this._loginShouldBeUsername(username)
+    const usernameWithAttributes = this._buildUserAttributes(username)
 
-    if (isUsername && !inputPassword) {
-      throw new Error(`Expected non-empty password for '${login}'`)
+    if (!inputPassword) {
+      throw new Error(`Expected non-empty password for '${username}'`)
     }
+
+    const password = normalizeShortPassword(inputPassword, username)
+    await this._signUp(usernameWithAttributes, password, messageParameters)
+    await this._keyStorageApiService.adminConfirmUser({ username })
+    const cognitoTokens = await this.signIn(username, inputPassword)
+    return cognitoTokens
+  }
+
+  async signUpWithEmailOrPhone(login: string, inputPassword: string, messageParameters: MessageParameters) {
+    this._loginShouldBeEmailOrPhoneNumber(login)
+    const usernameWithAttributes = this._buildUserAttributes(login)
 
     const shortPassword = inputPassword || (await generatePassword())
     const password = normalizeShortPassword(shortPassword, login)
     await this._signUp(usernameWithAttributes, password, messageParameters)
     const signUpToken = `${login}::${password}`
 
-    return { signUpToken, isUsername }
+    return signUpToken
   }
 
   private async _confirmSignUp(login: string, confirmationCode: string) {
@@ -126,18 +137,11 @@ export default class UserManagementService {
     }
   }
 
-  async confirmSignUp(token: string, confirmationCode: string) {
+  async confirmSignUpForEmailOrPhone(token: string, confirmationCode: string) {
     const [login, shortPassword] = token.split('::')
-
-    const { isUsername } = validateUsername(login)
-    if (isUsername) {
-      await this._keyStorageApiService.adminConfirmUser({ username: login })
-    } else {
-      await this._confirmSignUp(login, confirmationCode)
-    }
-
+    this._loginShouldBeEmailOrPhoneNumber(login)
+    await this._confirmSignUp(login, confirmationCode)
     const cognitoTokens = await this.signIn(login, shortPassword)
-
     return { cognitoTokens, shortPassword }
   }
 
@@ -337,6 +341,14 @@ export default class UserManagementService {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
 
     if (!isEmailValid && !isPhoneNumberValid) {
+      throw new SdkError('COR-3', { username: login })
+    }
+  }
+
+  private _loginShouldBeUsername(login: string) {
+    const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
+
+    if (isEmailValid || isPhoneNumberValid) {
       throw new SdkError('COR-3', { username: login })
     }
   }

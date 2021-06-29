@@ -525,7 +525,7 @@ describe('UserManagementService', () => {
       stubMethod(SIGN_UP, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.signUp(email, 'password', undefined)
+      const response = await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
 
       expect(response).to.exist
     })
@@ -541,7 +541,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signUp(email, 'password', undefined)
+        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -566,7 +566,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signUp(email, 'password', undefined)
+        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -587,7 +587,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signUp(email, 'password', undefined)
+        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -604,7 +604,7 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.confirmSignUp(`${email}::`, confirmationCode)
+      const response = await userManagementService.confirmSignUpForEmailOrPhone(`${email}::`, confirmationCode)
 
       expect(response).to.exist
     })
@@ -619,7 +619,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -644,7 +644,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -669,7 +669,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -694,7 +694,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUp(email, confirmationCode)
+        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }

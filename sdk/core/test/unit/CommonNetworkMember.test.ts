@@ -127,6 +127,7 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
     result: SignInResult.Success,
     cognitoTokens: {},
   })
+  sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves(SignUpResult.Success)
   sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey').resolves(opts.password)
   sinon.stub(KeysService, 'normalizePassword').returns(Buffer.from(opts.password))
   sinon.stub(KeysService, 'encryptSeed').resolves(opts.seedHex)
@@ -327,8 +328,6 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#signUp with username (with default SDK options)', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves(SignUpResult.Success)
-
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
@@ -403,10 +402,12 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    const response = await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
-
-    expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(CommonNetworkMember)
+    try {
+      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+      expect.fail()
+    } catch (err) {
+      expect(err.code).to.equal('COR-3')
+    }
   })
 
   it('#confirmSignIn signUp scenario', async () => {
@@ -770,7 +771,7 @@ describe('CommonNetworkMember', () => {
     let errorCode
 
     try {
-      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+      await CommonNetworkMember.signUp(username, walletPassword, options)
     } catch (error) {
       errorCode = error.code
       // catching error so the test doesn't throw
@@ -789,7 +790,7 @@ describe('CommonNetworkMember', () => {
     saveSeedStub.onCall(1).throws('UNKNOWN')
     saveSeedStub.onCall(2).throws('UNKNOWN')
 
-    await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+    await CommonNetworkMember.signUp(username, walletPassword, options)
 
     expect(saveSeedStub.callCount).to.eql(4)
   })
@@ -808,7 +809,7 @@ describe('CommonNetworkMember', () => {
     let errorCode
 
     try {
-      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+      await CommonNetworkMember.signUp(username, walletPassword, options)
     } catch (error) {
       errorCode = error.code
     }

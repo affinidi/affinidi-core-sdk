@@ -3,13 +3,14 @@
 import { expect } from 'chai'
 import { decode as jwtDecode } from 'jsonwebtoken'
 
-import WalletStorageService from '../../../src/services/WalletStorageService'
+import KeyManagementService from '../../../src/services/KeyManagementService'
+import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
 import UserManagementService from '../../../src/services/UserManagementService'
-import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
+import WalletStorageService from '../../../src/services/WalletStorageService'
+import { normalizeUsername } from '../../../src/shared'
 
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
-import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
-import KeyManagementService from '../../../src/services/KeyManagementService'
+import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
 
 const options = getAllOptionsForEnvironment()
 
@@ -92,17 +93,15 @@ describe('WalletStorageService', () => {
   })
 
   it('#adminDeleteUnconfirmedUser', async () => {
-    const username = 'different_test_user_to_delete'
+    const email = 'different_test_user_to_delete@example.com'
 
-    await userManagementService.signUp(username, password, null)
-
+    await userManagementService.signUpWithEmailOrPhone(email, password, null)
     const keyStorageApiService = new KeyStorageApiService(options)
-    await keyStorageApiService.adminDeleteUnconfirmedUser({ username })
-
+    await keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizeUsername(email) })
     let responseError
 
     try {
-      await userManagementService.signIn(username, password)
+      await userManagementService.signIn(email, password)
     } catch (error) {
       responseError = error
     }
