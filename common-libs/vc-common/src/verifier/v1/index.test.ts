@@ -1179,7 +1179,9 @@ describe('validateVCV1', () => {
         { did: bob.did },
       )
 
-      vc.proof.jws = ''
+      if ('jws' in vc.proof) {
+        vc.proof.jws = ''
+      }
 
       // Verify the VC
       const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)
@@ -1205,7 +1207,9 @@ describe('validateVCV1', () => {
         { did: bob.did },
       )
 
-      vc.proof.jws = vc.proof.jws.substr(0, vc.proof.jws.length - 1)
+      if ('jws' in vc.proof) {
+        vc.proof.jws = vc.proof.jws.substr(0, vc.proof.jws.length - 1)
+      }
 
       // Verify the VC
       const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)

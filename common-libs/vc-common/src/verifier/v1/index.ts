@@ -134,7 +134,8 @@ const validateVCProofStructure = genValidateFn<VCV1Proof>({
     (value: any) => createValidatorResponse(value === 'assertionMethod', 'Expected to be "assertionMethod"'),
   ],
   verificationMethod: [isNonEmptyString, isValidDID],
-  jws: isNonEmptyString,
+  jws: async (value, data) => data.proofValue !== undefined || isNonEmptyString(value, data),
+  proofValue: async (value, data) => data.jws !== undefined || isNonEmptyString(value, data),
 })
 
 const isValidVCProof = (
