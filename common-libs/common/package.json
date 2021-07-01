@@ -41,7 +41,7 @@
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "^0.0.25",
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.0",
-    "@affinidi/vc-common": "^1.3.0",
+    "@affinidi/vc-common": "^1.4.0",
     "base64url": "^3.0.1",
     "bip32": "^2.0.5",
     "browserify-aes": "^1.2.0",
