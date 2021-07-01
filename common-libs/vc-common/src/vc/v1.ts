@@ -24,7 +24,8 @@ export type VCV1Proof = {
   created: string
   proofPurpose: 'assertionMethod'
   verificationMethod: string
-  jws: string
+  jws?: string
+  proofValue?: string
 }
 
 export type VCV1Revocation = {

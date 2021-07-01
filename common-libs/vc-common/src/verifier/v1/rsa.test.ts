@@ -1,8 +1,8 @@
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 import { parse } from 'did-resolver'
 
-import { VPV1, VCV1, VCV1SubjectBase, GetSignSuiteFn } from '../../'
-import { validateVPV1, validateVCV1, GetVerifySuiteFn } from './'
+import { VPV1, VCV1, VCV1SubjectBase, GetSignSuiteFn } from '../..'
+import { validateVPV1, validateVCV1, GetVerifySuiteFn } from '.'
 import { Validatied, ErrorConfig } from '../util'
 import { buildVCV1, buildVCV1Skeleton, buildVCV1Unsigned, buildVPV1, buildVPV1Unsigned } from '../../issuer'
 
@@ -167,6 +167,7 @@ const didConfigs: DidConfigs = {
     },
   },
 }
+
 /*
  _____             _           __    __  _        _
 |  ___|           | |         / _|  / _|(_)      | |
@@ -257,10 +258,10 @@ const getVerifySuiteBad: GetVerifySuiteFn = () => {
 const createVC = async (
   issuer: Signer,
   holder: Holder,
-  options: {
+  options?: {
     exirationDate?: boolean
     revocation?: boolean
-  } = {},
+  },
 ): Promise<VCV1> => {
   const signed = await buildVCV1({
     unsigned: buildVCV1Unsigned({
@@ -306,8 +307,8 @@ const createVC = async (
         } as any,
       }),
       issuanceDate: new Date().toISOString(),
-      expirationDate: options.exirationDate ? new Date(new Date().getTime() + 10000).toISOString() : undefined,
-      revocation: options.revocation ? { id: 'urn:uuid:004aadf4-8e1a-4450-905b-6039179f52da' } : undefined,
+      expirationDate: options?.exirationDate ? new Date(new Date().getTime() + 10000).toISOString() : undefined,
+      revocation: options?.revocation ? { id: 'urn:uuid:004aadf4-8e1a-4450-905b-6039179f52da' } : undefined,
     }),
     issuer,
     documentLoader,
@@ -441,7 +442,7 @@ const expectToBeInvalidWith = <T>(res: Validatied<T>, ...errors: ErrorConfig[]) 
   }
 }
 
-describe('validateVCV1', () => {
+describe('validateVCV1 [RSA]', () => {
   it('validates a valid VC', async () => {
     expect.assertions(1)
 
@@ -1165,6 +1166,34 @@ describe('validateVCV1', () => {
       })
     })
 
+    it('when jws is not provided', async () => {
+      expect.assertions(1)
+
+      const { issuer, bob } = didConfigs
+      // Issue a VC to bob
+      const vc = await createVC(
+        {
+          did: issuer.did,
+          keyId: `${issuer.did}#primary`,
+          privateKey: issuer.primaryKey.privateKey,
+        },
+        { did: bob.did },
+      )
+
+      delete vc.proof.jws
+
+      // Verify the VC
+      const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)
+
+      expectToBeInvalidWith(res, {
+        kind: 'invalid_param',
+        message:
+          'Invalid value for field "proof": The following errors have occurred:' +
+          '\ninvalid_param: Invalid value for field "jws": Expected to be typeof: "string"' +
+          '\ninvalid_param: Invalid value for field "proofValue": Expected to be typeof: "string"',
+      })
+    })
+
     it('when jws is empty', async () => {
       expect.assertions(1)
 
@@ -1205,7 +1234,9 @@ describe('validateVCV1', () => {
         { did: bob.did },
       )
 
-      vc.proof.jws = vc.proof.jws.substr(0, vc.proof.jws.length - 1)
+      if (vc.proof.jws) {
+        vc.proof.jws = vc.proof.jws.substr(0, vc.proof.jws.length - 1)
+      }
 
       // Verify the VC
       const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)
