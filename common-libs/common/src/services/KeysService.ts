@@ -176,7 +176,7 @@ export default class KeysService {
   private _validateExternalKeyType(keyType: string) {
     const SUPPORTED_EXTERNAL_KEY_TYPES = ['rsa', 'bbs']
     if (!SUPPORTED_EXTERNAL_KEY_TYPES.includes(keyType)) {
-      throw new Error(`${keyType} is not supported external key type, supported: ${SUPPORTED_EXTERNAL_KEY_TYPES}`)
+      throw new Error(`${keyType} is not supported external key type, Supprted: ${SUPPORTED_EXTERNAL_KEY_TYPES}`)
     }
   }
 
