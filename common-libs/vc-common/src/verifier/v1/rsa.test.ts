@@ -215,7 +215,6 @@ type Signer = {
   did: string
   keyId: string
   privateKey: string
-  publicKey: string
 }
 
 type Holder = {
@@ -454,7 +453,6 @@ describe('validateVCV1 [RSA]', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
     )
@@ -479,7 +477,6 @@ describe('validateVCV1 [RSA]', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
       { exirationDate: true },
@@ -501,7 +498,6 @@ describe('validateVCV1 [RSA]', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
       { revocation: true },
@@ -523,7 +519,6 @@ describe('validateVCV1 [RSA]', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
     )
@@ -550,7 +545,6 @@ describe('validateVCV1 [RSA]', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
     )
@@ -577,7 +571,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -603,7 +596,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -631,7 +623,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -658,7 +649,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -687,7 +677,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -713,7 +702,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -741,7 +729,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -769,7 +756,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -795,7 +781,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -823,7 +808,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -856,7 +840,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -889,7 +872,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -924,7 +906,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -954,7 +935,6 @@ describe('validateVCV1 [RSA]', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -981,7 +961,6 @@ describe('validateVCV1 [RSA]', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -1009,7 +988,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1042,7 +1020,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1069,7 +1046,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1096,7 +1072,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1123,7 +1098,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1150,7 +1124,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1177,7 +1150,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1204,7 +1176,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1233,7 +1204,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1260,7 +1230,6 @@ describe('validateVCV1 [RSA]', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1289,7 +1258,6 @@ describe('validateVCV1 [RSA]', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
     )
@@ -1316,7 +1284,6 @@ describe('validateVPV1', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
     )
@@ -1357,7 +1324,6 @@ describe('validateVPV1', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       {
         // Provide the short form DID here becuase VP.holder.id needs to be resolvable
@@ -1392,7 +1358,6 @@ describe('validateVPV1', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
     )
@@ -1431,7 +1396,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1468,7 +1432,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1507,7 +1470,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1545,7 +1507,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1585,7 +1546,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1627,7 +1587,6 @@ describe('validateVPV1', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -1668,7 +1627,6 @@ describe('validateVPV1', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -1715,7 +1673,6 @@ describe('validateVPV1', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -1762,7 +1719,6 @@ describe('validateVPV1', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -1809,7 +1765,6 @@ describe('validateVPV1', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -1864,7 +1819,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1901,7 +1855,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -1939,7 +1892,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: alice.did },
       )
@@ -1977,7 +1929,6 @@ describe('validateVPV1', () => {
             did: issuer.did,
             keyId: `${issuer.did}#primary`,
             privateKey: issuer.primaryKey.privateKey,
-            publicKey: issuer.primaryKey.publicKey,
           },
           { did: bob.did },
         )
@@ -2016,7 +1967,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2065,7 +2015,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2103,7 +2052,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2141,7 +2089,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2179,7 +2126,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2217,7 +2163,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2255,7 +2200,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2293,7 +2237,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2331,7 +2274,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2369,7 +2311,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2407,7 +2348,6 @@ describe('validateVPV1', () => {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
           privateKey: issuer.primaryKey.privateKey,
-          publicKey: issuer.primaryKey.publicKey,
         },
         { did: bob.did },
       )
@@ -2445,7 +2385,6 @@ describe('validateVPV1', () => {
         did: issuer.did,
         keyId: `${issuer.did}#primary`,
         privateKey: issuer.primaryKey.privateKey,
-        publicKey: issuer.primaryKey.publicKey,
       },
       { did: bob.did },
     )

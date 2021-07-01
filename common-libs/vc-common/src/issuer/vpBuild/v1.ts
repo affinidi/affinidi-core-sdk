@@ -113,7 +113,6 @@ export const buildVPV1: BuildVPV1 = async ({
         controller: holder.did,
         keyId: holder.keyId,
         privateKey: holder.privateKey,
-        publicKey: holder.publicKey,
       }),
       documentLoader: documentLoader,
       purpose: new AuthenticationProofPurpose(
