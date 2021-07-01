@@ -262,7 +262,6 @@ const createVC = async (
   options?: {
     exirationDate?: boolean
     revocation?: boolean
-    getSignSuite?: GetSignSuiteFn
   },
 ): Promise<VCV1> => {
   const signed = await buildVCV1({
@@ -314,7 +313,7 @@ const createVC = async (
     }),
     issuer,
     documentLoader,
-    getSignSuite: options?.getSignSuite ?? getSignSuite,
+    getSignSuite,
   })
 
   return signed
@@ -423,7 +422,7 @@ const createVP = async (sharer: Signer, ...vcs: VCV1<any>[]): Promise<VPV1> => {
       },
     }),
     documentLoader,
-    getSignSuite: getSignSuite,
+    getSignSuite,
     holder: sharer,
     getProofPurposeOptions: () => ({
       challenge: 'challenge',
