@@ -24,7 +24,9 @@ export type VCV1Proof = {
   created: string
   proofPurpose: 'assertionMethod'
   verificationMethod: string
-} & ({ jws: string } | { proofValue: string })
+  jws?: string
+  proofValue?: string
+}
 
 export type VCV1Revocation = {
   // id: 'urn:uuid:...' etc.
