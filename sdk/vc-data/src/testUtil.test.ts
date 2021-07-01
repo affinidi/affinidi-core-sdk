@@ -90,7 +90,6 @@ export const expandVC = async <VC extends VCV1, VCS extends VCV1Subject<any>>({
         did: didUri,
         keyId: `${didDoc.id}#primary`,
         privateKey: keys.primaryKey.privateKey,
-        publicKey: keys.primaryKey.publicKey,
       },
       documentLoader: (url) => {
         if (url.startsWith('did:')) {
