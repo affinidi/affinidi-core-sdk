@@ -101,6 +101,7 @@ export const buildVCV1: BuildVCV1 = async ({
           controller: issuer.did,
           keyId: issuer.keyId,
           privateKey: issuer.privateKey,
+          publicKey: issuer.publicKey,
         }),
         documentLoader: documentLoader,
         purpose: new AssertionProofPurpose(

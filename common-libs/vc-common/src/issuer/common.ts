@@ -5,12 +5,14 @@ export type Signer = {
   did: string
   keyId: string
   privateKey: string
+  publicKey: string
 }
 
 export type GetSignSuiteOptions = {
   controller: string
   keyId: string
   privateKey: string
+  publicKey: string
 }
 
 export type GetSignSuiteFn = (options: GetSignSuiteOptions) => any | Promise<any>
