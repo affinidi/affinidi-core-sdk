@@ -1,4 +1,4 @@
-## 1.4.0
+## 1.4.0 (2020-07-01)
 
 * Added support for "proofValue" field in "proof" entry of the VC
 * SignSuite now requires issuer's public key for signing (required by BBS+ lib)

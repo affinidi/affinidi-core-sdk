@@ -1,5 +1,4 @@
 import { BbsBlsSignature2020, Bls12381G2KeyPair } from '@mattrglobal/jsonld-signatures-bbs'
-import { VCSNamePersonV1, getVCNamePersonV1Context } from '@affinidi/vc-data'
 
 import { VCV1, GetSignSuiteFn } from '../../'
 import { validateVCV1, GetVerifySuiteFn, GetVerifierProofPurposeOptionsFn } from './'
@@ -99,20 +98,86 @@ const getVerifySuite: GetVerifySuiteFn = async ({ controller, verificationMethod
 const createVC = async (): Promise<VCV1> => {
   return buildVCV1({
     unsigned: buildVCV1Unsigned({
-      skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
+      skeleton: buildVCV1Skeleton({
         id: 'claimId:63b5d11c0d1b5566',
         credentialSubject: {
           data: {
             '@type': ['Person', 'PersonE', 'NamePerson'],
-            givenName: 'DenisUpdated',
-            familyName: 'Popov',
+            givenName: 'Jon Smith',
+            familyName: 'Jon Family-Man Smith',
           },
         },
         holder: {
           id: holderDid,
         },
         type: 'NameCredentialPersonV1',
-        context: getVCNamePersonV1Context(),
+        context: {
+          NameCredentialPersonV1: {
+            '@id': 'https://schema.affinity-project.org/NameCredentialPersonV1',
+            '@context': { '@version': 1.1, '@protected': true },
+          },
+          data: {
+            '@id': 'https://schema.affinity-project.org/data',
+            '@context': [
+              null,
+              {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                NamePerson: {
+                  '@id': 'https://schema.affinity-project.org/NamePerson',
+                  '@context': {
+                    '@version': 1.1,
+                    '@protected': true,
+                    '@vocab': 'https://schema.org/',
+                    name: 'https://schema.org/name',
+                    givenName: 'https://schema.org/givenName',
+                    fullName: 'https://schema.org/fullName',
+                  },
+                },
+                PersonE: {
+                  '@id': 'https://schema.affinity-project.org/PersonE',
+                  '@context': { '@version': 1.1, '@protected': true, '@vocab': 'https://schema.org/' },
+                },
+                OrganizationE: {
+                  '@id': 'https://schema.affinity-project.org/OrganizationE',
+                  '@context': {
+                    '@version': 1.1,
+                    '@protected': true,
+                    '@vocab': 'https://schema.org/',
+                    hasCredential: 'https://schema.org/hasCredential',
+                    industry: 'https://schema.affinity-project.org/industry',
+                    identifiers: 'https://schema.affinity-project.org/identifiers',
+                  },
+                },
+                Credential: {
+                  '@id': 'https://schema.affinity-project.org/Credential',
+                  '@context': {
+                    '@version': 1.1,
+                    '@protected': true,
+                    '@vocab': 'https://schema.org/',
+                    dateRevoked: 'https://schema.affinity-project.org/dateRevoked',
+                    recognizedBy: 'https://schema.affinity-project.org/recognizedBy',
+                  },
+                },
+                OrganizationalCredential: {
+                  '@id': 'https://schema.affinity-project.org/OrganizationalCredential',
+                  '@context': {
+                    '@version': 1.1,
+                    '@protected': true,
+                    '@vocab': 'https://schema.org/',
+                    credentialCategory: 'https://schema.affinity-project.org/credentialCategory',
+                    organizationType: 'https://schema.affinity-project.org/organizationType',
+                    goodStanding: 'https://schema.affinity-project.org/goodStanding',
+                    active: 'https://schema.affinity-project.org/active',
+                    primaryJurisdiction: 'https://schema.affinity-project.org/primaryJurisdiction',
+                    identifier: 'https://schema.org/identifier',
+                  },
+                },
+              },
+            ],
+          },
+        } as any,
       }),
       issuanceDate: '2021-03-01T07:06:35.403Z',
       expirationDate: '2031-01-16T07:06:35.337Z',
