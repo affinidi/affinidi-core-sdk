@@ -8,7 +8,7 @@ import SdkError from '../../../src/shared/SdkError'
 
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
-import { TestmailInbox } from '../../../dist/test-helpers'
+import { TestmailInbox } from '../../../src/test-helpers'
 
 const { COGNITO_PASSWORD } = testSecrets
 

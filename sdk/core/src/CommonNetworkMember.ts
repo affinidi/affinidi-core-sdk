@@ -483,7 +483,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       { isArray: false, type: 'string', isRequired: true, value: password },
     ])
 
-    const { accessToken } = await this._userManagementService.signIn(username, password)
+    const { accessToken } = await this._userManagementService.logInWithPassword(username, password)
     const { encryptedSeed } = await this._keyManagementService.pullKeyAndSeed(accessToken)
 
     return encryptedSeed
@@ -507,7 +507,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
 
     /* istanbul ignore else: code simplicity */
     if (!token) {
-      this.cognitoUserTokens = await this._userManagementService.signIn(username, password)
+      this.cognitoUserTokens = await this._userManagementService.logInWithPassword(username, password)
 
       accessToken = this.cognitoUserTokens.accessToken
     }
@@ -535,7 +535,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    return await userManagementService.signInWithEmailOrPhone(login, messageParameters)
+    return await userManagementService.initiateLogInPasswordless(login, messageParameters)
   }
 
   /**
@@ -559,7 +559,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
 
     const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
     const keyManagementService = CommonNetworkMember._createKeyManagementService(inputOptions)
-    const cognitoUserTokens = await userManagementService.completeLoginChallenge(token, confirmationCode)
+    const cognitoUserTokens = await userManagementService.completeLogInPasswordless(token, confirmationCode)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
 
@@ -617,7 +617,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    const newTokens = await userManagementService.signOut(this.cognitoUserTokens)
+    const newTokens = await userManagementService.logOut(this.cognitoUserTokens)
     this.cognitoUserTokens = newTokens
   }
 
@@ -638,7 +638,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    await userManagementService.forgotPassword(login, messageParameters)
+    await userManagementService.initiateForgotPassword(login, messageParameters)
   }
 
   /**
@@ -662,7 +662,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = this._createUserManagementService(options)
-    await userManagementService.forgotPasswordSubmit(login, confirmationCode, newPassword)
+    await userManagementService.completeForgotPassword(login, confirmationCode, newPassword)
   }
 
   /**
@@ -686,7 +686,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
 
     const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
     const keyManagementService = CommonNetworkMember._createKeyManagementService(inputOptions)
-    const cognitoUserTokens = await userManagementService.signIn(username, password)
+    const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
     return new this(encryptionKey, encryptedSeed, { ...inputOptions, cognitoUserTokens })
@@ -794,7 +794,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    return userManagementService.signUpWithEmailOrPhone(login, password, messageParameters)
+    return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
   }
 
   /**
@@ -851,7 +851,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUpForEmailOrPhone(
+    const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
     )
@@ -909,7 +909,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    const { cognitoTokens, shortPassword } = await userManagementService.confirmSignUpForEmailOrPhone(
+    const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
     )
@@ -964,9 +964,9 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
     const doesConfirmedUserExist = await userManagementService.doesConfirmedUserExist(login)
     if (doesConfirmedUserExist) {
-      return userManagementService.signInWithEmailOrPhone(login, messageParameters)
+      return userManagementService.initiateLogInPasswordless(login, messageParameters)
     } else {
-      return userManagementService.signUpWithEmailOrPhone(login, null, messageParameters)
+      return userManagementService.initiateSignUpWithEmailOrPhone(login, null, messageParameters)
     }
   }
 
@@ -1041,7 +1041,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    this.cognitoUserTokens = await userManagementService.changeUsernameAndLogin(
+    this.cognitoUserTokens = await userManagementService.initiateChangeLogin(
       this.cognitoUserTokens,
       newLogin,
       messageParameters,
@@ -1062,7 +1062,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     ])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
-    this.cognitoUserTokens = await userManagementService.confirmChangeLogin(
+    this.cognitoUserTokens = await userManagementService.completeChangeLogin(
       this.cognitoUserTokens,
       newLogin,
       confirmationCode,

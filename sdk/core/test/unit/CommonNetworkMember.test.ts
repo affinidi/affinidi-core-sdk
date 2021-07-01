@@ -24,13 +24,13 @@ import { generateTestDIDs } from '../factory/didFactory'
 import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
 import SdkError from '../../src/shared/SdkError'
 import CognitoIdentityService, {
-  CompleteLoginChallengeResult,
-  ConfirmSignUpResult,
-  ForgotPasswordConfirmResult,
-  ForgotPasswordResult,
+  CompleteForgotPasswordResult,
+  CompleteLoginPasswordlessResult,
+  CompleteSignUpResult,
+  InitiateForgotPasswordResult,
+  InitiateLoginPasswordlessResult,
+  LogInWithPasswordResult,
   ResendSignUpResult,
-  SignInResult,
-  SignInWithLoginResult,
   SignUpResult,
 } from '../../src/services/CognitoIdentityService'
 
@@ -122,9 +122,9 @@ const { registryUrl } = options
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {
   const { id: did } = opts.didDocument
 
-  sinon.stub(CognitoIdentityService.prototype, 'confirmSignUp').resolves(ConfirmSignUpResult.Success)
-  sinon.stub(CognitoIdentityService.prototype, 'trySignIn').resolves({
-    result: SignInResult.Success,
+  sinon.stub(CognitoIdentityService.prototype, 'completeSignUp').resolves(CompleteSignUpResult.Success)
+  sinon.stub(CognitoIdentityService.prototype, 'tryLogInWithPassword').resolves({
+    result: LogInWithPasswordResult.Success,
     cognitoTokens: {},
   })
   sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves(SignUpResult.Success)
@@ -263,8 +263,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.passwordlessLogin (with default SDK options)', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'signInWithEmailOrPhone').resolves({
-      result: SignInWithLoginResult.Success,
+    sinon.stub(CognitoIdentityService.prototype, 'initiateLogInPasswordless').resolves({
+      result: InitiateLoginPasswordlessResult.Success,
       token: cognitoSignInWithUsernameResponseToken,
     })
 
@@ -274,8 +274,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.completeLoginChallenge', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'completeLoginChallenge').resolves({
-      result: CompleteLoginChallengeResult.Success,
+    sinon.stub(CognitoIdentityService.prototype, 'completeLogInPasswordless').resolves({
+      result: CompleteLoginPasswordlessResult.Success,
       cognitoTokens: cognitoUserTokens,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
@@ -302,7 +302,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#signOut', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'signOut')
+    sinon.stub(CognitoIdentityService.prototype, 'logOut')
 
     const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
 
@@ -312,7 +312,9 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#forgotPassword (with default SDK options)', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'forgotPassword').resolves(ForgotPasswordResult.Success)
+    sinon
+      .stub(CognitoIdentityService.prototype, 'initiateForgotPassword')
+      .resolves(InitiateForgotPasswordResult.Success)
 
     const response = await CommonNetworkMember.forgotPassword(email, options)
 
@@ -320,7 +322,9 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#forgotPasswordSubmit (with default SDK options)', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'forgotPasswordSubmit').resolves(ForgotPasswordConfirmResult.Success)
+    sinon
+      .stub(CognitoIdentityService.prototype, 'completeForgotPassword')
+      .resolves(CompleteForgotPasswordResult.Success)
 
     const response = await CommonNetworkMember.forgotPasswordSubmit(email, confirmationCode, walletPassword, options)
 
@@ -353,7 +357,7 @@ describe('CommonNetworkMember', () => {
     const username = email
     const signUpError = { foo: 'bar' }
 
-    sinon.stub(CognitoIdentityService.prototype, 'trySignIn')
+    sinon.stub(CognitoIdentityService.prototype, 'tryLogInWithPassword')
     sinon.stub(CognitoIdentityService.prototype, 'doesConfirmedUserExist').resolves(false)
     sinon.stub(CognitoIdentityService.prototype, 'trySignUp').rejects(signUpError)
     sinon.stub(CognitoIdentityService.prototype, 'doesUnconfirmedUserExist').resolves(false)
@@ -374,9 +378,9 @@ describe('CommonNetworkMember', () => {
     const username = email
     const signUpError = { code: 'COR-7' }
 
-    sinon.stub(CognitoIdentityService.prototype, 'trySignIn')
-    sinon.stub(CognitoIdentityService.prototype, 'signInWithEmailOrPhone').resolves({
-      result: SignInWithLoginResult.Success,
+    sinon.stub(CognitoIdentityService.prototype, 'tryLogInWithPassword')
+    sinon.stub(CognitoIdentityService.prototype, 'initiateLogInPasswordless').resolves({
+      result: InitiateLoginPasswordlessResult.Success,
       token: cognitoSignInWithUsernameResponseToken,
     })
     sinon.stub(CognitoIdentityService.prototype, 'trySignUp').rejects(signUpError)
@@ -427,8 +431,8 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignIn logIn scenario', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(CognitoIdentityService.prototype, 'completeLoginChallenge').resolves({
-      result: CompleteLoginChallengeResult.Success,
+    sinon.stub(CognitoIdentityService.prototype, 'completeLogInPasswordless').resolves({
+      result: CompleteLoginPasswordlessResult.Success,
       cognitoTokens: cognitoUserTokens,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
@@ -450,8 +454,8 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignIn logIn scenario (with default SDK options)', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    sinon.stub(CognitoIdentityService.prototype, 'completeLoginChallenge').resolves({
-      result: CompleteLoginChallengeResult.Success,
+    sinon.stub(CognitoIdentityService.prototype, 'completeLogInPasswordless').resolves({
+      result: CompleteLoginPasswordlessResult.Success,
       cognitoTokens: cognitoUserTokens,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({

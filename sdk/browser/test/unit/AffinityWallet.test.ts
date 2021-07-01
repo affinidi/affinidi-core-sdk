@@ -30,7 +30,7 @@ const sdkOptions = { env: 'dev', apiKey: 'fakeApiKey' } as const
 
 const stubConfirmAuthRequests = async (opts: { walletPassword: string; encryptedSeed: string }) => {
   return {
-    confirmSignUp: sinon.stub(UserManagementService.prototype, 'confirmSignUpForEmailOrPhone').resolves({
+    confirmSignUp: sinon.stub(UserManagementService.prototype, 'completeSignUpForEmailOrPhone').resolves({
       cognitoTokens: { accessToken, idToken },
       shortPassword: opts.walletPassword,
     }),

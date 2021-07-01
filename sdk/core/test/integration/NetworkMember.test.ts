@@ -1030,7 +1030,7 @@ describe('CommonNetworkMember', () => {
     const fullOptions = getAllOptionsForEnvironment()
     const userManagementService = new UserManagementService(fullOptions)
 
-    const { idToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
+    const { idToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
 
     const decoded = jwtDecode(idToken)
 
