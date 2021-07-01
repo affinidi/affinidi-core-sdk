@@ -1294,7 +1294,6 @@ describe('validateVPV1', () => {
         did: bob.did,
         keyId: `${bob.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
-        publicKey: bob.primaryKey.publicKey,
       },
       vc,
     )
@@ -1337,7 +1336,6 @@ describe('validateVPV1', () => {
         did: bob.did,
         keyId: `${bob.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
-        publicKey: bob.primaryKey.publicKey,
       },
       vc,
     )
@@ -1368,7 +1366,6 @@ describe('validateVPV1', () => {
         did: bob.did,
         keyId: `${bob.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
-        publicKey: bob.primaryKey.publicKey,
       },
       vc,
     )
@@ -1406,7 +1403,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1442,7 +1438,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1480,7 +1475,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1517,7 +1511,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1556,7 +1549,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1597,7 +1589,6 @@ describe('validateVPV1', () => {
             did: bob.did,
             keyId: `${bob.did}#primary`,
             privateKey: bob.primaryKey.privateKey,
-            publicKey: bob.primaryKey.publicKey,
           },
           vc,
         )
@@ -1637,7 +1628,6 @@ describe('validateVPV1', () => {
             did: bob.did,
             keyId: `${bob.did}#primary`,
             privateKey: bob.primaryKey.privateKey,
-            publicKey: bob.primaryKey.publicKey,
           },
           vc,
         )
@@ -1683,7 +1673,6 @@ describe('validateVPV1', () => {
             did: bob.did,
             keyId: `${bob.did}#primary`,
             privateKey: bob.primaryKey.privateKey,
-            publicKey: bob.primaryKey.publicKey,
           },
           vc,
         )
@@ -1729,7 +1718,6 @@ describe('validateVPV1', () => {
             did: bob.did,
             keyId: `${bob.did}#primary`,
             privateKey: bob.primaryKey.privateKey,
-            publicKey: bob.primaryKey.publicKey,
           },
           vc,
         )
@@ -1775,7 +1763,6 @@ describe('validateVPV1', () => {
             did: bob.did,
             keyId: `${bob.did}#primary`,
             privateKey: bob.primaryKey.privateKey,
-            publicKey: bob.primaryKey.publicKey,
           },
           vc,
         )
@@ -1829,7 +1816,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1867,7 +1853,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1902,7 +1887,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -1939,7 +1923,6 @@ describe('validateVPV1', () => {
             did: bob.did,
             keyId: `${bob.did}#primary`,
             privateKey: bob.primaryKey.privateKey,
-            publicKey: bob.primaryKey.publicKey,
           },
           vc,
         )
@@ -1977,7 +1960,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2025,7 +2007,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2062,7 +2043,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2099,7 +2079,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2136,7 +2115,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2173,7 +2151,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2210,7 +2187,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2247,7 +2223,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2284,7 +2259,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2321,7 +2295,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2358,7 +2331,6 @@ describe('validateVPV1', () => {
           did: bob.did,
           keyId: `${bob.did}#primary`,
           privateKey: bob.primaryKey.privateKey,
-          publicKey: bob.primaryKey.publicKey,
         },
         vc,
       )
@@ -2395,7 +2367,6 @@ describe('validateVPV1', () => {
         did: bob.did,
         keyId: `${issuer.did}#primary`,
         privateKey: bob.primaryKey.privateKey,
-        publicKey: bob.primaryKey.publicKey,
       },
       vc,
     )

@@ -72,6 +72,10 @@ const documentLoader = async (url: string): Promise<any> => {
 }
 
 const getSignSuite: GetSignSuiteFn = async ({ controller, keyId, privateKey, publicKey }) => {
+  if (!publicKey) {
+    throw new Error('Public key is required for signing with BBS+')
+  }
+
   return new BbsBlsSignature2020({
     key: new Bls12381G2KeyPair({
       id: keyId,
