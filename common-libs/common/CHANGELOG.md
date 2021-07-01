@@ -1,4 +1,6 @@
-# 2.0.0-beta.1 (2020-06-29)
+# 2.0.0-beta.1 (2020-07-01)
+* Updates related to @affinidi/vc-common changes (requiring `publicKey` for `getSignSuite`)
+# 2.0.0-beta.0 (2020-06-29)
 * Improved type declarations
 * Breaking changes
   * `KeysService.getSigningKey` and `getKey` made private. Use one of the following alternatives instead:
