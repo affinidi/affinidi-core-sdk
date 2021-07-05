@@ -109,7 +109,7 @@ const createVC = async (): Promise<VCV1> => {
           data: {
             '@type': ['Person', 'PersonE', 'NamePerson'],
             givenName: 'Jon Smith',
-            familyName: 'Jon Family-Man Smith',
+            fullName: 'Jon Family-Man Smith',
           },
         },
         holder: {
