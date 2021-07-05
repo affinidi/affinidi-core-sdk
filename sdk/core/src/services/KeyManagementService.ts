@@ -94,13 +94,13 @@ export default class KeyManagementService {
    */
   public async reencryptSeed(accessToken: string, keyParams: KeyParams, backupUpdatedSeed: boolean) {
     const encryptionKey = await this._pullEncryptionKey(accessToken)
-    const { fullSeedHex } = KeysService.decryptSeed(keyParams.encryptedSeed, keyParams.password)
+    const { seedHexWithMethod } = KeysService.decryptSeed(keyParams.encryptedSeed, keyParams.password)
     const encryptionKeyBuffer = KeysService.normalizePassword(encryptionKey)
-    const updatedEncryptedSeed = await KeysService.encryptSeed(fullSeedHex, encryptionKeyBuffer)
+    const updatedEncryptedSeed = await KeysService.encryptSeed(seedHexWithMethod, encryptionKeyBuffer)
 
     if (backupUpdatedSeed) {
-      const { fullSeedHex } = KeysService.decryptSeed(updatedEncryptedSeed, encryptionKey)
-      await this.pullEncryptionKeyAndStoreEncryptedSeed(accessToken, fullSeedHex)
+      const { seedHexWithMethod } = KeysService.decryptSeed(updatedEncryptedSeed, encryptionKey)
+      await this.pullEncryptionKeyAndStoreEncryptedSeed(accessToken, seedHexWithMethod)
     }
 
     return { encryptionKey, updatedEncryptedSeed }
