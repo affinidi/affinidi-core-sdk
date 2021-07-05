@@ -138,11 +138,19 @@ const validateVCProofStructure = genValidateFn<VCV1Proof>({
   proofValue: async (value, data) => data.jws !== undefined || isNonEmptyString(value, data),
 })
 
-const isValidVCProof = (
-  documentLoader: DocumentLoader,
-  getVerifySuite: GetVerifySuiteFn,
-  getProofPurposeOptions?: GetVerifierProofPurposeOptionsFn,
-): Validator => async (value, data) => {
+type IsValidVCProof = (options: {
+  documentLoader: DocumentLoader
+  getVerifySuite: GetVerifySuiteFn
+  getProofPurposeOptions?: GetVerifierProofPurposeOptionsFn
+  compactProof?: boolean
+}) => Validator
+
+const isValidVCProof: IsValidVCProof = ({
+  documentLoader,
+  getVerifySuite,
+  getProofPurposeOptions,
+  compactProof,
+}): Validator => async (value, data) => {
   try {
     let suite
     try {
@@ -172,7 +180,7 @@ const isValidVCProof = (
       suite: suite,
       documentLoader,
       purpose: new AssertionProofPurpose(purposeOptions || {}),
-      compactProof: false,
+      compactProof,
     })
 
     if (res.verified) {
@@ -267,10 +275,12 @@ export const validateVCV1 = ({
   documentLoader,
   getVerifySuite,
   getProofPurposeOptions,
+  compactProof = false,
 }: {
   documentLoader: DocumentLoader
   getVerifySuite: GetVerifySuiteFn
   getProofPurposeOptions?: GetVerifierProofPurposeOptionsFn
+  compactProof?: boolean
 }) =>
   genValidateFn<VCV1>({
     '@context': isValidContext,
@@ -291,7 +301,10 @@ export const validateVCV1 = ({
     ],
     credentialSubject: isValid(validateCredentialSubject),
     revocation: isUndefinedOr(isValid(validateRevocation)),
-    proof: [isValid(validateVCProofStructure), isValidVCProof(documentLoader, getVerifySuite, getProofPurposeOptions)],
+    proof: [
+      isValid(validateVCProofStructure),
+      isValidVCProof({ documentLoader, getVerifySuite, getProofPurposeOptions, compactProof }),
+    ],
   })
 
 export const validateVPV1 = ({
