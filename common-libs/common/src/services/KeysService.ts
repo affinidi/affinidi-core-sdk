@@ -234,12 +234,14 @@ export default class KeysService {
     validateDidMethodSupported(didMethod)
     const seedHex = seed.toString('hex')
     const seedHexWithMethod = `${seedHex}++${didMethod}`
+    let fullSeedHex = seedHexWithMethod
 
     if (base64EncodedKeys) {
+      fullSeedHex = `${fullSeedHex}++${base64EncodedKeys}`
       externalKeys = JSON.parse(encode.decode(base64EncodedKeys))
     }
 
-    return { seed, didMethod, seedHexWithMethod, externalKeys }
+    return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex }
   }
 
   static normalizePassword(password: string): Buffer | undefined {
