@@ -149,12 +149,14 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
     didMethod,
     seedHexWithMethod: `${seedHex}++${didMethod}`,
     externalKeys: null,
+    fullSeedHex: null,
   })
   sinon.stub(KeysService.prototype, 'decryptSeed').returns({
     seed: Buffer.from(opts.seedHex),
     didMethod,
     seedHexWithMethod: `${seedHex}++${didMethod}`,
     externalKeys: null,
+    fullSeedHex: null,
   })
   saveSeedStub = sinon.stub(KeyStorageApiService.prototype, 'storeMyKey')
 }

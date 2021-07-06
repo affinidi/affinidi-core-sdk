@@ -11,5 +11,6 @@ export const stubDecryptSeed = (seedHex: string, didMethod: 'jolo' | 'elem') => 
     didMethod,
     seedHexWithMethod,
     externalKeys: null,
+    fullSeedHex: null,
   })
 }

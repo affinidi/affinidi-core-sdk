@@ -79,6 +79,7 @@ type BuildVCV1 = <S extends VCV1SubjectBaseMA>(opts: {
   getSignSuite: GetSignSuiteFn
   documentLoader: DocumentLoader
   getProofPurposeOptions?: GetAssertionProofPurposeOptionsFn
+  compactProof?: boolean
 }) => Promise<VCV1<S>>
 
 export const buildVCV1: BuildVCV1 = async ({
@@ -87,6 +88,7 @@ export const buildVCV1: BuildVCV1 = async ({
   getSignSuite,
   documentLoader,
   getProofPurposeOptions,
+  compactProof = false,
 }) => {
   validateId(unsigned.id, true)
 
@@ -112,7 +114,7 @@ export const buildVCV1: BuildVCV1 = async ({
               })
             : {},
         ),
-        compactProof: false,
+        compactProof,
       },
     )
 
