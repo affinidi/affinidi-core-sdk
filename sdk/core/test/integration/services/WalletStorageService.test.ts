@@ -37,7 +37,7 @@ describe('WalletStorageService', () => {
   })
 
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {
-    const { accessToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
+    const { accessToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
 
     const keyStorageApiService = new KeyStorageApiService(options)
 
@@ -55,7 +55,7 @@ describe('WalletStorageService', () => {
 
   it('#pullEncryptedSeed', async () => {
     const keyManagementService = createKeyManagementService()
-    const { accessToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
+    const { accessToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
     const { encryptedSeed } = await keyManagementService.pullKeyAndSeed(accessToken)
 
     expect(encryptedSeed).to.exist
@@ -67,7 +67,7 @@ describe('WalletStorageService', () => {
     let responseError
 
     try {
-      const { accessToken } = await userManagementService.signIn(nonExistingUser, cognitoPassword)
+      const { accessToken } = await userManagementService.logInWithPassword(nonExistingUser, cognitoPassword)
       await keyManagementService.pullKeyAndSeed(accessToken)
     } catch (error) {
       responseError = error
@@ -77,7 +77,7 @@ describe('WalletStorageService', () => {
   })
 
   it.skip('#storeEncryptedSeed throws exception WHEN userId does not exists', async () => {
-    const { accessToken } = await userManagementService.signIn(nonExistingUser, cognitoPassword)
+    const { accessToken } = await userManagementService.logInWithPassword(nonExistingUser, cognitoPassword)
 
     const keyStorageApiService = new KeyStorageApiService(options)
 
@@ -95,13 +95,13 @@ describe('WalletStorageService', () => {
   it('#adminDeleteUnconfirmedUser', async () => {
     const email = 'different_test_user_to_delete@example.com'
 
-    await userManagementService.signUpWithEmailOrPhone(email, password, null)
+    await userManagementService.initiateSignUpWithEmailOrPhone(email, password, null)
     const keyStorageApiService = new KeyStorageApiService(options)
     await keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizeUsername(email) })
     let responseError
 
     try {
-      await userManagementService.signIn(email, password)
+      await userManagementService.logInWithPassword(email, password)
     } catch (error) {
       responseError = error
     }
@@ -151,7 +151,7 @@ describe('WalletStorageService', () => {
   })
 
   it('#getCredentialOffer', async () => {
-    const { idToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
+    const { idToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
 
     const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
@@ -169,7 +169,7 @@ describe('WalletStorageService', () => {
   it('#getSignedCredential', async () => {
     const keyManagementService = createKeyManagementService()
 
-    const { accessToken, idToken } = await userManagementService.signIn(cognitoUsername, cognitoPassword)
+    const { accessToken, idToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
     const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
     const networkMember = new CommonNetworkMember(encryptionKey, encryptedSeed, options)

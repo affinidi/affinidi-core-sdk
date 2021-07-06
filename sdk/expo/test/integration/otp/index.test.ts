@@ -6,7 +6,6 @@ import { expect } from 'chai'
 import { __dangerous } from '@affinidi/wallet-core-sdk'
 import { TestmailInbox } from '@affinidi/wallet-core-sdk/dist/test-helpers'
 import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
-import { SdkError } from '@affinidi/wallet-core-sdk/dist/shared'
 import { AffinityWallet } from '../../../src/AffinityWallet'
 
 import { getOptionsForEnvironment } from '../../helpers'
@@ -31,7 +30,7 @@ const credentialShareRequestToken =
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
 const options: __dangerous.SdkOptions = getOptionsForEnvironment()
-const { env, keyStorageUrl } = getOptionsForEnvironment(true)
+const { env } = getOptionsForEnvironment(true)
 
 const messageParameters: MessageParameters = {
   message: `Your verification code is: {{CODE}}`,
@@ -44,7 +43,6 @@ const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
 }
 
 const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.expo' })
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
@@ -149,242 +147,5 @@ describe('AffinityWallet [OTP]', () => {
 
     expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
     expect(result.commonNetworkMember.credentials).to.be.empty
-  })
-
-  it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
-    const inbox = createInbox()
-
-    await AffinityWallet.signUp(inbox.email, null, options, messageParameters)
-    await waitForOtpCode(inbox) // ignore first OTP code
-
-    const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signInToken)
-    const signInCode = await waitForOtpCode(inbox)
-
-    const { isNew, commonNetworkMember } = await AffinityWallet.confirmSignIn(signInToken, signInCode, options)
-
-    expect(isNew).to.eql(true)
-    expect(commonNetworkMember).to.be.instanceOf(AffinityWallet)
-  })
-
-  it('#signIn and #confirmSignIn WHEN user exists', async () => {
-    const inbox = createInbox()
-
-    const signUpToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signUpToken)
-    const sighUpCode = await waitForOtpCode(inbox)
-
-    const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, sighUpCode, options)
-    await commonNetworkMember.signOut(options)
-
-    const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signInToken)
-    const signInCode = await waitForOtpCode(inbox)
-
-    const result = await AffinityWallet.confirmSignIn(signInToken, signInCode, options)
-
-    expect(result.isNew).to.eql(false)
-    expect(result.commonNetworkMember).to.be.instanceOf(AffinityWallet)
-  })
-
-  it('#signUp (without password), change password, change username', async () => {
-    const inbox = createInbox()
-
-    const signUpToken = await AffinityWallet.signUp(inbox.email, null, options, messageParameters)
-    checkIsString(signUpToken)
-    const signUpCode = await waitForOtpCode(inbox)
-
-    let commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
-    expect(commonNetworkMember).to.be.instanceOf(AffinityWallet)
-
-    await commonNetworkMember.signOut(options)
-
-    await AffinityWallet.forgotPassword(inbox.email, options, messageParameters)
-    const forgotPasswordCode = await waitForOtpCode(inbox)
-
-    const password = COGNITO_PASSWORD
-    await AffinityWallet.forgotPasswordSubmit(inbox.email, forgotPasswordCode, password, options)
-
-    commonNetworkMember = await AffinityWallet.fromLoginAndPassword(inbox.email, password, options)
-    expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
-
-    const newInbox = createInbox()
-
-    await commonNetworkMember.changeUsername(newInbox.email, options, messageParameters)
-    const changeUsernameCode = await waitForOtpCode(newInbox)
-
-    await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
-    await commonNetworkMember.signOut(options)
-
-    commonNetworkMember = await AffinityWallet.fromLoginAndPassword(newInbox.email, password, options)
-    expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
-  })
-
-  it('#signUp, #resendSignUpConfirmationCode, then #signIn (with 1 wrong OTP)', async () => {
-    const inbox = createInbox()
-    const password = COGNITO_PASSWORD
-
-    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
-    checkIsString(signUpToken)
-    await waitForOtpCode(inbox) // skip first OTP code
-
-    await AffinityWallet.resendSignUpConfirmationCode(inbox.email, options, messageParameters)
-    const signUpCode = await waitForOtpCode(inbox)
-
-    const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
-    expect(commonNetworkMember).to.be.instanceOf(AffinityWallet)
-
-    await commonNetworkMember.signOut(options)
-
-    const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signInToken)
-
-    let confirmSignInOptions = {
-      ...options,
-      keyStorageUrl,
-    }
-
-    let error
-    try {
-      await AffinityWallet.confirmSignIn(signInToken, '123456', confirmSignInOptions)
-    } catch (err) {
-      error = err
-    }
-
-    expect(error).to.be.instanceOf(SdkError)
-    expect(error.name).to.eql('COR-5')
-
-    const signInCode = await waitForOtpCode(inbox)
-
-    confirmSignInOptions = {
-      ...options,
-      keyStorageUrl,
-    }
-
-    await AffinityWallet.confirmSignIn(signInToken, signInCode, confirmSignInOptions)
-  })
-
-  it('#signIn throws `COR-13 / 400` when OTP is wrong 3 times', async () => {
-    const inbox = createInbox()
-    const password = COGNITO_PASSWORD
-
-    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
-    checkIsString(signUpToken)
-    const signUpOtp = await waitForOtpCode(inbox)
-
-    const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpOtp, options)
-    expect(commonNetworkMember).to.be.instanceOf(AffinityWallet)
-
-    await commonNetworkMember.signOut(options)
-
-    const loginToken = await AffinityWallet.signIn(inbox.email, options)
-    checkIsString(loginToken)
-
-    let error
-    try {
-      await AffinityWallet.confirmSignIn(loginToken, '123456', options)
-    } catch (err) {
-      error = err
-    }
-
-    expect(error).to.exist
-    expect(error.name).to.eql('COR-5')
-
-    try {
-      await AffinityWallet.confirmSignIn(loginToken, '123456', options)
-    } catch (err) {
-      error = err
-    }
-
-    expect(error).to.exist
-    expect(error.name).to.eql('COR-5')
-
-    try {
-      await AffinityWallet.confirmSignIn(loginToken, '123456', options)
-    } catch (err) {
-      error = err
-    }
-
-    expect(error).to.exist
-    expect(error.name).to.eql('COR-13')
-  })
-
-  it.skip('Throws `COR-17 / 400` when OTP is expired', async () => {
-    const inbox = createInbox()
-
-    const signUpToken = await AffinityWallet.signUp(inbox.email, null, options, messageParameters)
-    checkIsString(signUpToken)
-    const signUpCode = await waitForOtpCode(inbox)
-
-    await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
-
-    const loginToken = await AffinityWallet.passwordlessLogin(inbox.email, options, messageParameters)
-    const loginCode = await waitForOtpCode(inbox)
-
-    await wait(180_000) // wait for 3 minutes before completing the login challenge
-
-    let error
-    try {
-      await AffinityWallet.completeLoginChallenge(loginToken, loginCode, options)
-    } catch (err) {
-      error = err
-    }
-
-    expect(error).to.be.instanceOf(SdkError)
-    expect(error.name).to.eql('COR-17')
-  }).timeout(200_000)
-
-  it('#confirmSignIn logIn scenario', async () => {
-    const inbox = createInbox()
-    const password = COGNITO_PASSWORD
-
-    const token = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
-    checkIsString(token)
-    const signUpOtp = await waitForOtpCode(inbox)
-
-    const commonNetworkMember = await AffinityWallet.confirmSignUp(token, signUpOtp, options)
-    await commonNetworkMember.signOut(options)
-
-    const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signInToken)
-    const signInCode = await waitForOtpCode(inbox)
-
-    const confirmSignInOptions = {
-      ...options,
-      issueSignupCredential: false,
-    }
-
-    const result = await AffinityWallet.confirmSignIn(signInToken, signInCode, confirmSignInOptions)
-
-    expect(result.isNew).to.be.false
-    expect(result.commonNetworkMember.did).to.exist
-    expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
-  })
-
-  it('#confirmSignIn logIn scenario with issueVC flag set', async () => {
-    const inbox = createInbox()
-    const password = COGNITO_PASSWORD
-
-    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
-    checkIsString(signUpToken)
-    const signUpCode = await waitForOtpCode(inbox)
-
-    const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
-    await commonNetworkMember.signOut(options)
-
-    const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signInToken)
-    const signInCode = await waitForOtpCode(inbox)
-
-    const confirmSignInOptions = {
-      ...options,
-      issueSignupCredential: true,
-    }
-
-    const result = await AffinityWallet.confirmSignIn(signInToken, signInCode, confirmSignInOptions)
-
-    expect(result.isNew).to.be.false
-    expect(result.commonNetworkMember.did).to.exist
-    expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
   })
 })

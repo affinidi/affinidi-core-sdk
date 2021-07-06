@@ -42,7 +42,7 @@ const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.browser' })
+const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.node' })
 
 function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
