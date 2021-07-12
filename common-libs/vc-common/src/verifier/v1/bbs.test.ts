@@ -101,6 +101,7 @@ const getVerifySuite: GetVerifySuiteFn = async ({ controller, verificationMethod
 
 const createVC = async (): Promise<VCV1> => {
   return buildVCV1({
+    compactProof: true,
     unsigned: buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton({
         id: 'claimId:63b5d11c0d1b5566',
@@ -108,80 +109,83 @@ const createVC = async (): Promise<VCV1> => {
           data: {
             '@type': ['Person', 'PersonE', 'NamePerson'],
             givenName: 'Jon Smith',
-            familyName: 'Jon Family-Man Smith',
+            fullName: 'Jon Family-Man Smith',
           },
         },
         holder: {
           id: holderDid,
         },
         type: 'NameCredentialPersonV1',
-        context: {
-          NameCredentialPersonV1: {
-            '@id': 'https://schema.affinity-project.org/NameCredentialPersonV1',
-            '@context': { '@version': 1.1, '@protected': true },
+        context: [
+          'https://w3id.org/security/bbs/v1',
+          {
+            NameCredentialPersonV1: {
+              '@id': 'https://schema.affinity-project.org/NameCredentialPersonV1',
+              '@context': { '@version': 1.1, '@protected': true },
+            },
+            data: {
+              '@id': 'https://schema.affinity-project.org/data',
+              '@context': [
+                null,
+                {
+                  '@version': 1.1,
+                  '@protected': true,
+                  '@vocab': 'https://schema.org/',
+                  NamePerson: {
+                    '@id': 'https://schema.affinity-project.org/NamePerson',
+                    '@context': {
+                      '@version': 1.1,
+                      '@protected': true,
+                      '@vocab': 'https://schema.org/',
+                      name: 'https://schema.org/name',
+                      givenName: 'https://schema.org/givenName',
+                      fullName: 'https://schema.org/fullName',
+                    },
+                  },
+                  PersonE: {
+                    '@id': 'https://schema.affinity-project.org/PersonE',
+                    '@context': { '@version': 1.1, '@protected': true, '@vocab': 'https://schema.org/' },
+                  },
+                  OrganizationE: {
+                    '@id': 'https://schema.affinity-project.org/OrganizationE',
+                    '@context': {
+                      '@version': 1.1,
+                      '@protected': true,
+                      '@vocab': 'https://schema.org/',
+                      hasCredential: 'https://schema.org/hasCredential',
+                      industry: 'https://schema.affinity-project.org/industry',
+                      identifiers: 'https://schema.affinity-project.org/identifiers',
+                    },
+                  },
+                  Credential: {
+                    '@id': 'https://schema.affinity-project.org/Credential',
+                    '@context': {
+                      '@version': 1.1,
+                      '@protected': true,
+                      '@vocab': 'https://schema.org/',
+                      dateRevoked: 'https://schema.affinity-project.org/dateRevoked',
+                      recognizedBy: 'https://schema.affinity-project.org/recognizedBy',
+                    },
+                  },
+                  OrganizationalCredential: {
+                    '@id': 'https://schema.affinity-project.org/OrganizationalCredential',
+                    '@context': {
+                      '@version': 1.1,
+                      '@protected': true,
+                      '@vocab': 'https://schema.org/',
+                      credentialCategory: 'https://schema.affinity-project.org/credentialCategory',
+                      organizationType: 'https://schema.affinity-project.org/organizationType',
+                      goodStanding: 'https://schema.affinity-project.org/goodStanding',
+                      active: 'https://schema.affinity-project.org/active',
+                      primaryJurisdiction: 'https://schema.affinity-project.org/primaryJurisdiction',
+                      identifier: 'https://schema.org/identifier',
+                    },
+                  },
+                },
+              ],
+            },
           },
-          data: {
-            '@id': 'https://schema.affinity-project.org/data',
-            '@context': [
-              null,
-              {
-                '@version': 1.1,
-                '@protected': true,
-                '@vocab': 'https://schema.org/',
-                NamePerson: {
-                  '@id': 'https://schema.affinity-project.org/NamePerson',
-                  '@context': {
-                    '@version': 1.1,
-                    '@protected': true,
-                    '@vocab': 'https://schema.org/',
-                    name: 'https://schema.org/name',
-                    givenName: 'https://schema.org/givenName',
-                    fullName: 'https://schema.org/fullName',
-                  },
-                },
-                PersonE: {
-                  '@id': 'https://schema.affinity-project.org/PersonE',
-                  '@context': { '@version': 1.1, '@protected': true, '@vocab': 'https://schema.org/' },
-                },
-                OrganizationE: {
-                  '@id': 'https://schema.affinity-project.org/OrganizationE',
-                  '@context': {
-                    '@version': 1.1,
-                    '@protected': true,
-                    '@vocab': 'https://schema.org/',
-                    hasCredential: 'https://schema.org/hasCredential',
-                    industry: 'https://schema.affinity-project.org/industry',
-                    identifiers: 'https://schema.affinity-project.org/identifiers',
-                  },
-                },
-                Credential: {
-                  '@id': 'https://schema.affinity-project.org/Credential',
-                  '@context': {
-                    '@version': 1.1,
-                    '@protected': true,
-                    '@vocab': 'https://schema.org/',
-                    dateRevoked: 'https://schema.affinity-project.org/dateRevoked',
-                    recognizedBy: 'https://schema.affinity-project.org/recognizedBy',
-                  },
-                },
-                OrganizationalCredential: {
-                  '@id': 'https://schema.affinity-project.org/OrganizationalCredential',
-                  '@context': {
-                    '@version': 1.1,
-                    '@protected': true,
-                    '@vocab': 'https://schema.org/',
-                    credentialCategory: 'https://schema.affinity-project.org/credentialCategory',
-                    organizationType: 'https://schema.affinity-project.org/organizationType',
-                    goodStanding: 'https://schema.affinity-project.org/goodStanding',
-                    active: 'https://schema.affinity-project.org/active',
-                    primaryJurisdiction: 'https://schema.affinity-project.org/primaryJurisdiction',
-                    identifier: 'https://schema.org/identifier',
-                  },
-                },
-              },
-            ],
-          },
-        } as any,
+        ] as any,
       }),
       issuanceDate: '2021-03-01T07:06:35.403Z',
       expirationDate: '2031-01-16T07:06:35.337Z',
@@ -224,6 +228,7 @@ describe('validateVCV1 [BBS+]', () => {
       documentLoader,
       getVerifySuite,
       getProofPurposeOptions,
+      compactProof: true,
     })(vc)
 
     if (res.kind === 'invalid') {
@@ -239,7 +244,7 @@ describe('validateVCV1 [BBS+]', () => {
 
       vc.proof.proofValue = ''
 
-      const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)
+      const res = await validateVCV1({ documentLoader, getVerifySuite, compactProof: true })(vc)
 
       expectToBeInvalidWith(res, {
         kind: 'invalid_param',
@@ -253,7 +258,7 @@ describe('validateVCV1 [BBS+]', () => {
 
       delete vc.proof.proofValue
 
-      const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)
+      const res = await validateVCV1({ documentLoader, getVerifySuite, compactProof: true })(vc)
 
       expectToBeInvalidWith(res, {
         kind: 'invalid_param',
