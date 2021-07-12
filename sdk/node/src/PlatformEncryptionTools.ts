@@ -68,7 +68,7 @@ export class PlatformEncryptionTools {
 
     return serializedEncryptedDataString
   }
-  
+
   async signWithPrivateKey(privateKeyBuffer: Buffer, data: string) {
     const dataBuffer = Buffer.from(data)
 
