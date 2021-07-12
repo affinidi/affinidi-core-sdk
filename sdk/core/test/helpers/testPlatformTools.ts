@@ -8,4 +8,7 @@ export const testPlatformTools: IPlatformEncryptionTools = {
   encryptByPublicKey: async () => {
     throw new Error('not implemented')
   },
+  signWithPrivateKey: async () => {
+    throw new Error('not implemented')
+  },
 }
