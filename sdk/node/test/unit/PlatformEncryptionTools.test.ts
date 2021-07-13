@@ -59,4 +59,14 @@ describe('PlatformEncryptionTools', () => {
 
     expect(result).to.true
   })
+
+  it('#computePersonalHashWithSameArguments', async () => {
+    const keysService = new KeysService(encryptedSeed, password)
+    const privateKey = keysService.getOwnPrivateKey()
+
+    const firstHash = await platformEncryptionTools.computePersonalHash(privateKey, signedCredential.id)
+    const secondHash = await platformEncryptionTools.computePersonalHash(privateKey, signedCredential.id)
+
+    expect(firstHash).to.eql(secondHash)
+  })
 })
