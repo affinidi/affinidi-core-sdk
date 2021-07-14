@@ -31,7 +31,7 @@ describe('UserManagementService', () => {
     username = email
 
     const userManagementService = new UserManagementService(constructorOptions)
-    const accessToken = await userManagementService.signIn(username, password)
+    const accessToken = await userManagementService.logInWithPassword(username, password)
 
     expect(accessToken).to.exist
   })
@@ -44,7 +44,7 @@ describe('UserManagementService', () => {
     let responseError
 
     try {
-      await userManagementService.signIn(username, password)
+      await userManagementService.logInWithPassword(username, password)
     } catch (error) {
       responseError = error
     }
@@ -87,7 +87,7 @@ describe('UserManagementService', () => {
     let responseError
 
     try {
-      await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
+      await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
     } catch (error) {
       responseError = error
     }

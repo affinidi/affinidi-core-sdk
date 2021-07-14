@@ -11,6 +11,10 @@ if (!fetch) {
 import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
 import { CognitoUserTokens, MessageParameters } from '../dto'
 
+type Response<TResult, TSuccessResult extends TResult, TAdditionalSuccessFields> =
+  | { result: Exclude<TResult, TSuccessResult> }
+  | ({ result: TSuccessResult } & TAdditionalSuccessFields)
+
 export enum SignUpResult {
   Success,
   UnconfirmedUsernameExists,
@@ -18,42 +22,48 @@ export enum SignUpResult {
   InvalidPassword,
 }
 
-export enum SignInResult {
+export enum LogInWithPasswordResult {
   Success,
   UserNotFound,
   UserNotConfirmed,
 }
 
-type SignInResponse =
-  | { result: Exclude<SignInResult, SignInResult.Success> }
-  | { result: SignInResult.Success; cognitoTokens: CognitoUserTokens }
+type LogInWithPasswordResponse = Response<
+  LogInWithPasswordResult,
+  LogInWithPasswordResult.Success,
+  { cognitoTokens: CognitoUserTokens }
+>
 
-export enum CompleteLoginChallengeResult {
+export enum CompleteLoginPasswordlessResult {
   Success,
   AttemptsExceeded,
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
 }
 
-type CompleteLoginChallengeResponse =
-  | { result: Exclude<CompleteLoginChallengeResult, CompleteLoginChallengeResult.Success> }
-  | { result: CompleteLoginChallengeResult.Success; cognitoTokens: CognitoUserTokens }
+type CompleteLoginPasswordlessResponse = Response<
+  CompleteLoginPasswordlessResult,
+  CompleteLoginPasswordlessResult.Success,
+  { cognitoTokens: CognitoUserTokens }
+>
 
-export enum SignInWithLoginResult {
+export enum InitiateLoginPasswordlessResult {
   Success,
   UserNotFound,
 }
 
-type SignInWithLoginResponse =
-  | { result: Exclude<SignInWithLoginResult, SignInWithLoginResult.Success> }
-  | { result: SignInWithLoginResult.Success; token: string }
+type InitiateLoginPasswordlessResponse = Response<
+  InitiateLoginPasswordlessResult,
+  InitiateLoginPasswordlessResult.Success,
+  { token: string }
+>
 
-export enum ForgotPasswordResult {
+export enum InitiateForgotPasswordResult {
   Success,
   UserNotFound,
 }
 
-export enum ForgotPasswordConfirmResult {
+export enum CompleteForgotPasswordResult {
   Success,
   UserNotFound,
   ConfirmationCodeExpired,
@@ -67,19 +77,19 @@ export enum ResendSignUpResult {
   UserAlreadyConfirmed,
 }
 
-export enum ConfirmSignUpResult {
+export enum CompleteSignUpResult {
   Success,
   UserNotFound,
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
 }
 
-export enum ChangeUsernameResult {
+export enum InitiateChangeLoginResult {
   Success,
-  NewUsernameExists,
+  NewLoginExists,
 }
 
-export enum ConfirmChangeUsernameResult {
+export enum CompleteChangeLoginResult {
   Success,
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
@@ -105,6 +115,9 @@ const getAdditionalParameters = (messageParameters?: MessageParameters) => {
 const tempSession: Record<string, string> = {}
 const INVALID_PASSWORD = '1'
 
+/**
+ * @internal
+ */
 @profile()
 export default class CognitoIdentityService {
   private readonly clientId
@@ -118,29 +131,32 @@ export default class CognitoIdentityService {
     })
   }
 
-  async trySignIn(login: string, password: string): Promise<SignInResponse> {
+  async tryLogInWithPassword(login: string, password: string): Promise<LogInWithPasswordResponse> {
     try {
       const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, login, password)
       const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
 
       return {
-        result: SignInResult.Success,
+        result: LogInWithPasswordResult.Success,
         cognitoTokens,
       }
     } catch (error) {
       switch (error.code) {
         case 'UserNotFoundException':
-          return { result: SignInResult.UserNotFound }
+          return { result: LogInWithPasswordResult.UserNotFound }
         case 'UserNotConfirmedException':
-          return { result: SignInResult.UserNotConfirmed }
+          return { result: LogInWithPasswordResult.UserNotConfirmed }
         default:
           throw error
       }
     }
   }
 
-  async signInWithEmailOrPhone(login: string, messageParameters?: MessageParameters): Promise<SignInWithLoginResponse> {
+  async initiateLogInPasswordless(
+    login: string,
+    messageParameters?: MessageParameters,
+  ): Promise<InitiateLoginPasswordlessResponse> {
     const params = {
       ...this._getCognitoAuthParametersObject(AuthFlow.Custom, login),
       ...getAdditionalParameters(messageParameters),
@@ -149,17 +165,17 @@ export default class CognitoIdentityService {
     try {
       const response = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
       const token = JSON.stringify(response)
-      return { result: SignInWithLoginResult.Success, token }
+      return { result: InitiateLoginPasswordlessResult.Success, token }
     } catch (error) {
       if (error.code === 'UserNotFoundException') {
-        return { result: SignInWithLoginResult.UserNotFound }
+        return { result: InitiateLoginPasswordlessResult.UserNotFound }
       } else {
         throw error
       }
     }
   }
 
-  async completeLoginChallenge(token: string, confirmationCode: string): Promise<CompleteLoginChallengeResponse> {
+  async completeLogInPasswordless(token: string, confirmationCode: string): Promise<CompleteLoginPasswordlessResponse> {
     const { Session: tokenSession, ChallengeName, ChallengeParameters } = JSON.parse(token)
 
     const { USERNAME } = ChallengeParameters
@@ -182,19 +198,19 @@ export default class CognitoIdentityService {
       // NOTE: respondToAuthChallenge for the custom auth flow do not return
       //       error, but if response has `ChallengeName` - it is an error
       if (result.ChallengeName === 'CUSTOM_CHALLENGE') {
-        return { result: CompleteLoginChallengeResult.ConfirmationCodeWrong }
+        return { result: CompleteLoginPasswordlessResult.ConfirmationCodeWrong }
       }
 
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(result.AuthenticationResult)
-      return { result: CompleteLoginChallengeResult.Success, cognitoTokens }
+      return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens }
     } catch (error) {
       // NOTE: Incorrect username or password. -> Corresponds to custom auth challenge
       //       error when OTP was entered incorrectly 3 times.
       if (error.message === 'Incorrect username or password.') {
-        return { result: CompleteLoginChallengeResult.AttemptsExceeded }
+        return { result: CompleteLoginPasswordlessResult.AttemptsExceeded }
       } else if (error.code === 'NotAuthorizedException') {
         // Throw when OTP is expired (3 min)
-        return { result: CompleteLoginChallengeResult.ConfirmationCodeExpired }
+        return { result: CompleteLoginPasswordlessResult.ConfirmationCodeExpired }
       } else {
         throw error
       }
@@ -205,11 +221,14 @@ export default class CognitoIdentityService {
   //       refresh tokens issued to a user. The user's current access and
   //       Id tokens remain valid until their expiry.
   //       Access and Id tokens expire one hour after they are issued.
-  async signOut(AccessToken: string): Promise<void> {
+  async logOut(AccessToken: string): Promise<void> {
     this.cognitoidentityserviceprovider.globalSignOut({ AccessToken })
   }
 
-  async forgotPassword(login: string, messageParameters?: MessageParameters): Promise<ForgotPasswordResult> {
+  async initiateForgotPassword(
+    login: string,
+    messageParameters?: MessageParameters,
+  ): Promise<InitiateForgotPasswordResult> {
     const params = {
       ClientId: this.clientId,
       Username: login,
@@ -219,21 +238,21 @@ export default class CognitoIdentityService {
     try {
       await this.cognitoidentityserviceprovider.forgotPassword(params).promise()
 
-      return ForgotPasswordResult.Success
+      return InitiateForgotPasswordResult.Success
     } catch (error) {
       if (error.code === 'UserNotFoundException') {
-        return ForgotPasswordResult.UserNotFound
+        return InitiateForgotPasswordResult.UserNotFound
       } else {
         throw error
       }
     }
   }
 
-  async forgotPasswordSubmit(
+  async completeForgotPassword(
     login: string,
     confirmationCode: string,
     password: string,
-  ): Promise<ForgotPasswordConfirmResult> {
+  ): Promise<CompleteForgotPasswordResult> {
     const params = {
       ClientId: this.clientId,
       Password: password,
@@ -244,17 +263,17 @@ export default class CognitoIdentityService {
     try {
       await this.cognitoidentityserviceprovider.confirmForgotPassword(params).promise()
 
-      return ForgotPasswordConfirmResult.Success
+      return CompleteForgotPasswordResult.Success
     } catch (error) {
       switch (error.code) {
         case 'ExpiredCodeException':
-          return ForgotPasswordConfirmResult.ConfirmationCodeExpired
+          return CompleteForgotPasswordResult.ConfirmationCodeExpired
         case 'UserNotFoundException':
-          return ForgotPasswordConfirmResult.UserNotFound
+          return CompleteForgotPasswordResult.UserNotFound
         case 'CodeMismatchException':
-          return ForgotPasswordConfirmResult.ConfirmationCodeWrong
+          return CompleteForgotPasswordResult.ConfirmationCodeWrong
         case 'InvalidPasswordException':
-          return ForgotPasswordConfirmResult.NewPasswordInvalid
+          return CompleteForgotPasswordResult.NewPasswordInvalid
         default:
           throw error
       }
@@ -318,10 +337,10 @@ export default class CognitoIdentityService {
     }
   }
 
-  async confirmSignUp(
+  async completeSignUp(
     usernameWithAttributes: UsernameWithAttributes,
     confirmationCode: string,
-  ): Promise<ConfirmSignUpResult> {
+  ): Promise<CompleteSignUpResult> {
     const params = {
       ClientId: this.clientId,
       Username: usernameWithAttributes.normalizedUsername,
@@ -330,15 +349,15 @@ export default class CognitoIdentityService {
 
     try {
       await this.cognitoidentityserviceprovider.confirmSignUp(params).promise()
-      return ConfirmSignUpResult.Success
+      return CompleteSignUpResult.Success
     } catch (error) {
       switch (error.code) {
         case 'UserNotFoundException':
-          return ConfirmSignUpResult.UserNotFound
+          return CompleteSignUpResult.UserNotFound
         case 'ExpiredCodeException':
-          return ConfirmSignUpResult.ConfirmationCodeExpired
+          return CompleteSignUpResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
-          return ConfirmSignUpResult.ConfirmationCodeWrong
+          return CompleteSignUpResult.ConfirmationCodeWrong
         default:
           throw error
       }
@@ -351,16 +370,16 @@ export default class CognitoIdentityService {
     return this.cognitoidentityserviceprovider.changePassword(params).promise()
   }
 
-  async changeUsernameAndLogin(
+  async initiateChangeAttributes(
     accessToken: string,
     usernameWithAttributes: UsernameWithAttributes,
     messageParameters?: MessageParameters,
-  ): Promise<ChangeUsernameResult> {
+  ): Promise<InitiateChangeLoginResult> {
     const usernameExists = await this._userExists(usernameWithAttributes.normalizedUsername)
     const loginExists = await this._userExists(usernameWithAttributes.login)
 
     if (usernameExists || loginExists) {
-      return ChangeUsernameResult.NewUsernameExists
+      return InitiateChangeLoginResult.NewLoginExists
     }
 
     const params = {
@@ -370,14 +389,14 @@ export default class CognitoIdentityService {
     }
 
     await this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
-    return ChangeUsernameResult.Success
+    return InitiateChangeLoginResult.Success
   }
 
-  private async _confirmChangeUsername(
+  private async _completeChangeAttributes(
     accessToken: string,
     attributeName: string,
     confirmationCode: string,
-  ): Promise<ConfirmChangeUsernameResult> {
+  ): Promise<CompleteChangeLoginResult> {
     const params = {
       AccessToken: accessToken,
       AttributeName: attributeName,
@@ -386,41 +405,35 @@ export default class CognitoIdentityService {
 
     try {
       await this.cognitoidentityserviceprovider.verifyUserAttribute(params).promise()
-      return ConfirmChangeUsernameResult.Success
+      return CompleteChangeLoginResult.Success
     } catch (error) {
       switch (error.code) {
         case 'ExpiredCodeException':
-          return ConfirmChangeUsernameResult.ConfirmationCodeExpired
+          return CompleteChangeLoginResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
-          return ConfirmChangeUsernameResult.ConfirmationCodeWrong
+          return CompleteChangeLoginResult.ConfirmationCodeWrong
         default:
           throw error
       }
     }
   }
 
-  async _confirmChangeUsernameToEmail(
-    accessToken: string,
-    confirmationCode: string,
-  ): Promise<ConfirmChangeUsernameResult> {
-    return this._confirmChangeUsername(accessToken, 'email', confirmationCode)
+  async completeChangeEmail(accessToken: string, confirmationCode: string): Promise<CompleteChangeLoginResult> {
+    return this._completeChangeAttributes(accessToken, 'email', confirmationCode)
   }
 
-  async _confirmChangeUsernameToPhone(
-    accessToken: string,
-    confirmationCode: string,
-  ): Promise<ConfirmChangeUsernameResult> {
-    return this._confirmChangeUsername(accessToken, 'phone_number', confirmationCode)
+  async completeChangePhone(accessToken: string, confirmationCode: string): Promise<CompleteChangeLoginResult> {
+    return this._completeChangeAttributes(accessToken, 'phone_number', confirmationCode)
   }
 
   async doesUnconfirmedUserExist(normalizedUsername: string): Promise<boolean> {
-    const { isUnconfirmed } = await this._signInWithInvalidPassword(normalizedUsername)
+    const { isUnconfirmed } = await this._logInWithInvalidPassword(normalizedUsername)
 
     return isUnconfirmed
   }
 
   async doesConfirmedUserExist(normalizedUsername: string): Promise<boolean> {
-    const { userExists, isUnconfirmed } = await this._signInWithInvalidPassword(normalizedUsername)
+    const { userExists, isUnconfirmed } = await this._logInWithInvalidPassword(normalizedUsername)
 
     return userExists && !isUnconfirmed
   }
@@ -460,7 +473,7 @@ export default class CognitoIdentityService {
     return { accessToken, idToken, refreshToken, expiresIn }
   }
 
-  public async signInWithRefreshToken(token: string): Promise<CognitoUserTokens> {
+  public async logInWithRefreshToken(token: string): Promise<CognitoUserTokens> {
     const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, token)
     console.log('params', params)
     const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
@@ -475,13 +488,13 @@ export default class CognitoIdentityService {
     ]
   }
 
-  private async _signInWithInvalidPassword(username: string) {
+  private async _logInWithInvalidPassword(username: string) {
     try {
-      const response = await this.trySignIn(username, INVALID_PASSWORD)
+      const response = await this.tryLogInWithPassword(username, INVALID_PASSWORD)
       switch (response.result) {
-        case SignInResult.UserNotFound:
+        case LogInWithPasswordResult.UserNotFound:
           return { userExists: false, isUnconfirmed: false }
-        case SignInResult.UserNotConfirmed:
+        case LogInWithPasswordResult.UserNotConfirmed:
           return { userExists: true, isUnconfirmed: true }
         default:
           return { userExists: true, isUnconfirmed: false }
@@ -492,7 +505,7 @@ export default class CognitoIdentityService {
   }
 
   private async _userExists(username: string): Promise<boolean> {
-    const { userExists } = await this._signInWithInvalidPassword(username)
+    const { userExists } = await this._logInWithInvalidPassword(username)
 
     return userExists
   }

@@ -8,4 +8,7 @@ export const testPlatformTools: IPlatformEncryptionTools = {
   encryptByPublicKey: async () => {
     throw new Error('not implemented')
   },
+  computePersonalHash: async () => {
+    throw new Error('not implemented')
+  },
 }

@@ -8,15 +8,15 @@ import { SessionStorageService } from '../shared/sessionStorageHandler'
 import { randomBytes } from '../shared/randomBytes'
 import KeyStorageApiService from './KeyStorageApiService'
 import CognitoIdentityService, {
-  ChangeUsernameResult,
-  CompleteLoginChallengeResult,
-  ConfirmChangeUsernameResult,
-  ConfirmSignUpResult,
-  ForgotPasswordConfirmResult,
-  ForgotPasswordResult,
+  CompleteChangeLoginResult,
+  CompleteForgotPasswordResult,
+  CompleteLoginPasswordlessResult,
+  CompleteSignUpResult,
+  InitiateChangeLoginResult,
+  InitiateForgotPasswordResult,
+  InitiateLoginPasswordlessResult,
+  LogInWithPasswordResult,
   ResendSignUpResult,
-  SignInResult,
-  SignInWithLoginResult,
   SignUpResult,
   UsernameWithAttributes,
 } from './CognitoIdentityService'
@@ -40,6 +40,17 @@ type ConstructorOptions = {
   accessApiKey: string
 }
 
+/**
+ * @internal
+ * Terminology:
+ *   - sign up: create a new account
+ *   - log in: log into existing account
+ *   - log out: the opposite of "log in", closes the current session
+ *   - sign in: (passwordless only) sign up if account does not exists, or log in to existing account
+ * For passwordless operation:
+ *   - initiate: first step (some of these methods return tokens)
+ *   - complete: second step (requires confirmation code, and a token if one was returned on first step)
+ */
 @profile()
 export default class UserManagementService {
   private _cognitoIdentityService
@@ -86,11 +97,11 @@ export default class UserManagementService {
     const password = normalizeShortPassword(inputPassword, username)
     await this._signUp(usernameWithAttributes, password, messageParameters)
     await this._keyStorageApiService.adminConfirmUser({ username })
-    const cognitoTokens = await this.signIn(username, inputPassword)
+    const cognitoTokens = await this.logInWithPassword(username, inputPassword)
     return cognitoTokens
   }
 
-  async signUpWithEmailOrPhone(login: string, inputPassword: string, messageParameters: MessageParameters) {
+  async initiateSignUpWithEmailOrPhone(login: string, inputPassword: string, messageParameters: MessageParameters) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
 
@@ -102,46 +113,46 @@ export default class UserManagementService {
     return signUpToken
   }
 
-  private async _confirmSignUp(login: string, confirmationCode: string) {
+  private async _completeSignUp(login: string, confirmationCode: string) {
     const usernameWithAttributes = this._buildUserAttributes(login)
     const { normalizedUsername } = usernameWithAttributes
-    const result = await this._cognitoIdentityService.confirmSignUp(usernameWithAttributes, confirmationCode)
+    const result = await this._cognitoIdentityService.completeSignUp(usernameWithAttributes, confirmationCode)
     switch (result) {
-      case ConfirmSignUpResult.Success:
+      case CompleteSignUpResult.Success:
         return
-      case ConfirmSignUpResult.ConfirmationCodeExpired:
+      case CompleteSignUpResult.ConfirmationCodeExpired:
         throw new SdkError('COR-2', { username: normalizedUsername, confirmationCode })
-      case ConfirmSignUpResult.ConfirmationCodeWrong:
+      case CompleteSignUpResult.ConfirmationCodeWrong:
         throw new SdkError('COR-5', { username: normalizedUsername, confirmationCode })
-      case ConfirmSignUpResult.UserNotFound:
+      case CompleteSignUpResult.UserNotFound:
         throw new SdkError('COR-4', { username: normalizedUsername })
       default:
         throw new DefaultResultError(result)
     }
   }
 
-  async signIn(login: string, shortPassword: string) {
+  async logInWithPassword(login: string, shortPassword: string) {
     const password = normalizeShortPassword(shortPassword, login)
-    const response = await this._cognitoIdentityService.trySignIn(login, password)
+    const response = await this._cognitoIdentityService.tryLogInWithPassword(login, password)
 
     switch (response.result) {
-      case SignInResult.Success:
+      case LogInWithPasswordResult.Success:
         this._sessionStorageService.saveUserTokens(response.cognitoTokens)
         return response.cognitoTokens
-      case SignInResult.UserNotConfirmed:
+      case LogInWithPasswordResult.UserNotConfirmed:
         throw new SdkError('COR-16', { username: login })
-      case SignInResult.UserNotFound:
+      case LogInWithPasswordResult.UserNotFound:
         throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(response)
     }
   }
 
-  async confirmSignUpForEmailOrPhone(token: string, confirmationCode: string) {
+  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
     const [login, shortPassword] = token.split('::')
     this._loginShouldBeEmailOrPhoneNumber(login)
-    await this._confirmSignUp(login, confirmationCode)
-    const cognitoTokens = await this.signIn(login, shortPassword)
+    await this._completeSignUp(login, confirmationCode)
+    const cognitoTokens = await this.logInWithPassword(login, shortPassword)
     return { cognitoTokens, shortPassword }
   }
 
@@ -155,7 +166,7 @@ export default class UserManagementService {
     return this._cognitoIdentityService.doesConfirmedUserExist(normalizedUsername)
   }
 
-  async signInWithEmailOrPhone(login: string, messageParameters?: MessageParameters): Promise<string> {
+  async initiateLogInPasswordless(login: string, messageParameters?: MessageParameters): Promise<string> {
     this._loginShouldBeEmailOrPhoneNumber(login)
 
     if (messageParameters) {
@@ -167,28 +178,28 @@ export default class UserManagementService {
       })
     }
 
-    const response = await this._cognitoIdentityService.signInWithEmailOrPhone(login, messageParameters)
+    const response = await this._cognitoIdentityService.initiateLogInPasswordless(login, messageParameters)
     switch (response.result) {
-      case SignInWithLoginResult.Success:
+      case InitiateLoginPasswordlessResult.Success:
         return response.token
-      case SignInWithLoginResult.UserNotFound:
+      case InitiateLoginPasswordlessResult.UserNotFound:
         throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(response)
     }
   }
 
-  async completeLoginChallenge(token: string, confirmationCode: string): Promise<CognitoUserTokens> {
-    const response = await this._cognitoIdentityService.completeLoginChallenge(token, confirmationCode)
+  async completeLogInPasswordless(token: string, confirmationCode: string): Promise<CognitoUserTokens> {
+    const response = await this._cognitoIdentityService.completeLogInPasswordless(token, confirmationCode)
     switch (response.result) {
-      case CompleteLoginChallengeResult.Success:
+      case CompleteLoginPasswordlessResult.Success:
         this._sessionStorageService.saveUserTokens(response.cognitoTokens)
         return response.cognitoTokens
-      case CompleteLoginChallengeResult.AttemptsExceeded:
+      case CompleteLoginPasswordlessResult.AttemptsExceeded:
         throw new SdkError('COR-13')
-      case CompleteLoginChallengeResult.ConfirmationCodeExpired:
+      case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
         throw new SdkError('COR-17', { confirmationCode })
-      case CompleteLoginChallengeResult.ConfirmationCodeWrong:
+      case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
         throw new SdkError('COR-5')
       default:
         throw new DefaultResultError(response)
@@ -197,7 +208,7 @@ export default class UserManagementService {
 
   private async refreshUserSessionTokens(refreshToken: string) {
     try {
-      const cognitoTokens = await this._cognitoIdentityService.signInWithRefreshToken(refreshToken)
+      const cognitoTokens = await this._cognitoIdentityService.logInWithRefreshToken(refreshToken)
       this._sessionStorageService.saveUserTokens(cognitoTokens)
       return cognitoTokens
     } catch (error) {
@@ -205,7 +216,7 @@ export default class UserManagementService {
     }
   }
 
-  async signOut(cognitoTokens: CognitoUserTokens) {
+  async logOut(cognitoTokens: CognitoUserTokens) {
     let newTokens = cognitoTokens
 
     if (cognitoTokens) {
@@ -219,7 +230,7 @@ export default class UserManagementService {
 
       const { accessToken } = newTokens
 
-      await this._cognitoIdentityService.signOut(accessToken)
+      await this._cognitoIdentityService.logOut(accessToken)
     }
 
     this._sessionStorageService.clearUserTokens()
@@ -227,32 +238,32 @@ export default class UserManagementService {
     return newTokens
   }
 
-  async forgotPassword(login: string, messageParameters?: MessageParameters): Promise<void> {
+  async initiateForgotPassword(login: string, messageParameters?: MessageParameters): Promise<void> {
     this._loginShouldBeEmailOrPhoneNumber(login)
-    const result = await this._cognitoIdentityService.forgotPassword(login, messageParameters)
+    const result = await this._cognitoIdentityService.initiateForgotPassword(login, messageParameters)
     switch (result) {
-      case ForgotPasswordResult.Success:
+      case InitiateForgotPasswordResult.Success:
         return
-      case ForgotPasswordResult.UserNotFound:
+      case InitiateForgotPasswordResult.UserNotFound:
         throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
     }
   }
 
-  async forgotPasswordSubmit(login: string, confirmationCode: string, newPassword: string): Promise<void> {
+  async completeForgotPassword(login: string, confirmationCode: string, newPassword: string): Promise<void> {
     this._loginShouldBeEmailOrPhoneNumber(login)
-    const result = await this._cognitoIdentityService.forgotPasswordSubmit(login, confirmationCode, newPassword)
+    const result = await this._cognitoIdentityService.completeForgotPassword(login, confirmationCode, newPassword)
     switch (result) {
-      case ForgotPasswordConfirmResult.Success:
+      case CompleteForgotPasswordResult.Success:
         return
-      case ForgotPasswordConfirmResult.ConfirmationCodeExpired:
+      case CompleteForgotPasswordResult.ConfirmationCodeExpired:
         throw new SdkError('COR-2', { username: login, confirmationCode })
-      case ForgotPasswordConfirmResult.ConfirmationCodeWrong:
+      case CompleteForgotPasswordResult.ConfirmationCodeWrong:
         throw new SdkError('COR-5', { username: login, confirmationCode })
-      case ForgotPasswordConfirmResult.NewPasswordInvalid:
+      case CompleteForgotPasswordResult.NewPasswordInvalid:
         throw new SdkError('COR-6')
-      case ForgotPasswordConfirmResult.UserNotFound:
+      case CompleteForgotPasswordResult.UserNotFound:
         throw new SdkError('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
@@ -290,21 +301,17 @@ export default class UserManagementService {
     })
   }
 
-  async changeUsernameAndLogin(
-    cognitoTokens: CognitoUserTokens,
-    newLogin: string,
-    messageParameters?: MessageParameters,
-  ) {
+  async initiateChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, messageParameters?: MessageParameters) {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
-      const result = await this._cognitoIdentityService.changeUsernameAndLogin(
+      const result = await this._cognitoIdentityService.initiateChangeAttributes(
         accessToken,
         this._buildUserAttributes(newLogin),
         messageParameters,
       )
       switch (result) {
-        case ChangeUsernameResult.Success:
+        case InitiateChangeLoginResult.Success:
           return
-        case ChangeUsernameResult.NewUsernameExists:
+        case InitiateChangeLoginResult.NewLoginExists:
           throw new SdkError('COR-7', { username: newLogin })
         default:
           throw new DefaultResultError(result)
@@ -312,20 +319,20 @@ export default class UserManagementService {
     })
   }
 
-  async confirmChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, confirmationCode: string) {
+  async completeChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, confirmationCode: string) {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
       this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const { isEmailValid } = validateUsername(newLogin)
       const result = isEmailValid
-        ? await this._cognitoIdentityService._confirmChangeUsernameToEmail(accessToken, confirmationCode)
-        : await this._cognitoIdentityService._confirmChangeUsernameToPhone(accessToken, confirmationCode)
+        ? await this._cognitoIdentityService.completeChangeEmail(accessToken, confirmationCode)
+        : await this._cognitoIdentityService.completeChangePhone(accessToken, confirmationCode)
 
       switch (result) {
-        case ConfirmChangeUsernameResult.Success:
+        case CompleteChangeLoginResult.Success:
           return
-        case ConfirmChangeUsernameResult.ConfirmationCodeExpired:
+        case CompleteChangeLoginResult.ConfirmationCodeExpired:
           throw new SdkError('COR-2', { confirmationCode })
-        case ConfirmChangeUsernameResult.ConfirmationCodeWrong:
+        case CompleteChangeLoginResult.ConfirmationCodeWrong:
           throw new SdkError('COR-5', { confirmationCode })
         default:
           throw new DefaultResultError(result)

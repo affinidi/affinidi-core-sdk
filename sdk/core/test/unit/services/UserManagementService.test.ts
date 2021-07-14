@@ -82,7 +82,7 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.signInWithEmailOrPhone(email)
+      const response = await userManagementService.initiateLogInPasswordless(email)
 
       expect(response).to.exist
     })
@@ -97,7 +97,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signInWithEmailOrPhone(email)
+        await userManagementService.initiateLogInPasswordless(email)
       } catch (error) {
         responseError = error
       }
@@ -118,7 +118,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signInWithEmailOrPhone(email)
+        await userManagementService.initiateLogInPasswordless(email)
       } catch (error) {
         responseError = error
       }
@@ -137,7 +137,7 @@ describe('UserManagementService', () => {
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.completeLoginChallenge(token, otp)
+      const response = await userManagementService.completeLogInPasswordless(token, otp)
 
       expect(response.accessToken).to.exist
     })
@@ -154,7 +154,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.completeLoginChallenge(token, otp)
+        await userManagementService.completeLogInPasswordless(token, otp)
       } catch (error) {
         responseError = error
       }
@@ -179,7 +179,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.completeLoginChallenge(token, otp)
+        await userManagementService.completeLogInPasswordless(token, otp)
       } catch (error) {
         responseError = error
       }
@@ -204,7 +204,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.completeLoginChallenge(token, otp)
+        await userManagementService.completeLogInPasswordless(token, otp)
       } catch (error) {
         responseError = error
       }
@@ -220,7 +220,7 @@ describe('UserManagementService', () => {
       stubMethod(FORGOT_PASSWORD, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.forgotPassword(email)
+      const response = await userManagementService.initiateForgotPassword(email)
       expect(response).to.not.exist
     })
 
@@ -234,7 +234,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPassword(email)
+        await userManagementService.initiateForgotPassword(email)
       } catch (error) {
         responseError = error
       }
@@ -255,7 +255,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPassword(email)
+        await userManagementService.initiateForgotPassword(email)
       } catch (error) {
         responseError = error
       }
@@ -271,7 +271,7 @@ describe('UserManagementService', () => {
       stubMethod(CONFIRM_FORGOT_PASSWORD, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+      const response = await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
       expect(response).to.not.exist
     })
 
@@ -281,7 +281,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPasswordSubmit(username, confirmationCode, 'newPassword')
+        await userManagementService.completeForgotPassword(username, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -302,7 +302,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -326,7 +326,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -349,7 +349,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -373,7 +373,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -394,7 +394,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.forgotPasswordSubmit(email, confirmationCode, 'newPassword')
+        await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
       } catch (error) {
         responseError = error
       }
@@ -525,7 +525,7 @@ describe('UserManagementService', () => {
       stubMethod(SIGN_UP, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
+      const response = await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
 
       expect(response).to.exist
     })
@@ -541,7 +541,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
+        await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -566,7 +566,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
+        await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -587,7 +587,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.signUpWithEmailOrPhone(email, 'password', undefined)
+        await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
       } catch (error) {
         responseError = error
       }
@@ -604,7 +604,7 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.confirmSignUpForEmailOrPhone(`${email}::`, confirmationCode)
+      const response = await userManagementService.completeSignUpForEmailOrPhone(`${email}::`, confirmationCode)
 
       expect(response).to.exist
     })
@@ -619,7 +619,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
+        await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -644,7 +644,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
+        await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -669,7 +669,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
+        await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -694,7 +694,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmSignUpForEmailOrPhone(email, confirmationCode)
+        await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -715,7 +715,7 @@ describe('UserManagementService', () => {
         stubMethod(UPDATE_USER_ATTRIBUTES, {})
 
         const userManagementService = new UserManagementService(options)
-        const response = await userManagementService.changeUsernameAndLogin(cognitoTokens, email)
+        const response = await userManagementService.initiateChangeLogin(cognitoTokens, email)
 
         expect(response).to.exist
       })
@@ -733,7 +733,7 @@ describe('UserManagementService', () => {
         })
 
         const userManagementService = new UserManagementService(options)
-        const response = await userManagementService.changeUsernameAndLogin(cognitoTokens, email, messageParameters)
+        const response = await userManagementService.initiateChangeLogin(cognitoTokens, email, messageParameters)
         expect(response).to.exist
       })
     })
@@ -747,7 +747,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.changeUsernameAndLogin(cognitoTokens, email)
+        await userManagementService.initiateChangeLogin(cognitoTokens, email)
       } catch (error) {
         responseError = error
       }
@@ -764,7 +764,7 @@ describe('UserManagementService', () => {
       stubMethod(VERIFY_USER_ATTRIBUTE, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
+      const response = await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)
 
       expect(response).to.exist
     })
@@ -779,7 +779,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
+        await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -800,7 +800,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
+        await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }
@@ -821,7 +821,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.confirmChangeLogin(cognitoTokens, email, confirmationCode)
+        await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)
       } catch (error) {
         responseError = error
       }

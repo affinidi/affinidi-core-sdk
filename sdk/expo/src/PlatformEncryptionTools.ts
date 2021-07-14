@@ -71,6 +71,15 @@ export class PlatformEncryptionTools {
 
     return serializedEncryptedDataString
   }
+
+  async computePersonalHash(privateKeyBuffer: Buffer, data: string) {
+    const dataBuffer = Buffer.from(data)
+
+    const signatureBuffer = await eccrypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
+    const signature = signatureBuffer.toString('hex')
+
+    return signature
+  }
 }
 
 const platformEncryptionTools = new PlatformEncryptionTools()

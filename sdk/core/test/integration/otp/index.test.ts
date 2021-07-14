@@ -8,7 +8,7 @@ import SdkError from '../../../src/shared/SdkError'
 
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
-import { TestmailInbox } from '../../../dist/test-helpers'
+import { TestmailInbox } from '../../../src/test-helpers'
 
 const { COGNITO_PASSWORD } = testSecrets
 
@@ -37,7 +37,7 @@ function checkIsCommonNetworkMember(value: CommonNetworkMember | unknown): asser
 }
 
 describe('CommonNetworkMember [OTP]', () => {
-  it('#signIn should send email with OTP code using the provided template (message parameters)', async () => {
+  it('sends email with OTP code using the provided template (message parameters) when #signIn is called', async () => {
     const inbox = createInbox()
 
     const timestamp = String(Date.now())
@@ -73,7 +73,7 @@ describe('CommonNetworkMember [OTP]', () => {
       optionsWithSkippedBackupEncryptedSeed,
     )
 
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     const { password, accessToken, encryptedSeed } = commonNetworkMember
 
@@ -87,10 +87,10 @@ describe('CommonNetworkMember [OTP]', () => {
     const signInCode2 = await waitForOtpCode(inbox)
 
     const result = await CommonNetworkMember.confirmSignIn(signInToken2, signInCode2, options)
-    expect(result.commonNetworkMember).to.be.an.instanceOf(CommonNetworkMember)
+    checkIsCommonNetworkMember(result.commonNetworkMember)
   })
 
-  it('#signIn and #confirmSignIn WHEN user is UNCONFIRMED', async () => {
+  it('registers new user after confirmation code from the first call to #signIn was ignored; #signUpConfirm returns { isNew: true }', async () => {
     const inbox = createInbox()
 
     await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
@@ -103,10 +103,10 @@ describe('CommonNetworkMember [OTP]', () => {
     const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
 
     expect(isNew).to.be.true
-    expect(commonNetworkMember).to.be.an.instanceOf(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
   })
 
-  it('#signUp with password, change email, forgot password, login with password', async () => {
+  it('changes forgotten password after email was changed for user registered with email and password', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
@@ -126,7 +126,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     await commonNetworkMember.signOut(options)
 
@@ -137,10 +137,10 @@ describe('CommonNetworkMember [OTP]', () => {
     await CommonNetworkMember.forgotPasswordSubmit(newInbox.email, forgotPasswordCode, newPassword, options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, newPassword, options)
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
   })
 
-  it('#signUp without password, forget password, change email, login with password', async () => {
+  it('changes forgotten password after email was changed for user registered with email but without password', async () => {
     const inbox = createInbox()
 
     const signUpToken = await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
@@ -159,7 +159,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await CommonNetworkMember.forgotPasswordSubmit(inbox.email, forgotPasswordCode, password, options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, password, options)
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     const newInbox = createInbox()
 
@@ -170,16 +170,16 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
   })
 
-  it('#signUp, #resendSignUpConfirmationCode, #confirmSignIn with 1 wrong OTP', async () => {
+  it('confirms signing up with resent confirmation code; allows to sign in with a correct confirmation code after 1 call to #confirmSignIn with wrong confirmation code', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
     const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
     checkIsString(signUpToken)
-    await waitForOtpCode(inbox) // ignore first OTP code
+    await waitForOtpCode(inbox) // skip first OTP code
 
     await CommonNetworkMember.resendSignUpConfirmationCode(inbox.email, options, messageParameters)
     const newSignUpCode = await waitForOtpCode(inbox)
@@ -205,10 +205,10 @@ describe('CommonNetworkMember [OTP]', () => {
     const signInCode = await waitForOtpCode(inbox)
 
     const result = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
-    expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+    checkIsCommonNetworkMember(result.commonNetworkMember)
   })
 
-  it('#confirmSignIn should throw "COR-13" after 3 consecutive wrong OTPs', async () => {
+  it('throws COR-13 at the third call to #confirmSignIn with wrong confirmation code', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
@@ -253,7 +253,7 @@ describe('CommonNetworkMember [OTP]', () => {
     expect(error.name).to.eql('COR-13')
   })
 
-  it('#signUp with username, add email, login with new email, change password, login with new password', async () => {
+  it('logs in with email and new password after adding email to username-only account and changing password', async () => {
     const username = generateUsername()
     const password = COGNITO_PASSWORD
 
@@ -269,7 +269,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, password, options)
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     const newPassword = `${password}_updated`
 
@@ -277,11 +277,12 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.signOut(options)
 
     commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, newPassword, options)
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsCommonNetworkMember(commonNetworkMember)
   })
 
-  describe('[with existing user]', () => {
+  describe('for confirmed user registered with email and no password', () => {
     let inbox: TestmailInbox
+    let originalNetworkMember: CommonNetworkMember
 
     before(async () => {
       inbox = createInbox()
@@ -290,10 +291,10 @@ describe('CommonNetworkMember [OTP]', () => {
       checkIsString(signUpToken)
       const signUpCode = await waitForOtpCode(inbox)
 
-      await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
+      originalNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
     })
 
-    it('#signIn and #confirmSignIn', async () => {
+    it('logs user in without password using #signIn and #confirmSignIn', async () => {
       const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
       checkIsString(signInToken)
       const signInCode = await waitForOtpCode(inbox)
@@ -302,9 +303,10 @@ describe('CommonNetworkMember [OTP]', () => {
 
       expect(result.isNew).to.be.false
       expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+      expect(result.commonNetworkMember.did).to.exist
     })
 
-    it('#passwordlessLogin should send email with OTP code using the provided template (message parameters)', async () => {
+    it('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
       const timestamp = String(Date.now())
       await CommonNetworkMember.passwordlessLogin(inbox.email, options, {
         message: `Your verification code is: {{CODE}} #${timestamp}`,
@@ -321,15 +323,16 @@ describe('CommonNetworkMember [OTP]', () => {
       expect(messageTimestamp).to.equal(timestamp)
     })
 
-    it('#passwordlessLogin and #completeLoginChallenge', async () => {
+    it('logs user in without password using #passwordlessLogin and #completeLoginChallenge', async () => {
       const loginToken = await CommonNetworkMember.passwordlessLogin(inbox.email, options, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
 
       const commonNetworkMember = await CommonNetworkMember.completeLoginChallenge(loginToken, loginCode, options)
       expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+      expect(commonNetworkMember.did).to.exist
     })
 
-    it.skip('#completeLoginChallenge should throw "COR-17" for expired OTP', async () => {
+    it.skip('throws COR-13 at attempt to call #completeLoginChallenge with expired confirmation code', async () => {
       const loginToken = await CommonNetworkMember.passwordlessLogin(inbox.email, options, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
 
@@ -346,7 +349,7 @@ describe('CommonNetworkMember [OTP]', () => {
       expect(error.name).to.eql('COR-17')
     }).timeout(200_000)
 
-    it('#signUp should throw "COR-7" error when signing user with already existing email', async () => {
+    it('throws "COR-7" at attempt to call #signUp with the same email and some password', async () => {
       const password = COGNITO_PASSWORD
 
       let error
@@ -360,7 +363,7 @@ describe('CommonNetworkMember [OTP]', () => {
       expect(error.name).to.eql('COR-7')
     })
 
-    it('#changeUsername should throw "COR-7" error when when changing email to an already existing one', async () => {
+    it('throws "COR-7" at attempt to change email of the newly registered (with email) account to the one used at the registration of the existing account', async () => {
       const newInbox = createInbox()
       const password = COGNITO_PASSWORD
 
@@ -380,6 +383,35 @@ describe('CommonNetworkMember [OTP]', () => {
 
       expect(error).to.be.instanceOf(SdkError)
       expect(error.name).to.eql('COR-7')
+    })
+
+    it('allows to change email after password was reset for user registered with email', async () => {
+      await originalNetworkMember.signOut(options)
+
+      const newInbox = createInbox()
+      const newPassword = COGNITO_PASSWORD
+
+      {
+        await CommonNetworkMember.forgotPassword(inbox.email, options, messageParameters)
+        const forgotPasswordCode = await waitForOtpCode(inbox)
+        await CommonNetworkMember.forgotPasswordSubmit(inbox.email, forgotPasswordCode, newPassword, options)
+      }
+
+      {
+        const commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, newPassword, options)
+        checkIsCommonNetworkMember(commonNetworkMember)
+
+        await commonNetworkMember.changeUsername(newInbox.email, options, messageParameters)
+        const changeUsernameOtp = await waitForOtpCode(newInbox)
+
+        await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameOtp, options)
+        await commonNetworkMember.signOut(options)
+      }
+
+      {
+        const commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, newPassword, options)
+        checkIsCommonNetworkMember(commonNetworkMember)
+      }
     })
   })
 })

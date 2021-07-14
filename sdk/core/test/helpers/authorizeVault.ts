@@ -20,6 +20,7 @@ const decryptSeedResponse: ReturnType<typeof KeysService.decryptSeed> = {
   didMethod,
   seedHexWithMethod,
   externalKeys: null,
+  fullSeedHex: null,
 }
 
 export const authorizeVault = async () => {
