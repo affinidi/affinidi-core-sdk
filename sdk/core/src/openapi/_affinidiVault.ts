@@ -1,3 +1,4 @@
+/* eslint-disable */
 export default {
     "components": {
         "examples": {},
@@ -43,7 +44,8 @@ export default {
                     "credentialTypes",
                     "credentialId"
                 ],
-                "type": "object"
+                "type": "object",
+                "additionalProperties": false
             },
             "SearchEncryptedVcOutput": {
                 "properties": {
@@ -57,18 +59,36 @@ export default {
                 "required": [
                     "credentials"
                 ],
-                "type": "object"
+                "type": "object",
+                "additionalProperties": false
             },
             "EncryptedVcOutput": {
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/EncryptedVc"
+                "properties": {
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
                     },
-                    {
-                        "properties": {},
-                        "type": "object"
+                    "payload": {
+                        "type": "string"
+                    },
+                    "credentialTypes": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "credentialId": {
+                        "type": "string"
                     }
-                ]
+                },
+                "required": [
+                    "createdAt",
+                    "payload",
+                    "credentialTypes",
+                    "credentialId"
+                ],
+                "type": "object",
+                "additionalProperties": false
             },
             "StoreEncryptedVcInput": {
                 "properties": {
@@ -86,7 +106,8 @@ export default {
                     "payload",
                     "credentialTypes"
                 ],
-                "type": "object"
+                "type": "object",
+                "additionalProperties": false
             }
         },
         "securitySchemes": {}
@@ -264,6 +285,9 @@ export default {
                 "operationId": "DeleteCredential",
                 "responses": {
                     "204": {
+                        "content": {
+							"application/json": {}
+						},
                         "description": "No content"
                     }
                 },
