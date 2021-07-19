@@ -1,45 +1,14 @@
-export default class SdkError extends Error {
-  private readonly _code: string
-  private readonly _context: any
-  private readonly _originalError: any
-  private readonly _httpStatusCode: any
+import { SdkError } from '@affinidi/common'
 
-  constructor(codeOrError: any, context: any = {}, originalError: any = {}) {
-    const isCode = typeof codeOrError === 'string'
-
-    const code = isCode ? codeOrError : codeOrError.code
-    const error = isCode ? SdkError.errors[code] : codeOrError
+export default class SdkErrorFromCode extends SdkError {
+  constructor(code: string, context: unknown = {}, originalError: unknown = {}) {
+    const error = SdkErrorFromCode.errors[code]
 
     if (!error) {
       throw new Error(`Invalid operation error code: ${code}`)
     }
 
-    super(error.message)
-
-    this._code = code
-    this._context = context
-    this._originalError = originalError
-    this._httpStatusCode = originalError.httpStatusCode || error.httpStatusCode
-  }
-
-  get code() {
-    return this._code
-  }
-
-  get name() {
-    return this._code
-  }
-
-  get context() {
-    return this._context
-  }
-
-  get originalError() {
-    return this._originalError
-  }
-
-  get httpStatusCode() {
-    return this._httpStatusCode
+    super({ ...error, code }, context, originalError)
   }
 
   static get errors(): any {

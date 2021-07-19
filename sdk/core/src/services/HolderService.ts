@@ -1,11 +1,10 @@
 import uniq from 'lodash.uniq'
 
-import { Affinity, JwtService, DidDocumentService, DigestService, KeysService } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
+import { Affinity, JwtService, DidDocumentService, DigestService, KeysService, profile } from '@affinidi/common'
 
-import SdkError from '../shared/SdkError'
-import { profile } from '@affinidi/common'
 import { stripParamsFromDidUrl } from '../_helpers'
+import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 
 type ConstructorOptions = {
   registryUrl: string
@@ -145,7 +144,7 @@ export default class HolderService {
       await this._affinityService.validateJWT(credentialShareResponseToken, credentialShareRequestToken, didDocument)
     } catch (error) {
       if (error.message === 'Token expired') {
-        throw new SdkError('COR-19')
+        throw new SdkErrorFromCode('COR-19')
       }
 
       throw error

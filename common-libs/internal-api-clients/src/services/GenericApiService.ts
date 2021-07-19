@@ -1,13 +1,19 @@
 import keyBy from 'lodash.keyby'
 import FetchType from 'node-fetch'
-import { profile } from '@affinidi/common'
+import { profile, SdkError } from '@affinidi/common'
 
-import SdkError from '../shared/SdkError'
-import { GenericApiSpec, ExtractAllOperationIds, ExtractRequestType, ExtractResponseType } from './SwaggerTypes'
+import {
+  GenericApiSpec,
+  ExtractAllOperationIds,
+  ExtractRequestType,
+  ExtractResponseType,
+  ExtractParametersType,
+} from './SwaggerTypes'
 
 let fetch: typeof FetchType
 
-/* istanbul ignore next */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 if (!fetch) {
   fetch = require('node-fetch')
 }
@@ -15,12 +21,31 @@ if (!fetch) {
 type BasicRequestOptions = {
   authorization?: string
   storageRegion?: string
-  urlPostfix?: string
 }
 
-type RequestOptions<TParams extends Record<string, any>> = TParams extends undefined
-  ? BasicRequestOptions
-  : BasicRequestOptions & { params: TParams }
+type OptionalRecord = Record<string, any> | undefined
+
+type WithOptionalField<TName extends string, TData extends OptionalRecord> = TData extends undefined
+  ? Partial<Record<TName, undefined>>
+  : Record<TName, TData>
+
+type RequestOptions<
+  TParams extends OptionalRecord,
+  TQuery extends OptionalRecord,
+  TPath extends OptionalRecord
+> = BasicRequestOptions &
+  WithOptionalField<'params', TParams> &
+  WithOptionalField<'queryParams', TQuery> &
+  WithOptionalField<'pathParams', TPath>
+
+type RequestOptionsForOperation<
+  TApiSpec extends GenericApiSpec,
+  TOperationId extends ExtractAllOperationIds<TApiSpec>
+> = RequestOptions<
+  ExtractRequestType<TApiSpec, TOperationId>,
+  ExtractParametersType<TApiSpec, TOperationId, 'query'>,
+  ExtractParametersType<TApiSpec, TOperationId, 'path'>
+>
 
 type ConstructorOptions = { accessApiKey: string }
 
@@ -67,10 +92,10 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
   private static async executeByOptions<TResponse>(
     accessApiKey: string,
     method: string,
-    url: string,
-    options: BasicRequestOptions & { params?: unknown },
+    pathTemplate: string,
+    options: BasicRequestOptions & { params?: any; pathParams?: any; queryParams?: any },
   ) {
-    const { authorization, storageRegion, params, urlPostfix } = options
+    const { authorization, storageRegion, params } = options
     const fetchOptions = {
       headers: {
         Accept: 'application/json',
@@ -80,10 +105,15 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
         ...(storageRegion && { 'X-DST-REGION': storageRegion }),
       },
       method,
-      ...(params && { body: JSON.stringify(params, null, 2) }),
+      ...(!!params && { body: JSON.stringify(params, null, 2) }),
     }
 
-    const response = await fetch(`${url}${urlPostfix ?? ''}`, fetchOptions)
+    // eslint-disable-next-line no-unused-vars
+    const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => options.pathParams?.[p1])
+    const url = new URL(path)
+    url.search = new URLSearchParams(options.queryParams ?? {}).toString()
+
+    const response = await fetch(url, fetchOptions)
     const { status } = response
 
     if (!status.toString().startsWith('2')) {
@@ -98,7 +128,7 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
 
   protected async execute<TOperationId extends ExtractAllOperationIds<TApiSpec>>(
     serviceOperationId: TOperationId,
-    options: RequestOptions<ExtractRequestType<TApiSpec, TOperationId>>,
+    options: RequestOptionsForOperation<TApiSpec, TOperationId>,
   ): Promise<{ body: ExtractResponseType<TApiSpec, TOperationId>; status: number }> {
     if (!this._serviceUrl) {
       throw new Error('Service URL is empty')

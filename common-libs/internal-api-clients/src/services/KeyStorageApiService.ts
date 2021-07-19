@@ -1,6 +1,5 @@
 import { profile } from '@affinidi/common'
 
-import { Env } from '../dto/shared.dto'
 import keyStorageSpec from '../openapi/_keyStorage'
 import GenericApiService from './GenericApiService'
 import { ExtractRequestType } from './SwaggerTypes'
@@ -27,6 +26,8 @@ type GetSignedCredentialRequest = {
   credentialOfferResponseToken: string
   options: GetSignedCredentialOptions
 }
+
+type Env = 'dev' | 'staging' | 'prod'
 
 type ConstructorOptions = { keyStorageUrl: string; accessApiKey: string }
 
@@ -59,7 +60,7 @@ export default class KeyStorageApiService extends GenericApiService<ApiSpec> {
   }
 
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {
-    return this.execute('GetCredentialOffer', { authorization: accessToken, urlPostfix: `?env=${env}` })
+    return this.execute('GetCredentialOffer', { authorization: accessToken, queryParams: { env } })
   }
 
   async getSignedCredential(accessToken: string, params: GetSignedCredentialRequest) {
