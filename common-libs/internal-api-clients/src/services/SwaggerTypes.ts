@@ -124,10 +124,25 @@ type ResponseSpecWithoutData =
 
 type ResponseSpec = ResponseSpecWithData<FieldSpec> | ResponseSpecWithoutData
 
+type ParameterType = 'header' | 'query' | 'path'
+
+type ParameterSpec<
+  TParameterType extends ParameterType,
+  TName extends string,
+  TFieldSpec extends FieldSpec,
+  TIsRequired extends boolean,
+> = {
+  in: TParameterType
+  name: TName
+  schema: TFieldSpec
+  required: TIsRequired
+}
+
 type OperationSpec = {
   operationId: string,
   responses: ResponseSpec,
   requestBody?: RequestSpec,
+  parameters?: readonly ParameterSpec<ParameterType, string, FieldSpec, boolean>[],
 }
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete'
@@ -282,6 +297,63 @@ type ExtractOperationResponseByField<TFieldSpec extends FieldSpec | void, TObjec
 type ExtractOperationResponse<TOperationSpec extends OperationSpec, TObjectSpecs extends ObjectSpecs<string>> =
   ExtractOperationResponseByField<ExtractResponseField<TOperationSpec['responses']>, TObjectSpecs>
 
+type ExtractParameterDeclaration<
+  TParameterSpec extends ParameterSpec<ParameterType, string, FieldSpec, boolean>,
+  TObjectSpecs extends ObjectSpecs<string>,
+> =
+  TParameterSpec extends ParameterSpec<ParameterType, string, infer UFieldSpec, boolean>
+    ? ExtractFieldDeclaration<UFieldSpec, TObjectSpecs>
+    : never
+
+type ExtractParameterDeclarationByName<
+  TParameterSpecs extends ParameterSpec<ParameterType, string, FieldSpec, boolean>,
+  TName extends string, TObjectSpecs extends ObjectSpecs<string>,
+> = ExtractParameterDeclaration<
+  Extract<TParameterSpecs, ParameterSpec<ParameterType, TName, FieldSpec, boolean>>,
+  TObjectSpecs
+>
+  
+type ExtractOperationRequiredParameters<
+  TParameterSpecs extends ParameterSpec<ParameterType, string, FieldSpec, true>,
+  TObjectSpecs extends ObjectSpecs<string>,
+> = {
+  [key in TParameterSpecs['name']]: ExtractParameterDeclarationByName<TParameterSpecs, key, TObjectSpecs>
+}
+
+type ExtractOperationOptionalParameters<
+  TParameterSpecs extends ParameterSpec<ParameterType, string, FieldSpec, false>,
+  TObjectSpecs extends ObjectSpecs<string>,
+> ={
+  [key in TParameterSpecs['name']]?: ExtractParameterDeclarationByName<TParameterSpecs, key, TObjectSpecs>
+}
+
+type ExtractOperationParametersByParameterSpecs<
+  TParameterSpecs extends ParameterSpec<ParameterType, string, FieldSpec, boolean>,
+  TObjectSpecs extends ObjectSpecs<string>,
+> =
+  ExtractOperationRequiredParameters<
+    Extract<TParameterSpecs, ParameterSpec<ParameterType, string, FieldSpec, true>>,
+    TObjectSpecs
+  > &
+  ExtractOperationOptionalParameters<
+    Extract<TParameterSpecs, ParameterSpec<ParameterType, string, FieldSpec, false>>,
+    TObjectSpecs
+  >
+
+type ExtractOperationParametersByParameterType<
+  TOperationSpec extends OperationSpec,
+  TParameterType extends ParameterType,
+  TObjectSpecs extends ObjectSpecs<string>,
+> =
+  TOperationSpec['parameters'] extends readonly (infer UParameterSpec)[]
+    ? TParameterType extends TOperationSpec['parameters'][number]['in']
+      ? ExtractOperationParametersByParameterSpecs<
+        Extract<UParameterSpec, ParameterSpec<TParameterType, string, FieldSpec, boolean>>,
+        TObjectSpecs
+      >
+      : undefined
+    : undefined
+
 type ExtractAllOperationIdsFromUnion<TOperationsSpec extends OperationSpec> = TOperationsSpec['operationId']
 
 export type ExtractAllOperationIds<TSpec extends GenericApiSpec> =
@@ -295,3 +367,10 @@ export type ExtractRequestType<TSpec extends GenericApiSpec, TOperationId extend
 
 export type ExtractResponseType<TSpec extends GenericApiSpec, TOperationId extends ExtractAllOperationIds<TSpec>> =
   Simplify<ExtractOperationResponse<GetOperationById<TSpec, TOperationId>, TSpec['components']['schemas']>>
+
+export type ExtractParametersType<
+  TSpec extends GenericApiSpec,
+  TOperationId extends ExtractAllOperationIds<TSpec>,
+  TParameterType extends ParameterType,
+> =
+  Simplify<ExtractOperationParametersByParameterType<GetOperationById<TSpec, TOperationId>, TParameterType, TSpec['components']['schemas']>>

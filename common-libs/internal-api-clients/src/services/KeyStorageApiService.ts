@@ -60,7 +60,7 @@ export default class KeyStorageApiService extends GenericApiService<ApiSpec> {
   }
 
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {
-    return this.execute('GetCredentialOffer', { authorization: accessToken, urlPostfix: `?env=${env}` })
+    return this.execute('GetCredentialOffer', { authorization: accessToken, queryParams: { env } })
   }
 
   async getSignedCredential(accessToken: string, params: GetSignedCredentialRequest) {

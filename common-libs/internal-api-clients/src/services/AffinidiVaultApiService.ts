@@ -23,11 +23,11 @@ export default class AffinidiVaultApiService extends GenericApiService<ApiSpec> 
     return this.execute('CreateDidAuthRequest', { params })
   }
 
-  async searchCredentials(accessToken: string, storageRegion: string, types: string[]) {
+  async searchCredentials(accessToken: string, storageRegion: string, types: string[][]) {
     return this.execute('SearchCredentials', {
       authorization: accessToken,
       storageRegion,
-      urlPostfix: `?types=${types}`,
+      queryParams: { types: JSON.stringify(types) },
     })
   }
 
@@ -35,19 +35,29 @@ export default class AffinidiVaultApiService extends GenericApiService<ApiSpec> 
     return this.execute('GetCredential', {
       authorization: accessToken,
       storageRegion,
-      urlPostfix: `/${id}`,
+      pathParams: { id },
     })
   }
 
-  async storeCredential(id: string, params: ExtractRequestType<ApiSpec, 'StoreCredential'>) {
-    return this.execute('StoreCredential', { params, urlPostfix: `/${id}` })
+  async storeCredential(
+    accessToken: string,
+    storageRegion: string,
+    id: string,
+    params: ExtractRequestType<ApiSpec, 'StoreCredential'>,
+  ) {
+    return this.execute('StoreCredential', {
+      authorization: accessToken,
+      storageRegion,
+      params,
+      pathParams: { id },
+    })
   }
 
   async deleteCredential(accessToken: string, storageRegion: string, id: string) {
     return this.execute('DeleteCredential', {
       authorization: accessToken,
       storageRegion,
-      urlPostfix: `/${id}`,
+      pathParams: { id },
     })
   }
 }
