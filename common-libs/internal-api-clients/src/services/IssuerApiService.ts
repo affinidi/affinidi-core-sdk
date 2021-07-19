@@ -8,6 +8,9 @@ type ConstructorOptions = { issuerUrl: string; accessApiKey: string }
 
 type ApiSpec = typeof issuerSpec
 
+type ObjectsSpec = ApiSpec['components']['schemas']
+type VerifyCredentialOfferResponseOutput = ObjectsSpec['VerifyCredentialOfferResponseOutput']
+
 @profile()
 export default class IssuerApiService extends GenericApiService<ApiSpec> {
   constructor(options: ConstructorOptions) {

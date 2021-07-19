@@ -1,5 +1,5 @@
-import SdkError from '../shared/SdkError'
 import { CognitoUserTokens } from '../dto/shared.dto'
+import SdkErrorFromCode from './SdkErrorFromCode'
 
 let tempSessionStorage: any = {}
 
@@ -29,7 +29,7 @@ export class SessionStorageService {
     }
 
     if (!sessionStorageObject) {
-      throw new SdkError('COR-9')
+      throw new SdkErrorFromCode('COR-9')
     }
 
     return JSON.parse(sessionStorageObject)

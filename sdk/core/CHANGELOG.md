@@ -1,3 +1,5 @@
+# release 6.0.0-beta.3 (2021-07-19)
+  * API client services moved out to @affinidi/internal-api-clients
 # release 6.0.0-beta.1 (2021-06-29)
   * Improved type inference.
   * `CommonNetworkMember._affinity` made protected.

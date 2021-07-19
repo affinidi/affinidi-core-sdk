@@ -1,6 +1,5 @@
 import { profile } from '@affinidi/common'
 
-import { Env } from '../dto/shared.dto'
 import keyStorageSpec from '../openapi/_keyStorage'
 import GenericApiService from './GenericApiService'
 import { ExtractRequestType } from './SwaggerTypes'
@@ -27,6 +26,8 @@ type GetSignedCredentialRequest = {
   credentialOfferResponseToken: string
   options: GetSignedCredentialOptions
 }
+
+type Env = 'dev' | 'staging' | 'prod'
 
 type ConstructorOptions = { keyStorageUrl: string; accessApiKey: string }
 

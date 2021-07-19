@@ -1,13 +1,13 @@
 import keyBy from 'lodash.keyby'
 import FetchType from 'node-fetch'
-import { profile } from '@affinidi/common'
+import { profile, SdkError } from '@affinidi/common'
 
-import SdkError from '../shared/SdkError'
 import { GenericApiSpec, ExtractAllOperationIds, ExtractRequestType, ExtractResponseType } from './SwaggerTypes'
 
 let fetch: typeof FetchType
 
-/* istanbul ignore next */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 if (!fetch) {
   fetch = require('node-fetch')
 }
@@ -18,7 +18,7 @@ type BasicRequestOptions = {
   urlPostfix?: string
 }
 
-type RequestOptions<TParams extends Record<string, any>> = TParams extends undefined
+type RequestOptions<TParams extends Record<string, any> | undefined> = TParams extends undefined
   ? BasicRequestOptions
   : BasicRequestOptions & { params: TParams }
 
@@ -80,7 +80,7 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
         ...(storageRegion && { 'X-DST-REGION': storageRegion }),
       },
       method,
-      ...(params && { body: JSON.stringify(params, null, 2) }),
+      ...(!!params && { body: JSON.stringify(params, null, 2) }),
     }
 
     const response = await fetch(`${url}${urlPostfix ?? ''}`, fetchOptions)

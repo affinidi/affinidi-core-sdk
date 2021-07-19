@@ -1,7 +1,8 @@
 import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
-import { Affinity, JwtService, KeysService, DidDocumentService } from '@affinidi/common'
+import { Affinity, JwtService, KeysService, DidDocumentService, SdkError } from '@affinidi/common'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { buildVCV1Skeleton, buildVCV1Unsigned } from '@affinidi/vc-common'
 import {
   VCSPhonePersonV1,
@@ -13,7 +14,6 @@ import {
 import { PhoneIssuerService } from '../../src/services/PhoneIssuerService'
 import { EmailIssuerService } from '../../src/services/EmailIssuerService'
 import KeyManagementService from '../../src/services/KeyManagementService'
-import KeyStorageApiService from '../../src/services/KeyStorageApiService'
 import WalletStorageService from '../../src/services/WalletStorageService'
 import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
 
@@ -22,7 +22,6 @@ import { getAllOptionsForEnvironment } from '../helpers'
 import cognitoSignInWithUsernameResponseToken from '../factory/cognitoSignInWithUsernameResponseToken'
 import { generateTestDIDs } from '../factory/didFactory'
 import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
-import SdkError from '../../src/shared/SdkError'
 import CognitoIdentityService, {
   CompleteForgotPasswordResult,
   CompleteLoginPasswordlessResult,

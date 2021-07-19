@@ -1,5 +1,7 @@
-type Simplify<T> = T extends Record<string, unknown>
-  ? T extends infer O ? { [K in keyof O]: Simplify<O[K]> } : never
+type Simplify<T> = T extends Record<string, unknown> | unknown[]
+  ? (T extends infer O
+    ? { [K in keyof O]: Simplify<O[K]> }
+    : never)
   : T;
 
 type RefSpec<TRefName extends string> = {
@@ -158,12 +160,21 @@ type ExtractFieldDeclaration<TField extends FieldSpec, TObjectSpecs extends Obje
     ? ExtractNonNullableFieldDeclaration<TField, TObjectSpecs> | null
     : ExtractNonNullableFieldDeclaration<TField, TObjectSpecs>
 
+type IsStaticNonEmptyArray<T> = 
+  T extends undefined | null | never
+    ? false
+    : (T extends readonly unknown[]
+      ? (T['length'] extends 0
+        ? false
+        : true)
+      : false)
+
 type ExtractRequiredFixedKeys<TObjectSpec extends ObjectSpec<any, any, any>> =
-  TObjectSpec['required'][0] extends NonNullable<string>
-    ? (TObjectSpec extends ObjectSpec<infer TKeys, infer TRequiredKeys, any>
+  IsStaticNonEmptyArray<TObjectSpec['required']> extends false
+    ? never
+    : (TObjectSpec extends ObjectSpec<infer TKeys, infer TRequiredKeys, any>
       ? TRequiredKeys
       : never)
-    : never
 
 type ExtractObjectDeclarationRequiredFields<
   TObjectSpec extends ObjectSpec<string, string, boolean>,
@@ -209,7 +220,7 @@ type ExtractResponseField<TResponseSpec extends ResponseSpec> =
 type ExtractOperationRequestByName<TRequestName extends string | undefined, TObjectSpecs extends ObjectSpecs<string>> =
   TRequestName extends undefined | null
     ? undefined
-    : ExtractObjectDeclaration<TRequestName, TObjectSpecs>
+    : ExtractObjectDeclaration<NonNullable<TRequestName>, TObjectSpecs>
   
 type ExtractOperationRequest<TOperationSpec extends OperationSpec, TObjectSpecs extends ObjectSpecs<string>> =
   ExtractOperationRequestByName<ExtractRequestName<TOperationSpec['requestBody']>, TObjectSpecs>
