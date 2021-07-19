@@ -388,8 +388,20 @@ export default class WalletStorageService {
   public async getAllCredentials(audienceDid: string, types: string[][], storageRegion?: string) {
     const token = await this._authorizeVcVault(audienceDid)
     storageRegion = storageRegion || this._storageRegion
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
-    const { body } = await this._vaultApiService.searchCredentials(token, storageRegion, types)
+    // convert each type to hash
+    const encryptedTypes: string[][] = []
+    for (const subset of types) {
+      const encryptedSubset: string[] = []
+      for (const type of subset) {
+        const encryptedType = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, type)
+        encryptedSubset.push(encryptedType)
+      }
+      encryptedTypes.push(encryptedSubset)
+    }
+
+    const { body } = await this._vaultApiService.searchCredentials(token, storageRegion, encryptedTypes)
     const credentials = await this._decryptCredentials(body.credentials)
 
     // should be deleted during migration to affinidi-vault Phase #2
@@ -415,10 +427,13 @@ export default class WalletStorageService {
   public async getCredentialById(audienceDid: string, credentialId: string, storageRegion?: string): Promise<any> {
     const token = await this._authorizeVcVault(audienceDid)
     storageRegion = storageRegion || this._storageRegion
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+
+    const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
 
     let encryptedCredential: string
     try {
-      const { body, status } = await this._vaultApiService.getCredential(token, storageRegion, credentialId)
+      const { body, status } = await this._vaultApiService.getCredential(token, storageRegion, hashedId)
       if (status >= 400) {
         throw new SdkErrorFromCode('COR-23', { credentialId })
       }
