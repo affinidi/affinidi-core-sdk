@@ -25,6 +25,7 @@ type FieldSpecDoubleType = {
 type FieldSpecRecordType = {
   type: 'object'
   additionalProperties: true
+  properties?: undefined
 }
 
 type FieldSpecRefType<TRefName extends string> = RefSpec<TRefName>
@@ -53,18 +54,29 @@ type FieldSpecType = FieldSpecPrimitiveType | FieldSpecArrayType<FieldSpecPrimit
 
 type FieldSpec = FieldSpecType & Partial<FieldSpecOptionNullable>
 
-type ObjectSpecOptionAdditionalProperties<TIsAdditionalPropertiesAllowed extends boolean> =
-  | (TIsAdditionalPropertiesAllowed extends false ? false : never)
-  | (TIsAdditionalPropertiesAllowed extends true ? { additionalProperties: true; type: 'object' } : never)
+type SimpleObjectSpecOptionAdditionalProperties<TIsAdditionalPropertiesAllowed extends boolean> =
+  | (TIsAdditionalPropertiesAllowed extends false ? { additionalProperties?: false } : never)
+  | (TIsAdditionalPropertiesAllowed extends true ? { additionalProperties: { additionalProperties: true; type: 'object' } } : never)
 
-type ObjectSpec<TKeys extends string, TRequiredKeys extends TKeys, TIsAdditionalPropertiesAllowed extends boolean> = {
+type SimpleObjectSpec<
+  TKeys extends string,
+  TRequiredKeys extends TKeys,
+  TIsAdditionalPropertiesAllowed extends boolean
+> = {
   properties: Record<TKeys, FieldSpec>
   type: 'object'
   required?: ReadonlyArray<TRequiredKeys>
-  additionalProperties: ObjectSpecOptionAdditionalProperties<TIsAdditionalPropertiesAllowed>
+} & SimpleObjectSpecOptionAdditionalProperties<TIsAdditionalPropertiesAllowed>
+
+type AllOfOptionSpec = RefSpec<string> | SimpleObjectSpec<string, string, boolean>
+
+type AllOfObjectSpec<T extends readonly AllOfOptionSpec[]> = {
+  allOf: T
 }
 
-type ObjectSpecs<TKeys extends string> = Record<TKeys, ObjectSpec<string, string, boolean>>
+type ObjectSpec = SimpleObjectSpec<string, string, boolean> | AllOfObjectSpec<readonly AllOfOptionSpec[]>
+
+type ObjectSpecs<TKeys extends string> = Record<TKeys, ObjectSpec>
 
 type RequestSpecWithData<TRequestName extends string> = {
   content: {
@@ -91,11 +103,12 @@ type ResponseSpecWithData<TFieldSpec extends FieldSpec> =
   | ResponseSpecWithDataByCode<TFieldSpec, '204'>
 
 type ResponseSpecWithoutDataByCode<THttpCode extends string> = Record<THttpCode, {
-  content: {
+  content?: {
     'application/json': {
       schema?: undefined
     }
   }
+  description?: 'No content'
 }>
 
 type ResponseSpecWithoutData =
@@ -142,7 +155,7 @@ type ExtractAllOperationSpecs<TSpec extends GenericApiSpec> = ExtractAllOperatio
 
 type ExtractNonNullableFieldDeclaration<TField extends FieldSpecType, TObjectSpecs extends ObjectSpecs<string>> = 
   TField extends FieldSpecRefType<infer URefName>
-    ? ExtractObjectDeclaration<URefName, TObjectSpecs>
+    ? ExtractObjectDeclarationByName<URefName, TObjectSpecs>
     : TField extends FieldSpecArrayType<infer UInnerFieldSpec>
       ? ExtractNonNullableFieldDeclaration<UInnerFieldSpec, TObjectSpecs>[]
       : TField extends FieldSpecBooleanType
@@ -169,43 +182,70 @@ type IsStaticNonEmptyArray<T> =
         : true)
       : false)
 
-type ExtractRequiredFixedKeys<TObjectSpec extends ObjectSpec<any, any, any>> =
+type ExtractRequiredFixedKeys<TObjectSpec extends SimpleObjectSpec<any, any, any>> =
   IsStaticNonEmptyArray<TObjectSpec['required']> extends false
     ? never
-    : (TObjectSpec extends ObjectSpec<infer TKeys, infer TRequiredKeys, any>
+    : (TObjectSpec extends SimpleObjectSpec<infer TKeys, infer TRequiredKeys, any>
       ? TRequiredKeys
       : never)
 
 type ExtractObjectDeclarationRequiredFields<
-  TObjectSpec extends ObjectSpec<string, string, boolean>,
+  TObjectSpec extends SimpleObjectSpec<string, string, boolean>,
   TObjectSpecs extends ObjectSpecs<string>,
 > =
-  TObjectSpec extends ObjectSpec<infer TKeys, infer TRequiredKeys, any> ? {
+  TObjectSpec extends SimpleObjectSpec<infer TKeys, infer TRequiredKeys, any> ? {
     [key in Extract<TKeys, ExtractRequiredFixedKeys<TObjectSpec>>]:
       ExtractFieldDeclaration<TObjectSpec['properties'][key], TObjectSpecs>
   } : never
 
 type ExtractObjectDeclarationOptionalFields<
-  TObjectSpec extends ObjectSpec<string, string, boolean>,
+  TObjectSpec extends SimpleObjectSpec<string, string, boolean>,
   TObjectSpecs extends ObjectSpecs<string>,
 > =
-  TObjectSpec extends ObjectSpec<infer TKeys, any, any> ? {
+  TObjectSpec extends SimpleObjectSpec<infer TKeys, any, any> ? {
     [key in Exclude<TKeys, ExtractRequiredFixedKeys<TObjectSpec>>]?:
       ExtractFieldDeclaration<TObjectSpec['properties'][key], TObjectSpecs>
   } : never
 
 type ExtractObjectDeclarationWithoutAdditionalFields<
-  TObjectSpec extends ObjectSpec<string, string, boolean>,
+  TObjectSpec extends SimpleObjectSpec<string, string, boolean>,
   TObjectSpecs extends ObjectSpecs<string>,
 > = ExtractObjectDeclarationRequiredFields<TObjectSpec, TObjectSpecs> &
   ExtractObjectDeclarationOptionalFields<TObjectSpec, TObjectSpecs>
 
-type ExtractObjectDeclaration<TName extends string, TObjectSpecs extends ObjectSpecs<string>> =
+type ExtractSimpleObjectDeclaration<
+  TObjectSpec extends SimpleObjectSpec<string, string, boolean>,
+  TObjectSpecs extends ObjectSpecs<string>
+> =
+  TObjectSpec extends SimpleObjectSpec<string, string, true>
+    ? ExtractObjectDeclarationWithoutAdditionalFields<TObjectSpec, TObjectSpecs> & Record<string, unknown>
+    : ExtractObjectDeclarationWithoutAdditionalFields<TObjectSpec, TObjectSpecs>
+
+type Tail<T extends readonly any[]> = T extends readonly [any, ...infer R] ? R : [];
+
+type ExtractAllOfOptionDeclaration<TOption extends AllOfOptionSpec, TObjectSpecs extends ObjectSpecs<string>> =
+  TOption extends RefSpec<infer URefName>
+    ? ExtractObjectDeclarationByName<URefName, TObjectSpecs>
+    : (TOption extends SimpleObjectSpec<string, string, boolean>
+      ? ExtractSimpleObjectDeclaration<TOption, TObjectSpecs>
+      : never)
+
+type ExtractAllOfDeclaration<TOptions extends readonly AllOfOptionSpec[], TObjectSpecs extends ObjectSpecs<string>> =
+  TOptions['length'] extends 0
+    ? Record<never, never>
+    : ExtractAllOfOptionDeclaration<TOptions[0], TObjectSpecs> & ExtractAllOfDeclaration<Tail<TOptions>, TObjectSpecs>
+
+type ExtractObjectDeclarationByValue<TObjectSpec extends ObjectSpec, TObjectSpecs extends ObjectSpecs<string>> =
+  TObjectSpec extends SimpleObjectSpec<string, string, boolean>
+    ? ExtractSimpleObjectDeclaration<TObjectSpec, TObjectSpecs>
+    : (TObjectSpec extends AllOfObjectSpec<readonly AllOfOptionSpec[]>
+        ? ExtractAllOfDeclaration<TObjectSpec['allOf'], TObjectSpecs>
+        : never)
+
+type ExtractObjectDeclarationByName<TName extends string, TObjectSpecs extends ObjectSpecs<string>> =
   TName extends `FreeFormObject${infer U}`
     ? any
-    : TObjectSpecs[TName] extends ObjectSpec<string, string, true>
-      ? ExtractObjectDeclarationWithoutAdditionalFields<TObjectSpecs[TName], TObjectSpecs> & Record<string, unknown>
-      : ExtractObjectDeclarationWithoutAdditionalFields<TObjectSpecs[TName], TObjectSpecs>
+    : ExtractObjectDeclarationByValue<TObjectSpecs[TName], TObjectSpecs>
 
 type ExtractRequestName<TRequestSpec extends RequestSpec> =
   TRequestSpec extends RequestSpecWithData<infer U>
@@ -220,7 +260,7 @@ type ExtractResponseField<TResponseSpec extends ResponseSpec> =
 type ExtractOperationRequestByName<TRequestName extends string | undefined, TObjectSpecs extends ObjectSpecs<string>> =
   TRequestName extends undefined | null
     ? undefined
-    : ExtractObjectDeclaration<NonNullable<TRequestName>, TObjectSpecs>
+    : ExtractObjectDeclarationByName<NonNullable<TRequestName>, TObjectSpecs>
   
 type ExtractOperationRequest<TOperationSpec extends OperationSpec, TObjectSpecs extends ObjectSpecs<string>> =
   ExtractOperationRequestByName<ExtractRequestName<TOperationSpec['requestBody']>, TObjectSpecs>
