@@ -1,11 +1,15 @@
 import { profile, DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
+import {
+  IssuerApiService,
+  RegistryApiService,
+  RevocationApiService,
+  VerifierApiService,
+} from '@affinidi/internal-api-clients'
 import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affinidi/vc-common'
 import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
 import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
-
-import SdkError from './shared/SdkError'
 
 import WalletStorageService from './services/WalletStorageService'
 import HolderService from './services/HolderService'
@@ -49,12 +53,9 @@ import { isW3cCredential } from './_helpers'
 
 import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
 import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
-import RegistryApiService from './services/RegistryApiService'
-import IssuerApiService from './services/IssuerApiService'
-import VerifierApiService from './services/VerifierApiService'
-import RevocationApiService from './services/RevocationApiService'
 import UserManagementService from './services/UserManagementService'
 import KeyManagementService from './services/KeyManagementService'
+import SdkErrorFromCode from './shared/SdkErrorFromCode'
 
 type GenericConstructor<T, TOptions> = new (
   password: string,
@@ -446,12 +447,12 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     const did = didDocument.id
     const isJoloMethod = did.startsWith('did:jolo')
     if (!isJoloMethod) {
-      throw new SdkError('COR-20', { did })
+      throw new SdkErrorFromCode('COR-20', { did })
     }
 
     const instanceDid = this.did
     if (instanceDid !== did) {
-      throw new SdkError('COR-21', { did, instanceDid })
+      throw new SdkErrorFromCode('COR-21', { did, instanceDid })
     }
 
     const keysService = new KeysService(this._encryptedSeed, this._password)
@@ -700,12 +701,12 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       const keysService = new KeysService(encryptedSeed, password)
       didMethod = keysService.decryptSeed().didMethod
     } catch (error) {
-      throw new SdkError('COR-24', {}, error)
+      throw new SdkErrorFromCode('COR-24', {}, error)
     }
 
     if (!SUPPORTED_DID_METHODS.includes(didMethod)) {
       const supportedDidMethods = SUPPORTED_DID_METHODS.join(', ')
-      throw new SdkError('COR-25', { didMethod, supportedDidMethods })
+      throw new SdkErrorFromCode('COR-25', { didMethod, supportedDidMethods })
     }
   }
 
@@ -1255,7 +1256,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     const areCredentialsValid = errors.length === 0
 
     if (!areCredentialsValid) {
-      throw new SdkError('COR-1', { errors, credentials })
+      throw new SdkErrorFromCode('COR-1', { errors, credentials })
     }
   }
 
@@ -1445,7 +1446,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     }
 
     if (signedCredentials.length === 0) {
-      throw new SdkError('COR-22', { credentialOfferResponseToken, credentialParams })
+      throw new SdkErrorFromCode('COR-22', { credentialOfferResponseToken, credentialParams })
     }
 
     return signedCredentials
@@ -1685,13 +1686,13 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       credentialShareRequestToken = await credentialShareRequest(requestNonce)
 
       if (!credentialShareRequestToken) {
-        throw new SdkError('COR-15', { credentialShareRequestToken })
+        throw new SdkErrorFromCode('COR-15', { credentialShareRequestToken })
       }
 
       try {
         CommonNetworkMember.fromJWT(credentialShareRequestToken)
       } catch (error) {
-        throw new SdkError('COR-15', { credentialShareRequestToken })
+        throw new SdkErrorFromCode('COR-15', { credentialShareRequestToken })
       }
     }
 

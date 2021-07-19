@@ -5,9 +5,9 @@ import sinon from 'sinon'
 import { expect } from 'chai'
 
 import { JwtService, KeysService } from '@affinidi/common'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { authorizeVault } from './../../helpers'
 import KeyManagementService from '../../../src/services/KeyManagementService'
-import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
 
@@ -208,7 +208,13 @@ describe('WalletStorageService', () => {
     it('should work for single page', async () => {
       await authorizeVault()
 
-      nock(STAGING_VAULT_URL).get(fetchCredentialsPath).reply(200, [signedCredential])
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '0/99')
+        .reply(200, [signedCredential])
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '100/199')
+        .reply(200, [])
 
       const walletStorageService = createWalletStorageService()
       const response = await walletStorageService.fetchAllBlobs()
@@ -230,6 +236,10 @@ describe('WalletStorageService', () => {
       nock(STAGING_VAULT_URL)
         .get(fetchCredentialsBase + '200/299')
         .reply(200, Array(50).fill(signedCredential))
+
+      nock(STAGING_VAULT_URL)
+        .get(fetchCredentialsBase + '300/399')
+        .reply(200, [])
 
       const walletStorageService = createWalletStorageService()
       const response = await walletStorageService.fetchAllBlobs()
@@ -284,6 +294,11 @@ describe('WalletStorageService', () => {
         expectedResult[30] = { cyphertext: null }
         const expectedPath = `${fetchCredentialsBase}200/299`
         nock(STAGING_VAULT_URL).get(expectedPath).reply(200, expectedResult)
+      }
+
+      {
+        const expectedPath = `${fetchCredentialsBase}300/399`
+        nock(STAGING_VAULT_URL).get(expectedPath).reply(200, [])
       }
 
       const walletStorageService = createWalletStorageService()

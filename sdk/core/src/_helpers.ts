@@ -1,9 +1,9 @@
 import { SUPPORTED_DID_METHODS } from './_defaultConfig'
-import SdkError from './shared/SdkError'
+import SdkErrorFromCode from './shared/SdkErrorFromCode'
 
 export const validateDidMethodSupported = (didMethod: string) => {
   if (!SUPPORTED_DID_METHODS.includes(didMethod)) {
-    throw new SdkError('COM-10', { didMethod: didMethod, supportedDidMethods: SUPPORTED_DID_METHODS })
+    throw new SdkErrorFromCode('COM-10', { didMethod: didMethod, supportedDidMethods: SUPPORTED_DID_METHODS })
   }
 }
 

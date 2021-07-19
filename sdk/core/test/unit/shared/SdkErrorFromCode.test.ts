@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import SdkError from '../../../src/shared/SdkError'
+import SdkErrorFromCode from '../../../src/shared/SdkErrorFromCode'
 
 describe('SdkError', () => {
   it('Throws `Invalid operation error code` if error code not found', async () => {
@@ -8,7 +8,7 @@ describe('SdkError', () => {
     let responseError
 
     try {
-      throw new SdkError(errorCode)
+      throw new SdkErrorFromCode(errorCode)
     } catch (error) {
       responseError = error
     }

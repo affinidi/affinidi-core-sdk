@@ -13,8 +13,7 @@ import Ajv from 'ajv'
 import S from 'fluent-schema'
 
 import { DID, DID_METHOD, JWT, COGNITO_CONFIRMATION_CODE, PASSWORD } from '../dto/shared.dto'
-
-import SdkError from './SdkError'
+import SdkErrorFromCode from './SdkErrorFromCode'
 
 const did = 'did'
 const didMethod = 'didMethod'
@@ -85,7 +84,7 @@ export class ParametersValidator {
     }
 
     if (allErrors.length > 0) {
-      throw new SdkError('COR-1', { errors: allErrors })
+      throw new SdkErrorFromCode('COR-1', { errors: allErrors })
     }
   }
 

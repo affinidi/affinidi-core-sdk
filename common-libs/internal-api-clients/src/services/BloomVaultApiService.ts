@@ -21,7 +21,7 @@ export default class BloomVaultApiService extends GenericApiService<ApiSpec> {
   async requestAuthToken({ did, storageRegion }: { did: string; storageRegion: string }) {
     return this.execute('RequestAuthToken', {
       storageRegion,
-      urlPostfix: `?did=${did}`,
+      queryParams: { did },
     })
   }
 
@@ -47,7 +47,7 @@ export default class BloomVaultApiService extends GenericApiService<ApiSpec> {
     return this.execute('DeleteCredentials', {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
-      urlPostfix: `/${start}/${end}`,
+      pathParams: { start: `${start}`, end: `${end}` },
     })
   }
 
@@ -56,7 +56,7 @@ export default class BloomVaultApiService extends GenericApiService<ApiSpec> {
     return this.execute('GetCredentials', {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
-      urlPostfix: `/${start}/${end}`,
+      pathParams: { start: `${start}`, end: `${end}` },
     })
   }
 }

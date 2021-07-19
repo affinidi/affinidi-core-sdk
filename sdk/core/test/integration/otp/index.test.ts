@@ -2,9 +2,9 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
+import { SdkError } from '@affinidi/common'
 import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
 import { SdkOptions } from '../../../src/dto/shared.dto'
-import SdkError from '../../../src/shared/SdkError'
 
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'

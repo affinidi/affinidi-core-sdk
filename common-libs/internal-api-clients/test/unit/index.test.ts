@@ -1,0 +1,3 @@
+import 'mocha'
+
+require('./services')

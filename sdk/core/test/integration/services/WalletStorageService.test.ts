@@ -2,9 +2,9 @@
 
 import { expect } from 'chai'
 import { decode as jwtDecode } from 'jsonwebtoken'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 
 import KeyManagementService from '../../../src/services/KeyManagementService'
-import KeyStorageApiService from '../../../src/services/KeyStorageApiService'
 import UserManagementService from '../../../src/services/UserManagementService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import { normalizeUsername } from '../../../src/shared'

@@ -1,12 +1,16 @@
 import { toRpcSig, ecsign } from 'ethereumjs-util'
-import SdkError from '../shared/SdkError'
-import { profile } from '@affinidi/common'
-import { JwtService, KeysService } from '@affinidi/common'
+import { JwtService, KeysService, profile } from '@affinidi/common'
+import { BloomVaultApiService, KeyStorageApiService } from '@affinidi/internal-api-clients'
 
 import { Env, FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { isW3cCredential } from '../_helpers'
 
 import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
+
+import { SignedCredential } from '../dto/shared.dto'
+import { ParametersValidator } from '../shared'
+import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 
 const keccak256 = require('keccak256')
 const createHash = require('create-hash')
@@ -36,13 +40,6 @@ const publicToAddress = (publicKey: Buffer): Buffer => {
 const sha256 = (data: unknown) => {
   return createHash('sha256').update(data).digest()
 }
-
-import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
-
-import { SignedCredential } from '../dto/shared.dto'
-import { ParametersValidator } from '../shared'
-import KeyStorageApiService from './KeyStorageApiService'
-import BloomVaultApiService, { BlobType } from './BloomVaultApiService'
 
 type ConstructorOptions = {
   vaultUrl: string
@@ -175,7 +172,7 @@ export default class WalletStorageService {
     try {
       await this._bloomVaultApiService.deleteCredentials({ accessToken, storageRegion, start: 0, end: 99 })
     } catch (error) {
-      throw new SdkError('COR-0', {}, error)
+      throw new SdkErrorFromCode('COR-0', {}, error)
     }
   }
 
@@ -189,17 +186,11 @@ export default class WalletStorageService {
       //       https://github.com/hellobloom/bloom-vault#delete-datastartend
       await this._bloomVaultApiService.deleteCredentials({ accessToken, storageRegion, start: index, end: index })
     } catch (error) {
-      throw new SdkError('COR-0', {}, error)
+      throw new SdkErrorFromCode('COR-0', {}, error)
     }
   }
 
-  private _filterDeletedCredentials(blobs: BlobType[]): BlobType[] {
-    return blobs.filter((blob) => blob.cyphertext !== null)
-  }
-
-  async fetchEncryptedCredentials(
-    fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions,
-  ): Promise<BlobType[]> {
+  async fetchEncryptedCredentials(fetchCredentialsPaginationOptions?: FetchCredentialsPaginationOptions) {
     await ParametersValidator.validate([
       {
         isArray: false,
@@ -213,24 +204,29 @@ export default class WalletStorageService {
 
     const token = await this.authorizeVcVault()
     const blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token)
-    return this._filterDeletedCredentials(blobs)
+    return blobs ?? []
   }
 
-  /**
-   * Start fetching all credentials inside the vault page by page
-   * @param fetchCredentialsPaginationOptions starting and batch count for the credentials
-   */
-  private async *fetchAllEncryptedCredentialsInBatches(): AsyncIterable<BlobType[]> {
+  public async fetchAllBlobs() {
+    const fetch = this._fetchEncryptedCredentialsWithPagination
+    type FetchReturnType = ReturnType<typeof fetch>
+    type BlobsType = FetchReturnType extends Promise<infer U> ? NonNullable<U> : never
+
+    const blobChunks: BlobsType[] = []
     const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault()
-    let lastCount = 0
 
     const token = await this.authorizeVcVault()
 
-    do {
-      let blobs: BlobType[] = []
-
+    for (;;) {
       try {
-        blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token)
+        const blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token)
+        paginationOptions.skip += paginationOptions.limit
+
+        if (!blobs) {
+          break
+        }
+
+        blobChunks.push(blobs)
       } catch (err) {
         if (err.code === 'COR-14') {
           break
@@ -238,27 +234,12 @@ export default class WalletStorageService {
 
         throw err
       }
-
-      yield this._filterDeletedCredentials(blobs)
-
-      paginationOptions.skip += paginationOptions.limit
-      lastCount = blobs.length
-    } while (lastCount === paginationOptions.limit)
-  }
-
-  public async fetchAllBlobs() {
-    let allBlobs: BlobType[] = []
-    for await (const blobs of this.fetchAllEncryptedCredentialsInBatches()) {
-      allBlobs = [...allBlobs, ...blobs]
     }
 
-    return allBlobs
+    return blobChunks.flatMap((blobs) => blobs)
   }
 
-  private async _fetchEncryptedCredentialsWithPagination(
-    paginationOptions: PaginationOptions,
-    accessToken: string,
-  ): Promise<BlobType[]> {
+  private async _fetchEncryptedCredentialsWithPagination(paginationOptions: PaginationOptions, accessToken: string) {
     try {
       const { body: blobs } = await this._bloomVaultApiService.getCredentials({
         accessToken,
@@ -267,10 +248,14 @@ export default class WalletStorageService {
         end: paginationOptions.skip + paginationOptions.limit - 1,
       })
 
-      return blobs
+      if (blobs.length === 0) {
+        return undefined
+      }
+
+      return blobs.filter((blob) => blob.cyphertext !== null)
     } catch (error) {
       if (error.httpStatusCode === 404) {
-        throw new SdkError('COR-14', {}, error)
+        throw new SdkErrorFromCode('COR-14', {}, error)
       } else {
         throw error
       }
@@ -360,7 +345,7 @@ export default class WalletStorageService {
     const credentials = await this.fetchDecryptedCredentials(paginationOptions)
 
     if (!credentials[0]) {
-      throw new SdkError('COR-14')
+      throw new SdkErrorFromCode('COR-14')
     }
 
     return credentials[0]
@@ -383,12 +368,12 @@ export default class WalletStorageService {
       }
     }
 
-    throw new SdkError('COR-23', { id })
+    throw new SdkErrorFromCode('COR-23', { id })
   }
 
   async deleteCredential(id?: string, credentialIndex?: number): Promise<void> {
     if ((credentialIndex !== undefined && id) || (!id && credentialIndex === undefined)) {
-      throw new SdkError('COR-1', {
+      throw new SdkErrorFromCode('COR-1', {
         errors: [{ message: 'should pass either id or credentialIndex and not both at the same time' }],
       })
     }

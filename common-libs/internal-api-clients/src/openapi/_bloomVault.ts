@@ -82,6 +82,16 @@ export default {
 						}
 					}
 				},
+				"parameters": [
+					{
+						"in": "query",
+						"name": "did",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/auth/validate-token": {
@@ -124,7 +134,9 @@ export default {
 						}
 					}
 				}
-			},
+			}
+		},
+		"/data/{start}/{end}": {
 			"delete": {
 				"operationId": "DeleteCredentials",
 				"responses": {
@@ -134,6 +146,24 @@ export default {
 						}
 					}
 				},
+				"parameters": [
+					{
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			},
 			"get": {
 				"operationId": "GetCredentials",
@@ -151,6 +181,24 @@ export default {
 						}
 					}
 				},
+				"parameters": [
+					{
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		}
 	},

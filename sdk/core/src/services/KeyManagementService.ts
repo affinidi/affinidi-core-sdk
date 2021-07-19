@@ -1,10 +1,10 @@
 import { JwtService, KeysService, profile } from '@affinidi/common'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import retry from 'async-retry'
 const createHash = require('create-hash')
 
 import { KeyParams } from '../dto/shared.dto'
-import { SdkError } from '../shared'
-import KeyStorageApiService from './KeyStorageApiService'
+import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 
 type ConstructorOptions = {
   keyStorageUrl: string
@@ -77,7 +77,7 @@ export default class KeyManagementService {
           } else {
             // Otherwise we wrap the error and throw that,
             // this will trigger a retry until "retries" count is met
-            throw new SdkError('COR-18', { accessToken }, error)
+            throw new SdkErrorFromCode('COR-18', { accessToken }, error)
           }
         }
       },

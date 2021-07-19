@@ -1,12 +1,13 @@
 import { profile } from '@affinidi/common'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 
 import { CognitoUserTokens, MessageParameters } from '../dto/shared.dto'
-import { validateUsername, SdkError } from '../shared'
+import { validateUsername } from '../shared'
+import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { normalizeShortPassword } from '../shared/normalizeShortPassword'
 import { normalizeUsername } from '../shared/normalizeUsername'
 import { SessionStorageService } from '../shared/sessionStorageHandler'
 import { randomBytes } from '../shared/randomBytes'
-import KeyStorageApiService from './KeyStorageApiService'
 import CognitoIdentityService, {
   CompleteChangeLoginResult,
   CompleteForgotPasswordResult,
@@ -75,9 +76,9 @@ export default class UserManagementService {
       case SignUpResult.Success:
         return
       case SignUpResult.InvalidPassword:
-        throw new SdkError('COR-6')
+        throw new SdkErrorFromCode('COR-6')
       case SignUpResult.ConfirmedUsernameExists:
-        throw new SdkError('COR-7', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-7', { username: normalizedUsername })
       case SignUpResult.UnconfirmedUsernameExists:
         await this._keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizedUsername })
         return this._signUp(usernameWithAttributes, password, messageParameters)
@@ -121,11 +122,11 @@ export default class UserManagementService {
       case CompleteSignUpResult.Success:
         return
       case CompleteSignUpResult.ConfirmationCodeExpired:
-        throw new SdkError('COR-2', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('COR-2', { username: normalizedUsername, confirmationCode })
       case CompleteSignUpResult.ConfirmationCodeWrong:
-        throw new SdkError('COR-5', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('COR-5', { username: normalizedUsername, confirmationCode })
       case CompleteSignUpResult.UserNotFound:
-        throw new SdkError('COR-4', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-4', { username: normalizedUsername })
       default:
         throw new DefaultResultError(result)
     }
@@ -140,9 +141,9 @@ export default class UserManagementService {
         this._sessionStorageService.saveUserTokens(response.cognitoTokens)
         return response.cognitoTokens
       case LogInWithPasswordResult.UserNotConfirmed:
-        throw new SdkError('COR-16', { username: login })
+        throw new SdkErrorFromCode('COR-16', { username: login })
       case LogInWithPasswordResult.UserNotFound:
-        throw new SdkError('COR-4', { username: login })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       default:
         throw new DefaultResultError(response)
     }
@@ -183,7 +184,7 @@ export default class UserManagementService {
       case InitiateLoginPasswordlessResult.Success:
         return response.token
       case InitiateLoginPasswordlessResult.UserNotFound:
-        throw new SdkError('COR-4', { username: login })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       default:
         throw new DefaultResultError(response)
     }
@@ -196,11 +197,11 @@ export default class UserManagementService {
         this._sessionStorageService.saveUserTokens(response.cognitoTokens)
         return response.cognitoTokens
       case CompleteLoginPasswordlessResult.AttemptsExceeded:
-        throw new SdkError('COR-13')
+        throw new SdkErrorFromCode('COR-13')
       case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
-        throw new SdkError('COR-17', { confirmationCode })
+        throw new SdkErrorFromCode('COR-17', { confirmationCode })
       case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
-        throw new SdkError('COR-5')
+        throw new SdkErrorFromCode('COR-5')
       default:
         throw new DefaultResultError(response)
     }
@@ -212,7 +213,7 @@ export default class UserManagementService {
       this._sessionStorageService.saveUserTokens(cognitoTokens)
       return cognitoTokens
     } catch (error) {
-      throw new SdkError('COR-9')
+      throw new SdkErrorFromCode('COR-9')
     }
   }
 
@@ -245,7 +246,7 @@ export default class UserManagementService {
       case InitiateForgotPasswordResult.Success:
         return
       case InitiateForgotPasswordResult.UserNotFound:
-        throw new SdkError('COR-4', { username: login })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
     }
@@ -258,13 +259,13 @@ export default class UserManagementService {
       case CompleteForgotPasswordResult.Success:
         return
       case CompleteForgotPasswordResult.ConfirmationCodeExpired:
-        throw new SdkError('COR-2', { username: login, confirmationCode })
+        throw new SdkErrorFromCode('COR-2', { username: login, confirmationCode })
       case CompleteForgotPasswordResult.ConfirmationCodeWrong:
-        throw new SdkError('COR-5', { username: login, confirmationCode })
+        throw new SdkErrorFromCode('COR-5', { username: login, confirmationCode })
       case CompleteForgotPasswordResult.NewPasswordInvalid:
-        throw new SdkError('COR-6')
+        throw new SdkErrorFromCode('COR-6')
       case CompleteForgotPasswordResult.UserNotFound:
-        throw new SdkError('COR-4', { username: login })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
     }
@@ -278,9 +279,9 @@ export default class UserManagementService {
       case ResendSignUpResult.Success:
         return
       case ResendSignUpResult.UserAlreadyConfirmed:
-        throw new SdkError('COR-8', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-8', { username: normalizedUsername })
       case ResendSignUpResult.UserNotFound:
-        throw new SdkError('COR-4', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-4', { username: normalizedUsername })
       default:
         throw new DefaultResultError(result)
     }
@@ -312,7 +313,7 @@ export default class UserManagementService {
         case InitiateChangeLoginResult.Success:
           return
         case InitiateChangeLoginResult.NewLoginExists:
-          throw new SdkError('COR-7', { username: newLogin })
+          throw new SdkErrorFromCode('COR-7', { username: newLogin })
         default:
           throw new DefaultResultError(result)
       }
@@ -331,9 +332,9 @@ export default class UserManagementService {
         case CompleteChangeLoginResult.Success:
           return
         case CompleteChangeLoginResult.ConfirmationCodeExpired:
-          throw new SdkError('COR-2', { confirmationCode })
+          throw new SdkErrorFromCode('COR-2', { confirmationCode })
         case CompleteChangeLoginResult.ConfirmationCodeWrong:
-          throw new SdkError('COR-5', { confirmationCode })
+          throw new SdkErrorFromCode('COR-5', { confirmationCode })
         default:
           throw new DefaultResultError(result)
       }
@@ -348,7 +349,7 @@ export default class UserManagementService {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
 
     if (!isEmailValid && !isPhoneNumberValid) {
-      throw new SdkError('COR-3', { username: login })
+      throw new SdkErrorFromCode('COR-3', { username: login })
     }
   }
 
@@ -356,7 +357,7 @@ export default class UserManagementService {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
 
     if (isEmailValid || isPhoneNumberValid) {
-      throw new SdkError('COR-3', { username: login })
+      throw new SdkErrorFromCode('COR-3', { username: login })
     }
   }
 
