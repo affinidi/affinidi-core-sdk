@@ -24,7 +24,7 @@ export default class AffinidiVaultApiService extends GenericApiService<ApiSpec> 
   }
 
   async searchCredentials(accessToken: string, storageRegion: string, types: string[][]) {
-    let queryParams: any = {}
+    const queryParams: any = {}
     if (types.length > 0) {
       queryParams.types = JSON.stringify(types)
     }
