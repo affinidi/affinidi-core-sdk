@@ -6,10 +6,11 @@ import { expect } from 'chai'
 
 import { JwtService, KeysService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { authorizeVault } from './../../helpers'
 import KeyManagementService from '../../../src/services/KeyManagementService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
-import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL } from '../../../src/_defaultConfig'
+import { STAGING_VAULT_URL, STAGING_KEY_STORAGE_URL, STAGING_BLOOM_VAULT_URL } from '../../../src/_defaultConfig'
 
 import { generateTestDIDs } from '../../factory/didFactory'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
@@ -18,6 +19,7 @@ import signedCredential from '../../factory/signedCredential'
 
 import credentialShareRequestToken from '../../factory/credentialShareRequestToken'
 import parsedCredentialShareRequestToken from '../../factory/parsedCredentialShareRequestToken'
+import { SignedCredential } from '../../../src/dto'
 
 let walletPassword: string
 
@@ -28,7 +30,9 @@ const fetchCredentialsBase = '/data/'
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
-  return new WalletStorageService(keysService, testPlatformTools, {
+  const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: walletPassword })
+  return new WalletStorageService(keysService, didAuthService, testPlatformTools, {
+    bloomVaultUrl: STAGING_BLOOM_VAULT_URL,
     vaultUrl: STAGING_VAULT_URL,
     accessApiKey: undefined,
     storageRegion: undefined,
@@ -69,7 +73,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
 
-    const response = await walletStorageService.saveCredentials(['encrypted'])
+    const response = await walletStorageService.saveCredentials('', [{} as SignedCredential])
 
     expect(response).to.be.an('array')
   })
