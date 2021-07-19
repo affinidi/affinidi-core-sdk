@@ -10,7 +10,13 @@ type RefSpec<TRefName extends string> = {
 
 type FieldSpecStringType = {
   type: 'string'
+  enum?: undefined
   pattern?: string
+}
+
+type FieldSpecEnumType<TEnum extends string> = {
+  type: 'string'
+  enum: readonly TEnum[]
 }
 
 type FieldSpecBooleanType = {
@@ -38,6 +44,7 @@ type FieldSpecOptions = Partial<FieldSpecOptionNullable>
 
 type FieldSpecPrimitiveType =
   | FieldSpecStringType
+  | FieldSpecEnumType<string>
   | FieldSpecDoubleType
   | FieldSpecBooleanType
   | FieldSpecRecordType
@@ -166,7 +173,9 @@ type ExtractNonNullableFieldDeclaration<TField extends FieldSpecType, TObjectSpe
             ? number
             : TField extends FieldSpecRecordType
               ? Record<string, any>
-              : never
+              : TField extends FieldSpecEnumType<infer UEnum>
+                ? UEnum
+                : never
 
 type ExtractFieldDeclaration<TField extends FieldSpec, TObjectSpecs extends ObjectSpecs<string>> =
   TField extends FieldSpecOptionNullable
