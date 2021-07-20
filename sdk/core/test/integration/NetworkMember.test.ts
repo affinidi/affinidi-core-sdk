@@ -1062,7 +1062,7 @@ describe('CommonNetworkMember', () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     const result = await commonNetworkMember.getCredentialById(credential.id)
-    
+
     const parsedCredential = JSON.parse(result)
     expect(parsedCredential.id).to.eql(credential.id)
   })
@@ -1087,6 +1087,6 @@ describe('CommonNetworkMember', () => {
 
   it('#deleteCredentialById', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
-    const result = await commonNetworkMember.deleteCredentialById(credential.id)
+    await commonNetworkMember.deleteCredentialById(credential.id)
   })
 })

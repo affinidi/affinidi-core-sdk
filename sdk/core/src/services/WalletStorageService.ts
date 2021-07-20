@@ -45,14 +45,16 @@ const sha256 = (data: unknown) => {
 
 type ConstructorOptions = {
   bloomVaultUrl: string
-  vaultUrl: string
+  affinidiVaultUrl: string
   storageRegion: string
   accessApiKey: string
+  audienceDid: string
 }
 
 @profile()
 export default class WalletStorageService {
   private _storageRegion: string
+  private _audienceDid: string
   private _keysService: KeysService
   private _didAuthService: DidAuthService
   private _platformEncryptionTools: IPlatformEncryptionTools
@@ -68,9 +70,16 @@ export default class WalletStorageService {
     this._keysService = keysService
     this._didAuthService = didAuthService
     this._platformEncryptionTools = platformEncryptionTools
-    this._bloomVaultApiService = new BloomVaultApiService({ ...options, vaultUrl: options.bloomVaultUrl })
+    this._bloomVaultApiService = new BloomVaultApiService({
+      accessApiKey: options.accessApiKey,
+      vaultUrl: options.bloomVaultUrl,
+    })
     this._storageRegion = options.storageRegion
-    this._vaultApiService = new AffinidiVaultApiService(options)
+    this._audienceDid = options.audienceDid
+    this._vaultApiService = new AffinidiVaultApiService({
+      accessApiKey: options.accessApiKey,
+      vaultUrl: options.affinidiVaultUrl,
+    })
   }
 
   static hashFromString(data: string): string {
@@ -97,31 +106,6 @@ export default class WalletStorageService {
     const sig = ecsign(hashPersonalMessage(Buffer.from(message)), Buffer.from(privateKey, 'hex'))
 
     return toRpcSig(sig.v, sig.r, sig.s)
-  }
-
-  async authorizeVcBloomVault(region?: string) {
-    const storageRegion = region || this._storageRegion
-
-    const { addressHex, privateKeyHex } = this.getVaultKeys()
-    const didEth = `did:ethr:0x${addressHex}`
-
-    const {
-      body: { token },
-    } = await this._bloomVaultApiService.requestAuthToken({
-      storageRegion,
-      did: didEth,
-    })
-
-    const signature = this.signByVaultKeys(token, privateKeyHex)
-
-    await this._bloomVaultApiService.validateAuthToken({
-      storageRegion,
-      accessToken: token,
-      signature,
-      did: didEth,
-    })
-
-    return token
   }
 
   /* istanbul ignore next: private method */
@@ -172,7 +156,7 @@ export default class WalletStorageService {
 
     const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
 
-    const token = await this.authorizeVcBloomVault()
+    const token = await this._authorizeVcBloomVault()
     const blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token)
     return blobs ?? []
   }
@@ -185,7 +169,7 @@ export default class WalletStorageService {
     const blobChunks: BlobsType[] = []
     const paginationOptions = WalletStorageService._getPaginationOptionsWithDefault()
 
-    const token = await this.authorizeVcBloomVault()
+    const token = await this._authorizeVcBloomVault()
 
     for (;;) {
       try {
@@ -298,10 +282,35 @@ export default class WalletStorageService {
     return credentials
   }
 
-  private async _authorizeVcVault(audienceDid: string): Promise<string> {
-    const { body } = await this._vaultApiService.createDidAuthRequest({ audienceDid })
+  private async _authorizeAffinidiVcVault(): Promise<string> {
+    const { body } = await this._vaultApiService.createDidAuthRequest({ audienceDid: this._audienceDid })
     const responseToken = await this._didAuthService.createDidAuthResponseToken(body)
     return responseToken
+  }
+
+  private async _authorizeVcBloomVault(region?: string) {
+    const storageRegion = region || this._storageRegion
+
+    const { addressHex, privateKeyHex } = this.getVaultKeys()
+    const didEth = `did:ethr:0x${addressHex}`
+
+    const {
+      body: { token },
+    } = await this._bloomVaultApiService.requestAuthToken({
+      storageRegion,
+      did: didEth,
+    })
+
+    const signature = this.signByVaultKeys(token, privateKeyHex)
+
+    await this._bloomVaultApiService.validateAuthToken({
+      storageRegion,
+      accessToken: token,
+      signature,
+      did: didEth,
+    })
+
+    return token
   }
 
   private async _encryptCredentials(credentials: SignedCredential[]): Promise<VaultCredential[]> {
@@ -365,8 +374,40 @@ export default class WalletStorageService {
     throw new SdkErrorFromCode('COR-23', { id })
   }
 
-  public async saveCredentials(audienceDid: string, credentials: SignedCredential[], storageRegion?: string) {
-    const token = await this._authorizeVcVault(audienceDid)
+  private async _getEncryptedCredentialById(credentialId: string, storageRegion: string) {
+    const token = await this._authorizeAffinidiVcVault()
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+
+    const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
+
+    let encryptedCredential: string
+    try {
+      const { body } = await this._vaultApiService.getCredential(token, storageRegion, hashedId)
+      encryptedCredential = body.payload
+    } catch (error) {
+      // should be deleted during migration to affinidi-vault Phase #2
+      if (error.code === 'AVT-2') {
+        const bloomToken = await this._authorizeVcBloomVault()
+        const credentialIndex = await this._findCredentialIndexById(credentialId)
+        const { body } = await this._bloomVaultApiService.getCredentials({
+          accessToken: bloomToken,
+          start: credentialIndex,
+          end: credentialIndex,
+          storageRegion,
+        })
+        if (body?.length > 0) {
+          throw error
+        }
+
+        encryptedCredential = body[0].cyphertext
+      }
+    }
+
+    return encryptedCredential
+  }
+
+  public async saveCredentials(credentials: SignedCredential[], storageRegion?: string) {
+    const token = await this._authorizeAffinidiVcVault()
     storageRegion = storageRegion || this._storageRegion
 
     const responses = []
@@ -385,8 +426,8 @@ export default class WalletStorageService {
     return responses
   }
 
-  public async getAllCredentials(audienceDid: string, types: string[][], storageRegion?: string) {
-    const token = await this._authorizeVcVault(audienceDid)
+  public async getAllCredentials(types: string[][], storageRegion?: string) {
+    const token = await this._authorizeAffinidiVcVault()
     storageRegion = storageRegion || this._storageRegion
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
@@ -398,6 +439,7 @@ export default class WalletStorageService {
         const encryptedType = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, type)
         encryptedSubset.push(encryptedType)
       }
+
       encryptedTypes.push(encryptedSubset)
     }
 
@@ -424,55 +466,24 @@ export default class WalletStorageService {
     return credentials
   }
 
-  public async getCredentialById(audienceDid: string, credentialId: string, storageRegion?: string): Promise<any> {
-    const token = await this._authorizeVcVault(audienceDid)
+  public async getCredentialById(credentialId: string, storageRegion?: string): Promise<any> {
     storageRegion = storageRegion || this._storageRegion
-    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
-
-    const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
-
-    let encryptedCredential: string
-    try {
-      const { body, status } = await this._vaultApiService.getCredential(token, storageRegion, hashedId)
-      if (status >= 400) {
-        throw new SdkErrorFromCode('COR-23', { credentialId })
-      }
-
-      encryptedCredential = body.payload
-    } catch (error) {
-      // should be deleted during migration to affinidi-vault Phase #2
-      const bloomToken = await this.authorizeVcBloomVault()
-      const credentialIndexToDelete = await this._findCredentialIndexById(credentialId)
-      const { body, status } = await this._bloomVaultApiService.getCredentials({
-        accessToken: bloomToken,
-        start: credentialIndexToDelete,
-        end: credentialIndexToDelete,
-        storageRegion,
-      })
-      if (status >= 400 && body?.length > 0) {
-        throw error
-      }
-
-      encryptedCredential = body[0].cyphertext
-    }
+    const encryptedCredential = await this._getEncryptedCredentialById(credentialId, storageRegion)
 
     const privateKey = this._keysService.getOwnPrivateKey()
     const credential = await this._platformEncryptionTools.decryptByPrivateKey(privateKey, encryptedCredential)
     return credential
   }
 
-  public async deleteCredentialById(audienceDid: string, credentialId: string, storageRegion?: string) {
-    const token = await this._authorizeVcVault(audienceDid)
+  public async deleteCredentialById(credentialId: string, storageRegion?: string) {
+    const token = await this._authorizeAffinidiVcVault()
     storageRegion = storageRegion || this._storageRegion
 
     try {
-      const { status } = await this._vaultApiService.deleteCredential(token, storageRegion, credentialId)
-      if (status >= 400) {
-        throw new SdkErrorFromCode('COR-26', { credentialId })
-      }
+      await this._vaultApiService.deleteCredential(token, storageRegion, credentialId)
     } catch (error) {
       // should be deleted during migration to affinidi-vault Phase #2
-      const bloomToken = await this.authorizeVcBloomVault()
+      const bloomToken = await this._authorizeVcBloomVault()
       const credentialIndexToDelete = await this._findCredentialIndexById(credentialId)
       const { status } = await this._bloomVaultApiService.deleteCredentials({
         accessToken: bloomToken,
@@ -488,7 +499,7 @@ export default class WalletStorageService {
   }
 
   public async deleteAllCredentials(storageRegion?: string): Promise<void> {
-    const accessToken = await this.authorizeVcBloomVault()
+    const accessToken = await this._authorizeVcBloomVault()
     storageRegion = storageRegion || this._storageRegion
 
     try {

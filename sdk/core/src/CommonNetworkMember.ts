@@ -159,7 +159,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       registryUrl,
       verifierUrl,
       bloomVaultUrl,
-      vaultUrl,
+      affinidiVaultUrl,
       phoneIssuerBasePath,
       emailIssuerBasePath,
       clientId,
@@ -178,16 +178,17 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey })
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
     this._keyManagementService = new KeyManagementService({ keyStorageUrl, accessApiKey })
+    this._didDocumentService = new DidDocumentService(keysService)
     const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
     this._walletStorageService = new WalletStorageService(keysService, didAuthService, platformEncryptionTools, {
       bloomVaultUrl,
-      vaultUrl,
+      affinidiVaultUrl,
       accessApiKey,
       storageRegion,
+      audienceDid: this.did,
     })
     this._jwtService = new JwtService()
     this._holderService = new HolderService({ registryUrl, metricsUrl, accessApiKey }, component)
-    this._didDocumentService = new DidDocumentService(keysService)
     this._affinity = new Affinity({
       apiKey: accessApiKey,
       registryUrl: registryUrl,
@@ -1093,8 +1094,8 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   }
 
   /* istanbul ignore next: protected method */
-  protected async saveEncryptedCredentials(audienceDid: string, data: any, storageRegion?: string): Promise<any[]> {
-    return this._walletStorageService.saveCredentials(audienceDid, data, storageRegion)
+  protected async saveEncryptedCredentials(data: any, storageRegion?: string): Promise<any[]> {
+    return this._walletStorageService.saveCredentials(data, storageRegion)
   }
 
   /**
@@ -1979,7 +1980,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @returns array of ids for corelated records
    */
   async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
-    const result = await this._walletStorageService.saveCredentials(this.did, data, storageRegion)
+    const result = await this._walletStorageService.saveCredentials(data, storageRegion)
 
     this._sendVCSavedMetrics(data)
     // NOTE: what if creds actually were not saved in the vault?
@@ -1995,7 +1996,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @returns a single VC
    */
   async getCredentialById(credentialId: string, storageRegion?: string): Promise<any> {
-    return this._walletStorageService.getCredentialById(this.did, credentialId, storageRegion)
+    return this._walletStorageService.getCredentialById(credentialId, storageRegion)
   }
 
   /**
@@ -2004,7 +2005,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @returns a single VC
    */
   async getAllCredentials(types: string[][], storageRegion?: string): Promise<any> {
-    return this._walletStorageService.getAllCredentials(this.did, types, storageRegion)
+    return this._walletStorageService.getAllCredentials(types, storageRegion)
   }
 
   /**
@@ -2013,6 +2014,6 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    */
   async deleteCredentialById(credentialId: string, storageRegion?: string): Promise<void> {
-    return this._walletStorageService.deleteCredentialById(this.did, credentialId, storageRegion)
+    return this._walletStorageService.deleteCredentialById(credentialId, storageRegion)
   }
 }
