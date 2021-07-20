@@ -380,13 +380,16 @@ export default class WalletStorageService {
 
     const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
 
-    let encryptedCredential: string
     try {
       const { body } = await this._vaultApiService.getCredential(token, storageRegion, hashedId)
-      encryptedCredential = body.payload
+      return body.payload
     } catch (error) {
+      if (error.code !== 'AVT-2') {
+        throw error
+      }
+
       // should be deleted during migration to affinidi-vault Phase #2
-      if (error.code === 'AVT-2') {
+      try {
         const bloomToken = await this._authorizeVcBloomVault()
         const credentialIndex = await this._findCredentialIndexById(credentialId)
         const { body } = await this._bloomVaultApiService.getCredentials({
@@ -399,11 +402,11 @@ export default class WalletStorageService {
           throw error
         }
 
-        encryptedCredential = body[0].cyphertext
+        return body[0].cyphertext
+      } catch (bloomError) {
+        throw error
       }
     }
-
-    return encryptedCredential
   }
 
   public async saveCredentials(credentials: SignedCredential[], storageRegion?: string) {
@@ -482,17 +485,21 @@ export default class WalletStorageService {
     try {
       await this._vaultApiService.deleteCredential(token, storageRegion, credentialId)
     } catch (error) {
-      // should be deleted during migration to affinidi-vault Phase #2
-      const bloomToken = await this._authorizeVcBloomVault()
-      const credentialIndexToDelete = await this._findCredentialIndexById(credentialId)
-      const { status } = await this._bloomVaultApiService.deleteCredentials({
-        accessToken: bloomToken,
-        storageRegion,
-        start: credentialIndexToDelete,
-        end: credentialIndexToDelete,
-      })
+      if (error.code !== 'AVT-2') {
+        throw error
+      }
 
-      if (status >= 400) {
+      // should be deleted during migration to affinidi-vault Phase #2
+      try {
+        const bloomToken = await this._authorizeVcBloomVault()
+        const credentialIndexToDelete = await this._findCredentialIndexById(credentialId)
+        const { status } = await this._bloomVaultApiService.deleteCredentials({
+          accessToken: bloomToken,
+          storageRegion,
+          start: credentialIndexToDelete,
+          end: credentialIndexToDelete,
+        })
+      } catch (bloomError) {
         throw error
       }
     }
