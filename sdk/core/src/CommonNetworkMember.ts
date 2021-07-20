@@ -180,7 +180,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this._keyManagementService = new KeyManagementService({ keyStorageUrl, accessApiKey })
     this._didDocumentService = new DidDocumentService(keysService)
     const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
-    this._walletStorageService = new WalletStorageService(keysService, didAuthService, platformEncryptionTools, {
+    this._walletStorageService = new WalletStorageService(didAuthService, keysService, platformEncryptionTools, {
       bloomVaultUrl,
       affinidiVaultUrl,
       accessApiKey,
