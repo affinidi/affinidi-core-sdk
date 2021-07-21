@@ -71,7 +71,7 @@ describe('AffinityWallet [OTP]', () => {
       ? firstCredential.id
       : firstCredential.data.id
 
-    await commonNetworkMember.deleteCredential(credentialIdToDelete)
+    await commonNetworkMember.deleteCredentialById(credentialIdToDelete)
     credentials = await commonNetworkMember.getCredentials()
 
     const credentialIds = credentials.map((credential: any) => {
@@ -97,7 +97,7 @@ describe('AffinityWallet [OTP]', () => {
     expect(credentials).to.have.length(3)
 
     const credentialIdToDelete = credentials[1].id
-    await commonNetworkMember.deleteCredential(credentialIdToDelete)
+    await commonNetworkMember.deleteCredentialById(credentialIdToDelete)
 
     credentials = await commonNetworkMember.getCredentials()
     const credentialIds = credentials.map((credential: any) => credential.id)
@@ -109,42 +109,5 @@ describe('AffinityWallet [OTP]', () => {
 
     credentials = await commonNetworkMember.getCredentials()
     expect(credentials).to.have.length(0)
-  })
-
-  it('#signIn with skipBackupEncryptedSeed and skipBackupCredentials, #storeEncryptedSeed, #signIn', async () => {
-    const inbox = createInbox()
-
-    const signInToken = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signInToken)
-    const signInCode = await waitForOtpCode(inbox)
-
-    const confirmSignInOptions = Object.assign({}, options, {
-      skipBackupEncryptedSeed: true,
-      skipBackupCredentials: true,
-      issueSignupCredential: true,
-    })
-
-    const { commonNetworkMember } = await AffinityWallet.confirmSignIn(signInToken, signInCode, confirmSignInOptions)
-
-    expect(commonNetworkMember.credentials).not.to.be.empty
-    expect(commonNetworkMember).to.be.an.instanceof(AffinityWallet)
-
-    const { password, accessToken, encryptedSeed } = commonNetworkMember
-
-    await commonNetworkMember.signOut(options)
-
-    const commonNetworkMember2 = new AffinityWallet(password, encryptedSeed, options)
-
-    await commonNetworkMember2.storeEncryptedSeed('', '', accessToken)
-    await commonNetworkMember2.signOut(options)
-
-    const signInToken2 = await AffinityWallet.signIn(inbox.email, options, messageParameters)
-    checkIsString(signInToken2)
-    const signInCode2 = await waitForOtpCode(inbox)
-
-    const result = await AffinityWallet.confirmSignIn(signInToken2, signInCode2, options)
-
-    expect(result.commonNetworkMember).to.be.an.instanceof(AffinityWallet)
-    expect(result.commonNetworkMember.credentials).to.be.empty
   })
 })

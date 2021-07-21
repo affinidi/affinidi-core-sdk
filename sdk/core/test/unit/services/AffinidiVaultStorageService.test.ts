@@ -95,14 +95,19 @@ describe('AffinidiVaultStorageService', () => {
         credentials: [
           {
             credentialId: credential.id,
-            payload: JSON.stringify({ id: credential.id }),
-          } as VaultCredential,
-        ],
+            payload: JSON.stringify(credential),
+          },
+          {
+            credentialId: credential.id,
+            payload: JSON.stringify(credential),
+          },
+        ] as VaultCredential[],
       })
 
     const service = createAffinidiStorageService()
     const credentials = await service.getAllCredentials([], region)
-    expect(credentials[0].credentialId).to.eql(credential.id)
+    expect(credentials).to.length(2)
+    expect(credentials[0].id).to.eql(credential.id)
   })
 
   it('#getAllCredentialsByTypes', async () => {
@@ -114,14 +119,19 @@ describe('AffinidiVaultStorageService', () => {
         credentials: [
           {
             credentialId: credential.id,
-            payload: JSON.stringify({ id: credential.id }),
-          } as VaultCredential,
-        ],
+            payload: JSON.stringify(credential),
+          },
+          {
+            credentialId: credential.id,
+            payload: JSON.stringify(credential),
+          },
+        ] as VaultCredential[],
       })
 
     const service = createAffinidiStorageService()
     const credentials = await service.getAllCredentials([credential.type], region)
-    expect(credentials[0].credentialId).to.eql(credential.id)
+    expect(credentials).to.length(2)
+    expect(credentials[0].id).to.eql(credential.id)
   })
 
   it('#getAllCredentialsWithError', async () => {
@@ -139,7 +149,7 @@ describe('AffinidiVaultStorageService', () => {
     }
   })
 
-  it('#getEncryptedCredentialById', async () => {
+  it('#getCredentialById', async () => {
     mockDidAuth()
 
     nock(STAGING_AFFINIDI_VAULT_URL)
@@ -150,11 +160,11 @@ describe('AffinidiVaultStorageService', () => {
       } as VaultCredential)
 
     const service = createAffinidiStorageService()
-    const result = await service.getEncryptedCredentialById(credential.id, region)
-    expect(result.credentialId).to.eql(credential.id)
+    const result = await service.getCredentialById(credential.id, region)
+    expect(result.id).to.eql(credential.id)
   })
 
-  it('#getEncryptedCredentialByIdWithError', async () => {
+  it('#getCredentialByIdWithError', async () => {
     mockDidAuth()
 
     nock(STAGING_AFFINIDI_VAULT_URL)
@@ -163,7 +173,7 @@ describe('AffinidiVaultStorageService', () => {
 
     const service = createAffinidiStorageService()
     try {
-      await service.getEncryptedCredentialById(credential.id, region)
+      await service.getCredentialById(credential.id, region)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }
@@ -202,11 +212,11 @@ describe('AffinidiVaultStorageService', () => {
       credentials: [
         {
           credentialId: credential.id,
-          payload: JSON.stringify({ id: credential.id }),
+          payload: JSON.stringify(credential),
         },
         {
           credentialId: credential.id + '1',
-          payload: JSON.stringify({ id: credential.id + '1' }),
+          payload: JSON.stringify({ ...credential, id: credential.id + '1' }),
         },
       ] as VaultCredential[],
     }

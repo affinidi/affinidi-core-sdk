@@ -3,8 +3,8 @@ import { AffinidiVaultApiService } from '@affinidi/internal-api-clients'
 import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 
 import { IPlatformEncryptionTools } from '../shared/interfaces'
-import { SignedCredential } from '../dto'
 import { VaultCredential } from '../dto/vault.dto'
+import { isW3cCredential } from '../_helpers'
 
 type AffinidiVaultStorageOptions = {
   accessApiKey: string
@@ -39,18 +39,25 @@ export default class AffinidiVaultStorageService {
     return responseToken
   }
 
-  private async _encryptCredentials(credentials: SignedCredential[]): Promise<VaultCredential[]> {
+  private async _encryptCredentials(credentials: any[]): Promise<VaultCredential[]> {
     const publicKeyBuffer = this._keysService.getOwnPublicKey()
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const encryptedCredentials: VaultCredential[] = []
 
     for (const credential of credentials) {
-      const credentialIdHash = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credential.id)
+      let credentialId = credential?.id
+      if (!isW3cCredential(credential)) {
+        credentialId = credential?.data?.id
+      }
+
+      const credentialIdHash = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
 
       const typeHashes = []
-      for (const credentialType of credential.type) {
-        const typeHash = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialType)
-        typeHashes.push(typeHash)
+      if (isW3cCredential(credential)) {
+        for (const credentialType of credential.type) {
+          const typeHash = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialType)
+          typeHashes.push(typeHash)
+        }
       }
 
       const cyphertext = await this._platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, credential)
@@ -82,30 +89,29 @@ export default class AffinidiVaultStorageService {
     return hashedTypes
   }
 
-  private async _decryptCredentials(encryptedCredentials: VaultCredential[]): Promise<VaultCredential[]> {
-    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
-    const credentials: VaultCredential[] = []
+  private async _decryptCredentials(encryptedCredentials: VaultCredential[]): Promise<any[]> {
+    const credentials: any[] = []
 
-    for (const credential of encryptedCredentials) {
-      const decryptedCredential = await this._platformEncryptionTools.decryptByPrivateKey(
-        privateKeyBuffer,
-        credential.payload,
-      )
-
-      const signedCredential = decryptedCredential as SignedCredential
-
-      credentials.push({
-        credentialId: signedCredential.id,
-        credentialTypes: signedCredential.type,
-        payload: decryptedCredential,
-        createdAt: credential.createdAt,
-      })
+    for (const encryptedCredential of encryptedCredentials) {
+      const credential = await this._decryptCredential(encryptedCredential)
+      credentials.push(credential)
     }
 
     return credentials
   }
 
-  public async saveCredentials(credentials: SignedCredential[], storageRegion: string): Promise<VaultCredential[]> {
+  private async _decryptCredential(encryptedCredential: VaultCredential): Promise<any> {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+
+    const credential = await this._platformEncryptionTools.decryptByPrivateKey(
+      privateKeyBuffer,
+      encryptedCredential.payload,
+    )
+
+    return credential
+  }
+
+  public async saveCredentials(credentials: any[], storageRegion: string): Promise<VaultCredential[]> {
     const token = await this._authorizeVcVault()
 
     const responses = []
@@ -124,7 +130,7 @@ export default class AffinidiVaultStorageService {
     return responses
   }
 
-  public async getAllCredentials(types: string[][], storageRegion: string): Promise<VaultCredential[]> {
+  public async getAllCredentials(types: string[][], storageRegion: string): Promise<any[]> {
     const token = await this._authorizeVcVault()
 
     const hashedTypes = await this._computeTypesHashes(types)
@@ -135,31 +141,44 @@ export default class AffinidiVaultStorageService {
     return credentials
   }
 
-  public async getEncryptedCredentialById(credentialId: string, storageRegion: string): Promise<VaultCredential> {
+  public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
     const token = await this._authorizeVcVault()
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
     const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
-
     const { body } = await this._vaultApiService.getCredential(token, storageRegion, hashedId)
-    return body
+
+    const credential = await this._decryptCredential(body)
+
+    return credential
   }
 
   public async deleteCredentialById(credentialId: string, storageRegion: string): Promise<void> {
     const token = await this._authorizeVcVault()
 
-    await this._vaultApiService.deleteCredential(token, storageRegion, credentialId)
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+    const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
+
+    await this._vaultApiService.deleteCredential(token, storageRegion, hashedId)
   }
 
   public async deleteAllCredentials(storageRegion: string): Promise<void> {
     const token = await this._authorizeVcVault()
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
     const credentials = await this.getAllCredentials([], storageRegion)
 
     // this could have perfomance problems when need delete big amount of credentials
     // probably can use some kind of concurrency, but it is unknown what behavior will be at each platform
     for (const credential of credentials) {
-      await this._vaultApiService.deleteCredential(token, storageRegion, credential.credentialId)
+      let credentialId = credential?.id
+      if (!isW3cCredential(credential)) {
+        credentialId = credential?.data?.id
+      }
+      
+      const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
+
+      await this._vaultApiService.deleteCredential(token, storageRegion, hashedId)
     }
   }
 }

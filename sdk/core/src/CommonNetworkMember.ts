@@ -1099,14 +1099,6 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   }
 
   /**
-   * @description Deletes all credentials from the wallet
-   * @param storageRegion (string) - (optional) specify region where credentials will be stored
-   */
-  async deleteAllCredentials(storageRegion?: string): Promise<void> {
-    return this._walletStorageService.deleteAllCredentials(storageRegion)
-  }
-
-  /**
    * @description Creates JWT of credential offer request
    * @param offeredCredentials - array of credentials to be offered
    * @param options - optional, JwtOptions containing:
@@ -2000,12 +1992,23 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   }
 
   /**
-   * @description Retrieve only the credential
+   * @description Retrieve all credential
+   * @param types (string[][]) - (optional) specify credential types to filter
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    * @returns a single VC
    */
-  async getAllCredentials(types: string[][], storageRegion?: string): Promise<any> {
+  async getAllCredentials(types?: string[][], storageRegion?: string): Promise<any> {
     return this._walletStorageService.getAllCredentials(types, storageRegion)
+  }
+
+  /**
+   * @description Retrieve only the credential
+   * @param token (string) - specify credential share request token to filter
+   * @param storageRegion (string) - (optional) specify region where credentials will be stored
+   * @returns a single VC
+   */
+  async getCredentialsByShareToken(token: string, storageRegion?: string): Promise<any> {
+    return this._walletStorageService.getCredentialsByShareToken(token, storageRegion)
   }
 
   /**
@@ -2015,5 +2018,13 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    */
   async deleteCredentialById(credentialId: string, storageRegion?: string): Promise<void> {
     return this._walletStorageService.deleteCredentialById(credentialId, storageRegion)
+  }
+
+  /**
+   * @description Deletes all credentials from the wallet
+   * @param storageRegion (string) - (optional) specify region where credentials will be stored
+   */
+  async deleteAllCredentials(storageRegion?: string): Promise<void> {
+    return this._walletStorageService.deleteAllCredentials(storageRegion)
   }
 }

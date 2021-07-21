@@ -34,9 +34,11 @@ describe('WalletStorageService', () => {
     sinon.stub(WalletStorageService.prototype, 'saveCredentials').resolves([])
 
     const keysService = new KeysService(encryptedSeed, password)
-    walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
+    walletStorageService = new WalletStorageService(null, keysService, platformEncryptionTools, {
+      audienceDid: undefined,
       accessApiKey: undefined,
-      vaultUrl: undefined,
+      affinidiVaultUrl: undefined,
+      bloomVaultUrl: undefined,
       storageRegion: undefined,
     })
   })
@@ -46,7 +48,7 @@ describe('WalletStorageService', () => {
   })
 
   it('encryptAndSaveCredentials', async () => {
-    const response = await walletStorageService.encryptAndSaveCredentials([{ foo: 'bar' }])
+    const response = await walletStorageService.saveCredentials([{ foo: 'bar' }])
 
     expect(response).to.exist
   })

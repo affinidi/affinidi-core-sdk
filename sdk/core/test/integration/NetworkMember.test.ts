@@ -1058,13 +1058,33 @@ describe('CommonNetworkMember', () => {
     expect(result[0].credentialId).to.eql(credential.id)
   })
 
+  it('#saveCredentials existing', async () => {
+    const credentials = [credential]
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    try {
+      await commonNetworkMember.saveCredentials(credentials)
+    } catch (error) {
+      expect(error.code).to.eql('AVT-5')
+    }
+  })
+
   it('#getCredentialById', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     const result = await commonNetworkMember.getCredentialById(credential.id)
 
-    const parsedCredential = JSON.parse(result)
-    expect(parsedCredential.id).to.eql(credential.id)
+    expect(result.id).to.eql(credential.id)
+  })
+
+  it('#getCredentialById with error', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    try {
+      await commonNetworkMember.getCredentialById('fake_id')
+    } catch (error) {
+      expect(error.code).to.eql('AVT-2')
+    }
   })
 
   it('#getAllCredentials', async () => {
@@ -1072,8 +1092,7 @@ describe('CommonNetworkMember', () => {
 
     const result = await commonNetworkMember.getAllCredentials([])
 
-    const parsedCredential = JSON.parse(result[0])
-    expect(parsedCredential.id).to.eql(credential.id)
+    expect(result[0].id).to.eql(credential.id)
   })
 
   it('#getAllCredentials by types', async () => {
@@ -1081,8 +1100,7 @@ describe('CommonNetworkMember', () => {
 
     const result = await commonNetworkMember.getAllCredentials([credential.type])
 
-    const parsedCredential = JSON.parse(result[0])
-    expect(parsedCredential.id).to.eql(credential.id)
+    expect(result[0].id).to.eql(credential.id)
   })
 
   it('#deleteCredentialById', async () => {

@@ -63,36 +63,18 @@ describe('AffinityWallet', () => {
     sinon.restore()
   })
 
-  describe('#getCredentialByIndex', () => {
-    it('throws COR-14 if there are no credentials for the user', async () => {
-      sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').resolves([])
-
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
-
-      let responseError
-
-      try {
-        await affinityWallet.getCredentialByIndex(0)
-      } catch (error) {
-        responseError = error
-      }
-
-      const { code } = responseError
-
-      expect(code).to.eql('COR-14')
-    })
-
+  describe('#getCredentialById', () => {
     it('throws error', async () => {
       const error = 'Error'
 
-      sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: error })
+      sinon.stub(WalletStorageService.prototype, 'getCredentialById').rejects({ code: error })
 
       const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
       let responseError
 
       try {
-        await affinityWallet.getCredentialByIndex(0)
+        await affinityWallet.getCredentialById(signedCredential.id)
       } catch (error) {
         responseError = error
       }
@@ -104,64 +86,21 @@ describe('AffinityWallet', () => {
   })
 
   describe('#deleteCredential', () => {
-    it('should throw if both parameters are given', async () => {
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
-
-      let responseError
-
-      try {
-        await affinityWallet.deleteCredential('id', 1)
-      } catch (error) {
-        responseError = error
-      }
-
-      const { code } = responseError
-
-      expect(code).to.eql('COR-1')
-    })
-
-    it('should throw if neither parameters are given', async () => {
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
-
-      let responseError
-
-      try {
-        await affinityWallet.deleteCredential(undefined, undefined)
-      } catch (error) {
-        responseError = error
-      }
-
-      const { code } = responseError
-
-      expect(code).to.eql('COR-1')
-    })
-
-    it('should remove with given index', async () => {
-      const credentialIndex = 1
-
-      sinon.stub(CommonNetworkMember.prototype as any, 'deleteCredentialByIndex').resolves(undefined)
+    it('should remove with given id', async () => {
+      sinon.stub(CommonNetworkMember.prototype as any, 'deleteCredentialById').resolves(undefined)
 
       const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
-      const result = await affinityWallet.deleteCredential(undefined, credentialIndex)
+      const result = await affinityWallet.deleteCredentialById(signedCredential.id)
 
       expect(result).to.be.undefined
     })
   })
 
-  it('#getCredentials returns [] if there are no credentials for the user', async () => {
-    sinon.stub(WalletStorageService.prototype, 'fetchEncryptedCredentials').rejects({ code: 'COR-14' })
-
-    const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
-    const response = await affinityWallet.getCredentials()
-
-    expect(response).to.eql([])
-  })
-
   it('#getCredentials throws error', async () => {
     const error = 'Error'
 
-    sinon.stub(WalletStorageService.prototype, 'fetchAllDecryptedCredentials').rejects({ code: error })
+    sinon.stub(WalletStorageService.prototype, 'getAllCredentials').rejects({ code: error })
 
     const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
@@ -181,7 +120,7 @@ describe('AffinityWallet', () => {
   it('#saveCredentials', async () => {
     const credentials = [signedCredential]
 
-    sinon.stub(WalletStorageService.prototype, 'encryptAndSaveCredentials').resolves([])
+    sinon.stub(WalletStorageService.prototype, 'saveCredentials').resolves([])
 
     const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
 
