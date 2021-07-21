@@ -104,6 +104,44 @@ export type AccountV1 = CreateThing<
   }
 >
 
+export type AccountOwnershipV1 = CreateThing<
+  'AccountOwnership',
+  {
+    id?: number
+    login?: string
+    url?: string
+    name?: string
+    email?: string
+    followers?: number
+    following?: number
+    twitterUsername?: string
+    repos?: Array<UserRepoV1>
+  }
+  >
+
+type UserRepoV1 = CreateThing<
+  'UserRepo',
+  {
+    id?: number
+    // eslint-disable-next-line camelcase
+    full_name?: string
+    owner?: RepoOwnerV1
+    url?: string
+    // eslint-disable-next-line camelcase
+    forks_count?: number
+    // eslint-disable-next-line camelcase
+    stargazers_count?: number
+    // eslint-disable-next-line camelcase
+    watchers_count?: number
+  }
+  >
+
+type RepoOwnerV1 = CreateThing<'RepoOwner',
+  {
+    login?: string
+  }
+  >
+
 const getHelperContextEntries = () => {
   const accountStatementEntry = createContextEntry<AccountStatementV1>({
     type: 'AccountStatement',
@@ -198,6 +236,44 @@ const getHelperContextEntries = () => {
     },
   })
 
+  const accountOwnershipEntry = createContextEntry<AccountOwnershipV1>({
+    type: 'AccountOwnership',
+    typeIdBase: 'affSchema',
+    fields: {
+      id: 'affSchema',
+      login: 'affSchema',
+      url: 'affSchema',
+      name: 'affSchema',
+      email: 'affSchema',
+      followers: 'affSchema',
+      following: 'affSchema',
+      twitterUsername: 'affSchema',
+      repos: 'affSchema',
+    },
+  })
+
+  const userRepoEntry = createContextEntry<UserRepoV1>({
+    type: 'UserRepo',
+    typeIdBase: 'affSchema',
+    fields: {
+      id: 'affSchema',
+      full_name: 'affSchema',
+      owner: 'affSchema',
+      url: 'affSchema',
+      forks_count: 'affSchema',
+      stargazers_count: 'affSchema',
+      watchers_count: 'affSchema',
+    },
+  })
+
+  const repoOwnerEntry = createContextEntry<RepoOwnerV1>({
+    type: 'RepoOwner',
+    typeIdBase: 'affSchema',
+    fields: {
+      login: 'affSchema',
+    },
+  })
+
   return [
     accountStatementEntry,
     accountPaymentEntry,
@@ -206,6 +282,9 @@ const getHelperContextEntries = () => {
     bankAccountTransactionGroupV1Entry,
     organizationAccountEntry,
     accountEntry,
+    accountOwnershipEntry,
+    userRepoEntry,
+    repoOwnerEntry
   ]
 }
 
