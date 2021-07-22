@@ -106,7 +106,7 @@ describe('WalletStorageService', () => {
     sinon
       .stub(BloomVaultStorageService.prototype, 'searchCredentials')
       .withArgs(region, [signedCredential.type])
-      .resolves([signedCredential])
+      .resolves([{ ...signedCredential, id: 'bloomId' }])
 
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
 
@@ -122,7 +122,10 @@ describe('WalletStorageService', () => {
   it('#getCredentialsByShareToken when share request token not provided', async () => {
     sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
-    sinon.stub(BloomVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+    sinon
+      .stub(BloomVaultStorageService.prototype, 'searchCredentials')
+      .withArgs(region)
+      .resolves([{ ...signedCredential, id: 'bloomId' }])
 
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
 
@@ -138,14 +141,29 @@ describe('WalletStorageService', () => {
   it('#getAllCredentials', async () => {
     sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
-    sinon.stub(BloomVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+    sinon
+      .stub(BloomVaultStorageService.prototype, 'searchCredentials')
+      .withArgs(region)
+      .resolves([{ ...signedCredential, id: 'bloomId' }])
 
     const walletStorageService = createWalletStorageService()
     const response = await walletStorageService.getAllCredentials()
 
     expect(response).to.be.an('array')
     expect(response).to.length(2)
-    expect(response).to.eql([signedCredential, signedCredential])
+  })
+
+  it('#getAllCredentials distinct duplicates', async () => {
+    sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+
+    sinon.stub(BloomVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+
+    const walletStorageService = createWalletStorageService()
+    const response = await walletStorageService.getAllCredentials()
+
+    expect(response).to.be.an('array')
+    expect(response).to.length(1)
+    expect(response).to.eql([signedCredential])
   })
 
   it('#getCredentialById from Affinidi vault', async () => {

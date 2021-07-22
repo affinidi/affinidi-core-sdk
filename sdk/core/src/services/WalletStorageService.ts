@@ -102,7 +102,22 @@ export default class WalletStorageService {
     // should be deleted during migration to affinidi-vault Phase #2
     const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion, types)
 
-    return [...credentials, ...bloomCredentials]
+    return this._uniqueCredentials([...credentials, ...bloomCredentials])
+  }
+
+  private async _uniqueCredentials(credentials: any[]) {
+    const uniqueMap = new Map()
+    const uniqueCredentials = credentials.filter((credential) => {
+      const jsonCredentials = JSON.stringify(credential)
+      if (uniqueMap.has(jsonCredentials)) {
+        return false
+      }
+
+      uniqueMap.set(jsonCredentials, {})
+      return true
+    })
+
+    return uniqueCredentials
   }
 
   public async saveCredentials(credentials: any[], storageRegion?: string) {
@@ -121,7 +136,7 @@ export default class WalletStorageService {
     // should be deleted during migration to affinidi-vault Phase #2
     const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion)
 
-    return [...credentials, ...bloomCredentials]
+    return this._uniqueCredentials([...credentials, ...bloomCredentials])
   }
 
   public async getCredentialsByShareToken(token: string, storageRegion?: string) {
