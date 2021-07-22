@@ -130,7 +130,7 @@ export default class AffinidiVaultStorageService {
     return responses
   }
 
-  public async getAllCredentials(types: string[][], storageRegion: string): Promise<any[]> {
+  public async searchCredentials(types: string[][], storageRegion: string): Promise<any[]> {
     const token = await this._authorizeVcVault()
 
     const hashedTypes = await this._computeTypesHashes(types)
@@ -166,7 +166,7 @@ export default class AffinidiVaultStorageService {
     const token = await this._authorizeVcVault()
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
-    const credentials = await this.getAllCredentials([], storageRegion)
+    const credentials = await this.searchCredentials([], storageRegion)
 
     // this could have perfomance problems when need delete big amount of credentials
     // probably can use some kind of concurrency, but it is unknown what behavior will be at each platform
@@ -175,7 +175,7 @@ export default class AffinidiVaultStorageService {
       if (!isW3cCredential(credential)) {
         credentialId = credential?.data?.id
       }
-      
+
       const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
 
       await this._vaultApiService.deleteCredential(token, storageRegion, hashedId)

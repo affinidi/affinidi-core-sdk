@@ -221,7 +221,7 @@ export default class KeysService {
     let didMethod = seedParts[1]
     const base64EncodedKeys = seedParts[2]
 
-    let externalKeys
+    let externalKeys = []
     let seed
     if (!didMethod) {
       // to suppoer already created seeds

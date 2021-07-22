@@ -1992,13 +1992,22 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   }
 
   /**
-   * @description Retrieve all credential
-   * @param types (string[][]) - (optional) specify credential types to filter
+   * @description Retrieve all credentials
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    * @returns a single VC
    */
-  async getAllCredentials(types?: string[][], storageRegion?: string): Promise<any> {
-    return this._walletStorageService.getAllCredentials(types, storageRegion)
+  async getAllCredentials(storageRegion?: string): Promise<any> {
+    return this._walletStorageService.getAllCredentials(storageRegion)
+  }
+
+  /**
+   * @description Retrieve all credential by types
+   * @param types (string[][]) - specify credential types to filter
+   * @param storageRegion (string) - (optional) specify region where credentials will be stored
+   * @returns a single VC
+   */
+  async getCredentialsByTypes(types: string[][], storageRegion?: string): Promise<any> {
+    return this._walletStorageService.getCredentialsByTypes(types, storageRegion)
   }
 
   /**

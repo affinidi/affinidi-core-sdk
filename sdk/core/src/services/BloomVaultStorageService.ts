@@ -6,7 +6,6 @@ import { toRpcSig, ecsign } from 'ethereumjs-util'
 import { IPlatformEncryptionTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
-import { ParametersValidator } from '../shared'
 import { isW3cCredential } from '../_helpers'
 
 const keccak256 = require('keccak256')
@@ -143,27 +142,6 @@ export default class BloomVaultStorageService {
     }
   }
 
-  /* istanbul ignore next: private function */
-  private async _fetchEncryptedCredentials(
-    fetchCredentialsPaginationOptions: FetchCredentialsPaginationOptions,
-    storageRegion: string,
-  ) {
-    await ParametersValidator.validate([
-      {
-        isArray: false,
-        type: FetchCredentialsPaginationOptions,
-        isRequired: false,
-        value: fetchCredentialsPaginationOptions,
-      },
-    ])
-
-    const paginationOptions = this._getPaginationOptionsWithDefault(fetchCredentialsPaginationOptions)
-
-    const token = await this._authorizeVcVault(storageRegion)
-    const blobs = await this._fetchEncryptedCredentialsWithPagination(paginationOptions, token, storageRegion)
-    return blobs ?? []
-  }
-
   private async _fetchAllBlobs(accessToken: string, storageRegion: string) {
     const fetch = this._fetchEncryptedCredentialsWithPagination
     type FetchReturnType = ReturnType<typeof fetch>
@@ -249,7 +227,7 @@ export default class BloomVaultStorageService {
     }
   }
 
-  public async getAllCredentials(types: string[][], storageRegion: string): Promise<any[]> {
+  public async searchCredentials(types: string[][], storageRegion: string): Promise<any[]> {
     const accessToken = await this._authorizeVcVault(storageRegion)
 
     const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)

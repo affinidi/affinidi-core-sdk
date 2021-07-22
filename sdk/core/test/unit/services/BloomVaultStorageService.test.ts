@@ -52,7 +52,7 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
-    const credentials = await service.getAllCredentials([], region)
+    const credentials = await service.searchCredentials([], region)
     expect(credentials).to.length(2)
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
@@ -71,7 +71,7 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/300/399').reply(200, [])
 
     const service = createBloomStorageService()
-    const credentials = await service.getAllCredentials([], region)
+    const credentials = await service.searchCredentials([], region)
     expect(credentials).to.length(248)
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
@@ -88,7 +88,7 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
-    const credentials = await service.getAllCredentials([signedCredential.type], region)
+    const credentials = await service.searchCredentials([signedCredential.type], region)
     expect(credentials).to.length(1)
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
@@ -123,7 +123,7 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
-    const filteredCredentials = await service.getAllCredentials([['Denis'], ['Stas', 'Alex']], region)
+    const filteredCredentials = await service.searchCredentials([['Denis'], ['Stas', 'Alex']], region)
     expect(filteredCredentials).to.length(2)
     expect(filteredCredentials).to.be.an('array')
     expect(filteredCredentials).to.eql(expectedFilteredCredentialsToReturn)
@@ -136,7 +136,7 @@ describe('BloomVaultStorageService', () => {
 
     const service = createBloomStorageService()
     try {
-      await service.getAllCredentials([], region)
+      await service.searchCredentials([], region)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }

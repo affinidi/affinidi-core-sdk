@@ -146,11 +146,6 @@ export default class SdkErrorFromCode extends SdkError {
         message: 'did method: {{didMethod}} not supported. Supported methods: {{supportedDidMethods}}',
         httpStatusCode: 409,
       },
-      'COR-26': {
-        type: 'OperationError',
-        message: 'Delete credential {{credentialId}} failed',
-        httpStatusCode: 400,
-      },
     }
   }
 }

@@ -85,18 +85,6 @@ describe('AffinityWallet', () => {
     })
   })
 
-  describe('#deleteCredential', () => {
-    it('should remove with given id', async () => {
-      sinon.stub(CommonNetworkMember.prototype as any, 'deleteCredentialById').resolves(undefined)
-
-      const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
-
-      const result = await affinityWallet.deleteCredentialById(signedCredential.id)
-
-      expect(result).to.be.undefined
-    })
-  })
-
   it('#getCredentials throws error', async () => {
     const error = 'Error'
 

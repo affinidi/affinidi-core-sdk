@@ -1083,14 +1083,14 @@ describe('CommonNetworkMember', () => {
     try {
       await commonNetworkMember.getCredentialById('fake_id')
     } catch (error) {
-      expect(error.code).to.eql('AVT-2')
+      expect(error.code).to.eql('COR-23')
     }
   })
 
   it('#getAllCredentials', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
-    const result = await commonNetworkMember.getAllCredentials([])
+    const result = await commonNetworkMember.getAllCredentials()
 
     expect(result[0].id).to.eql(credential.id)
   })
@@ -1098,7 +1098,7 @@ describe('CommonNetworkMember', () => {
   it('#getAllCredentials by types', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
-    const result = await commonNetworkMember.getAllCredentials([credential.type])
+    const result = await commonNetworkMember.getCredentialsByTypes([credential.type])
 
     expect(result[0].id).to.eql(credential.id)
   })
