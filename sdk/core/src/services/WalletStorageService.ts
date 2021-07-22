@@ -121,8 +121,7 @@ export default class WalletStorageService {
     // should be deleted during migration to affinidi-vault Phase #2
     const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion)
 
-    const uniqueList = new Set([...credentials, ...bloomCredentials])
-    return uniqueList.values()
+    return [...credentials, ...bloomCredentials]
   }
 
   public async getCredentialsByShareToken(token: string, storageRegion?: string) {
