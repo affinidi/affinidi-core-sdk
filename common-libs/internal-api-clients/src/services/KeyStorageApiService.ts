@@ -1,8 +1,9 @@
 import { profile } from '@affinidi/common'
 
 import keyStorageSpec from '../openapi/_keyStorage'
+import { ParseSpec } from '../types/openapiParser'
+import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService from './GenericApiService'
-import { ExtractRequestType } from './SwaggerTypes'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
 // getSignedCredential there only uses options to create a new instance of its own CommonNetworkMember,
@@ -31,15 +32,15 @@ type Env = 'dev' | 'staging' | 'prod'
 
 type ConstructorOptions = { keyStorageUrl: string; accessApiKey: string }
 
-type ApiSpec = typeof keyStorageSpec
+type ApiType = BuildApiType<ParseSpec<typeof keyStorageSpec>>
 
 @profile()
-export default class KeyStorageApiService extends GenericApiService<ApiSpec> {
+export default class KeyStorageApiService extends GenericApiService<ApiType> {
   constructor(options: ConstructorOptions) {
     super(options.keyStorageUrl, options, keyStorageSpec)
   }
 
-  async storeTemplate(params: ExtractRequestType<ApiSpec, 'StoreTemplate'>) {
+  async storeTemplate(params: ApiType['StoreTemplate']['requestBody']) {
     return this.execute('StoreTemplate', { params })
   }
 
@@ -47,15 +48,15 @@ export default class KeyStorageApiService extends GenericApiService<ApiSpec> {
     return this.execute('ReadMyKey', { authorization: accessToken })
   }
 
-  async storeMyKey(accessToken: string, params: ExtractRequestType<ApiSpec, 'StoreMyKey'>) {
+  async storeMyKey(accessToken: string, params: ApiType['StoreMyKey']['requestBody']) {
     return this.execute('StoreMyKey', { authorization: accessToken, params })
   }
 
-  async adminConfirmUser(params: ExtractRequestType<ApiSpec, 'AdminConfirmUser'>) {
+  async adminConfirmUser(params: ApiType['AdminConfirmUser']['requestBody']) {
     return this.execute('AdminConfirmUser', { params })
   }
 
-  async adminDeleteUnconfirmedUser(params: ExtractRequestType<ApiSpec, 'AdminDeleteUnconfirmedUser'>) {
+  async adminDeleteUnconfirmedUser(params: ApiType['AdminDeleteUnconfirmedUser']['requestBody']) {
     return this.execute('AdminDeleteUnconfirmedUser', { params })
   }
 
