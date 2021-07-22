@@ -227,12 +227,12 @@ export default class BloomVaultStorageService {
     }
   }
 
-  public async searchCredentials(types: string[][], storageRegion: string): Promise<any[]> {
+  public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
     const accessToken = await this._authorizeVcVault(storageRegion)
 
     const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
 
-    if (types.length === 0) {
+    if (!types) {
       return credentials
     }
 

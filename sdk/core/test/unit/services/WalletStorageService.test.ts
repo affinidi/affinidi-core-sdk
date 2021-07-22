@@ -100,12 +100,12 @@ describe('WalletStorageService', () => {
   it('#getCredentialsByShareToken', async () => {
     sinon
       .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
-      .withArgs([signedCredential.type], region)
+      .withArgs(region, [signedCredential.type])
       .resolves([signedCredential])
 
     sinon
       .stub(BloomVaultStorageService.prototype, 'searchCredentials')
-      .withArgs([signedCredential.type], region)
+      .withArgs(region, [signedCredential.type])
       .resolves([signedCredential])
 
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
@@ -120,15 +120,9 @@ describe('WalletStorageService', () => {
   })
 
   it('#getCredentialsByShareToken when share request token not provided', async () => {
-    sinon
-      .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
-      .withArgs([], region)
-      .resolves([signedCredential])
+    sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
-    sinon
-      .stub(BloomVaultStorageService.prototype, 'searchCredentials')
-      .withArgs([], region)
-      .resolves([signedCredential])
+    sinon.stub(BloomVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
 
@@ -142,15 +136,9 @@ describe('WalletStorageService', () => {
   })
 
   it('#getAllCredentials', async () => {
-    sinon
-      .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
-      .withArgs([], region)
-      .resolves([signedCredential])
+    sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
-    sinon
-      .stub(BloomVaultStorageService.prototype, 'searchCredentials')
-      .withArgs([], region)
-      .resolves([signedCredential])
+    sinon.stub(BloomVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
     const walletStorageService = createWalletStorageService()
     const response = await walletStorageService.getAllCredentials()

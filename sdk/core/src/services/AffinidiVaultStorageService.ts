@@ -130,10 +130,10 @@ export default class AffinidiVaultStorageService {
     return responses
   }
 
-  public async searchCredentials(types: string[][], storageRegion: string): Promise<any[]> {
+  public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
     const token = await this._authorizeVcVault()
 
-    const hashedTypes = await this._computeTypesHashes(types)
+    const hashedTypes = types ? await this._computeTypesHashes(types) : undefined
 
     const { body } = await this._vaultApiService.searchCredentials(token, storageRegion, hashedTypes)
     const credentials = await this._decryptCredentials(body.credentials)
@@ -166,7 +166,7 @@ export default class AffinidiVaultStorageService {
     const token = await this._authorizeVcVault()
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
-    const credentials = await this.searchCredentials([], storageRegion)
+    const credentials = await this.searchCredentials(storageRegion)
 
     // this could have perfomance problems when need delete big amount of credentials
     // probably can use some kind of concurrency, but it is unknown what behavior will be at each platform

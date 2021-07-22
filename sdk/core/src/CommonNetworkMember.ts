@@ -2001,16 +2001,6 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   }
 
   /**
-   * @description Retrieve all credential by types
-   * @param types (string[][]) - specify credential types to filter
-   * @param storageRegion (string) - (optional) specify region where credentials will be stored
-   * @returns a single VC
-   */
-  async getCredentialsByTypes(types: string[][], storageRegion?: string): Promise<any> {
-    return this._walletStorageService.getCredentialsByTypes(types, storageRegion)
-  }
-
-  /**
    * @description Retrieve only the credential
    * @param token (string) - specify credential share request token to filter
    * @param storageRegion (string) - (optional) specify region where credentials will be stored

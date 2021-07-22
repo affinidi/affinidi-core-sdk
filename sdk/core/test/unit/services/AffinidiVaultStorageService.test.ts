@@ -105,7 +105,7 @@ describe('AffinidiVaultStorageService', () => {
       })
 
     const service = createAffinidiStorageService()
-    const credentials = await service.searchCredentials([], region)
+    const credentials = await service.searchCredentials(region)
     expect(credentials).to.length(2)
     expect(credentials[0].id).to.eql(credential.id)
   })
@@ -129,7 +129,7 @@ describe('AffinidiVaultStorageService', () => {
       })
 
     const service = createAffinidiStorageService()
-    const credentials = await service.searchCredentials([credential.type], region)
+    const credentials = await service.searchCredentials(region, [credential.type])
     expect(credentials).to.length(2)
     expect(credentials[0].id).to.eql(credential.id)
   })
@@ -143,7 +143,7 @@ describe('AffinidiVaultStorageService', () => {
 
     const service = createAffinidiStorageService()
     try {
-      await service.searchCredentials([], region)
+      await service.searchCredentials(region)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }

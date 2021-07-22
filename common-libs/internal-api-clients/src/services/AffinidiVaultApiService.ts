@@ -23,11 +23,11 @@ export default class AffinidiVaultApiService extends GenericApiService<ApiSpec> 
     return this.execute('CreateDidAuthRequest', { params })
   }
 
-  async searchCredentials(accessToken: string, storageRegion: string, types: string[][]) {
+  async searchCredentials(accessToken: string, storageRegion: string, types?: string[][]) {
     return this.execute('SearchCredentials', {
       authorization: accessToken,
       storageRegion,
-      queryParams: types.length > 0 ? { types: JSON.stringify(types) } : {},
+      queryParams: !!types ? { types: JSON.stringify(types) } : {},
     })
   }
 

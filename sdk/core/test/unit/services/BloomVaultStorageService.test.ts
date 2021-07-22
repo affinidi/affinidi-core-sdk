@@ -52,7 +52,7 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
-    const credentials = await service.searchCredentials([], region)
+    const credentials = await service.searchCredentials(region)
     expect(credentials).to.length(2)
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
@@ -71,7 +71,7 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/300/399').reply(200, [])
 
     const service = createBloomStorageService()
-    const credentials = await service.searchCredentials([], region)
+    const credentials = await service.searchCredentials(region)
     expect(credentials).to.length(248)
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
@@ -88,8 +88,27 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
-    const credentials = await service.searchCredentials([signedCredential.type], region)
+    const credentials = await service.searchCredentials(region, [signedCredential.type])
     expect(credentials).to.length(1)
+    expect(credentials[0].id).to.eql(signedCredential.id)
+  })
+
+  it('#getCredentials with types=[[]] except which do not have type property', async () => {
+    await authorizeVault()
+
+    nock(STAGING_BLOOM_VAULT_URL)
+      .get('/data/0/99')
+      .reply(200, [
+        { id: 0, cyphertext: JSON.stringify(signedCredential) },
+        { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
+        { id: 2, cyphertext: JSON.stringify({ ...signedCredential, type: [] }) },
+        { id: 3, cyphertext: JSON.stringify({ ...signedCredential, type: undefined }) },
+      ])
+    nock(STAGING_BLOOM_VAULT_URL).get('/data/100/199').reply(200, [])
+
+    const service = createBloomStorageService()
+    const credentials = await service.searchCredentials(region, [[]])
+    expect(credentials).to.length(3)
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
 
@@ -123,7 +142,7 @@ describe('BloomVaultStorageService', () => {
     nock(STAGING_BLOOM_VAULT_URL).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
-    const filteredCredentials = await service.searchCredentials([['Denis'], ['Stas', 'Alex']], region)
+    const filteredCredentials = await service.searchCredentials(region, [['Denis'], ['Stas', 'Alex']])
     expect(filteredCredentials).to.length(2)
     expect(filteredCredentials).to.be.an('array')
     expect(filteredCredentials).to.eql(expectedFilteredCredentialsToReturn)
@@ -136,7 +155,7 @@ describe('BloomVaultStorageService', () => {
 
     const service = createBloomStorageService()
     try {
-      await service.searchCredentials([], region)
+      await service.searchCredentials(region)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }

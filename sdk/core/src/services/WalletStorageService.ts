@@ -94,6 +94,17 @@ export default class WalletStorageService {
     return signedCredentials as SignedCredential[]
   }
 
+  private async _getCredentialsByTypes(storageRegion?: string, types?: string[][]) {
+    storageRegion = storageRegion || this._storageRegion
+
+    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion, types)
+
+    // should be deleted during migration to affinidi-vault Phase #2
+    const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion, types)
+
+    return [...credentials, ...bloomCredentials]
+  }
+
   public async saveCredentials(credentials: any[], storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
@@ -105,23 +116,13 @@ export default class WalletStorageService {
   public async getAllCredentials(storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
-    const credentials = await this._affinidiVaultStorageService.searchCredentials([], storageRegion)
+    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion)
 
     // should be deleted during migration to affinidi-vault Phase #2
-    const bloomCredentials = await this._bloomVaultStorageService.searchCredentials([], storageRegion)
+    const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion)
 
-    return [...credentials, ...bloomCredentials]
-  }
-
-  public async getCredentialsByTypes(types: string[][], storageRegion?: string) {
-    storageRegion = storageRegion || this._storageRegion
-
-    const credentials = await this._affinidiVaultStorageService.searchCredentials(types, storageRegion)
-
-    // should be deleted during migration to affinidi-vault Phase #2
-    const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(types, storageRegion)
-
-    return [...credentials, ...bloomCredentials]
+    const uniqueList = new Set([...credentials, ...bloomCredentials])
+    return uniqueList.values()
   }
 
   public async getCredentialsByShareToken(token: string, storageRegion?: string) {
@@ -138,11 +139,15 @@ export default class WalletStorageService {
       },
     } = request
 
+    if (!credentialRequirements) {
+      return this.getAllCredentials()
+    }
+
     const requirementTypes = credentialRequirements.map(
       (credentialRequirement: { type: string[] }) => credentialRequirement.type,
     )
 
-    return this.getCredentialsByTypes(requirementTypes, storageRegion)
+    return this._getCredentialsByTypes(storageRegion, requirementTypes)
   }
 
   public async getCredentialById(credentialId: string, storageRegion?: string): Promise<any> {

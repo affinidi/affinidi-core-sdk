@@ -18,6 +18,7 @@ import {
   testSecrets,
 } from '../helpers'
 import credential from '../factory/signedCredential'
+import { credentialShareRequestTokenToFilterCredentials } from '../factory/credentialShareRequestToken'
 
 const {
   PASSWORD,
@@ -1095,10 +1096,10 @@ describe('CommonNetworkMember', () => {
     expect(result[0].id).to.eql(credential.id)
   })
 
-  it('#getAllCredentials by types', async () => {
+  it('#getAllCredentials by share token', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
-    const result = await commonNetworkMember.getCredentialsByTypes([credential.type])
+    const result = await commonNetworkMember.getCredentialsByShareToken(credentialShareRequestTokenToFilterCredentials)
 
     expect(result[0].id).to.eql(credential.id)
   })
