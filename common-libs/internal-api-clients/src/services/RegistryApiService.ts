@@ -1,24 +1,25 @@
 import { profile } from '@affinidi/common'
 
 import registrySpec from '../openapi/_registry'
+import { ParseSpec } from '../types/openapiParser'
+import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService from './GenericApiService'
-import { ExtractRequestType } from './SwaggerTypes'
 
 type ConstructorOptions = { registryUrl: string; accessApiKey: string }
 
-type ApiSpec = typeof registrySpec
+type ApiType = BuildApiType<ParseSpec<typeof registrySpec>>
 
 @profile()
-export default class RegistryApiService extends GenericApiService<ApiSpec> {
+export default class RegistryApiService extends GenericApiService<ApiType> {
   constructor(options: ConstructorOptions) {
     super(options.registryUrl, options, registrySpec)
   }
 
-  async putDocumentInIpfs(params: ExtractRequestType<ApiSpec, 'PutDocumentInIpfs'>) {
+  async putDocumentInIpfs(params: ApiType['PutDocumentInIpfs']['requestBody']) {
     return this.execute('PutDocumentInIpfs', { params })
   }
 
-  async createAnchorTransaction(params: ExtractRequestType<ApiSpec, 'CreateAnchorTransaction'>) {
+  async createAnchorTransaction(params: ApiType['CreateAnchorTransaction']['requestBody']) {
     return this.execute('CreateAnchorTransaction', { params })
   }
 
@@ -45,11 +46,11 @@ export default class RegistryApiService extends GenericApiService<ApiSpec> {
     return this.execute('AnchorDid', { params })
   }
 
-  async resolveDid(params: ExtractRequestType<ApiSpec, 'ResolveDid'>) {
+  async resolveDid(params: ApiType['ResolveDid']['requestBody']) {
     return this.execute('ResolveDid', { params })
   }
 
-  async transactionCount(params: ExtractRequestType<ApiSpec, 'TransactionCount'>) {
+  async transactionCount(params: ApiType['TransactionCount']['requestBody']) {
     return this.execute('TransactionCount', { params })
   }
 }
