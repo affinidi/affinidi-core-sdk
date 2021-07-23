@@ -1,3 +1,5 @@
+# 2.0.0-beta.4 (2020-07-23)
+* Fixed initializing `externalKeys` in `KeysService`
 # 2.0.0-beta.3 (2020-07-19)
 * Internal changes
 # 2.0.0-beta.1 (2020-06-29)
