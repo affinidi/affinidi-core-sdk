@@ -114,7 +114,7 @@ export default class AffinidiVaultStorageService {
   public async saveCredentials(credentials: any[], storageRegion: string): Promise<VaultCredential[]> {
     const token = await this._authorizeVcVault()
 
-    const responses = []
+    const responses: VaultCredential[] = []
 
     const encryptedCredentials = await this._encryptCredentials(credentials)
 
