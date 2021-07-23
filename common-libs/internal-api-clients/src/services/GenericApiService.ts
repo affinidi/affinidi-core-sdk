@@ -2,13 +2,8 @@ import keyBy from 'lodash.keyby'
 import FetchType from 'node-fetch'
 import { profile, SdkError } from '@affinidi/common'
 
-import {
-  GenericApiSpec,
-  ExtractAllOperationIds,
-  ExtractRequestType,
-  ExtractResponseType,
-  ExtractParametersType,
-} from './SwaggerTypes'
+import { BuiltApiType } from '../types/typeBuilder'
+import { Simplify } from '../types/util'
 
 let fetch: typeof FetchType
 
@@ -25,7 +20,7 @@ type BasicRequestOptions = {
 
 type OptionalRecord = Record<string, any> | undefined
 
-type WithOptionalField<TName extends string, TData extends OptionalRecord> = TData extends undefined
+type WithOptionalField<TName extends string, TData extends OptionalRecord> = TData extends undefined | never
   ? Partial<Record<TName, undefined>>
   : Record<TName, TData>
 
@@ -38,31 +33,31 @@ type RequestOptions<
   WithOptionalField<'queryParams', TQuery> &
   WithOptionalField<'pathParams', TPath>
 
-type RequestOptionsForOperation<
-  TApiSpec extends GenericApiSpec,
-  TOperationId extends ExtractAllOperationIds<TApiSpec>
-> = RequestOptions<
-  ExtractRequestType<TApiSpec, TOperationId>,
-  ExtractParametersType<TApiSpec, TOperationId, 'query'>,
-  ExtractParametersType<TApiSpec, TOperationId, 'path'>
+type RequestOptionsForOperation<TApi extends BuiltApiType, TOperationId extends keyof TApi> = Simplify<
+  RequestOptions<TApi[TOperationId]['requestBody'], TApi[TOperationId]['queryParams'], TApi[TOperationId]['pathParams']>
 >
 
 type ConstructorOptions = { accessApiKey: string }
 
+type RawApiSpec<TApi extends BuiltApiType> = {
+  servers: readonly [{ url: string }]
+  paths: Record<string, Partial<Record<'get' | 'post' | 'put' | 'delete', { operationId: keyof TApi }>>>
+}
+
 @profile()
-export default class GenericApiService<TApiSpec extends GenericApiSpec> {
+export default class GenericApiService<TApi extends BuiltApiType> {
   private readonly _serviceUrl: string
   private readonly _accessApiKey: string
   private readonly _specGroupByOperationId
 
-  constructor(serviceUrl: string, options: ConstructorOptions, rawSpec: TApiSpec) {
+  constructor(serviceUrl: string, options: ConstructorOptions, rawSpec: RawApiSpec<TApi>) {
     this._serviceUrl = serviceUrl
     this._accessApiKey = options.accessApiKey
     const specGroupByOperationId = GenericApiService.parseSpec(rawSpec)
     this._specGroupByOperationId = specGroupByOperationId
   }
 
-  private static parseSpec<TApiSpec extends GenericApiSpec>(rawSpec: TApiSpec) {
+  private static parseSpec<TApi extends BuiltApiType>(rawSpec: RawApiSpec<TApi>) {
     const basePath = rawSpec.servers[0].url
 
     const spec = Object.entries(rawSpec.paths).flatMap(([operationPath, operation]) => {
@@ -74,7 +69,7 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
           return []
         }
 
-        const { operationId }: { operationId: ExtractAllOperationIds<TApiSpec> } = operationForMethod
+        const { operationId } = operationForMethod
 
         return [
           {
@@ -86,7 +81,7 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
       })
     })
 
-    return keyBy(spec, 'operationId') as Record<ExtractAllOperationIds<TApiSpec>, typeof spec[number]>
+    return keyBy(spec, 'operationId') as Record<keyof TApi, typeof spec[number]>
   }
 
   private static async executeByOptions<TResponse>(
@@ -126,10 +121,10 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
     return { body: jsonResponse as TResponse, status }
   }
 
-  protected async execute<TOperationId extends ExtractAllOperationIds<TApiSpec>>(
+  protected async execute<TOperationId extends keyof TApi>(
     serviceOperationId: TOperationId,
-    options: RequestOptionsForOperation<TApiSpec, TOperationId>,
-  ): Promise<{ body: ExtractResponseType<TApiSpec, TOperationId>; status: number }> {
+    options: RequestOptionsForOperation<TApi, TOperationId>,
+  ): Promise<{ body: TApi[TOperationId]['responseBody']; status: number }> {
     if (!this._serviceUrl) {
       throw new Error('Service URL is empty')
     }
@@ -137,7 +132,7 @@ export default class GenericApiService<TApiSpec extends GenericApiSpec> {
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
     const url = `${this._serviceUrl}${path}`
-    return GenericApiService.executeByOptions<ExtractResponseType<TApiSpec, TOperationId>>(
+    return GenericApiService.executeByOptions<TApi[TOperationId]['responseBody']>(
       this._accessApiKey,
       method,
       url,

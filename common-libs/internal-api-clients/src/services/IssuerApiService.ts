@@ -1,24 +1,25 @@
 import { profile } from '@affinidi/common'
 
 import issuerSpec from '../openapi/_issuer'
+import { ParseSpec } from '../types/openapiParser'
+import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService from './GenericApiService'
-import { ExtractRequestType } from './SwaggerTypes'
 
 type ConstructorOptions = { issuerUrl: string; accessApiKey: string }
 
-type ApiSpec = typeof issuerSpec
+type ApiType = BuildApiType<ParseSpec<typeof issuerSpec>>
 
 @profile()
-export default class IssuerApiService extends GenericApiService<ApiSpec> {
+export default class IssuerApiService extends GenericApiService<ApiType> {
   constructor(options: ConstructorOptions) {
     super(options.issuerUrl, options, issuerSpec)
   }
 
-  async buildCredentialOffer(params: ExtractRequestType<ApiSpec, 'BuildCredentialOffer'>) {
+  async buildCredentialOffer(params: ApiType['BuildCredentialOffer']['requestBody']) {
     return this.execute('BuildCredentialOffer', { params })
   }
 
-  async verifyCredentialOfferResponse(params: ExtractRequestType<ApiSpec, 'VerifyCredentialOfferResponse'>) {
+  async verifyCredentialOfferResponse(params: ApiType['VerifyCredentialOfferResponse']['requestBody']) {
     return this.execute('VerifyCredentialOfferResponse', { params })
   }
 
