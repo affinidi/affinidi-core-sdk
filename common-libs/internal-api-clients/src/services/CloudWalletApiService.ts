@@ -2,23 +2,24 @@ import { profile } from '@affinidi/common'
 
 import cloudWalletSpec from '../openapi/_cloudWallet'
 import GenericApiService from './GenericApiService'
-import { ExtractRequestType } from './SwaggerTypes'
+import { ParseSpec } from '../types/openapiParser'
+import { BuildApiType } from '../types/typeBuilder'
 
 type ConstructorOptions = { cloudWalletUrl: string; accessApiKey: string }
 
-type ApiSpec = typeof cloudWalletSpec
+type ApiType = BuildApiType<ParseSpec<typeof cloudWalletSpec>>
 
 @profile()
-export default class CloudWalletApiService extends GenericApiService<ApiSpec> {
+export default class CloudWalletApiService extends GenericApiService<ApiType> {
   constructor(options: ConstructorOptions) {
     super(options.cloudWalletUrl, options, cloudWalletSpec)
   }
 
-  async login(params: ExtractRequestType<ApiSpec, 'Login'>) {
+  async login(params: ApiType['Login']['requestBody']) {
     return this.execute('Login', { params })
   }
 
-  async signCredential(params: ExtractRequestType<ApiSpec, 'SignCredential'>) {
+  async signCredential(params: ApiType['SignCredential']['requestBody']) {
     return this.execute('SignCredential', { params })
   }
 }

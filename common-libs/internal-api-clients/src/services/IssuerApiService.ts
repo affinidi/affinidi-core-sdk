@@ -23,7 +23,7 @@ export default class IssuerApiService extends GenericApiService<ApiType> {
     return this.execute('VerifyCredentialOfferResponse', { params })
   }
 
-  async buildUnsignedCredentials(params: ExtractRequestType<ApiSpec, 'BuildUnsigned'>) {
+  async buildUnsignedCredentials(params: ApiType['BuildUnsigned']['requestBody']) {
     return this.execute('BuildUnsigned', { params })
   }
 }
