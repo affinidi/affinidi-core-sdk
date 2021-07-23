@@ -1,8 +1,9 @@
 import { profile } from '@affinidi/common'
 
 import affinidiVaultSpec from '../openapi/_affinidiVault'
+import { ParseSpec } from '../types/openapiParser'
+import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService from './GenericApiService'
-import { ExtractRequestType } from './SwaggerTypes'
 
 type ConstructorOptions = { vaultUrl: string; accessApiKey: string }
 
@@ -11,15 +12,15 @@ export type BlobType = {
   id: number
 }
 
-type ApiSpec = typeof affinidiVaultSpec
+type ApiType = BuildApiType<ParseSpec<typeof affinidiVaultSpec>>
 
 @profile()
-export default class AffinidiVaultApiService extends GenericApiService<ApiSpec> {
+export default class AffinidiVaultApiService extends GenericApiService<ApiType> {
   constructor(options: ConstructorOptions) {
     super(options.vaultUrl, options, affinidiVaultSpec)
   }
 
-  async createDidAuthRequest(params: ExtractRequestType<ApiSpec, 'CreateDidAuthRequest'>) {
+  async createDidAuthRequest(params: ApiType['CreateDidAuthRequest']['requestBody']) {
     return this.execute('CreateDidAuthRequest', { params })
   }
 
@@ -43,7 +44,7 @@ export default class AffinidiVaultApiService extends GenericApiService<ApiSpec> 
     accessToken: string,
     storageRegion: string,
     id: string,
-    params: ExtractRequestType<ApiSpec, 'StoreCredential'>,
+    params: ApiType['StoreCredential']['requestBody'],
   ) {
     return this.execute('StoreCredential', {
       authorization: accessToken,

@@ -2,6 +2,8 @@ import { profile } from '@affinidi/common'
 
 import bloomVaultSpec from '../openapi/_bloomVault'
 import GenericApiService from './GenericApiService'
+import { ParseSpec } from '../types/openapiParser'
+import { BuildApiType } from '../types/typeBuilder'
 
 type ConstructorOptions = { vaultUrl: string; accessApiKey: string }
 
@@ -10,10 +12,10 @@ export type BlobType = {
   id: number
 }
 
-type ApiSpec = typeof bloomVaultSpec
+type ApiType = BuildApiType<ParseSpec<typeof bloomVaultSpec>>
 
 @profile()
-export default class BloomVaultApiService extends GenericApiService<ApiSpec> {
+export default class BloomVaultApiService extends GenericApiService<ApiType> {
   constructor(options: ConstructorOptions) {
     super(options.vaultUrl, options, bloomVaultSpec)
   }
