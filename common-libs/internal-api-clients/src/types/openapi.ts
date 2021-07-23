@@ -70,12 +70,17 @@ export type AnyOfObjectSpec<TObjectSpecTypes extends readonly ObjectSpecType[]> 
   anyOf: TObjectSpecTypes
 }
 
+export type OneOfObjectSpec<TObjectSpecTypes extends readonly ObjectSpecType[]> = {
+  oneOf: TObjectSpecTypes
+}
+
 export type ObjectSpecType =
   | FieldSpecPrimitiveType
   | FieldSpecArrayType<any>
   | SimpleObjectSpec<string, readonly string[], boolean>
   | AllOfObjectSpec<any>
   | AnyOfObjectSpec<any>
+  | OneOfObjectSpec<any>
 
 export type ObjectSpecOptionNullable = {
   nullable: true
