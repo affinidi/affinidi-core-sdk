@@ -70,7 +70,7 @@ type ParseAllOfObjectSpec<TObjectSpecType extends readonly ObjectSpecType[]> = {
   dataType: 'allOf'
   allOf: {
     [key in keyof TObjectSpecType]:
-    TObjectSpecType[key] extends TObjectSpecType[number]
+      TObjectSpecType[key] extends TObjectSpecType[number]
         ? ParseObjectSpecType<TObjectSpecType[key]>
         : never
   }
@@ -80,9 +80,9 @@ type ParseAnyOfObjectSpec<TObjectSpecType extends readonly ObjectSpecType[]> = {
   dataType: 'anyOf'
   anyOf: {
     [key in keyof TObjectSpecType]:
-    TObjectSpecType[key] extends TObjectSpecType[number]
-      ? ParseObjectSpecType<TObjectSpecType[key]>
-      : never
+      TObjectSpecType[key] extends TObjectSpecType[number]
+        ? ParseObjectSpecType<TObjectSpecType[key]>
+        : never
   }
 }
 
