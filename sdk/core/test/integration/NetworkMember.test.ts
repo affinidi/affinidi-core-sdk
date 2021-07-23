@@ -17,6 +17,8 @@ import {
   getBasicOptionsForEnvironment,
   testSecrets,
 } from '../helpers'
+import credential from '../factory/signedCredential'
+import { credentialShareRequestTokenToFilterCredentials } from '../factory/credentialShareRequestToken'
 
 const {
   PASSWORD,
@@ -1046,5 +1048,64 @@ describe('CommonNetworkMember', () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(signedCredentials[0].credentialSubject.data.email).to.eq(decoded.email)
+  })
+
+  it('#saveCredentials', async () => {
+    const credentials = [credential]
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    const result = await commonNetworkMember.saveCredentials(credentials)
+
+    expect(result[0].credentialId).to.eql(credential.id)
+  })
+
+  it('#saveCredentials existing', async () => {
+    const credentials = [credential]
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    try {
+      await commonNetworkMember.saveCredentials(credentials)
+    } catch (error) {
+      expect(error.code).to.eql('AVT-5')
+    }
+  })
+
+  it('#getCredentialById', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    const result = await commonNetworkMember.getCredentialById(credential.id)
+
+    expect(result.id).to.eql(credential.id)
+  })
+
+  it('#getCredentialById with error', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    try {
+      await commonNetworkMember.getCredentialById('fake_id')
+    } catch (error) {
+      expect(error.code).to.eql('COR-23')
+    }
+  })
+
+  it('#getAllCredentials', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    const result = await commonNetworkMember.getAllCredentials()
+
+    expect(result[0].id).to.eql(credential.id)
+  })
+
+  it('#getAllCredentials by share token', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    const result = await commonNetworkMember.getCredentialsByShareToken(credentialShareRequestTokenToFilterCredentials)
+
+    expect(result[0].id).to.eql(credential.id)
+  })
+
+  it('#deleteCredentialById', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+    await commonNetworkMember.deleteCredentialById(credential.id)
   })
 })

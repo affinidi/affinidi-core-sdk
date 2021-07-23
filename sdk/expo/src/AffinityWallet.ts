@@ -12,8 +12,6 @@ const COMPONENT = EventComponent.AffinidiExpoSDK
 
 @profile()
 export class AffinityWallet extends CoreNetwork<SdkOptions> {
-  _credentials: any[] = []
-
   constructor(password: string, encryptedSeed: string, options: SdkOptions, component: EventComponent = COMPONENT) {
     super(password, encryptedSeed, platformEncryptionTools, options, component)
 
@@ -28,10 +26,6 @@ export class AffinityWallet extends CoreNetwork<SdkOptions> {
     return this._sdkOptions.otherOptions.skipBackupCredentials
   }
 
-  get credentials() {
-    return this._credentials
-  }
-
   static async afterConfirmSignUp(affinityWallet: AffinityWallet, originalOptions: SdkOptions): Promise<void> {
     const options = Object.assign({}, affinityWallet._sdkOptions, originalOptions)
     const { idToken } = affinityWallet.cognitoUserTokens
@@ -39,11 +33,7 @@ export class AffinityWallet extends CoreNetwork<SdkOptions> {
     if (options.issueSignupCredential) {
       const signedCredentials = await affinityWallet.getSignupCredentials(idToken, options)
 
-      if (affinityWallet.skipBackupCredentials) {
-        affinityWallet._credentials = signedCredentials
-      } else {
-        await affinityWallet.saveCredentials(signedCredentials)
-      }
+      await affinityWallet.saveCredentials(signedCredentials)
     }
   }
 
@@ -83,33 +73,16 @@ export class AffinityWallet extends CoreNetwork<SdkOptions> {
   }
 
   /**
-   * @description Searches all of VCs for matches for the given credentialShareRequestToken
-   *   or returns all of your offline VCs
-   *   or fetches a subset of backup VCs
-   * 1. pull encrypted VCs
-   * 2. decrypt encrypted VCs
-   * 3. optionally filter VCs by type
-   * @param credentialShareRequestToken - JWT received from verifier, if given will search in all VCs
-   * @param fetchBackupCredentials - optional, if false - returns all credentials from instance ignoring pagination
-   * @param paginationOptions - if fetching from backup, optional range for credentials to be pulled (default is skip: 0, limit: 100)
+   * @description Searches all of VCs for matches for the given credentialShareRequestToken.
+   * If a token is not given returns all the available credentials
+   * @param credentialShareRequestToken - JWT received from verifier
    * @returns array of VCs
    */
-  async getCredentials(
-    credentialShareRequestToken: string = null,
-    fetchBackupCredentials: boolean = true,
-  ): Promise<any[]> {
-    const credentials = fetchBackupCredentials ? await this.fetchAllCredentials() : this._credentials
-
+  async getCredentials(credentialShareRequestToken: string = null): Promise<any[]> {
     if (credentialShareRequestToken) {
-      return this._walletStorageService.filterCredentials(credentialShareRequestToken, credentials)
+      return this.getCredentialsByShareToken(credentialShareRequestToken)
     }
 
-    return credentials
-  }
-
-  private async fetchAllCredentials() {
-    const credentials = await this._walletStorageService.fetchAllDecryptedCredentials()
-    this._credentials = credentials
-    return credentials
+    return this.getAllCredentials()
   }
 }

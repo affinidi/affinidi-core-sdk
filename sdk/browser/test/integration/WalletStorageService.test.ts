@@ -69,7 +69,7 @@ describe('WalletStorageService [OTP]', () => {
       const expectedIds = getCredentialIds(credentialsToSave)
       for (const id of credentialIdsToDelete) {
         expectedIds.delete(id)
-        await commonNetworkMember.deleteCredential(id)
+        await commonNetworkMember.deleteCredentialById(id)
         console.log('deleted credential')
         const remaining = await commonNetworkMember.getCredentials()
         console.log(`There are ${remaining.length} credentials left`)
