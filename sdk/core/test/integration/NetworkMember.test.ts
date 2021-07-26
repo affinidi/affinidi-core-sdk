@@ -300,7 +300,7 @@ describe('CommonNetworkMember', () => {
 
   it('#resolveDid ignores extra parameter', async () => {
     const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod } as const)
-
+    console.log("password, encryptedSeedElem", password, encryptedSeedElem)
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, optionsWithElemDid)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

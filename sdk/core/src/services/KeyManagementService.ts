@@ -1,6 +1,7 @@
 import { JwtService, KeysService, profile } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import retry from 'async-retry'
+import { createApiServiceHeaders } from '../_helpers'
 const createHash = require('create-hash')
 
 import { KeyParams } from '../dto/shared.dto'
@@ -26,7 +27,11 @@ export default class KeyManagementService {
   private _keyStorageApiService
 
   constructor(options: ConstructorOptions) {
-    this._keyStorageApiService = new KeyStorageApiService(options)
+    this._keyStorageApiService = new KeyStorageApiService({
+      keyStorageUrl: options.keyStorageUrl,
+      accessApiKey: options.accessApiKey,
+      headers: createApiServiceHeaders(),
+    })
   }
 
   private async _pullEncryptedSeed(accessToken: string) {

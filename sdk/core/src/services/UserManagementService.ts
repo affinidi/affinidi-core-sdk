@@ -21,6 +21,7 @@ import CognitoIdentityService, {
   SignUpResult,
   UsernameWithAttributes,
 } from './CognitoIdentityService'
+import { createApiServiceHeaders } from '../_helpers'
 
 const generatePassword = async () => {
   const randomPassword = (await randomBytes(32)).toString('hex')
@@ -59,7 +60,11 @@ export default class UserManagementService {
   private _sessionStorageService
 
   constructor(options: ConstructorOptions) {
-    this._keyStorageApiService = new KeyStorageApiService(options)
+    this._keyStorageApiService = new KeyStorageApiService({
+      keyStorageUrl: options.keyStorageUrl,
+      accessApiKey: options.accessApiKey,
+      headers: createApiServiceHeaders(),
+    })
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
   }

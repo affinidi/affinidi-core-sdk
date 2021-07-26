@@ -5,7 +5,7 @@ import GenericApiService from './GenericApiService'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 
-type ConstructorOptions = { vaultUrl: string; accessApiKey: string }
+type ConstructorOptions = { vaultUrl: string; accessApiKey: string, headers?: object }
 
 export type BlobType = {
   cyphertext: string

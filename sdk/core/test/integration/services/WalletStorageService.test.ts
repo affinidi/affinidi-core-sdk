@@ -11,6 +11,7 @@ import { normalizeUsername } from '../../../src/shared'
 
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
+import { createApiServiceHeaders } from '../../../src/_helpers'
 
 const options = getAllOptionsForEnvironment()
 
@@ -39,7 +40,11 @@ describe('WalletStorageService', () => {
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {
     const { accessToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
 
-    const keyStorageApiService = new KeyStorageApiService(options)
+    const keyStorageApiService = new KeyStorageApiService({
+      keyStorageUrl: options.keyStorageUrl,
+      accessApiKey: options.accessApiKey,
+      headers: createApiServiceHeaders(),
+    })
 
     let responseError
 
@@ -79,7 +84,11 @@ describe('WalletStorageService', () => {
   it.skip('#storeEncryptedSeed throws exception WHEN userId does not exists', async () => {
     const { accessToken } = await userManagementService.logInWithPassword(nonExistingUser, cognitoPassword)
 
-    const keyStorageApiService = new KeyStorageApiService(options)
+    const keyStorageApiService = new KeyStorageApiService({
+      keyStorageUrl: options.keyStorageUrl,
+      accessApiKey: options.accessApiKey,
+      headers: createApiServiceHeaders(),
+    })
 
     let responseError
 
@@ -96,7 +105,11 @@ describe('WalletStorageService', () => {
     const email = 'different_test_user_to_delete@example.com'
 
     await userManagementService.initiateSignUpWithEmailOrPhone(email, password, null)
-    const keyStorageApiService = new KeyStorageApiService(options)
+    const keyStorageApiService = new KeyStorageApiService({
+      keyStorageUrl: options.keyStorageUrl,
+      accessApiKey: options.accessApiKey,
+      headers: createApiServiceHeaders(),
+    })
     await keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizeUsername(email) })
     let responseError
 
@@ -116,7 +129,11 @@ describe('WalletStorageService', () => {
     let responseError
 
     try {
-      const keyStorageApiService = new KeyStorageApiService(options)
+      const keyStorageApiService = new KeyStorageApiService({
+        keyStorageUrl: options.keyStorageUrl,
+        accessApiKey: options.accessApiKey,
+        headers: createApiServiceHeaders(),
+      })
       await keyStorageApiService.adminConfirmUser({ username: cognitoUsername })
     } catch (error) {
       responseError = error
@@ -135,7 +152,11 @@ describe('WalletStorageService', () => {
     let responseError
 
     try {
-      const keyStorageApiService = new KeyStorageApiService(options)
+      const keyStorageApiService = new KeyStorageApiService({
+        keyStorageUrl: options.keyStorageUrl,
+        accessApiKey: options.accessApiKey,
+        headers: createApiServiceHeaders(),
+      })
       await keyStorageApiService.adminDeleteUnconfirmedUser({ username: cognitoUsername })
     } catch (error) {
       responseError = error

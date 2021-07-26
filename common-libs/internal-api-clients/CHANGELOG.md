@@ -1,3 +1,5 @@
+# release 1.0.0-beta.6 (2021-07-26)
+  * Added headers to GenericApiService constructor options
 # release 1.0.0-beta.5 (2021-07-23)
   * Fixed passing empty `types` to `searchCredentials` in `AffinidiVaultApiService`
 # release 1.0.0-beta.4 (2021-07-23)

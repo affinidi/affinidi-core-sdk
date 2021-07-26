@@ -50,7 +50,7 @@ import {
 } from './dto/verifier.dto'
 
 import { randomBytes } from './shared/randomBytes'
-import { isW3cCredential } from './_helpers'
+import { createApiServiceHeaders, isW3cCredential } from './_helpers'
 
 import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
 import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
@@ -172,10 +172,12 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       accessApiKey: accessApiKey,
       component: component,
     })
-    this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey })
-    this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey })
-    this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey })
-    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey })
+
+    const headers = createApiServiceHeaders()
+    this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey, headers })
+    this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, headers })
+    this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, headers })
+    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, headers })
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
     this._keyManagementService = new KeyManagementService({ keyStorageUrl, accessApiKey })
     this._didDocumentService = new DidDocumentService(keysService)
@@ -386,7 +388,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       accessApiKey,
     } = getOptionsFromEnvironment(options)
 
-    const api = new RegistryApiService({ registryUrl, accessApiKey })
+    const api = new RegistryApiService({ registryUrl, accessApiKey, headers: createApiServiceHeaders() })
 
     const did = didDocument.id
 

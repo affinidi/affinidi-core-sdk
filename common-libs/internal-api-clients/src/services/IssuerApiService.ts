@@ -5,7 +5,7 @@ import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService from './GenericApiService'
 
-type ConstructorOptions = { issuerUrl: string; accessApiKey: string }
+type ConstructorOptions = { issuerUrl: string; accessApiKey: string, headers?: object }
 
 type ApiType = BuildApiType<ParseSpec<typeof issuerSpec>>
 

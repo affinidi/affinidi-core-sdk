@@ -30,7 +30,7 @@ type GetSignedCredentialRequest = {
 
 type Env = 'dev' | 'staging' | 'prod'
 
-type ConstructorOptions = { keyStorageUrl: string; accessApiKey: string }
+type ConstructorOptions = { keyStorageUrl: string; accessApiKey: string, headers?: object }
 
 type ApiType = BuildApiType<ParseSpec<typeof keyStorageSpec>>
 

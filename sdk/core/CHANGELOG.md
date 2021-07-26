@@ -1,3 +1,5 @@
+# release 6.0.0-beta.5 (2021-07-26)
+  * added header `X-SDK-Version` to all api services
 # release 6.0.0-beta.4 (2021-07-23)
 * Created `AffinidiVaultStorageService` for managing credentials at Affinidi vault:
   - saveCredentials - stores VC in Affinidi vault

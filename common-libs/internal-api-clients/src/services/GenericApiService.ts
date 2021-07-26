@@ -37,7 +37,7 @@ type RequestOptionsForOperation<TApi extends BuiltApiType, TOperationId extends 
   RequestOptions<TApi[TOperationId]['requestBody'], TApi[TOperationId]['queryParams'], TApi[TOperationId]['pathParams']>
 >
 
-type ConstructorOptions = { accessApiKey: string }
+type ConstructorOptions = { accessApiKey: string, headers?: object }
 
 type RawApiSpec<TApi extends BuiltApiType> = {
   servers: readonly [{ url: string }]
@@ -49,10 +49,12 @@ export default class GenericApiService<TApi extends BuiltApiType> {
   private readonly _serviceUrl: string
   private readonly _accessApiKey: string
   private readonly _specGroupByOperationId
+  private readonly _headers: object
 
   constructor(serviceUrl: string, options: ConstructorOptions, rawSpec: RawApiSpec<TApi>) {
     this._serviceUrl = serviceUrl
     this._accessApiKey = options.accessApiKey
+    this._headers = options.headers || {}
     const specGroupByOperationId = GenericApiService.parseSpec(rawSpec)
     this._specGroupByOperationId = specGroupByOperationId
   }
@@ -87,12 +89,14 @@ export default class GenericApiService<TApi extends BuiltApiType> {
   private static async executeByOptions<TResponse>(
     accessApiKey: string,
     method: string,
-    pathTemplate: string,
+    pathTemplate: string, 
+    headers: object,
     options: BasicRequestOptions & { params?: any; pathParams?: any; queryParams?: any },
   ) {
     const { authorization, storageRegion, params } = options
     const fetchOptions = {
       headers: {
+        ...headers,
         Accept: 'application/json',
         'Content-Type': 'application/json',
         'Api-Key': accessApiKey,
@@ -136,6 +140,7 @@ export default class GenericApiService<TApi extends BuiltApiType> {
       this._accessApiKey,
       method,
       url,
+      this._headers,
       options,
     )
   }
