@@ -19,7 +19,7 @@ export default class CloudWalletApiService extends GenericApiService<ApiType> {
     return this.execute('Login', { params })
   }
 
-  async signCredential(params: ApiType['SignCredential']['requestBody']) {
-    return this.execute('SignCredential', { params })
+  async signCredential(params: ApiType['SignCredential']['requestBody'], accessToken: string) {
+    return this.execute('SignCredential', { params, authorization: accessToken })
   }
 }
