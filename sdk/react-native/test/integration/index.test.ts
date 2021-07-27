@@ -1,5 +1,7 @@
 import 'mocha'
 import './env'
 
-require('./AffinityWallet.test')
-require('./otp/index.test')
+describe('React integration tests', () => {
+  it.skip('no actual react-specific tests here', () => {
+  })
+})

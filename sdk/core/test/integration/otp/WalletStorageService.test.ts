@@ -1,21 +1,21 @@
 import 'mocha'
 
-import './env'
+import '../env'
 
 import { expect } from 'chai'
-import { __dangerous } from '@affinidi/wallet-core-sdk'
-import { TestmailInbox } from '@affinidi/wallet-core-sdk/dist/test-helpers'
-import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
-import { AffinityWallet } from '../../src/AffinityWallet'
+import { MessageParameters, SdkOptions } from '../../../src/dto'
+import { TestmailInbox } from '../../../src/test-helpers'
 
-import { getOptionsForEnvironment } from '../helpers'
+import { generateCredentials } from '../../factory/signedCredentials'
+import { getBasicOptionsForEnvironment } from '../../helpers'
+import { CommonNetworkMemberWithEncryption } from '../../helpers/CommonNetworkMemberWithEncryption'
 
-import { generateCredentials } from '../factory/signedCredentials'
+const AffinityWallet = CommonNetworkMemberWithEncryption
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
-const options: __dangerous.SdkOptions = getOptionsForEnvironment()
+const options: SdkOptions = getBasicOptionsForEnvironment()
 const { env } = options
 
 const messageParameters: MessageParameters = {
@@ -28,7 +28,7 @@ const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   return body.replace('Your verification code is: ', '')
 }
 
-const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.node' })
+const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.wallet' })
 
 const getCredentialIds = (credentials: any[]) => new Set(credentials.map((credential) => credential.id))
 

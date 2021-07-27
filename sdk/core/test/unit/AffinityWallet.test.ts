@@ -3,18 +3,21 @@
 import sinon from 'sinon'
 import { expect, use as chaiUse } from 'chai'
 import sinonChai from 'sinon-chai'
-import { CommonNetworkMember, __dangerous } from '@affinidi/wallet-core-sdk'
-import KeyManagementService from '@affinidi/wallet-core-sdk/dist/services/KeyManagementService'
-import UserManagementService from '@affinidi/wallet-core-sdk/dist/services/UserManagementService'
+
+import { SdkOptions } from '../../src/dto'
+import KeyManagementService from '../../src/services/KeyManagementService'
+import UserManagementService from '../../src/services/UserManagementService'
+import WalletStorageService from '../../src/services/WalletStorageService'
+
+import { CommonNetworkMemberWithEncryption } from '../helpers/CommonNetworkMemberWithEncryption'
+import { generateTestDIDs } from '../factory/didFactory'
 
 chaiUse(sinonChai)
 
-import { AffinityWallet, SdkOptions } from '../../src/AffinityWallet'
-import { generateTestDIDs } from '../factory/didFactory'
-
 const signedCredential = require('../factory/signedCredential')
 
-const { WalletStorageService } = __dangerous
+const AffinityWallet = CommonNetworkMemberWithEncryption
+const CommonNetworkMember = CommonNetworkMemberWithEncryption
 
 let walletPassword: string
 
@@ -66,6 +69,7 @@ describe('AffinityWallet', () => {
   describe('#getCredentialById', () => {
     it('throws error', async () => {
       const error = 'Error'
+
       sinon.stub(WalletStorageService.prototype, 'getCredentialById').rejects({ code: error })
 
       const affinityWallet = new AffinityWallet(walletPassword, encryptedSeed, sdkOptions)
@@ -116,7 +120,7 @@ describe('AffinityWallet', () => {
     expect(token).to.exist
   })
 
-  it('#confirmSignIn without VC issuance', async () => {
+  it('#confirmSignUp without VC issuance', async () => {
     const spys = await stubConfirmAuthRequests({ walletPassword, encryptedSeed })
 
     const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, sdkOptions)

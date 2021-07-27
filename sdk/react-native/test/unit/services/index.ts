@@ -1,1 +1,0 @@
-require('./WalletStorageService.test')

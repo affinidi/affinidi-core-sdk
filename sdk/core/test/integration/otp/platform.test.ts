@@ -1,17 +1,18 @@
-import 'mocha'
-
 import '../env'
 
+import 'mocha'
 import { expect } from 'chai'
-import { __dangerous } from '@affinidi/wallet-core-sdk'
-import { TestmailInbox } from '@affinidi/wallet-core-sdk/dist/test-helpers'
-import { MessageParameters } from '@affinidi/wallet-core-sdk/dist/dto'
-import { AffinityWallet } from '../../../src/AffinityWallet'
 
-import { getOptionsForEnvironment } from '../../helpers'
+import { isW3cCredential } from '../../../src/_helpers'
+import { MessageParameters, SdkOptions } from '../../../src/dto'
+import { TestmailInbox } from '../../../src/test-helpers'
+
+import { getBasicOptionsForEnvironment } from '../../helpers'
+import { CommonNetworkMemberWithEncryption } from '../../helpers/CommonNetworkMemberWithEncryption'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
-
 import { generateCredentials } from '../../factory/signedCredentials'
+
+const AffinityWallet = CommonNetworkMemberWithEncryption
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -29,7 +30,7 @@ const credentialShareRequestToken =
   'y0xIn0.4c0de5d6d44d77d38b4c8c7f5d099dee53f938c1baf8b35ded409fda9c44eac73f3' +
   '50b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
-const options: __dangerous.SdkOptions = getOptionsForEnvironment()
+const options: SdkOptions = getBasicOptionsForEnvironment()
 const { env } = options
 
 const messageParameters: MessageParameters = {
@@ -67,15 +68,13 @@ describe('AffinityWallet [OTP]', () => {
     expect(credentials).to.have.length(1)
 
     const firstCredential = credentials[0]
-    const credentialIdToDelete = __dangerous.isW3cCredential(firstCredential)
-      ? firstCredential.id
-      : firstCredential.data.id
+    const credentialIdToDelete = isW3cCredential(firstCredential) ? firstCredential.id : firstCredential.data.id
 
     await commonNetworkMember.deleteCredentialById(credentialIdToDelete)
     credentials = await commonNetworkMember.getCredentials()
 
     const credentialIds = credentials.map((credential: any) => {
-      return __dangerous.isW3cCredential(credential) ? credential.id : credential.data.id
+      return isW3cCredential(credential) ? credential.id : credential.data.id
     })
 
     expect(credentialIds).to.not.include(credentialIdToDelete)
