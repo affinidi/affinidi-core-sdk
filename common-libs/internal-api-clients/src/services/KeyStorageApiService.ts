@@ -3,7 +3,7 @@ import { profile } from '@affinidi/common'
 import keyStorageSpec from '../openapi/_keyStorage'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
 // getSignedCredential there only uses options to create a new instance of its own CommonNetworkMember,
@@ -30,7 +30,7 @@ type GetSignedCredentialRequest = {
 
 type Env = 'dev' | 'staging' | 'prod'
 
-type ConstructorOptions = { keyStorageUrl: string; accessApiKey: string, headers?: object }
+type ConstructorOptions = GenericConstructorOptions & { keyStorageUrl: string }
 
 type ApiType = BuildApiType<ParseSpec<typeof keyStorageSpec>>
 

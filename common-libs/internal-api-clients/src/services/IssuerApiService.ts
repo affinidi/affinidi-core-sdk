@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import issuerSpec from '../openapi/_issuer'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = { issuerUrl: string; accessApiKey: string, headers?: object }
+type ConstructorOptions = GenericConstructorOptions & { issuerUrl: string }
 
 type ApiType = BuildApiType<ParseSpec<typeof issuerSpec>>
 

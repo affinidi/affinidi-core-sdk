@@ -37,7 +37,7 @@ type RequestOptionsForOperation<TApi extends BuiltApiType, TOperationId extends 
   RequestOptions<TApi[TOperationId]['requestBody'], TApi[TOperationId]['queryParams'], TApi[TOperationId]['pathParams']>
 >
 
-type ConstructorOptions = { accessApiKey: string, headers?: object }
+export type GenericConstructorOptions = { accessApiKey: string; headers?: NodeJS.Dict<string | string[]> }
 
 type RawApiSpec<TApi extends BuiltApiType> = {
   servers: readonly [{ url: string }]
@@ -49,9 +49,9 @@ export default class GenericApiService<TApi extends BuiltApiType> {
   private readonly _serviceUrl: string
   private readonly _accessApiKey: string
   private readonly _specGroupByOperationId
-  private readonly _headers: object
+  private readonly _headers: NodeJS.Dict<string | string[]>
 
-  constructor(serviceUrl: string, options: ConstructorOptions, rawSpec: RawApiSpec<TApi>) {
+  constructor(serviceUrl: string, options: GenericConstructorOptions, rawSpec: RawApiSpec<TApi>) {
     this._serviceUrl = serviceUrl
     this._accessApiKey = options.accessApiKey
     this._headers = options.headers || {}
@@ -89,8 +89,8 @@ export default class GenericApiService<TApi extends BuiltApiType> {
   private static async executeByOptions<TResponse>(
     accessApiKey: string,
     method: string,
-    pathTemplate: string, 
-    headers: object,
+    pathTemplate: string,
+    headers: NodeJS.Dict<string | string[]>,
     options: BasicRequestOptions & { params?: any; pathParams?: any; queryParams?: any },
   ) {
     const { authorization, storageRegion, params } = options

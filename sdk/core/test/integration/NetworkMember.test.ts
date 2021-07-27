@@ -17,8 +17,9 @@ import {
   getBasicOptionsForEnvironment,
   testSecrets,
 } from '../helpers'
-import credential from '../factory/signedCredential'
 import { credentialShareRequestTokenToFilterCredentials } from '../factory/credentialShareRequestToken'
+import { generateCredentials } from '../helpers/generateCredentials'
+import { SignedCredential } from '../../src/dto'
 
 const {
   PASSWORD,
@@ -62,6 +63,13 @@ const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 const options = getBasicOptionsForEnvironment()
 
 describe('CommonNetworkMember', () => {
+  let randomCredentials: SignedCredential[]
+  before(async () => {
+    randomCredentials = generateCredentials({
+      types: ['Credential', 'ProofOfNameCredential'],
+    })
+  })
+
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
 
   const offeredCredentials = [
@@ -300,7 +308,6 @@ describe('CommonNetworkMember', () => {
 
   it('#resolveDid ignores extra parameter', async () => {
     const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod } as const)
-    console.log("password, encryptedSeedElem", password, encryptedSeedElem)
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, optionsWithElemDid)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -1050,35 +1057,32 @@ describe('CommonNetworkMember', () => {
     expect(signedCredentials[0].credentialSubject.data.email).to.eq(decoded.email)
   })
 
-  it('#saveCredentials', async () => {
-    const credentials = [credential]
+  it('#NCsaveCredentials', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
-
-    const result = await commonNetworkMember.saveCredentials(credentials)
-
-    expect(result[0].credentialId).to.eql(credential.id)
+    const result = await commonNetworkMember.saveCredentials(randomCredentials)
+    expect(result).to.length(randomCredentials.length)
+    expect(result[0].credentialId).to.eql(randomCredentials[0].id)
   })
 
-  it('#saveCredentials existing', async () => {
-    const credentials = [credential]
+  it('#NCsaveCredentials existing', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     try {
-      await commonNetworkMember.saveCredentials(credentials)
+      await commonNetworkMember.saveCredentials(randomCredentials)
     } catch (error) {
       expect(error.code).to.eql('AVT-5')
     }
   })
 
-  it('#getCredentialById', async () => {
+  it('#NCgetCredentialById', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
-    const result = await commonNetworkMember.getCredentialById(credential.id)
+    const result = await commonNetworkMember.getCredentialById(randomCredentials[0].id)
 
-    expect(result.id).to.eql(credential.id)
+    expect(result.id).to.eql(randomCredentials[0].id)
   })
 
-  it('#getCredentialById with error', async () => {
+  it('#NCgetCredentialById with error', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     try {
@@ -1088,24 +1092,29 @@ describe('CommonNetworkMember', () => {
     }
   })
 
-  it('#getAllCredentials', async () => {
+  it('#NCgetAllCredentials', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     const result = await commonNetworkMember.getAllCredentials()
 
-    expect(result[0].id).to.eql(credential.id)
+    expect(result).to.eql(randomCredentials)
   })
 
-  it('#getAllCredentials by share token', async () => {
+  it('#NCgetAllCredentials by share token', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     const result = await commonNetworkMember.getCredentialsByShareToken(credentialShareRequestTokenToFilterCredentials)
 
-    expect(result[0].id).to.eql(credential.id)
+    expect(result[0].id).to.eql(randomCredentials[0].id)
   })
 
-  it('#deleteCredentialById', async () => {
+  it('#NCdeleteCredentialById', async () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
-    await commonNetworkMember.deleteCredentialById(credential.id)
+    await commonNetworkMember.deleteCredentialById(randomCredentials[0].id)
+  })
+
+  it('#NCdeleteAllCredentials', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+    await commonNetworkMember.deleteAllCredentials()
   })
 })

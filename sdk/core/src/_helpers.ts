@@ -1,7 +1,8 @@
 import { SUPPORTED_DID_METHODS } from './_defaultConfig'
 import SdkErrorFromCode from './shared/SdkErrorFromCode'
 
-import {version} from '../package.json';
+import { version } from '../package.json'
+import { IncomingHttpHeaders } from 'http'
 
 export const validateDidMethodSupported = (didMethod: string) => {
   if (!SUPPORTED_DID_METHODS.includes(didMethod)) {
@@ -20,4 +21,8 @@ export function isW3cCredential(credential: any): boolean {
   return !!credential.type
 }
 
-export const createApiServiceHeaders = () => ({ 'X-SDK-Version': version })
+interface SDKHeaders extends IncomingHttpHeaders {
+  'X-SDK-Version': string
+}
+
+export const createApiServiceHeaders = (): SDKHeaders => ({ 'X-SDK-Version': version })

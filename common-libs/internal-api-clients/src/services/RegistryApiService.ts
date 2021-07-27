@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import registrySpec from '../openapi/_registry'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = { registryUrl: string; accessApiKey: string, headers?: object }
+type ConstructorOptions = GenericConstructorOptions & { registryUrl: string }
 
 type ApiType = BuildApiType<ParseSpec<typeof registrySpec>>
 

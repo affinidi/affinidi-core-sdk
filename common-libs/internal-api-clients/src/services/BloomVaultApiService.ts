@@ -1,11 +1,11 @@
 import { profile } from '@affinidi/common'
 
 import bloomVaultSpec from '../openapi/_bloomVault'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 
-type ConstructorOptions = { vaultUrl: string; accessApiKey: string, headers?: object }
+type ConstructorOptions = GenericConstructorOptions & { vaultUrl: string }
 
 export type BlobType = {
   cyphertext: string

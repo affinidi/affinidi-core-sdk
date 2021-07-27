@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import verifierSpec from '../openapi/_verifier'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = { verifierUrl: string; accessApiKey: string, headers?: object }
+type ConstructorOptions = GenericConstructorOptions & { verifierUrl: string }
 
 type ApiType = BuildApiType<ParseSpec<typeof verifierSpec>>
 
