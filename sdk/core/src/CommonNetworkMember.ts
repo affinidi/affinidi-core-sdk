@@ -58,26 +58,22 @@ import UserManagementService from './services/UserManagementService'
 import KeyManagementService from './services/KeyManagementService'
 import SdkErrorFromCode from './shared/SdkErrorFromCode'
 
-type GenericConstructor<T, TOptions> = new (
+type GenericConstructor<T> = new (
   password: string,
   encryptedSeed: string,
-  options: TOptions,
+  options: SdkOptions,
   component?: EventComponent,
 ) => T
-type Constructor<T, TOptions extends SdkOptions> = GenericConstructor<T, TOptions> &
-  GenericConstructor<CommonNetworkMember<TOptions>, TOptions>
-type AbstractStaticMethods<T, TOptions> = {
-  afterConfirmSignUp: (networkMember: T, originalOptions: TOptions) => Promise<void>
-}
+type Constructor<T> = GenericConstructor<T> & GenericConstructor<CommonNetworkMember>
+type AbstractStaticMethods = Record<never, never>
 type ConstructorKeys<T> = {
   [P in keyof T]: T[P] extends new (...args: unknown[]) => unknown ? P : never
 }[keyof T]
 type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
-type DerivedTypeForOptions<TInstance, TOptions extends SdkOptions> = Constructor<TInstance, TOptions> &
-  AbstractStaticMethods<TInstance, TOptions> &
+type DerivedTypeForOptions<TInstance> = Constructor<TInstance> &
+  AbstractStaticMethods &
   OmitConstructor<typeof CommonNetworkMember>
-type ExtractOptionsType<T extends new (...args: unknown[]) => unknown> = SdkOptions & ConstructorParameters<T>[2]
-type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<T>, ExtractOptionsType<T>>
+type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<T>>
 
 /**
  * This class is abstract.
@@ -99,7 +95,7 @@ type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<
  * You can leave the method body empty if you don't need it.
  */
 @profile()
-export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptions> {
+export abstract class CommonNetworkMember {
   private _did: string
   private readonly _encryptedSeed: string
   private _password: string
@@ -122,12 +118,13 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   private _didDocumentKeyId: string
   protected readonly _component: EventComponent
   protected cognitoUserTokens: CognitoUserTokens
+  protected readonly _platformEncryptionTools: IPlatformEncryptionTools
 
   constructor(
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
-    inputOptions: TOptions,
+    inputOptions: SdkOptions,
     component: EventComponent,
   ) {
     // await ParametersValidator.validateSync(
@@ -207,6 +204,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this.cognitoUserTokens = cognitoUserTokens
     this._did = null
     this._didDocumentKeyId = null
+    this._platformEncryptionTools = platformEncryptionTools
   }
 
   /**
@@ -277,7 +275,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   static async fromSeed<T extends DerivedType<T>>(
     this: T,
     seedHexWithMethod: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
     password: string = null,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
@@ -350,7 +348,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   static async register<T extends DerivedType<T>>(
     this: T,
     password: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
   ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
@@ -555,7 +553,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this: T,
     token: string,
     confirmationCode: string,
-    inputOptions: ExtractOptionsType<T>,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -682,7 +680,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this: T,
     username: string,
     password: string,
-    inputOptions: ExtractOptionsType<T>,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
@@ -732,7 +730,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     keyParams: KeyParams,
     login: string,
     password: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
@@ -765,7 +763,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     self: T,
     username: string,
     password: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
@@ -782,14 +780,14 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       messageParameters,
     )
     const result = await CommonNetworkMember._confirmSignUp(self, cognitoTokens, password, undefined, options)
-    await self.afterConfirmSignUp(result, options)
+    result.afterConfirmSignUp()
     return result
   }
 
   private static async _signUpByEmailOrPhone<T extends DerivedType<T>>(
     login: string,
     password: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
@@ -818,7 +816,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this: T,
     login: string,
     password: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
@@ -847,7 +845,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     keyParams: KeyParams,
     signUpToken: string,
     confirmationCode: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     ParametersValidator.validate([
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
@@ -869,7 +867,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     cognitoTokens: CognitoUserTokens,
     shortPassword: string,
     keyParams: KeyParams,
-    inputOptions: ExtractOptionsType<T>,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     const { accessToken } = cognitoTokens
 
@@ -906,7 +904,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this: T,
     signUpToken: string,
     confirmationCode: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
@@ -920,8 +918,18 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       confirmationCode,
     )
     const result = await CommonNetworkMember._confirmSignUp(this, cognitoTokens, shortPassword, undefined, options)
-    await this.afterConfirmSignUp(result, options)
+    await result.afterConfirmSignUp()
     return result
+  }
+
+  private async afterConfirmSignUp() {
+    const { idToken } = this.cognitoUserTokens
+
+    if (this._sdkOptions.otherOptions.issueSignupCredential) {
+      const signedCredentials = await this.getSignupCredentials(idToken, this._sdkOptions)
+
+      await this.saveCredentials(signedCredentials)
+    }
   }
 
   /**
@@ -956,7 +964,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   static async signIn<T extends DerivedType<T>>(
     this: T,
     login: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
@@ -987,7 +995,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
     this: T,
     token: string,
     confirmationCode: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
   ): Promise<{ isNew: boolean; commonNetworkMember: InstanceType<T> }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -1934,7 +1942,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
   static async fromAccessToken<T extends DerivedType<T>>(
     this: T,
     accessToken: string,
-    options: ExtractOptionsType<T>,
+    options: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: false, value: accessToken },
@@ -1952,7 +1960,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init<T extends DerivedType<T>>(this: T, options: ExtractOptionsType<T>): Promise<InstanceType<T>> {
+  static async init<T extends DerivedType<T>>(this: T, options: SdkOptions): Promise<InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
 
     const userManagementService = CommonNetworkMember._createUserManagementService(options)
@@ -2025,5 +2033,54 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    */
   async deleteAllCredentials(storageRegion?: string): Promise<void> {
     return this._walletStorageService.deleteAllCredentials(storageRegion)
+  }
+
+  /**
+   * @description Searches all of VCs for matches for the given credentialShareRequestToken.
+   * If a token is not given returns all the available credentials
+   * @param credentialShareRequestToken - JWT received from verifier
+   * @returns array of VCs
+   */
+  async getCredentials(credentialShareRequestToken: string = null): Promise<any[]> {
+    if (credentialShareRequestToken) {
+      return this.getCredentialsByShareToken(credentialShareRequestToken)
+    }
+
+    return this.getAllCredentials()
+  }
+
+  /**
+   * @description Decrypts message using user's private key
+   * @param encryptedMessage - message encrypted for you by your public key
+   * @returns decrypted message
+   */
+  async readEncryptedMessage(encryptedMessage: string): Promise<any> {
+    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
+
+    return this._platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, encryptedMessage)
+  }
+
+  /**
+   * @description Creates encrypted message for another user DID
+   * 1. resolve DID (for whom message will be encrypted)
+   * 2. get public key from resolved DID document
+   * 3. encrypt message using public key of resolved DID
+   * @param did - DID of user for whom message will be sent (only this user
+   * will be able to decrypt it using his private key),
+   * or if DID Document is passed, resolveDid won't happen
+   * @param object - message object which will be send
+   * @returns encryptedMessage - string version of encrypted message
+   */
+  async createEncryptedMessage(did: string | any, object: any) {
+    let didDocument = did
+
+    if (typeof did === 'string') {
+      didDocument = await this.resolveDid(did)
+    }
+
+    const publicKeyHex = this.getPublicKeyHexFromDidDocument(didDocument)
+    const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
+
+    return this._platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, object)
   }
 }

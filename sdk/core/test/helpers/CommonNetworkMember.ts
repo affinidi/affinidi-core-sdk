@@ -7,8 +7,4 @@ export class CommonNetworkMember extends GenericCommonNetworkMember {
   constructor(password: string, encryptedSeed: string, options: SdkOptions, component?: EventComponent) {
     super(password, encryptedSeed, testPlatformTools, options, component)
   }
-
-  static async afterConfirmSignUp() {
-    // empty implementation of "abstract" static method
-  }
 }

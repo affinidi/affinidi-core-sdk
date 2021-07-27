@@ -107,6 +107,9 @@ export class SdkOptions {
 
   @IsOptional()
   storageRegion?: string
+
+  @IsOptional()
+  issueSignupCredential?: boolean
 }
 
 export class MessageParameters {
