@@ -1,7 +1,7 @@
 import { SUPPORTED_DID_METHODS } from './_defaultConfig'
 import SdkErrorFromCode from './shared/SdkErrorFromCode'
 
-import { version } from '../package.json'
+const packageInfo = require('../package.json')
 import { IncomingHttpHeaders } from 'http'
 
 export const validateDidMethodSupported = (didMethod: string) => {
@@ -25,4 +25,4 @@ interface SDKHeaders extends IncomingHttpHeaders {
   'X-SDK-Version': string
 }
 
-export const createApiServiceHeaders = (): SDKHeaders => ({ 'X-SDK-Version': version })
+export const createApiServiceHeaders = (): SDKHeaders => ({ 'X-SDK-Version': packageInfo.version })
