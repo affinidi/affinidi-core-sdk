@@ -21,7 +21,7 @@ export function isW3cCredential(credential: any): boolean {
   return !!credential.type
 }
 
-interface SDKHeaders extends IncomingHttpHeaders {
+interface SDKHeaders {
   'X-SDK-Version': string
 }
 
