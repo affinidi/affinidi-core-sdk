@@ -1998,7 +1998,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    * @returns a single VC
    */
-  async getAllCredentials(storageRegion?: string): Promise<any> {
+  async getAllCredentials(storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.getAllCredentials(storageRegion)
   }
 
@@ -2008,7 +2008,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    * @returns a single VC
    */
-  async getCredentialsByShareToken(token: string, storageRegion?: string): Promise<any> {
+  async getCredentialsByShareToken(token: string, storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.getCredentialsByShareToken(token, storageRegion)
   }
 

@@ -66,8 +66,11 @@ describe('CommonNetworkMember', () => {
   let randomCredentials: SignedCredential[]
   before(async () => {
     randomCredentials = generateCredentials({
+      count: 5,
       types: ['Credential', 'ProofOfNameCredential'],
     })
+
+    randomCredentials.sort((a, b) => a.id.localeCompare(b.id))
   })
 
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
@@ -1096,6 +1099,7 @@ describe('CommonNetworkMember', () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     const result = await commonNetworkMember.getAllCredentials()
+    result.sort((a, b) => a.id.localeCompare(b.id))
 
     expect(result).to.eql(randomCredentials)
   })
@@ -1104,7 +1108,8 @@ describe('CommonNetworkMember', () => {
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
 
     const result = await commonNetworkMember.getCredentialsByShareToken(credentialShareRequestTokenToFilterCredentials)
-
+    result.sort((a, b) => a.id.localeCompare(b.id))
+    
     expect(result[0].id).to.eql(randomCredentials[0].id)
   })
 

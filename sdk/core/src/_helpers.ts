@@ -21,7 +21,7 @@ export function isW3cCredential(credential: any): boolean {
   return !!credential.type
 }
 
-interface SDKHeaders {
+interface SDKHeaders extends NodeJS.Dict<string | string[]> {
   'X-SDK-Version': string
 }
 
