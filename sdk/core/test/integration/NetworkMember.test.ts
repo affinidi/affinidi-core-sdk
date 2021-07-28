@@ -1109,7 +1109,7 @@ describe('CommonNetworkMember', () => {
 
     const result = await commonNetworkMember.getCredentialsByShareToken(credentialShareRequestTokenToFilterCredentials)
     result.sort((a, b) => a.id.localeCompare(b.id))
-    
+
     expect(result[0].id).to.eql(randomCredentials[0].id)
   })
 
