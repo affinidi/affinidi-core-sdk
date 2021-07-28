@@ -3,7 +3,9 @@ import '../env'
 
 import { expect } from 'chai'
 import { SdkError } from '@affinidi/common'
-import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
+import { CommonNetworkMember } from '../../../src'
+import { BaseNetworkMember } from '../../../src/CommonNetworkMember/BaseNetworkMember'
+import { AffinidiWallet } from '../../helpers/AffinidiWallet'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
@@ -33,7 +35,7 @@ function checkIsString(value: string | unknown): asserts value is string {
 }
 
 function checkIsCommonNetworkMember(value: CommonNetworkMember | unknown): asserts value is CommonNetworkMember {
-  expect(value).to.be.an.instanceof(CommonNetworkMember)
+  expect(value).to.be.an.instanceof(BaseNetworkMember)
 }
 
 describe('CommonNetworkMember [OTP]', () => {
@@ -41,7 +43,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const inbox = createInbox()
 
     const timestamp = String(Date.now())
-    await CommonNetworkMember.signIn(inbox.email, options, {
+    await AffinidiWallet.signIn(inbox.email, options, {
       message: `Your verification code is: {{CODE}} #${timestamp}`,
       subject: `Code {{CODE}} #${timestamp}`,
     })
@@ -58,7 +60,7 @@ describe('CommonNetworkMember [OTP]', () => {
   it('#signIn with skipBackupEncryptedSeed, #storeEncryptedSeed, #signIn', async () => {
     const inbox = createInbox()
 
-    const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    const signInToken = await AffinidiWallet.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken)
     const signInCode = await waitForOtpCode(inbox)
 
@@ -67,7 +69,7 @@ describe('CommonNetworkMember [OTP]', () => {
       skipBackupEncryptedSeed: true,
     }
 
-    let { commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
+    let { commonNetworkMember } = await AffinidiWallet.confirmSignIn(
       signInToken,
       signInCode,
       optionsWithSkippedBackupEncryptedSeed,
@@ -77,30 +79,30 @@ describe('CommonNetworkMember [OTP]', () => {
 
     const { password, accessToken, encryptedSeed } = commonNetworkMember
 
-    commonNetworkMember = new CommonNetworkMember(password, encryptedSeed, options)
+    commonNetworkMember = new AffinidiWallet(password, encryptedSeed, options)
 
     await commonNetworkMember.storeEncryptedSeed('', '', accessToken)
     await commonNetworkMember.signOut(options)
 
-    const signInToken2 = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    const signInToken2 = await AffinidiWallet.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken2)
     const signInCode2 = await waitForOtpCode(inbox)
 
-    const result = await CommonNetworkMember.confirmSignIn(signInToken2, signInCode2, options)
+    const result = await AffinidiWallet.confirmSignIn(signInToken2, signInCode2, options)
     checkIsCommonNetworkMember(result.commonNetworkMember)
   })
 
   it('registers new user after confirmation code from the first call to #signIn was ignored; #signUpConfirm returns { isNew: true }', async () => {
     const inbox = createInbox()
 
-    await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+    await AffinidiWallet.signUp(inbox.email, null, options, messageParameters)
     await waitForOtpCode(inbox) // ignore first OTP code
 
-    const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    const signInToken = await AffinidiWallet.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken)
     const signInCode = await waitForOtpCode(inbox)
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
+    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(signInToken, signInCode, options)
 
     expect(isNew).to.be.true
     checkIsCommonNetworkMember(commonNetworkMember)
@@ -110,12 +112,12 @@ describe('CommonNetworkMember [OTP]', () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    const signUpToken = await AffinidiWallet.signUp(inbox.email, password, options, messageParameters)
     checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
-    let commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
-    expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+    let commonNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, signUpCode, options)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     const newInbox = createInbox()
 
@@ -125,40 +127,40 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
+    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
     checkIsCommonNetworkMember(commonNetworkMember)
 
     await commonNetworkMember.signOut(options)
 
-    await CommonNetworkMember.forgotPassword(newInbox.email, options, messageParameters)
+    await AffinidiWallet.forgotPassword(newInbox.email, options, messageParameters)
     const forgotPasswordCode = await waitForOtpCode(newInbox)
 
     const newPassword = `${password}_updated`
-    await CommonNetworkMember.forgotPasswordSubmit(newInbox.email, forgotPasswordCode, newPassword, options)
+    await AffinidiWallet.forgotPasswordSubmit(newInbox.email, forgotPasswordCode, newPassword, options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, newPassword, options)
+    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, newPassword, options)
     checkIsCommonNetworkMember(commonNetworkMember)
   })
 
   it('changes forgotten password after email was changed for user registered with email but without password', async () => {
     const inbox = createInbox()
 
-    const signUpToken = await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+    const signUpToken = await AffinidiWallet.signUp(inbox.email, null, options, messageParameters)
     checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
-    let commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
-    expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+    let commonNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, signUpCode, options)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     await commonNetworkMember.signOut(options)
 
-    await CommonNetworkMember.forgotPassword(inbox.email, options, messageParameters)
+    await AffinidiWallet.forgotPassword(inbox.email, options, messageParameters)
     const forgotPasswordCode = await waitForOtpCode(inbox)
 
     const password = COGNITO_PASSWORD
-    await CommonNetworkMember.forgotPasswordSubmit(inbox.email, forgotPasswordCode, password, options)
+    await AffinidiWallet.forgotPasswordSubmit(inbox.email, forgotPasswordCode, password, options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, password, options)
+    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
     checkIsCommonNetworkMember(commonNetworkMember)
 
     const newInbox = createInbox()
@@ -169,7 +171,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, password, options)
+    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
     checkIsCommonNetworkMember(commonNetworkMember)
   })
 
@@ -177,24 +179,24 @@ describe('CommonNetworkMember [OTP]', () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    const signUpToken = await AffinidiWallet.signUp(inbox.email, password, options, messageParameters)
     checkIsString(signUpToken)
     await waitForOtpCode(inbox) // skip first OTP code
 
-    await CommonNetworkMember.resendSignUpConfirmationCode(inbox.email, options, messageParameters)
+    await AffinidiWallet.resendSignUpConfirmationCode(inbox.email, options, messageParameters)
     const newSignUpCode = await waitForOtpCode(inbox)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, newSignUpCode, options)
-    expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+    const commonNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, newSignUpCode, options)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     await commonNetworkMember.signOut(options)
 
-    const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+    const signInToken = await AffinidiWallet.signIn(inbox.email, options, messageParameters)
     checkIsString(signInToken)
 
     let error
     try {
-      await CommonNetworkMember.confirmSignIn(signInToken, '123456', options)
+      await AffinidiWallet.confirmSignIn(signInToken, '123456', options)
     } catch (err) {
       error = err
     }
@@ -204,7 +206,7 @@ describe('CommonNetworkMember [OTP]', () => {
 
     const signInCode = await waitForOtpCode(inbox)
 
-    const result = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
+    const result = await AffinidiWallet.confirmSignIn(signInToken, signInCode, options)
     checkIsCommonNetworkMember(result.commonNetworkMember)
   })
 
@@ -212,21 +214,21 @@ describe('CommonNetworkMember [OTP]', () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const signUpToken = await CommonNetworkMember.signUp(inbox.email, password, options, messageParameters)
+    const signUpToken = await AffinidiWallet.signUp(inbox.email, password, options, messageParameters)
     checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
-    const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
-    expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+    const commonNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, signUpCode, options)
+    checkIsCommonNetworkMember(commonNetworkMember)
 
     await commonNetworkMember.signOut(options)
 
-    const loginToken = await CommonNetworkMember.signIn(inbox.email, options)
+    const loginToken = await AffinidiWallet.signIn(inbox.email, options)
     checkIsString(loginToken)
 
     let error
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
+      await AffinidiWallet.confirmSignIn(loginToken, '123456', options)
     } catch (err) {
       error = err
     }
@@ -235,7 +237,7 @@ describe('CommonNetworkMember [OTP]', () => {
     expect(error.name).to.eql('COR-5')
 
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
+      await AffinidiWallet.confirmSignIn(loginToken, '123456', options)
     } catch (err) {
       error = err
     }
@@ -244,7 +246,7 @@ describe('CommonNetworkMember [OTP]', () => {
     expect(error.name).to.eql('COR-5')
 
     try {
-      await CommonNetworkMember.confirmSignIn(loginToken, '123456', options)
+      await AffinidiWallet.confirmSignIn(loginToken, '123456', options)
     } catch (err) {
       error = err
     }
@@ -257,7 +259,7 @@ describe('CommonNetworkMember [OTP]', () => {
     const username = generateUsername()
     const password = COGNITO_PASSWORD
 
-    let commonNetworkMember = await CommonNetworkMember.signUp(username, password, options)
+    let commonNetworkMember = await AffinidiWallet.signUp(username, password, options)
     checkIsCommonNetworkMember(commonNetworkMember)
 
     const inbox = createInbox()
@@ -268,7 +270,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.confirmChangeUsername(inbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, password, options)
+    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
     checkIsCommonNetworkMember(commonNetworkMember)
 
     const newPassword = `${password}_updated`
@@ -276,7 +278,7 @@ describe('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.changePassword(password, newPassword, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, newPassword, options)
+    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
     checkIsCommonNetworkMember(commonNetworkMember)
   })
 
@@ -287,28 +289,28 @@ describe('CommonNetworkMember [OTP]', () => {
     before(async () => {
       inbox = createInbox()
 
-      const signUpToken = await CommonNetworkMember.signUp(inbox.email, null, options, messageParameters)
+      const signUpToken = await AffinidiWallet.signUp(inbox.email, null, options, messageParameters)
       checkIsString(signUpToken)
       const signUpCode = await waitForOtpCode(inbox)
 
-      originalNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
+      originalNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, signUpCode, options)
     })
 
     it('logs user in without password using #signIn and #confirmSignIn', async () => {
-      const signInToken = await CommonNetworkMember.signIn(inbox.email, options, messageParameters)
+      const signInToken = await AffinidiWallet.signIn(inbox.email, options, messageParameters)
       checkIsString(signInToken)
       const signInCode = await waitForOtpCode(inbox)
 
-      const result = await CommonNetworkMember.confirmSignIn(signInToken, signInCode, options)
+      const result = await AffinidiWallet.confirmSignIn(signInToken, signInCode, options)
 
       expect(result.isNew).to.be.false
-      expect(result.commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+      checkIsCommonNetworkMember(result.commonNetworkMember)
       expect(result.commonNetworkMember.did).to.exist
     })
 
     it('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
       const timestamp = String(Date.now())
-      await CommonNetworkMember.passwordlessLogin(inbox.email, options, {
+      await AffinidiWallet.passwordlessLogin(inbox.email, options, {
         message: `Your verification code is: {{CODE}} #${timestamp}`,
         subject: `Code {{CODE}} #${timestamp}`,
       })
@@ -324,23 +326,23 @@ describe('CommonNetworkMember [OTP]', () => {
     })
 
     it('logs user in without password using #passwordlessLogin and #completeLoginChallenge', async () => {
-      const loginToken = await CommonNetworkMember.passwordlessLogin(inbox.email, options, messageParameters)
+      const loginToken = await AffinidiWallet.passwordlessLogin(inbox.email, options, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
 
-      const commonNetworkMember = await CommonNetworkMember.completeLoginChallenge(loginToken, loginCode, options)
-      expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+      const commonNetworkMember = await AffinidiWallet.completeLoginChallenge(loginToken, loginCode, options)
+      checkIsCommonNetworkMember(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
     })
 
     it.skip('throws COR-13 at attempt to call #completeLoginChallenge with expired confirmation code', async () => {
-      const loginToken = await CommonNetworkMember.passwordlessLogin(inbox.email, options, messageParameters)
+      const loginToken = await AffinidiWallet.passwordlessLogin(inbox.email, options, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
 
       await wait(180_000) // wait for 3 minutes before completing the login challenge
 
       let error
       try {
-        await CommonNetworkMember.completeLoginChallenge(loginToken, loginCode, options)
+        await AffinidiWallet.completeLoginChallenge(loginToken, loginCode, options)
       } catch (err) {
         error = err
       }
@@ -354,7 +356,7 @@ describe('CommonNetworkMember [OTP]', () => {
 
       let error
       try {
-        await CommonNetworkMember.signUp(inbox.email, password, options)
+        await AffinidiWallet.signUp(inbox.email, password, options)
       } catch (err) {
         error = err
       }
@@ -367,12 +369,12 @@ describe('CommonNetworkMember [OTP]', () => {
       const newInbox = createInbox()
       const password = COGNITO_PASSWORD
 
-      const signUpToken = await CommonNetworkMember.signUp(newInbox.email, password, options, messageParameters)
+      const signUpToken = await AffinidiWallet.signUp(newInbox.email, password, options, messageParameters)
       checkIsString(signUpToken)
       const signUpCode = await waitForOtpCode(newInbox)
 
-      const commonNetworkMember = await CommonNetworkMember.confirmSignUp(signUpToken, signUpCode, options)
-      expect(commonNetworkMember).to.be.instanceOf(CommonNetworkMember)
+      const commonNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, signUpCode, options)
+      checkIsCommonNetworkMember(commonNetworkMember)
 
       let error
       try {
@@ -392,13 +394,13 @@ describe('CommonNetworkMember [OTP]', () => {
       const newPassword = COGNITO_PASSWORD
 
       {
-        await CommonNetworkMember.forgotPassword(inbox.email, options, messageParameters)
+        await AffinidiWallet.forgotPassword(inbox.email, options, messageParameters)
         const forgotPasswordCode = await waitForOtpCode(inbox)
-        await CommonNetworkMember.forgotPasswordSubmit(inbox.email, forgotPasswordCode, newPassword, options)
+        await AffinidiWallet.forgotPasswordSubmit(inbox.email, forgotPasswordCode, newPassword, options)
       }
 
       {
-        const commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(inbox.email, newPassword, options)
+        const commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
         checkIsCommonNetworkMember(commonNetworkMember)
 
         await commonNetworkMember.changeUsername(newInbox.email, options, messageParameters)
@@ -409,7 +411,7 @@ describe('CommonNetworkMember [OTP]', () => {
       }
 
       {
-        const commonNetworkMember = await CommonNetworkMember.fromLoginAndPassword(newInbox.email, newPassword, options)
+        const commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, newPassword, options)
         checkIsCommonNetworkMember(commonNetworkMember)
       }
     })

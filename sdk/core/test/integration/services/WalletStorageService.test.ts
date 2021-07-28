@@ -10,7 +10,7 @@ import WalletStorageService from '../../../src/services/WalletStorageService'
 import { normalizeUsername } from '../../../src/shared'
 
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
-import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
+import { AffinidiWallet } from '../../helpers/AffinidiWallet'
 
 const options = getAllOptionsForEnvironment()
 
@@ -172,7 +172,7 @@ describe('WalletStorageService', () => {
     const { accessToken, idToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
     const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    const networkMember = new CommonNetworkMember(encryptionKey, encryptedSeed, options)
+    const networkMember = new AffinidiWallet(encryptionKey, encryptedSeed, options)
     const offerResponse = await networkMember.createCredentialOfferResponseToken(offerToken)
     const signedCredentials = await WalletStorageService.getSignedCredentials(idToken, offerResponse, options)
 

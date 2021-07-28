@@ -12,18 +12,18 @@ import { parse } from 'did-resolver'
 
 import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 
-import WalletStorageService from './services/WalletStorageService'
-import HolderService from './services/HolderService'
+import WalletStorageService from '../services/WalletStorageService'
+import HolderService from '../services/HolderService'
 import {
   PhoneIssuerService,
   InitiateResponse as PhoneIssuerInitiateResponse,
   VerifyResponse as PhoneIssuerVerifyResponse,
-} from './services/PhoneIssuerService'
+} from '../services/PhoneIssuerService'
 import {
   EmailIssuerService,
   InitiateResponse as EmailIssuerInitiateResponse,
   VerifyResponse as EmailIssuerVerifyResponse,
-} from './services/EmailIssuerService'
+} from '../services/EmailIssuerService'
 
 import {
   ClaimMetadata,
@@ -36,27 +36,27 @@ import {
   CognitoUserTokens,
   MessageParameters,
   KeyParams,
-} from './dto/shared.dto'
+} from '../dto/shared.dto'
 
-import { validateUsername } from './shared/validateUsername'
+import { validateUsername } from '../shared/validateUsername'
 
-import { FreeFormObject, IPlatformEncryptionTools } from './shared/interfaces'
-import { ParametersValidator } from './shared/ParametersValidator'
+import { FreeFormObject, IPlatformEncryptionTools } from '../shared/interfaces'
+import { ParametersValidator } from '../shared/ParametersValidator'
 
 import {
   CredentialShareResponseOutput,
   CredentialOfferResponseOutput,
   PresentationValidationOutput,
-} from './dto/verifier.dto'
+} from '../dto/verifier.dto'
 
-import { randomBytes } from './shared/randomBytes'
-import { isW3cCredential } from './_helpers'
+import { randomBytes } from '../shared/randomBytes'
+import { isW3cCredential } from '../_helpers'
 
-import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
-import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
-import UserManagementService from './services/UserManagementService'
-import KeyManagementService from './services/KeyManagementService'
-import SdkErrorFromCode from './shared/SdkErrorFromCode'
+import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
+import { getOptionsFromEnvironment } from '../shared/getOptionsFromEnvironment'
+import UserManagementService from '../services/UserManagementService'
+import KeyManagementService from '../services/KeyManagementService'
+import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -64,7 +64,7 @@ type GenericConstructor<T> = new (
   options: SdkOptions,
   component?: EventComponent,
 ) => T
-type Constructor<T> = GenericConstructor<T> & GenericConstructor<CommonNetworkMember>
+type Constructor<T> = GenericConstructor<T> & GenericConstructor<BaseNetworkMember>
 type AbstractStaticMethods = Record<never, never>
 type ConstructorKeys<T> = {
   [P in keyof T]: T[P] extends new (...args: unknown[]) => unknown ? P : never
@@ -72,8 +72,9 @@ type ConstructorKeys<T> = {
 type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
 type DerivedTypeForOptions<TInstance> = Constructor<TInstance> &
   AbstractStaticMethods &
-  OmitConstructor<typeof CommonNetworkMember>
+  OmitConstructor<typeof BaseNetworkMember>
 type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<T>>
+export type UniversalDerivedType = DerivedType<DerivedTypeForOptions<BaseNetworkMember>>
 
 /**
  * This class is abstract.
@@ -95,7 +96,7 @@ type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<
  * You can leave the method body empty if you don't need it.
  */
 @profile()
-export abstract class CommonNetworkMember {
+export abstract class BaseNetworkMember {
   private _did: string
   private readonly _encryptedSeed: string
   private _password: string
@@ -261,7 +262,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     return userManagementService.doesUnconfirmedUserExist(username)
   }
 
@@ -356,7 +357,7 @@ export abstract class CommonNetworkMember {
     ])
 
     const didMethod = options.didMethod || DEFAULT_DID_METHOD
-    const seed = await CommonNetworkMember.generateSeed(didMethod)
+    const seed = await BaseNetworkMember.generateSeed(didMethod)
     const seedHex = seed.toString('hex')
     const seedWithMethod = `${seedHex}++${didMethod}`
     const passwordBuffer = KeysService.normalizePassword(password)
@@ -367,7 +368,7 @@ export abstract class CommonNetworkMember {
     const didDocument = await didDocumentService.buildDidDocument()
     const did = didDocument.id
 
-    await CommonNetworkMember.anchorDid(encryptedSeed, password, didDocument, 0, options)
+    await BaseNetworkMember.anchorDid(encryptedSeed, password, didDocument, 0, options)
 
     return { did, encryptedSeed }
   }
@@ -470,7 +471,7 @@ export abstract class CommonNetworkMember {
 
     const nonce = transactionCount
 
-    await CommonNetworkMember.anchorDid(this._encryptedSeed, this._password, didDocument, nonce, this._sdkOptions)
+    await BaseNetworkMember.anchorDid(this._encryptedSeed, this._password, didDocument, nonce, this._sdkOptions)
   }
 
   /**
@@ -538,7 +539,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     return await userManagementService.initiateLogInPasswordless(login, messageParameters)
   }
 
@@ -546,7 +547,7 @@ export abstract class CommonNetworkMember {
    * @description Completes login
    * @param token - received from #passwordlessLogin method
    * @param confirmationCode - OTP sent by AWS Cognito/SES
-   * @param options - optional parameters for CommonNetworkMember initialization
+   * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
   static async completeLoginChallenge<T extends DerivedType<T>>(
@@ -561,8 +562,8 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
-    const keyManagementService = CommonNetworkMember._createKeyManagementService(inputOptions)
+    const userManagementService = BaseNetworkMember._createUserManagementService(inputOptions)
+    const keyManagementService = BaseNetworkMember._createKeyManagementService(inputOptions)
     const cognitoUserTokens = await userManagementService.completeLogInPasswordless(token, confirmationCode)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
@@ -575,7 +576,7 @@ export abstract class CommonNetworkMember {
 
   getShareCredential(credentialShareRequestToken: string, options: FreeFormObject): SignedCredential[] {
     const { credentials } = options
-    const credentialShareRequest = CommonNetworkMember.fromJWT(credentialShareRequestToken)
+    const credentialShareRequest = BaseNetworkMember.fromJWT(credentialShareRequestToken)
     const types = this.getCredentialTypes(credentialShareRequest)
 
     const filteredCredentials = credentials.filter((cred: SignedCredential) => {
@@ -620,7 +621,7 @@ export abstract class CommonNetworkMember {
   async signOut(options: SdkOptions): Promise<void> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const newTokens = await userManagementService.logOut(this.cognitoUserTokens)
     this.cognitoUserTokens = newTokens
   }
@@ -641,7 +642,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     await userManagementService.initiateForgotPassword(login, messageParameters)
   }
 
@@ -673,7 +674,7 @@ export abstract class CommonNetworkMember {
    * @description Logins to Affinity with login and password
    * @param username - email/phoneNumber, registered in Cognito
    * @param password - password for Cognito user
-   * @param options - optional parameters for CommonNetworkMember initialization
+   * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
   static async fromLoginAndPassword<T extends DerivedType<T>>(
@@ -688,8 +689,8 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(inputOptions)
-    const keyManagementService = CommonNetworkMember._createKeyManagementService(inputOptions)
+    const userManagementService = BaseNetworkMember._createUserManagementService(inputOptions)
+    const keyManagementService = BaseNetworkMember._createKeyManagementService(inputOptions)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
@@ -736,7 +737,7 @@ export abstract class CommonNetworkMember {
     const { isUsername } = validateUsername(login)
 
     if (!isUsername) {
-      return CommonNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
+      return BaseNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
     }
 
     const username = login
@@ -748,15 +749,15 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    CommonNetworkMember._validateKeys(keyParams)
+    BaseNetworkMember._validateKeys(keyParams)
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
       username,
       password,
       messageParameters,
     )
-    return CommonNetworkMember._confirmSignUp(this, cognitoTokens, password, keyParams, options)
+    return BaseNetworkMember._confirmSignUp(this, cognitoTokens, password, keyParams, options)
   }
 
   private static async _signUpByUsernameAutoConfirm<T extends DerivedType<T>>(
@@ -773,13 +774,13 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
       username,
       password,
       messageParameters,
     )
-    const result = await CommonNetworkMember._confirmSignUp(self, cognitoTokens, password, undefined, options)
+    const result = await BaseNetworkMember._confirmSignUp(self, cognitoTokens, password, undefined, options)
     result.afterConfirmSignUp()
     return result
   }
@@ -797,7 +798,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
   }
 
@@ -822,10 +823,10 @@ export abstract class CommonNetworkMember {
     const { isUsername } = validateUsername(login)
 
     if (!isUsername) {
-      return CommonNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
+      return BaseNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
     }
 
-    return CommonNetworkMember._signUpByUsernameAutoConfirm(this, login, password, options, messageParameters)
+    return BaseNetworkMember._signUpByUsernameAutoConfirm(this, login, password, options, messageParameters)
   }
 
   /**
@@ -837,7 +838,7 @@ export abstract class CommonNetworkMember {
    * @param keyParams - { ecnryptedSeed, password } - previously created keys to be storead at wallet.
    * @param token - Token returned by signUpWithExistsEntity method.
    * @param confirmationCode - OTP sent by AWS Cognito/SES.
-   * @param options - optional parameters for CommonNetworkMember initialization
+   * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
   static async confirmSignUpWithExistsEntity<T extends DerivedType<T>>(
@@ -854,12 +855,12 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
     )
-    return CommonNetworkMember._confirmSignUp(this, cognitoTokens, shortPassword, keyParams, options)
+    return BaseNetworkMember._confirmSignUp(this, cognitoTokens, shortPassword, keyParams, options)
   }
 
   private static async _confirmSignUp<T extends DerivedType<T>>(
@@ -897,7 +898,7 @@ export abstract class CommonNetworkMember {
    *       as registration is already completed.
    * NOTE: this method will throw an error if called for arbitrary username
    * @param confirmationCode - OTP sent by AWS Cognito/SES.
-   * @param options - optional parameters for CommonNetworkMember initialization
+   * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
   static async confirmSignUp<T extends DerivedType<T>>(
@@ -912,12 +913,12 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
     )
-    const result = await CommonNetworkMember._confirmSignUp(this, cognitoTokens, shortPassword, undefined, options)
+    const result = await BaseNetworkMember._confirmSignUp(this, cognitoTokens, shortPassword, undefined, options)
     await result.afterConfirmSignUp()
     return result
   }
@@ -949,7 +950,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     await userManagementService.resendSignUp(login, messageParameters)
   }
 
@@ -975,7 +976,7 @@ export abstract class CommonNetworkMember {
 
     // NOTE: This is a passwordless login/sign up flow,
     //       case when user signs up more often
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const doesConfirmedUserExist = await userManagementService.doesConfirmedUserExist(login)
     if (doesConfirmedUserExist) {
       return userManagementService.initiateLogInPasswordless(login, messageParameters)
@@ -988,7 +989,7 @@ export abstract class CommonNetworkMember {
    * @description Completes sign in
    * @param token - received from #signIn method
    * @param confirmationCode - OTP sent by AWS Cognito/SES
-   * @param options - optional parameters for CommonNetworkMember initialization
+   * @param options - optional parameters for BaseNetworkMember initialization
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
   static async confirmSignIn<T extends DerivedType<T>>(
@@ -1031,7 +1032,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.changePassword(
       this.cognitoUserTokens,
       oldPassword,
@@ -1054,7 +1055,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.initiateChangeLogin(
       this.cognitoUserTokens,
       newLogin,
@@ -1075,7 +1076,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.completeChangeLogin(
       this.cognitoUserTokens,
       newLogin,
@@ -1418,7 +1419,7 @@ export abstract class CommonNetworkMember {
     ])
 
     const signedCredentials = []
-    const credentialOfferResponse = CommonNetworkMember.fromJWT(credentialOfferResponseToken)
+    const credentialOfferResponse = BaseNetworkMember.fromJWT(credentialOfferResponseToken)
     const { selectedCredentials } = credentialOfferResponse.payload.interactionToken
 
     const credentialTypesThatCanBeSigned: string[] = selectedCredentials.map(({ type }: any) => type)
@@ -1679,7 +1680,7 @@ export abstract class CommonNetworkMember {
     await ParametersValidator.validate(paramsToValidate)
 
     if (isFunction) {
-      const credentialShareResponse = CommonNetworkMember.fromJWT(credentialShareResponseToken)
+      const credentialShareResponse = BaseNetworkMember.fromJWT(credentialShareResponseToken)
       const requestNonce: string = credentialShareResponse.payload.jti
       credentialShareRequestToken = await credentialShareRequest(requestNonce)
 
@@ -1688,7 +1689,7 @@ export abstract class CommonNetworkMember {
       }
 
       try {
-        CommonNetworkMember.fromJWT(credentialShareRequestToken)
+        BaseNetworkMember.fromJWT(credentialShareRequestToken)
       } catch (error) {
         throw new SdkErrorFromCode('COR-15', { credentialShareRequestToken })
       }
@@ -1866,7 +1867,7 @@ export abstract class CommonNetworkMember {
       { isArray: true, type: 'VCV1', isRequired: true, value: vcs },
     ])
 
-    const requestedTypes = this.getCredentialTypes(CommonNetworkMember.fromJWT(challenge))
+    const requestedTypes = this.getCredentialTypes(BaseNetworkMember.fromJWT(challenge))
 
     return this._affinity.signPresentation({
       vp: buildVPV1Unsigned({
@@ -1949,7 +1950,7 @@ export abstract class CommonNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
     ])
 
-    const keyManagementService = await CommonNetworkMember._createKeyManagementService(options)
+    const keyManagementService = await BaseNetworkMember._createKeyManagementService(options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
     return new this(encryptionKey, encryptedSeed, options)
   }
@@ -1963,9 +1964,9 @@ export abstract class CommonNetworkMember {
   static async init<T extends DerivedType<T>>(this: T, options: SdkOptions): Promise<InstanceType<T>> {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
 
-    const userManagementService = CommonNetworkMember._createUserManagementService(options)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const { accessToken } = userManagementService.readUserTokensFromSessionStorage()
-    const keyManagementService = CommonNetworkMember._createKeyManagementService(options)
+    const keyManagementService = BaseNetworkMember._createKeyManagementService(options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
 
     return new this(encryptionKey, encryptedSeed, options)

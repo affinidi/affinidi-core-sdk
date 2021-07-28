@@ -1,7 +1,12 @@
 if (typeof Buffer === 'undefined') global.Buffer = require('buffer').Buffer
 
-export { CommonNetworkMember } from './CommonNetworkMember'
-
 import * as __dangerous from './dangerous'
 
+import { BaseNetworkMember } from './CommonNetworkMember/BaseNetworkMember'
+
+export { SdkOptions } from './dto'
+export { createWalletFactories } from './CommonNetworkMember/walletFactories'
+
 export { __dangerous }
+
+export type CommonNetworkMember = BaseNetworkMember

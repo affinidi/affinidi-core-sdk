@@ -25,4 +25,5 @@ global.TextEncoder = global.TextEncoder || TextEncoder
 //   },
 // })
 
+export { SdkOptions } from '@affinidi/wallet-core-sdk'
 export { AffinityWallet, AffinityWallet as AffinidiWallet } from './AffinityWallet'

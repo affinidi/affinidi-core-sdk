@@ -8,11 +8,9 @@ import { MessageParameters, SdkOptions } from '../../../src/dto'
 import { TestmailInbox } from '../../../src/test-helpers'
 
 import { getBasicOptionsForEnvironment } from '../../helpers'
-import { CommonNetworkMemberWithEncryption } from '../../helpers/CommonNetworkMemberWithEncryption'
+import { AffinidiWalletWithEncryption as AffinityWallet } from '../../helpers/AffinidiWallet'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 import { generateCredentials } from '../../factory/signedCredentials'
-
-const AffinityWallet = CommonNetworkMemberWithEncryption
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)

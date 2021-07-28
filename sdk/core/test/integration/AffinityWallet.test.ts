@@ -1,8 +1,10 @@
 import { expect } from 'chai'
 
+import { CommonNetworkMember } from '../../src'
+import { BaseNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
 import { SdkOptions } from '../../src/dto'
 import { getBasicOptionsForEnvironment, waitForConfirmationCodeInput } from '../helpers'
-import { CommonNetworkMemberWithEncryption as AffinityWallet } from '../helpers/CommonNetworkMemberWithEncryption'
+import { AffinidiWallet as AffinityWallet } from '../helpers/AffinidiWallet'
 
 const signedCredential = require('../factory/signedCredential')
 
@@ -54,8 +56,8 @@ function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
 }
 
-function checkIsAffinityWallet(value: AffinityWallet | unknown): asserts value is AffinityWallet {
-  expect(value).to.be.an.instanceof(AffinityWallet)
+function checkIsAffinityWallet(value: CommonNetworkMember | unknown): asserts value is CommonNetworkMember {
+  expect(value).to.be.an.instanceof(BaseNetworkMember)
 }
 
 describe('AffinityWallet', () => {
