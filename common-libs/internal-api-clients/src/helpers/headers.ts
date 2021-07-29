@@ -1,5 +1,3 @@
-import { Headers } from 'node-fetch'
-
 type createHeadersOptions = {
   accessApiKey: string
   sdkVersion?: string
@@ -7,15 +5,15 @@ type createHeadersOptions = {
 
 const defaultHeaderValue = 'unknown'
 
-export const createHeaders = (options: createHeadersOptions): Headers => {
-  const headers = new Headers({
+export type ApiRequestHeaders = { [key: string]: string }
+
+export const createHeaders = (options: createHeadersOptions): ApiRequestHeaders => {
+  return {
     Accept: 'application/json',
     'Api-Key': options.accessApiKey,
     'Content-Type': 'application/json',
     'X-SDK-Version': options.sdkVersion || defaultHeaderValue,
-  })
-
-  return headers
+  }
 }
 
 type updateHeadersOptions = {
@@ -23,9 +21,10 @@ type updateHeadersOptions = {
   storageRegion?: string
 }
 
-export const updateHeaders = (headers: Headers, options: updateHeadersOptions) => {
-  options.authorization && headers.append('Authorization', options.authorization)
-  options.storageRegion && headers.append('X-DST-REGION', options.storageRegion)
-
-  return headers
+export const updateHeaders = (headers: ApiRequestHeaders, options: updateHeadersOptions) => {
+  return {
+    ...headers,
+    ...(options.authorization && { Authorization: options.authorization }),
+    ...(options.storageRegion && { 'X-DST-REGION': options.storageRegion }),
+  }
 }

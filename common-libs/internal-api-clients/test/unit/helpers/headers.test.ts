@@ -15,10 +15,10 @@ describe('Headers Helpers', () => {
       sdkVersion: fakeSDKVersion,
     })
 
-    expect(headers.get('Accept')).to.eql('application/json')
-    expect(headers.get('Api-Key')).to.eql(fakeAccessApiKey)
-    expect(headers.get('Content-Type')).to.eql('application/json')
-    expect(headers.get('X-SDK-Version')).to.eql(fakeSDKVersion)
+    expect(headers['Accept']).to.eql('application/json')
+    expect(headers['Api-Key']).to.eql(fakeAccessApiKey)
+    expect(headers['Content-Type']).to.eql('application/json')
+    expect(headers['X-SDK-Version']).to.eql(fakeSDKVersion)
   })
 
   it('#createHeaders without SDK version', async () => {
@@ -26,10 +26,10 @@ describe('Headers Helpers', () => {
       accessApiKey: 'fakeAccessApiKey',
     })
 
-    expect(headers.get('Accept')).to.eql('application/json')
-    expect(headers.get('Api-Key')).to.eql(fakeAccessApiKey)
-    expect(headers.get('Content-Type')).to.eql('application/json')
-    expect(headers.get('X-SDK-Version')).to.eql('unknown')
+    expect(headers['Accept']).to.eql('application/json')
+    expect(headers['Api-Key']).to.eql(fakeAccessApiKey)
+    expect(headers['Content-Type']).to.eql('application/json')
+    expect(headers['X-SDK-Version']).to.eql('unknown')
   })
 
   it('#updateHeaders', async () => {
@@ -43,12 +43,12 @@ describe('Headers Helpers', () => {
       storageRegion: fakeRegion,
     })
 
-    expect(headers.get('Accept')).to.eql('application/json')
-    expect(headers.get('Api-Key')).to.eql(fakeAccessApiKey)
-    expect(headers.get('Authorization')).to.eql(fakeAuthToken)
-    expect(headers.get('Content-Type')).to.eql('application/json')
-    expect(headers.get('X-SDK-Version')).to.eql(fakeSDKVersion)
-    expect(headers.get('X-DST-REGION')).to.eql(fakeRegion)
+    expect(headers['Accept']).to.eql('application/json')
+    expect(headers['Api-Key']).to.eql(fakeAccessApiKey)
+    expect(headers['Authorization']).to.eql(fakeAuthToken)
+    expect(headers['Content-Type']).to.eql('application/json')
+    expect(headers['X-SDK-Version']).to.eql(fakeSDKVersion)
+    expect(headers['X-DST-REGION']).to.eql(fakeRegion)
   })
 
   it('#updateHeaders with empty options', async () => {
@@ -59,11 +59,11 @@ describe('Headers Helpers', () => {
 
     headers = updateHeaders(headers, {})
 
-    expect(headers.get('Accept')).to.eql('application/json')
-    expect(headers.get('Api-Key')).to.eql(fakeAccessApiKey)
-    expect(headers.has('Authorization')).to.eql(false)
-    expect(headers.get('Content-Type')).to.eql('application/json')
-    expect(headers.get('X-SDK-Version')).to.eql(fakeSDKVersion)
-    expect(headers.has('X-DST-REGION')).to.eql(false)
+    expect(headers['Accept']).to.eql('application/json')
+    expect(headers['Api-Key']).to.eql(fakeAccessApiKey)
+    expect(headers['Authorization']).to.be.undefined
+    expect(headers['Content-Type']).to.eql('application/json')
+    expect(headers['X-SDK-Version']).to.eql(fakeSDKVersion)
+    expect(headers['X-DST-REGION']).to.be.undefined
   })
 })

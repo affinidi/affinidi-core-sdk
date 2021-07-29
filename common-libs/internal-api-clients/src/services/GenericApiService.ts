@@ -1,10 +1,10 @@
 import keyBy from 'lodash.keyby'
-import FetchType, { Headers } from 'node-fetch'
+import FetchType from 'node-fetch'
 import { profile, SdkError } from '@affinidi/common'
 
 import { BuiltApiType } from '../types/typeBuilder'
 import { Simplify } from '../types/util'
-import { createHeaders, updateHeaders } from '../helpers/headers'
+import { ApiRequestHeaders, createHeaders, updateHeaders } from '../helpers/headers'
 
 let fetch: typeof FetchType
 
@@ -48,13 +48,11 @@ type RawApiSpec<TApi extends BuiltApiType> = {
 @profile()
 export default class GenericApiService<TApi extends BuiltApiType> {
   private readonly _serviceUrl: string
-  private readonly _accessApiKey: string
   private readonly _specGroupByOperationId
-  private readonly _initHeaders: Headers
+  private readonly _initHeaders: ApiRequestHeaders
 
   constructor(serviceUrl: string, options: GenericConstructorOptions, rawSpec: RawApiSpec<TApi>) {
     this._serviceUrl = serviceUrl
-    this._accessApiKey = options.accessApiKey
     this._initHeaders = createHeaders(options)
     const specGroupByOperationId = GenericApiService.parseSpec(rawSpec)
     this._specGroupByOperationId = specGroupByOperationId
@@ -90,7 +88,7 @@ export default class GenericApiService<TApi extends BuiltApiType> {
   private static async executeByOptions<TResponse>(
     method: string,
     pathTemplate: string,
-    headers: Headers,
+    headers: ApiRequestHeaders,
     options: { params?: any; pathParams?: any; queryParams?: any },
   ) {
     const { params } = options
