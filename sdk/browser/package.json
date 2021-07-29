@@ -11,11 +11,11 @@
     "tsc": "tsc -p tsconfig-build.json",
     "lint": "eslint src/** test/**",
     "prepare": "npm run build",
-    "test:only": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
-    "test": "npm run lint && npm run test:only",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
     "test:integration": "cross-env NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
     "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
-    "test:coverage:codeclimate": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000  && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.browser.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
+    "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.browser.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
   },
   "publishConfig": {

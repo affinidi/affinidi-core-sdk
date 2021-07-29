@@ -66,3 +66,16 @@ Before we begin, make sure you have the following installed:
 
 ## API Key
 You need to to use an API Key when you initialize the SDK. Here are the steps required to generate and start using the API Key: https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key
+
+## npm commands
+
+The following commands should be supported by all projects in monorepo
+
+* `prepare`: should build package
+* `lint`: should run lint
+* `checkLicenses`: should check licenses
+* `test:unit`: should run unit tests, if any
+* `test:integration`: should run integration tests, if any
+* `test`: should run all tests
+* `test:coverage`: should run all tests with coverage
+* `test:coverage:codeclimate`: should run `test:coverage` and save codeclimate results
