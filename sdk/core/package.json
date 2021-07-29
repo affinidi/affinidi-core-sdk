@@ -100,6 +100,7 @@
     "jsonwebtoken": "^8.5.1",
     "license-checker": "25.0.1",
     "mocha": "7.2.0",
+    "mocha.parallel": "^0.15.6",
     "nock": "12.0.3",
     "nyc": "15.1.0",
     "prettier": "2.0.5",

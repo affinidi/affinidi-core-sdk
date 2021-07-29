@@ -12,6 +12,8 @@ import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '..
 import { MessageParameters } from '../../../dist/dto'
 import { TestmailInbox } from '../../../src/test-helpers'
 
+const parallel = require('mocha.parallel')
+
 const { COGNITO_PASSWORD } = testSecrets
 
 const options = getBasicOptionsForEnvironment()
@@ -38,7 +40,7 @@ function checkIsCommonNetworkMember(value: CommonNetworkMember | unknown): asser
   expect(value).to.be.an.instanceof(BaseNetworkMember)
 }
 
-describe('CommonNetworkMember [OTP]', () => {
+parallel('CommonNetworkMember [OTP]', () => {
   it('sends email with OTP code using the provided template (message parameters) when #signIn is called', async () => {
     const inbox = createInbox()
 
@@ -283,20 +285,20 @@ describe('CommonNetworkMember [OTP]', () => {
   })
 
   describe('for confirmed user registered with email and no password', () => {
-    let inbox: TestmailInbox
-    let originalNetworkMember: CommonNetworkMember
-
-    before(async () => {
-      inbox = createInbox()
+    const createUser = async () => {
+      const inbox = createInbox()
 
       const signUpToken = await AffinidiWallet.signUp(inbox.email, null, options, messageParameters)
       checkIsString(signUpToken)
       const signUpCode = await waitForOtpCode(inbox)
 
-      originalNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, signUpCode, options)
-    })
+      const originalNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, signUpCode, options)
+
+      return { inbox, originalNetworkMember }
+    }
 
     it('logs user in without password using #signIn and #confirmSignIn', async () => {
+      const { inbox } = await createUser()
       const signInToken = await AffinidiWallet.signIn(inbox.email, options, messageParameters)
       checkIsString(signInToken)
       const signInCode = await waitForOtpCode(inbox)
@@ -309,6 +311,7 @@ describe('CommonNetworkMember [OTP]', () => {
     })
 
     it('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
+      const { inbox } = await createUser()
       const timestamp = String(Date.now())
       await AffinidiWallet.passwordlessLogin(inbox.email, options, {
         message: `Your verification code is: {{CODE}} #${timestamp}`,
@@ -326,6 +329,7 @@ describe('CommonNetworkMember [OTP]', () => {
     })
 
     it('logs user in without password using #passwordlessLogin and #completeLoginChallenge', async () => {
+      const { inbox } = await createUser()
       const loginToken = await AffinidiWallet.passwordlessLogin(inbox.email, options, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
 
@@ -334,7 +338,9 @@ describe('CommonNetworkMember [OTP]', () => {
       expect(commonNetworkMember.did).to.exist
     })
 
-    it.skip('throws COR-13 at attempt to call #completeLoginChallenge with expired confirmation code', async () => {
+    it.skip('throws COR-13 at attempt to call #completeLoginChallenge with expired confirmation code', async function () {
+      this.timeout(200_000)
+      const { inbox } = await createUser()
       const loginToken = await AffinidiWallet.passwordlessLogin(inbox.email, options, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
 
@@ -349,9 +355,10 @@ describe('CommonNetworkMember [OTP]', () => {
 
       expect(error).to.be.instanceOf(SdkError)
       expect(error.name).to.eql('COR-17')
-    }).timeout(200_000)
+    })
 
     it('throws "COR-7" at attempt to call #signUp with the same email and some password', async () => {
+      const { inbox } = await createUser()
       const password = COGNITO_PASSWORD
 
       let error
@@ -366,6 +373,7 @@ describe('CommonNetworkMember [OTP]', () => {
     })
 
     it('throws "COR-7" at attempt to change email of the newly registered (with email) account to the one used at the registration of the existing account', async () => {
+      const { inbox } = await createUser()
       const newInbox = createInbox()
       const password = COGNITO_PASSWORD
 
@@ -388,6 +396,7 @@ describe('CommonNetworkMember [OTP]', () => {
     })
 
     it('allows to change email after password was reset for user registered with email', async () => {
+      const { inbox, originalNetworkMember } = await createUser()
       await originalNetworkMember.signOut(options)
 
       const newInbox = createInbox()

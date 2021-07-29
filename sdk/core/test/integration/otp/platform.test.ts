@@ -12,6 +12,8 @@ import { AffinidiWalletWithEncryption as AffinityWallet } from '../../helpers/Af
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 import { generateCredentials } from '../../factory/signedCredentials'
 
+const parallel = require('mocha.parallel')
+
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
 
@@ -47,7 +49,7 @@ function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
 }
 
-describe('AffinityWallet [OTP]', () => {
+parallel('AffinityWallet [OTP]', () => {
   it('Save Open Attestation credential and #deleteCredential scenario', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
