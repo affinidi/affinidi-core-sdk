@@ -11,7 +11,7 @@ import { normalizeUsername } from '../../../src/shared'
 
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 import { CommonNetworkMember } from '../../helpers/CommonNetworkMember'
-import { createApiServiceHeaders } from '../../../src/_helpers'
+import { extractSDKVersion } from '../../../src/_helpers'
 
 const options = getAllOptionsForEnvironment()
 
@@ -43,7 +43,7 @@ describe('WalletStorageService', () => {
     const keyStorageApiService = new KeyStorageApiService({
       keyStorageUrl: options.keyStorageUrl,
       accessApiKey: options.accessApiKey,
-      headers: createApiServiceHeaders(),
+      sdkVersion: extractSDKVersion(),
     })
 
     let responseError
@@ -87,7 +87,7 @@ describe('WalletStorageService', () => {
     const keyStorageApiService = new KeyStorageApiService({
       keyStorageUrl: options.keyStorageUrl,
       accessApiKey: options.accessApiKey,
-      headers: createApiServiceHeaders(),
+      sdkVersion: extractSDKVersion(),
     })
 
     let responseError
@@ -108,7 +108,7 @@ describe('WalletStorageService', () => {
     const keyStorageApiService = new KeyStorageApiService({
       keyStorageUrl: options.keyStorageUrl,
       accessApiKey: options.accessApiKey,
-      headers: createApiServiceHeaders(),
+      sdkVersion: extractSDKVersion(),
     })
     await keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizeUsername(email) })
     let responseError
@@ -132,7 +132,7 @@ describe('WalletStorageService', () => {
       const keyStorageApiService = new KeyStorageApiService({
         keyStorageUrl: options.keyStorageUrl,
         accessApiKey: options.accessApiKey,
-        headers: createApiServiceHeaders(),
+        sdkVersion: extractSDKVersion(),
       })
       await keyStorageApiService.adminConfirmUser({ username: cognitoUsername })
     } catch (error) {
@@ -155,7 +155,7 @@ describe('WalletStorageService', () => {
       const keyStorageApiService = new KeyStorageApiService({
         keyStorageUrl: options.keyStorageUrl,
         accessApiKey: options.accessApiKey,
-        headers: createApiServiceHeaders(),
+        sdkVersion: extractSDKVersion(),
       })
       await keyStorageApiService.adminDeleteUnconfirmedUser({ username: cognitoUsername })
     } catch (error) {
