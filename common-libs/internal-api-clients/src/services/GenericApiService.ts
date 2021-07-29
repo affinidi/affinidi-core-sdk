@@ -4,7 +4,7 @@ import { profile, SdkError } from '@affinidi/common'
 
 import { BuiltApiType } from '../types/typeBuilder'
 import { Simplify } from '../types/util'
-import { ApiRequestHeaders, createHeaders, updateHeaders } from '../helpers/headers'
+import { ApiRequestHeaders, createHeaders, getExtendedHeaders } from '../helpers/headers'
 
 let fetch: typeof FetchType
 
@@ -124,10 +124,10 @@ export default class GenericApiService<TApi extends BuiltApiType> {
       throw new Error('Service URL is empty')
     }
 
-    const headers = updateHeaders(this._initHeaders, options)
+    const extendedHeaders = getExtendedHeaders(this._initHeaders, options)
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
     const url = `${this._serviceUrl}${path}`
-    return GenericApiService.executeByOptions<TApi[TOperationId]['responseBody']>(method, url, headers, options)
+    return GenericApiService.executeByOptions<TApi[TOperationId]['responseBody']>(method, url, extendedHeaders, options)
   }
 }

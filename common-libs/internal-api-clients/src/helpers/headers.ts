@@ -21,7 +21,7 @@ type updateHeadersOptions = {
   storageRegion?: string
 }
 
-export const updateHeaders = (headers: ApiRequestHeaders, options: updateHeadersOptions) => {
+export const getExtendedHeaders = (headers: ApiRequestHeaders, options: updateHeadersOptions): ApiRequestHeaders => {
   return {
     ...headers,
     ...(options.authorization && { Authorization: options.authorization }),

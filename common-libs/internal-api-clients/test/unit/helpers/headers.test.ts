@@ -1,7 +1,7 @@
 'use strict'
 
 import { expect } from 'chai'
-import { createHeaders, updateHeaders } from '../../../src/helpers/headers'
+import { createHeaders, getExtendedHeaders } from '../../../src/helpers/headers'
 
 const fakeAccessApiKey = 'fakeAccessApiKey'
 const fakeAuthToken = Math.random().toString(36).substring(7)
@@ -32,38 +32,38 @@ describe('Headers Helpers', () => {
     expect(headers['X-SDK-Version']).to.eql('unknown')
   })
 
-  it('#updateHeaders', async () => {
-    let headers = createHeaders({
+  it('#getExtendedHeaders', async () => {
+    const headers = createHeaders({
       accessApiKey: fakeAccessApiKey,
       sdkVersion: fakeSDKVersion,
     })
 
-    headers = updateHeaders(headers, {
+    const extendedHeaders = getExtendedHeaders(headers, {
       authorization: fakeAuthToken,
       storageRegion: fakeRegion,
     })
 
-    expect(headers['Accept']).to.eql('application/json')
-    expect(headers['Api-Key']).to.eql(fakeAccessApiKey)
-    expect(headers['Authorization']).to.eql(fakeAuthToken)
-    expect(headers['Content-Type']).to.eql('application/json')
-    expect(headers['X-SDK-Version']).to.eql(fakeSDKVersion)
-    expect(headers['X-DST-REGION']).to.eql(fakeRegion)
+    expect(extendedHeaders['Accept']).to.eql('application/json')
+    expect(extendedHeaders['Api-Key']).to.eql(fakeAccessApiKey)
+    expect(extendedHeaders['Authorization']).to.eql(fakeAuthToken)
+    expect(extendedHeaders['Content-Type']).to.eql('application/json')
+    expect(extendedHeaders['X-SDK-Version']).to.eql(fakeSDKVersion)
+    expect(extendedHeaders['X-DST-REGION']).to.eql(fakeRegion)
   })
 
-  it('#updateHeaders with empty options', async () => {
-    let headers = createHeaders({
+  it('#getExtendedHeaders with empty options', async () => {
+    const headers = createHeaders({
       accessApiKey: fakeAccessApiKey,
       sdkVersion: fakeSDKVersion,
     })
 
-    headers = updateHeaders(headers, {})
+    const extendedHeaders = getExtendedHeaders(headers, {})
 
-    expect(headers['Accept']).to.eql('application/json')
-    expect(headers['Api-Key']).to.eql(fakeAccessApiKey)
-    expect(headers['Authorization']).to.be.undefined
-    expect(headers['Content-Type']).to.eql('application/json')
-    expect(headers['X-SDK-Version']).to.eql(fakeSDKVersion)
-    expect(headers['X-DST-REGION']).to.be.undefined
+    expect(extendedHeaders['Accept']).to.eql('application/json')
+    expect(extendedHeaders['Api-Key']).to.eql(fakeAccessApiKey)
+    expect(extendedHeaders['Authorization']).to.be.undefined
+    expect(extendedHeaders['Content-Type']).to.eql('application/json')
+    expect(extendedHeaders['X-SDK-Version']).to.eql(fakeSDKVersion)
+    expect(extendedHeaders['X-DST-REGION']).to.be.undefined
   })
 })
