@@ -24,6 +24,7 @@ import credentialShareRequestToken from '../../factory/credentialShareRequestTok
 import parsedCredentialShareRequestToken from '../../factory/parsedCredentialShareRequestToken'
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
 import BloomVaultStorageService from '../../../src/services/BloomVaultStorageService'
+import { extractSDKVersion } from '../../../src/_helpers'
 
 let walletPassword: string
 
@@ -278,6 +279,7 @@ describe('WalletStorageService', () => {
     const keyStorageApiService = new KeyStorageApiService({
       keyStorageUrl: STAGING_KEY_STORAGE_URL,
       accessApiKey: undefined,
+      sdkVersion: extractSDKVersion(),
     })
     const response = await keyStorageApiService.adminConfirmUser({ username })
 

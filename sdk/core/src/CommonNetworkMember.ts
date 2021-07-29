@@ -50,7 +50,7 @@ import {
 } from './dto/verifier.dto'
 
 import { randomBytes } from './shared/randomBytes'
-import { isW3cCredential } from './_helpers'
+import { extractSDKVersion, isW3cCredential } from './_helpers'
 
 import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
 import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
@@ -172,10 +172,12 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       accessApiKey: accessApiKey,
       component: component,
     })
-    this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey })
-    this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey })
-    this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey })
-    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey })
+
+    const sdkVersion = extractSDKVersion()
+    this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion })
+    this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
+    this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
+    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, sdkVersion })
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
     this._keyManagementService = new KeyManagementService({ keyStorageUrl, accessApiKey })
     this._didDocumentService = new DidDocumentService(keysService)
@@ -386,7 +388,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       accessApiKey,
     } = getOptionsFromEnvironment(options)
 
-    const api = new RegistryApiService({ registryUrl, accessApiKey })
+    const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
 
     const did = didDocument.id
 
@@ -1996,7 +1998,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    * @returns a single VC
    */
-  async getAllCredentials(storageRegion?: string): Promise<any> {
+  async getAllCredentials(storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.getAllCredentials(storageRegion)
   }
 
@@ -2006,7 +2008,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    * @returns a single VC
    */
-  async getCredentialsByShareToken(token: string, storageRegion?: string): Promise<any> {
+  async getCredentialsByShareToken(token: string, storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.getCredentialsByShareToken(token, storageRegion)
   }
 

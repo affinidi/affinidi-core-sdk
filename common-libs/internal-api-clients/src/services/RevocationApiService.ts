@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import revocationSpec from '../openapi/_revocation'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = { revocationUrl: string; accessApiKey: string }
+type ConstructorOptions = GenericConstructorOptions & { revocationUrl: string }
 
 type ApiType = BuildApiType<ParseSpec<typeof revocationSpec>>
 

@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import affinidiVaultSpec from '../openapi/_affinidiVault'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = { vaultUrl: string; accessApiKey: string }
+type ConstructorOptions = GenericConstructorOptions & { vaultUrl: string }
 
 export type BlobType = {
   cyphertext: string
