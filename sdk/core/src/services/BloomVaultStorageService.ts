@@ -6,7 +6,7 @@ import { toRpcSig, ecsign } from 'ethereumjs-util'
 import { IPlatformEncryptionTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
-import { isW3cCredential } from '../_helpers'
+import { extractSDKVersion, isW3cCredential } from '../_helpers'
 
 const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
@@ -55,7 +55,11 @@ export default class BloomVaultStorageService {
   ) {
     this._keysService = keysService
     this._platformEncryptionTools = platformEncryptionTools
-    this._vaultApiService = new BloomVaultApiService(options)
+    this._vaultApiService = new BloomVaultApiService({
+      vaultUrl: options.vaultUrl,
+      accessApiKey: options.accessApiKey,
+      sdkVersion: extractSDKVersion(),
+    })
   }
 
   /* istanbul ignore next: private function */
