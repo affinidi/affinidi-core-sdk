@@ -4,7 +4,7 @@ import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 
 import { IPlatformEncryptionTools } from '../shared/interfaces'
 import { VaultCredential } from '../dto/vault.dto'
-import { createApiServiceHeaders, isW3cCredential } from '../_helpers'
+import { extractSDKVersion, isW3cCredential } from '../_helpers'
 
 type AffinidiVaultStorageOptions = {
   accessApiKey: string
@@ -33,7 +33,7 @@ export default class AffinidiVaultStorageService {
     this._vaultApiService = new AffinidiVaultApiService({
       vaultUrl: options.vaultUrl,
       accessApiKey: options.accessApiKey,
-      headers: createApiServiceHeaders(),
+      sdkVersion: extractSDKVersion(),
     })
   }
 

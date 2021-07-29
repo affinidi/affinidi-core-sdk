@@ -13,7 +13,7 @@ import { STAGING_AFFINIDI_VAULT_URL, STAGING_REGISTRY_URL } from '../../../src/_
 import credential from '../../factory/signedCredential'
 import { VaultCredential } from '../../../src/dto/vault.dto'
 import { expect } from 'chai'
-import { createApiServiceHeaders } from '../../../src/_helpers'
+import { extractSDKVersion } from '../../../src/_helpers'
 
 let encryptionKey: string
 let encryptedSeed: string
@@ -49,8 +49,7 @@ describe('AffinidiVaultStorageService', () => {
     encryptedSeed = testDids.jolo.encryptedSeed
     audienceDid = testDids.elem.did
 
-    const headers = createApiServiceHeaders()
-    reqheaders['X-SDK-Version'] = headers['X-SDK-Version']
+    reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
 
   after(() => {

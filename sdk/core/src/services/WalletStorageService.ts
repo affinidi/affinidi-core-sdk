@@ -11,7 +11,7 @@ import { SignedCredential } from '../dto/shared.dto'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import AffinidiVaultStorageService from './AffinidiVaultStorageService'
 import BloomVaultStorageService from './BloomVaultStorageService'
-import { createApiServiceHeaders } from '../_helpers'
+import { extractSDKVersion } from '../_helpers'
 
 const createHash = require('create-hash')
 
@@ -74,7 +74,7 @@ export default class WalletStorageService {
     const service = new KeyStorageApiService({
       keyStorageUrl,
       accessApiKey,
-      headers: createApiServiceHeaders(),
+      sdkVersion: extractSDKVersion(),
     })
     const { body } = await service.getCredentialOffer({ accessToken, env })
     const { offerToken } = body
@@ -88,7 +88,7 @@ export default class WalletStorageService {
   ): Promise<SignedCredential[]> {
     const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
     const { issuerUrl, accessApiKey, apiKey } = options
-    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey, headers: createApiServiceHeaders() })
+    const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const { body } = await service.getSignedCredential(accessToken, {
       credentialOfferResponseToken,
       options: { issuerUrl, accessApiKey, apiKey },

@@ -50,7 +50,7 @@ import {
 } from './dto/verifier.dto'
 
 import { randomBytes } from './shared/randomBytes'
-import { createApiServiceHeaders, isW3cCredential } from './_helpers'
+import { extractSDKVersion, isW3cCredential } from './_helpers'
 
 import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from './_defaultConfig'
 import { getOptionsFromEnvironment } from './shared/getOptionsFromEnvironment'
@@ -173,11 +173,11 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       component: component,
     })
 
-    const headers = createApiServiceHeaders()
-    this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey, headers })
-    this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, headers })
-    this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, headers })
-    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, headers })
+    const sdkVersion = extractSDKVersion()
+    this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion })
+    this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
+    this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
+    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, sdkVersion })
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
     this._keyManagementService = new KeyManagementService({ keyStorageUrl, accessApiKey })
     this._didDocumentService = new DidDocumentService(keysService)
@@ -388,7 +388,7 @@ export abstract class CommonNetworkMember<TOptions extends SdkOptions = SdkOptio
       accessApiKey,
     } = getOptionsFromEnvironment(options)
 
-    const api = new RegistryApiService({ registryUrl, accessApiKey, headers: createApiServiceHeaders() })
+    const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
 
     const did = didDocument.id
 

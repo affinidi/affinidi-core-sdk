@@ -20,8 +20,4 @@ export function isW3cCredential(credential: any): boolean {
   return !!credential.type
 }
 
-interface SDKHeaders extends NodeJS.Dict<string | string[]> {
-  'X-SDK-Version': string
-}
-
-export const createApiServiceHeaders = (): SDKHeaders => ({ 'X-SDK-Version': packageInfo.version })
+export const extractSDKVersion = (): string => packageInfo.version

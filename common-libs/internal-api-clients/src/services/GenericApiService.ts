@@ -1,9 +1,10 @@
 import keyBy from 'lodash.keyby'
-import FetchType from 'node-fetch'
+import FetchType, { Headers } from 'node-fetch'
 import { profile, SdkError } from '@affinidi/common'
 
 import { BuiltApiType } from '../types/typeBuilder'
 import { Simplify } from '../types/util'
+import { createHeaders, updateHeaders } from '../helpers/headers'
 
 let fetch: typeof FetchType
 
@@ -37,7 +38,7 @@ type RequestOptionsForOperation<TApi extends BuiltApiType, TOperationId extends 
   RequestOptions<TApi[TOperationId]['requestBody'], TApi[TOperationId]['queryParams'], TApi[TOperationId]['pathParams']>
 >
 
-export type GenericConstructorOptions = { accessApiKey: string; headers?: NodeJS.Dict<string | string[]> }
+export type GenericConstructorOptions = { accessApiKey: string; sdkVersion?: string }
 
 type RawApiSpec<TApi extends BuiltApiType> = {
   servers: readonly [{ url: string }]
@@ -49,12 +50,12 @@ export default class GenericApiService<TApi extends BuiltApiType> {
   private readonly _serviceUrl: string
   private readonly _accessApiKey: string
   private readonly _specGroupByOperationId
-  private readonly _headers: NodeJS.Dict<string | string[]>
+  private readonly _initHeaders: Headers
 
   constructor(serviceUrl: string, options: GenericConstructorOptions, rawSpec: RawApiSpec<TApi>) {
     this._serviceUrl = serviceUrl
     this._accessApiKey = options.accessApiKey
-    this._headers = options.headers || {}
+    this._initHeaders = createHeaders(options)
     const specGroupByOperationId = GenericApiService.parseSpec(rawSpec)
     this._specGroupByOperationId = specGroupByOperationId
   }
@@ -87,22 +88,14 @@ export default class GenericApiService<TApi extends BuiltApiType> {
   }
 
   private static async executeByOptions<TResponse>(
-    accessApiKey: string,
     method: string,
     pathTemplate: string,
-    headers: NodeJS.Dict<string | string[]>,
-    options: BasicRequestOptions & { params?: any; pathParams?: any; queryParams?: any },
+    headers: Headers,
+    options: { params?: any; pathParams?: any; queryParams?: any },
   ) {
-    const { authorization, storageRegion, params } = options
+    const { params } = options
     const fetchOptions = {
-      headers: {
-        ...headers,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'Api-Key': accessApiKey,
-        ...(authorization && { Authorization: authorization }),
-        ...(storageRegion && { 'X-DST-REGION': storageRegion }),
-      },
+      headers,
       method,
       ...(!!params && { body: JSON.stringify(params, null, 2) }),
     }
@@ -133,15 +126,10 @@ export default class GenericApiService<TApi extends BuiltApiType> {
       throw new Error('Service URL is empty')
     }
 
+    const headers = updateHeaders(this._initHeaders, options)
     const operation = this._specGroupByOperationId[serviceOperationId]
     const { method, path } = operation
     const url = `${this._serviceUrl}${path}`
-    return GenericApiService.executeByOptions<TApi[TOperationId]['responseBody']>(
-      this._accessApiKey,
-      method,
-      url,
-      this._headers,
-      options,
-    )
+    return GenericApiService.executeByOptions<TApi[TOperationId]['responseBody']>(method, url, headers, options)
   }
 }

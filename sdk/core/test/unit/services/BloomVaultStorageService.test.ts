@@ -12,7 +12,7 @@ import { STAGING_BLOOM_VAULT_URL } from '../../../src/_defaultConfig'
 import { expect } from 'chai'
 import { authorizeVault } from './../../helpers'
 import signedCredential from '../../factory/signedCredential'
-import { createApiServiceHeaders } from '../../../src/_helpers'
+import { extractSDKVersion } from '../../../src/_helpers'
 
 let encryptionKey: string
 let encryptedSeed: string
@@ -33,8 +33,7 @@ describe('BloomVaultStorageService', () => {
     encryptionKey = testDids.password
     encryptedSeed = testDids.jolo.encryptedSeed
 
-    const headers = createApiServiceHeaders()
-    reqheaders['X-SDK-Version'] = headers['X-SDK-Version']
+    reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
 
   after(() => {
