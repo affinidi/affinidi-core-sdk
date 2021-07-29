@@ -1,11 +1,12 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
+import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
+import { BaseNetworkMember, UniversalDerivedType } from '../CommonNetworkMember/BaseNetworkMember'
 import { KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
 import { IPlatformEncryptionTools } from '../shared/interfaces'
-import { BaseNetworkMember, UniversalDerivedType } from './BaseNetworkMember'
 
 export const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, component: EventComponent) => {
   class Wallet extends BaseNetworkMember {
-    constructor(password: string, encryptedSeed: string, options: SdkOptions, componentOverride?: EventComponent) {
+    constructor(password: string, encryptedSeed: string, options: ParsedOptions, componentOverride?: EventComponent) {
       super(password, encryptedSeed, platformEncryptionTools, options, componentOverride ?? component)
     }
   }
@@ -15,7 +16,9 @@ export const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, 
 
 export const createWalletFactories = (platformEncryptionTools: IPlatformEncryptionTools, component: EventComponent) => {
   const Wallet = createWallet(platformEncryptionTools, component)
-  type WalletConstructor = new (...args: ConstructorParameters<typeof Wallet>) => InstanceType<typeof Wallet>
+  type WalletConstructor = new (password: string, encryptedSeed: string, inputOptions: SdkOptions) => InstanceType<
+    typeof Wallet
+  >
 
   const result = {
     /**
@@ -266,9 +269,12 @@ export const createWalletFactories = (platformEncryptionTools: IPlatformEncrypti
     },
   }
 
-  const legacyConstructor: WalletConstructor = function (password: string, encryptedSeed: string, options: SdkOptions) {
+  const legacyConstructor: WalletConstructor = function (
+    ...[password, encryptedSeed, inputOptions]: ConstructorParameters<WalletConstructor>
+  ) {
+    const options = getOptionsFromEnvironment(inputOptions)
     return new Wallet(password, encryptedSeed, options)
-  } as any
+  } as any // because its type is `(args) => Wallet` and we need to cast it to `new (args) => Wallet`
 
   return Object.assign(legacyConstructor, result)
 }

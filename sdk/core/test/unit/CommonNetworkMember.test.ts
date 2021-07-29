@@ -252,9 +252,7 @@ describe('CommonNetworkMember', () => {
     let validationError
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      new AffinidiWallet(options)
+      new AffinidiWallet(null, null, options)
     } catch (error) {
       validationError = error
     }

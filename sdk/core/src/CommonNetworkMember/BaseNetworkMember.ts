@@ -53,7 +53,7 @@ import { randomBytes } from '../shared/randomBytes'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
 
 import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
-import { getOptionsFromEnvironment } from '../shared/getOptionsFromEnvironment'
+import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import UserManagementService from '../services/UserManagementService'
 import KeyManagementService from '../services/KeyManagementService'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
@@ -61,7 +61,7 @@ import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 type GenericConstructor<T> = new (
   password: string,
   encryptedSeed: string,
-  options: SdkOptions,
+  options: ParsedOptions,
   component?: EventComponent,
 ) => T
 type Constructor<T> = GenericConstructor<T> & GenericConstructor<BaseNetworkMember>
@@ -125,17 +125,9 @@ export abstract class BaseNetworkMember {
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
-    inputOptions: SdkOptions,
+    { accessApiKey, basicOptions, storageRegion, cognitoUserTokens, otherOptions }: ParsedOptions,
     component: EventComponent,
   ) {
-    // await ParametersValidator.validateSync(
-    //   [
-    //     { isArray: false, type: 'string', isRequired: true, value: password },
-    //     { isArray: false, type: 'string', isRequired: true, value: encryptedSeed },
-    //     { isArray: false, type: SdkOptions, isRequired: true, value: options }
-    //   ]
-    // )
-
     if (!password || !encryptedSeed) {
       // TODO: implement appropriate error wrapper
       throw new Error('`password` and `encryptedSeed` must be provided!')
@@ -144,10 +136,6 @@ export abstract class BaseNetworkMember {
     if (!platformEncryptionTools?.platformName) {
       throw new Error('`platformEncryptionTools` must be provided!')
     }
-
-    const { accessApiKey, basicOptions, storageRegion, cognitoUserTokens, otherOptions } = getOptionsFromEnvironment(
-      inputOptions,
-    )
 
     const {
       issuerUrl,
@@ -242,13 +230,11 @@ export abstract class BaseNetworkMember {
     return this._password
   }
 
-  private static _createUserManagementService = (options: SdkOptions) => {
-    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
+  private static _createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
     return new UserManagementService({ ...basicOptions, accessApiKey })
   }
 
-  private static _createKeyManagementService = (options: SdkOptions) => {
-    const { basicOptions, accessApiKey } = getOptionsFromEnvironment(options)
+  private static _createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
     return new KeyManagementService({ ...basicOptions, accessApiKey })
   }
 
@@ -258,12 +244,13 @@ export abstract class BaseNetworkMember {
    * @param options - object with environment, staging is default { env: 'staging' }
    * @returns `true` if user is uncofirmed in Cognito, and `false` otherwise.
    */
-  static async isUserUnconfirmed(username: string, options: SdkOptions) {
+  static async isUserUnconfirmed(username: string, inputOptions: SdkOptions) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     return userManagementService.doesUnconfirmedUserExist(username)
   }
@@ -278,12 +265,12 @@ export abstract class BaseNetworkMember {
   static async fromSeed<T extends DerivedType<T>>(
     this: T,
     seedHexWithMethod: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     password: string = null,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: seedHexWithMethod },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: false, value: password },
     ])
 
@@ -296,8 +283,8 @@ export abstract class BaseNetworkMember {
       password = passwordBuffer.toString('hex')
     }
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const encryptedSeedWithInitializationVector = await KeysService.encryptSeed(seedHexWithMethod, passwordBuffer)
-
     return new this(password, encryptedSeedWithInitializationVector, options)
   }
 
@@ -351,14 +338,37 @@ export abstract class BaseNetworkMember {
   static async register<T extends DerivedType<T>>(
     this: T,
     password: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
-    const didMethod = options.didMethod || DEFAULT_DID_METHOD
+    const options = getOptionsFromEnvironment(inputOptions)
+    return BaseNetworkMember._register(password, options)
+  }
+
+  /**
+   * @description Creates DID and anchors it
+   * 1. generate seed/keys
+   * 2. build DID document
+   * 3. sign DID document
+   * 4. store DID document in IPFS
+   * 5. anchor DID with DID document ID from IPFS
+   * @param password - encryption key which will be used to encrypt randomly created seed/keys pair
+   * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+   * @returns
+   *
+   * did - hash from public key (your decentralized ID)
+   *
+   * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
+   */
+  private static async _register(
+    password: string,
+    options: ParsedOptions,
+  ): Promise<{ did: string; encryptedSeed: string }> {
+    const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
     const seed = await BaseNetworkMember.generateSeed(didMethod)
     const seedHex = seed.toString('hex')
     const seedWithMethod = `${seedHex}++${didMethod}`
@@ -370,7 +380,7 @@ export abstract class BaseNetworkMember {
     const didDocument = await didDocumentService.buildDidDocument()
     const did = didDocument.id
 
-    await BaseNetworkMember.anchorDid(encryptedSeed, password, didDocument, 0, options)
+    await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
 
     return { did, encryptedSeed }
   }
@@ -380,13 +390,19 @@ export abstract class BaseNetworkMember {
     password: string,
     didDocument: any,
     nonce: number,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ) {
-    const {
-      basicOptions: { registryUrl },
-      accessApiKey,
-    } = getOptionsFromEnvironment(options)
+    const options = getOptionsFromEnvironment(inputOptions)
+    return BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, nonce, options)
+  }
 
+  private static async _anchorDid(
+    encryptedSeed: string,
+    password: string,
+    didDocument: any,
+    nonce: number,
+    { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
+  ) {
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
 
     const did = didDocument.id
@@ -532,15 +548,16 @@ export abstract class BaseNetworkMember {
    */
   static async passwordlessLogin(
     login: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     return await userManagementService.initiateLogInPasswordless(login, messageParameters)
   }
@@ -564,14 +581,15 @@ export abstract class BaseNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
-    const userManagementService = BaseNetworkMember._createUserManagementService(inputOptions)
-    const keyManagementService = BaseNetworkMember._createKeyManagementService(inputOptions)
+    const options = getOptionsFromEnvironment(inputOptions)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
+    const keyManagementService = BaseNetworkMember._createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.completeLogInPasswordless(token, confirmationCode)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
 
     return new this(encryptionKey, encryptedSeed, {
-      ...inputOptions,
+      ...options,
       cognitoUserTokens,
     })
   }
@@ -620,9 +638,10 @@ export abstract class BaseNetworkMember {
   /**
    * @description Signs out current user
    */
-  async signOut(options: SdkOptions): Promise<void> {
-    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
+  async signOut(inputOptions: SdkOptions): Promise<void> {
+    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: inputOptions }])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const newTokens = await userManagementService.logOut(this.cognitoUserTokens)
     this.cognitoUserTokens = newTokens
@@ -636,14 +655,15 @@ export abstract class BaseNetworkMember {
    */
   static async forgotPassword(
     login: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     await userManagementService.initiateForgotPassword(login, messageParameters)
   }
@@ -659,15 +679,16 @@ export abstract class BaseNetworkMember {
     login: string,
     confirmationCode: string,
     newPassword: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
       { isArray: false, type: 'string', isRequired: true, value: newPassword },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = this._createUserManagementService(options)
     await userManagementService.completeForgotPassword(login, confirmationCode, newPassword)
   }
@@ -691,12 +712,13 @@ export abstract class BaseNetworkMember {
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
-    const userManagementService = BaseNetworkMember._createUserManagementService(inputOptions)
-    const keyManagementService = BaseNetworkMember._createKeyManagementService(inputOptions)
+    const options = getOptionsFromEnvironment(inputOptions)
+    const userManagementService = BaseNetworkMember._createUserManagementService(options)
+    const keyManagementService = BaseNetworkMember._createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    return new this(encryptionKey, encryptedSeed, { ...inputOptions, cognitoUserTokens })
+    return new this(encryptionKey, encryptedSeed, { ...options, cognitoUserTokens })
   }
 
   private static _validateKeys(keyParams: KeyParams) {
@@ -733,13 +755,13 @@ export abstract class BaseNetworkMember {
     keyParams: KeyParams,
     login: string,
     password: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
 
     if (!isUsername) {
-      return BaseNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
+      return BaseNetworkMember._signUpByEmailOrPhone(login, password, inputOptions, messageParameters)
     }
 
     const username = login
@@ -747,12 +769,13 @@ export abstract class BaseNetworkMember {
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     BaseNetworkMember._validateKeys(keyParams)
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
       username,
@@ -766,16 +789,17 @@ export abstract class BaseNetworkMember {
     self: T,
     username: string,
     password: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
       username,
@@ -790,16 +814,17 @@ export abstract class BaseNetworkMember {
   private static async _signUpByEmailOrPhone<T extends DerivedType<T>>(
     login: string,
     password: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
       { isArray: false, type: 'password', isRequired: false, value: password },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
   }
@@ -819,16 +844,16 @@ export abstract class BaseNetworkMember {
     this: T,
     login: string,
     password: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
 
     if (!isUsername) {
-      return BaseNetworkMember._signUpByEmailOrPhone(login, password, options, messageParameters)
+      return BaseNetworkMember._signUpByEmailOrPhone(login, password, inputOptions, messageParameters)
     }
 
-    return BaseNetworkMember._signUpByUsernameAutoConfirm(this, login, password, options, messageParameters)
+    return BaseNetworkMember._signUpByUsernameAutoConfirm(this, login, password, inputOptions, messageParameters)
   }
 
   /**
@@ -848,15 +873,16 @@ export abstract class BaseNetworkMember {
     keyParams: KeyParams,
     signUpToken: string,
     confirmationCode: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     ParametersValidator.validate([
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
@@ -870,26 +896,26 @@ export abstract class BaseNetworkMember {
     cognitoTokens: CognitoUserTokens,
     shortPassword: string,
     keyParams: KeyParams,
-    inputOptions: SdkOptions,
+    options: ParsedOptions,
   ): Promise<InstanceType<T>> {
     const { accessToken } = cognitoTokens
 
     if (!keyParams?.encryptedSeed) {
       const passwordHash = WalletStorageService.hashFromString(shortPassword)
-      const registerResult = await self.register(passwordHash, inputOptions)
+      const registerResult = await BaseNetworkMember._register(passwordHash, options)
       const encryptedSeed = registerResult.encryptedSeed
       keyParams = { password: passwordHash, encryptedSeed }
     }
 
-    const keyManagementService = this._createKeyManagementService(inputOptions)
+    const keyManagementService = this._createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       accessToken,
       keyParams,
-      !inputOptions.skipBackupEncryptedSeed,
+      !options.otherOptions.skipBackupEncryptedSeed,
     )
 
     return new self(encryptionKey, updatedEncryptedSeed, {
-      ...inputOptions,
+      ...options,
       cognitoUserTokens: cognitoTokens,
     })
   }
@@ -907,14 +933,15 @@ export abstract class BaseNetworkMember {
     this: T,
     signUpToken: string,
     confirmationCode: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
@@ -943,15 +970,16 @@ export abstract class BaseNetworkMember {
    */
   static async resendSignUpConfirmationCode(
     login: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     await userManagementService.resendSignUp(login, messageParameters)
   }
@@ -967,17 +995,18 @@ export abstract class BaseNetworkMember {
   static async signIn<T extends DerivedType<T>>(
     this: T,
     login: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     // NOTE: This is a passwordless login/sign up flow,
     //       case when user signs up more often
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const doesConfirmedUserExist = await userManagementService.doesConfirmedUserExist(login)
     if (doesConfirmedUserExist) {
@@ -1027,13 +1056,14 @@ export abstract class BaseNetworkMember {
    * @param newPassword
    * @param options - optional parameters with specified environment
    */
-  async changePassword(oldPassword: string, newPassword: string, options: SdkOptions): Promise<void> {
+  async changePassword(oldPassword: string, newPassword: string, inputOptions: SdkOptions): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: oldPassword },
       { isArray: false, type: 'string', isRequired: true, value: newPassword },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.changePassword(
       this.cognitoUserTokens,
@@ -1050,13 +1080,18 @@ export abstract class BaseNetworkMember {
    */
   // NOTE: operation is used for change the attribute, not username. Consider renaming
   //       New email/phoneNumber can be useded as a username to login.
-  async changeUsername(newLogin: string, options: SdkOptions, messageParameters?: MessageParameters): Promise<void> {
+  async changeUsername(
+    newLogin: string,
+    inputOptions: SdkOptions,
+    messageParameters?: MessageParameters,
+  ): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newLogin },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.initiateChangeLogin(
       this.cognitoUserTokens,
@@ -1071,13 +1106,14 @@ export abstract class BaseNetworkMember {
    * @param confirmationCode - OTP sent by AWS Cognito/SES
    * @param options - optional parameters with specified environment
    */
-  async confirmChangeUsername(newLogin: string, confirmationCode: string, options: SdkOptions): Promise<void> {
+  async confirmChangeUsername(newLogin: string, confirmationCode: string, inputOptions: SdkOptions): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newLogin },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.completeChangeLogin(
       this.cognitoUserTokens,
@@ -1945,13 +1981,14 @@ export abstract class BaseNetworkMember {
   static async fromAccessToken<T extends DerivedType<T>>(
     this: T,
     accessToken: string,
-    options: SdkOptions,
+    inputOptions: SdkOptions,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: false, value: accessToken },
-      { isArray: false, type: SdkOptions, isRequired: true, value: options },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const keyManagementService = await BaseNetworkMember._createKeyManagementService(options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
     return new this(encryptionKey, encryptedSeed, options)
@@ -1963,9 +2000,10 @@ export abstract class BaseNetworkMember {
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init<T extends DerivedType<T>>(this: T, options: SdkOptions): Promise<InstanceType<T>> {
-    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: options }])
+  static async init<T extends DerivedType<T>>(this: T, inputOptions: SdkOptions): Promise<InstanceType<T>> {
+    await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: inputOptions }])
 
+    const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = BaseNetworkMember._createUserManagementService(options)
     const { accessToken } = userManagementService.readUserTokensFromSessionStorage()
     const keyManagementService = BaseNetworkMember._createKeyManagementService(options)

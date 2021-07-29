@@ -172,7 +172,7 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
   }
 }
 
-export const getOptionsFromEnvironment = <TOptions extends SdkOptions>(options: TOptions) => {
+export const getOptionsFromEnvironment = (options: SdkOptions) => {
   const { accessApiKeyOptions, environmentOptions, storageRegion, cognitoUserTokens, otherOptions } = splitOptions(
     options,
   )
@@ -185,3 +185,5 @@ export const getOptionsFromEnvironment = <TOptions extends SdkOptions>(options: 
     otherOptions,
   }
 }
+
+export type ParsedOptions = ReturnType<typeof getOptionsFromEnvironment>
