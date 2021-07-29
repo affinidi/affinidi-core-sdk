@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import { createHeaders, updateHeaders } from '../../../src/helpers/headers'
 
 const fakeAccessApiKey = 'fakeAccessApiKey'
-const fakeAuthToken = 'fakeAuthToken'
+const fakeAuthToken = Math.random().toString(36).substring(7)
 const fakeSDKVersion = 'fakeSDKVersion'
 const fakeRegion = 'fakeRegion'
 
