@@ -4,7 +4,7 @@ import sinon from 'sinon'
 import { expect, use as chaiUse } from 'chai'
 import sinonChai from 'sinon-chai'
 
-import { BaseNetworkMember as MockableNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
+import { LegacyNetworkMemberWithFactories as MockableNetworkMember } from '../../src/CommonNetworkMember/LegacyNetworkMemberWithFactories'
 import { SdkOptions } from '../../src/dto'
 import KeyManagementService from '../../src/services/KeyManagementService'
 import UserManagementService from '../../src/services/UserManagementService'
@@ -40,7 +40,7 @@ const stubConfirmAuthRequests = async (opts: { walletPassword: string; encrypted
       updatedEncryptedSeed: opts.encryptedSeed,
     }),
 
-    getSignupCredentials: sinon.stub(MockableNetworkMember.prototype, 'getSignupCredentials').resolves([signedCredential]),
+    getSignupCredentials: sinon.stub(MockableNetworkMember.prototype as any, '_getSignupCredentials').resolves([signedCredential]),
     pullEncryptionKey: sinon
       .stub(KeyManagementService.prototype as any, '_pullEncryptionKey')
       .resolves(opts.walletPassword),

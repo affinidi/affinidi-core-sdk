@@ -63,9 +63,6 @@ export class SdkOptions {
   revocationUrl?: string
 
   @IsOptional()
-  cognitoUserTokens?: CognitoUserTokens
-
-  @IsOptional()
   @IsIn(SUPPORTED_DID_METHODS)
   didMethod?: DidMethod
 
