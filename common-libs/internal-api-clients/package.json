@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/internal-api-clients",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.0-beta.7",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -49,6 +49,7 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
+    "@affinidi/affinidi-did-auth-lib": "^1.0.7",
     "@types/chai": "4.2.12",
     "@types/chai-spies": "1.0.2",
     "@types/lodash.keyby": "^4.6.6",

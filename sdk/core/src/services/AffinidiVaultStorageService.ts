@@ -34,13 +34,9 @@ export default class AffinidiVaultStorageService {
       vaultUrl: options.vaultUrl,
       accessApiKey: options.accessApiKey,
       sdkVersion: extractSDKVersion(),
+      audienceDid: options.audienceDid,
+      didAuthService: didAuthService,
     })
-  }
-
-  private async _authorizeVcVault(): Promise<string> {
-    const { body } = await this._vaultApiService.createDidAuthRequest({ audienceDid: this._audienceDid })
-    const responseToken = await this._didAuthService.createDidAuthResponseToken(body)
-    return responseToken
   }
 
   private async _encryptCredentials(credentials: any[]): Promise<VaultCredential[]> {
@@ -116,14 +112,12 @@ export default class AffinidiVaultStorageService {
   }
 
   public async saveCredentials(credentials: any[], storageRegion: string): Promise<VaultCredential[]> {
-    const token = await this._authorizeVcVault()
-
     const responses: VaultCredential[] = []
 
     const encryptedCredentials = await this._encryptCredentials(credentials)
 
     for (const credential of encryptedCredentials) {
-      const { body } = await this._vaultApiService.storeCredential(token, storageRegion, credential.credentialId, {
+      const { body } = await this._vaultApiService.storeCredential(storageRegion, credential.credentialId, {
         credentialTypes: credential.credentialTypes,
         payload: credential.payload,
       })
@@ -135,22 +129,19 @@ export default class AffinidiVaultStorageService {
   }
 
   public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
-    const token = await this._authorizeVcVault()
-
     const hashedTypes = types ? await this._computeTypesHashes(types) : undefined
 
-    const { body } = await this._vaultApiService.searchCredentials(token, storageRegion, hashedTypes)
+    const { body } = await this._vaultApiService.searchCredentials(storageRegion, hashedTypes)
     const credentials = await this._decryptCredentials(body.credentials)
 
     return credentials
   }
 
   public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
-    const token = await this._authorizeVcVault()
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
     const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
-    const { body } = await this._vaultApiService.getCredential(token, storageRegion, hashedId)
+    const { body } = await this._vaultApiService.getCredential(storageRegion, hashedId)
 
     const credential = await this._decryptCredential(body)
 
@@ -158,16 +149,13 @@ export default class AffinidiVaultStorageService {
   }
 
   public async deleteCredentialById(credentialId: string, storageRegion: string): Promise<void> {
-    const token = await this._authorizeVcVault()
-
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
 
-    await this._vaultApiService.deleteCredential(token, storageRegion, hashedId)
+    await this._vaultApiService.deleteCredential(storageRegion, hashedId)
   }
 
   public async deleteAllCredentials(storageRegion: string): Promise<void> {
-    const token = await this._authorizeVcVault()
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
     const credentials = await this.searchCredentials(storageRegion)
@@ -182,7 +170,7 @@ export default class AffinidiVaultStorageService {
 
       const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
 
-      await this._vaultApiService.deleteCredential(token, storageRegion, hashedId)
+      await this._vaultApiService.deleteCredential(storageRegion, hashedId)
     }
   }
 }

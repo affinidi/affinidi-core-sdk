@@ -225,9 +225,9 @@ describe('AffinidiVaultStorageService', () => {
       ] as VaultCredential[],
     }
 
-    mockDidAuth()
-
     nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
+
+    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(true)
 
     for (const cred of getAllResponse.credentials) {
       nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })

@@ -3,8 +3,8 @@ import FetchType from 'node-fetch'
 import { profile, SdkError } from '@affinidi/common'
 
 import { BuiltApiType } from '../types/typeBuilder'
-import { Simplify } from '../types/util'
 import { ApiRequestHeaders, createHeaders, getExtendedHeaders } from '../helpers/headers'
+import { RawApiSpec, RequestOptionsForOperation } from '../types/request'
 
 let fetch: typeof FetchType
 
@@ -14,36 +14,7 @@ if (!fetch) {
   fetch = require('node-fetch')
 }
 
-type BasicRequestOptions = {
-  authorization?: string
-  storageRegion?: string
-}
-
-type OptionalRecord = Record<string, any> | undefined
-
-type WithOptionalField<TName extends string, TData extends OptionalRecord> = TData extends undefined | never
-  ? Partial<Record<TName, undefined>>
-  : Record<TName, TData>
-
-type RequestOptions<
-  TParams extends OptionalRecord,
-  TQuery extends OptionalRecord,
-  TPath extends OptionalRecord
-> = BasicRequestOptions &
-  WithOptionalField<'params', TParams> &
-  WithOptionalField<'queryParams', TQuery> &
-  WithOptionalField<'pathParams', TPath>
-
-type RequestOptionsForOperation<TApi extends BuiltApiType, TOperationId extends keyof TApi> = Simplify<
-  RequestOptions<TApi[TOperationId]['requestBody'], TApi[TOperationId]['queryParams'], TApi[TOperationId]['pathParams']>
->
-
 export type GenericConstructorOptions = { accessApiKey: string; sdkVersion?: string }
-
-type RawApiSpec<TApi extends BuiltApiType> = {
-  servers: readonly [{ url: string }]
-  paths: Record<string, Partial<Record<'get' | 'post' | 'put' | 'delete', { operationId: keyof TApi }>>>
-}
 
 @profile()
 export default class GenericApiService<TApi extends BuiltApiType> {

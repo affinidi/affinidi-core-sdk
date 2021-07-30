@@ -1,3 +1,5 @@
+# release 6.0.0-beta.6 (2021-07-30)
+  * removed did auth related logic from `AffinidiVaultStorageService`
 # release 6.0.0-beta.5 (2021-07-26)
   * passing `sdkVersion` to all api services
 # release 6.0.0-beta.4 (2021-07-23)
