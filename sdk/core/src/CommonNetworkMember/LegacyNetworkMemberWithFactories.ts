@@ -1,7 +1,7 @@
 import { profile, KeysService } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import WalletStorageService from '../services/WalletStorageService'
-import { SignedCredential, SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
+import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
 import { validateUsername } from '../shared/validateUsername'
 import { IPlatformEncryptionTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
@@ -10,7 +10,6 @@ import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFr
 import UserManagementService from '../services/UserManagementService'
 import { createKeyManagementService } from './BaseNetworkMember'
 import { LegacyNetworkMember } from './LegacyNetworkMember'
-import { Util } from './Util'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -368,7 +367,13 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
       password,
       messageParameters,
     )
-    const result = await LegacyNetworkMemberWithFactories._confirmSignUp(self, cognitoTokens, password, undefined, options)
+    const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
+      self,
+      cognitoTokens,
+      password,
+      undefined,
+      options,
+    )
     result.afterConfirmSignUp()
     return result
   }
@@ -415,7 +420,13 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
       return LegacyNetworkMemberWithFactories._signUpByEmailOrPhone(login, password, inputOptions, messageParameters)
     }
 
-    return LegacyNetworkMemberWithFactories._signUpByUsernameAutoConfirm(this, login, password, inputOptions, messageParameters)
+    return LegacyNetworkMemberWithFactories._signUpByUsernameAutoConfirm(
+      this,
+      login,
+      password,
+      inputOptions,
+      messageParameters,
+    )
   }
 
   /**
@@ -506,7 +517,13 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
       signUpToken,
       confirmationCode,
     )
-    const result = await LegacyNetworkMemberWithFactories._confirmSignUp(this, cognitoTokens, shortPassword, undefined, options)
+    const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
+      this,
+      cognitoTokens,
+      shortPassword,
+      undefined,
+      options,
+    )
     await result.afterConfirmSignUp()
     return result
   }
@@ -687,7 +704,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param options - optional parameters for AffinityWallet initialization
    * @returns initialized instance of SDK
    */
-   static async fromAccessToken<T extends DerivedType<T>>(
+  static async fromAccessToken<T extends DerivedType<T>>(
     this: T,
     accessToken: string,
     inputOptions: SdkOptions,

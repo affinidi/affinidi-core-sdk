@@ -8,7 +8,7 @@ import { MessageParameters, SdkOptions } from '../../../src/dto'
 import { TestmailInbox } from '../../../src/test-helpers'
 
 import { getBasicOptionsForEnvironment } from '../../helpers'
-import { AffinidiWalletV6WithEncryption as AffinityWallet, checkIsWallet } from '../../helpers/AffinidiWallet'
+import { AffinidiWalletV6WithEncryption as AffinityWallet } from '../../helpers/AffinidiWallet'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 import { generateCredentials } from '../../factory/signedCredentials'
 

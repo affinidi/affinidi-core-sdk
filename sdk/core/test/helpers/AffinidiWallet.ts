@@ -1,10 +1,6 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { expect } from 'chai'
-import {
-  CommonNetworkMember,
-  createV5CompatibleWalletFactories,
-  createV6WalletFactories,
-} from '../../src'
+import { CommonNetworkMember, createV5CompatibleWalletFactories, createV6WalletFactories } from '../../src'
 import { BaseNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
 import { testPlatformTools } from './testPlatformTools'
 import { testPlatformToolsWithEncryption } from './testPlatformToolsWithEncryption'

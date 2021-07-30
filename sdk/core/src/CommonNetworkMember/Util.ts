@@ -67,5 +67,5 @@ export const Util = {
     // )
 
     return JwtService.fromJWT(token)
-  }
+  },
 }

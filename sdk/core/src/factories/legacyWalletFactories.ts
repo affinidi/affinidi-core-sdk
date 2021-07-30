@@ -1,6 +1,9 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
-import { LegacyNetworkMemberWithFactories, UniversalDerivedType } from '../CommonNetworkMember/LegacyNetworkMemberWithFactories'
+import {
+  LegacyNetworkMemberWithFactories,
+  UniversalDerivedType,
+} from '../CommonNetworkMember/LegacyNetworkMemberWithFactories'
 import { Util } from '../CommonNetworkMember/Util'
 import { CognitoUserTokens, KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
@@ -21,7 +24,10 @@ const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, compone
   return Wallet as UniversalDerivedType
 }
 
-export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEncryptionTools, component: EventComponent) => {
+export const createLegacyWalletFactories = (
+  platformEncryptionTools: IPlatformEncryptionTools,
+  component: EventComponent,
+) => {
   const Wallet = createWallet(platformEncryptionTools, component)
 
   return {

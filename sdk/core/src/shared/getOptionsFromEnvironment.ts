@@ -171,9 +171,7 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
 }
 
 export const getOptionsFromEnvironment = (options: SdkOptions) => {
-  const { accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(
-    options,
-  )
+  const { accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(options)
 
   return {
     basicOptions: getBasicOptionsFromEnvironment(environmentOptions),

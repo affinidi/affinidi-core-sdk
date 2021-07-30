@@ -22,9 +22,9 @@ const createConstructor = <T extends (...args: any) => any>(inputFunction: T) =>
 
   const f: TF = inputFunction
 
-  return function (...args: Parameters<T>) {
+  return (function (...args: Parameters<T>) {
     return f(...args)
-  } as any as TConstructor
+  } as any) as TConstructor
 }
 
 export const createV5CompatibleWalletFactories = (
@@ -34,12 +34,7 @@ export const createV5CompatibleWalletFactories = (
   const { legacyConstructor, ...legacyFactories } = createLegacyWalletFactories(platformEncryptionTools, component)
   const cognitoFactories = createCognitoWalletFactories(platformEncryptionTools, component)
   const cognitolessFactories = createCognitolessWalletFactories(platformEncryptionTools, component)
-  return Object.assign(
-    createConstructor(legacyConstructor),
-    cognitoFactories,
-    cognitolessFactories,
-    legacyFactories,
-  )
+  return Object.assign(createConstructor(legacyConstructor), cognitoFactories, cognitolessFactories, legacyFactories)
 }
 
 export const createV6WalletFactories = (

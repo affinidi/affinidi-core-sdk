@@ -201,7 +201,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(error.name).to.equal('COR-5')
     }
 
-
     const signInCode = await waitForOtpCode(inbox)
 
     const result = await AffinidiWallet.completeSignInPasswordless(options, signInToken, signInCode)
@@ -373,7 +372,12 @@ parallel('CommonNetworkMember [OTP]', () => {
       const newInbox = createInbox()
       const password = COGNITO_PASSWORD
 
-      const signUpToken = await AffinidiWallet.initiateSignUpByEmail(options, newInbox.email, password, messageParameters)
+      const signUpToken = await AffinidiWallet.initiateSignUpByEmail(
+        options,
+        newInbox.email,
+        password,
+        messageParameters,
+      )
       checkIsString(signUpToken)
       const signUpCode = await waitForOtpCode(newInbox)
 

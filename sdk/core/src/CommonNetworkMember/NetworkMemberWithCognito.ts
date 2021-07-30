@@ -1,4 +1,4 @@
-import { profile, KeysService } from '@affinidi/common'
+import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import WalletStorageService from '../services/WalletStorageService'
 import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
@@ -343,7 +343,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     const keyManagementService = createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       accessToken,
-      inputKeyParams ?? await NetworkMemberWithCognito._createSignUpKeys(shortPassword, options),
+      inputKeyParams ?? (await NetworkMemberWithCognito._createSignUpKeys(shortPassword, options)),
       !options.otherOptions.skipBackupEncryptedSeed,
     )
 
@@ -359,20 +359,23 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     const { idToken } = this.cognitoUserTokens
 
     if (this._options.otherOptions.issueSignupCredential) {
-      const { basicOptions: { env, keyStorageUrl, issuerUrl }, accessApiKey } = this._options
+      const {
+        basicOptions: { env, keyStorageUrl, issuerUrl },
+        accessApiKey,
+      } = this._options
       const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, {
         env,
         accessApiKey,
       })
-  
+
       const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferToken)
-  
+
       const signedCredentials = await WalletStorageService.getSignedCredentials(idToken, credentialOfferResponseToken, {
         accessApiKey,
         issuerUrl,
         keyStorageUrl,
       })
-  
+
       await this.saveCredentials(signedCredentials)
     }
   }
@@ -491,10 +494,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     )
   }
 
-  private async _initiateChangeEmailOrPhone(
-    newLogin: string,
-    messageParameters?: MessageParameters,
-  ): Promise<string> {
+  private async _initiateChangeEmailOrPhone(newLogin: string, messageParameters?: MessageParameters): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: newLogin },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
@@ -515,10 +515,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    * @param messageParameters - optional parameters with specified welcome message
    * @returns token to be used with completeChangeEmailOrPhone
    */
-  public async initiateChangeEmail(
-    email: string,
-    messageParameters?: MessageParameters,
-  ): Promise<string> {
+  public async initiateChangeEmail(email: string, messageParameters?: MessageParameters): Promise<string> {
     return this._initiateChangeEmailOrPhone(email, messageParameters)
   }
 

@@ -15,7 +15,10 @@ const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, compone
   return Wallet as UniversalDerivedType
 }
 
-export const createCognitoWalletFactories = (platformEncryptionTools: IPlatformEncryptionTools, component: EventComponent) => {
+export const createCognitoWalletFactories = (
+  platformEncryptionTools: IPlatformEncryptionTools,
+  component: EventComponent,
+) => {
   const Wallet = createWallet(platformEncryptionTools, component)
 
   return {
@@ -115,7 +118,6 @@ export const createCognitoWalletFactories = (platformEncryptionTools: IPlatformE
     ) => {
       return Wallet.initiateSignUpByEmail(inputOptions, email, password, messageParameters)
     },
-
 
     /**
      * @description Initiates sign up flow

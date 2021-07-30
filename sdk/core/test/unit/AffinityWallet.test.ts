@@ -40,7 +40,9 @@ const stubConfirmAuthRequests = async (opts: { walletPassword: string; encrypted
       updatedEncryptedSeed: opts.encryptedSeed,
     }),
 
-    getSignupCredentials: sinon.stub(MockableNetworkMember.prototype as any, '_getSignupCredentials').resolves([signedCredential]),
+    getSignupCredentials: sinon
+      .stub(MockableNetworkMember.prototype as any, '_getSignupCredentials')
+      .resolves([signedCredential]),
     pullEncryptionKey: sinon
       .stub(KeyManagementService.prototype as any, '_pullEncryptionKey')
       .resolves(opts.walletPassword),

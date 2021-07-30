@@ -7,11 +7,7 @@ import { randomBytes } from '../shared/randomBytes'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { BaseNetworkMember } from './BaseNetworkMember'
 
-type GenericConstructor<T> = new (
-  password: string,
-  encryptedSeed: string,
-  options: ParsedOptions,
-) => T
+type GenericConstructor<T> = new (password: string, encryptedSeed: string, options: ParsedOptions) => T
 type Constructor<T> = GenericConstructor<T> & GenericConstructor<NetworkMemberWithoutCognito>
 type AbstractStaticMethods = Record<never, never>
 type ConstructorKeys<T> = {
@@ -83,7 +79,7 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */
-   static async createFromEncryptedSeedAndPassword<T extends DerivedType<T>>(
+  static async createFromEncryptedSeedAndPassword<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
     encryptedSeed: string,

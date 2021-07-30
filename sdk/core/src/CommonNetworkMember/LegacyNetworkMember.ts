@@ -36,7 +36,9 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
   ) {
     super(password, encryptedSeed, platformEncryptionTools, options, component)
 
-    const { basicOptions: { phoneIssuerBasePath, emailIssuerBasePath } } = this._options
+    const {
+      basicOptions: { phoneIssuerBasePath, emailIssuerBasePath },
+    } = this._options
     this._phoneIssuer = new PhoneIssuerService({ basePath: phoneIssuerBasePath })
     this._emailIssuer = new EmailIssuerService({ basePath: emailIssuerBasePath })
   }
@@ -188,7 +190,7 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
    *
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
-   static async register(password: string, inputOptions: SdkOptions): Promise<{ did: string; encryptedSeed: string }> {
+  static async register(password: string, inputOptions: SdkOptions): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -214,7 +216,7 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
    * @param idToken - idToken received from cognito
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
-   async getSignupCredentials(idToken: string, inputOptions: SdkOptions): Promise<SignedCredential[]> {
+  async getSignupCredentials(idToken: string, inputOptions: SdkOptions): Promise<SignedCredential[]> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: idToken },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -246,5 +248,4 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
       keyStorageUrl,
     })
   }
-
 }
