@@ -32,4 +32,4 @@ global.TextEncoder = global.TextEncoder || TextEncoder
 // See https://docs.expo.io/guides/using-sentry
 
 export { SdkOptions } from '@affinidi/wallet-core-sdk'
-export { AffinityWallet, AffinityWallet as AffinidiWallet } from './AffinityWallet'
+export { AffinidiWallet, AffinidiWallet as AffinityWallet, AffinidiWalletV6 } from './AffinityWallet'
