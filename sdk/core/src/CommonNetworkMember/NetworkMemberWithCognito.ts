@@ -449,7 +449,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     options: SdkOptions,
     signInToken: string,
     confirmationCode: string,
-  ): Promise<{ isNew: boolean; commonNetworkMember: InstanceType<T> }> {
+  ): Promise<{ isNew: boolean; wallet: InstanceType<T> }> {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: options },
       { isArray: false, type: 'string', isRequired: true, value: signInToken },
@@ -461,12 +461,12 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
       case 'logIn':
         return {
           isNew: false,
-          commonNetworkMember: await this.completeLogInPasswordless(options, token.logInToken, confirmationCode),
+          wallet: await this.completeLogInPasswordless(options, token.logInToken, confirmationCode),
         }
       case 'signUp':
         return {
           isNew: true,
-          commonNetworkMember: await this.completeSignUp(options, token.signUpToken, confirmationCode),
+          wallet: await this.completeSignUp(options, token.signUpToken, confirmationCode),
         }
       default:
         throw new Error(`Incorrect token type '${token.signInType}'`)

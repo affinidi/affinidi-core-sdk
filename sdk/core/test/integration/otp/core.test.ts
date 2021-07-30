@@ -3,7 +3,11 @@ import '../env'
 
 import { expect } from 'chai'
 import { SdkError } from '@affinidi/common'
-import { AffinidiWalletV6 as AffinidiWallet, checkIsWallet } from '../../helpers/AffinidiWallet'
+import {
+  AffinidiWalletV6 as AffinidiWallet,
+  AffinidiWallet as LegacyAffinidiWallet,
+  checkIsWallet,
+} from '../../helpers/AffinidiWallet'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
@@ -65,20 +69,26 @@ parallel('CommonNetworkMember [OTP]', () => {
       skipBackupEncryptedSeed: true,
     }
 
-    const originalWallet = await AffinidiWallet.completeSignInPasswordless(
+    const { wallet: originalWallet } = await AffinidiWallet.completeSignInPasswordless(
       optionsWithSkippedBackupEncryptedSeed,
       signInToken,
       signInCode,
     )
 
     checkIsWallet(originalWallet)
+    const { password, encryptedSeed } = originalWallet
+    const { accessToken } = JSON.parse(originalWallet.serialize())
+
+    const legacyWallet = new LegacyAffinidiWallet(password, encryptedSeed, options)
+    await legacyWallet.storeEncryptedSeed('', '', accessToken)
+    await legacyWallet.signOut(options)
 
     const signInToken2 = await AffinidiWallet.initiateSignInPasswordless(options, inbox.email, messageParameters)
     checkIsString(signInToken2)
     const signInCode2 = await waitForOtpCode(inbox)
 
     const result = await AffinidiWallet.completeSignInPasswordless(options, signInToken2, signInCode2)
-    checkIsWallet(result.commonNetworkMember)
+    checkIsWallet(result.wallet)
   })
 
   it('registers new user after confirmation code from the first call to #signIn was ignored; #signUpConfirm returns { isNew: true }', async () => {
@@ -91,10 +101,10 @@ parallel('CommonNetworkMember [OTP]', () => {
     checkIsString(signInToken)
     const signInCode = await waitForOtpCode(inbox)
 
-    const { isNew, commonNetworkMember } = await AffinidiWallet.completeSignInPasswordless(options, signInToken, signInCode)
+    const { isNew, wallet } = await AffinidiWallet.completeSignInPasswordless(options, signInToken, signInCode)
 
     expect(isNew).to.be.true
-    checkIsWallet(commonNetworkMember)
+    checkIsWallet(wallet)
   })
 
   it('changes forgotten password after email was changed for user registered with email and password', async () => {
@@ -195,7 +205,7 @@ parallel('CommonNetworkMember [OTP]', () => {
     const signInCode = await waitForOtpCode(inbox)
 
     const result = await AffinidiWallet.completeSignInPasswordless(options, signInToken, signInCode)
-    checkIsWallet(result.commonNetworkMember)
+    checkIsWallet(result.wallet)
   })
 
   it('throws COR-13 at the third call to #confirmSignIn with wrong confirmation code', async () => {
@@ -292,8 +302,8 @@ parallel('CommonNetworkMember [OTP]', () => {
       const result = await AffinidiWallet.completeSignInPasswordless(options, signInToken, signInCode)
 
       expect(result.isNew).to.be.false
-      checkIsWallet(result.commonNetworkMember)
-      expect(result.commonNetworkMember.did).to.exist
+      checkIsWallet(result.wallet)
+      expect(result.wallet.did).to.exist
     })
 
     it('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
