@@ -9,8 +9,8 @@ export type AccountOwnershipV1 = CreateThing<
     metaData: AddKeyPairs<any>
   }
 >
-
-export type VCAccountOwnershipV1 = VCV1<VCV1Subject<AccountOwnershipV1>>
+export type VCSAccountOwnershipV1 = VCV1Subject<AccountOwnershipV1>
+export type VCAccountOwnershipV1 = VCV1<VCSAccountOwnershipV1>
 
 export const getAccountOwnershipV1Context = () => {
   const accountOwnershipEntry = createContextEntry<AccountOwnershipV1>({
@@ -21,13 +21,13 @@ export const getAccountOwnershipV1Context = () => {
       accountType: 'affSchema',
       metaData: 'affSchema',
     },
-    vocab: 'schema',
+    vocab: 'affSchema',
   })
 
   return createVCContextEntry<VCAccountOwnershipV1>({
     type: 'AccountOwnershipV1',
     typeIdBase: 'affSchema',
     entries: [accountOwnershipEntry],
-    vocab: 'schema',
+    vocab: 'affSchema',
   })
 }
