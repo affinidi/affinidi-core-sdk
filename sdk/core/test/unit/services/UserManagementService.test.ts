@@ -442,7 +442,7 @@ describe('UserManagementService', () => {
       stubMethod(RESEND_CONFIRMATION_CODE, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.resendSignUp(email)
+      const response = await userManagementService.resendSignUpByLogin(email)
       expect(response).to.not.exist
     })
 
@@ -456,7 +456,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.resendSignUp(email)
+        await userManagementService.resendSignUpByLogin(email)
       } catch (error) {
         responseError = error
       }
@@ -481,7 +481,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.resendSignUp(email)
+        await userManagementService.resendSignUpByLogin(email)
       } catch (error) {
         responseError = error
       }
@@ -506,7 +506,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.resendSignUp(email)
+        await userManagementService.resendSignUpByLogin(email)
       } catch (error) {
         responseError = error
       }

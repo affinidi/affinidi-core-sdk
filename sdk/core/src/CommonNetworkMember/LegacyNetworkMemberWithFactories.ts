@@ -8,15 +8,15 @@ import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import UserManagementService from '../services/UserManagementService'
-import { BaseNetworkMember } from './BaseNetworkMember'
+import { createKeyManagementService } from './BaseNetworkMember'
+import { LegacyNetworkMember } from './LegacyNetworkMember'
 import { Util } from './Util'
 
 type GenericConstructor<T> = new (
   password: string,
   encryptedSeed: string,
-  cognitoUserTokens: CognitoUserTokens | undefined,
   options: ParsedOptions,
-  component?: EventComponent,
+  cognitoUserTokens?: CognitoUserTokens,
 ) => T
 type Constructor<T> = GenericConstructor<T> & GenericConstructor<LegacyNetworkMemberWithFactories>
 type AbstractStaticMethods = Record<never, never>
@@ -30,37 +30,25 @@ type DerivedTypeForOptions<TInstance> = Constructor<TInstance> &
 type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<T>>
 export type UniversalDerivedType = DerivedType<DerivedTypeForOptions<LegacyNetworkMemberWithFactories>>
 
+const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
+  return new UserManagementService({ ...basicOptions, accessApiKey })
+}
+
 /**
- * This class is abstract.
- * You can use implementations from wallet-browser-sdk, wallet-expo-sdk or wallet-react-native-sdk as needed.
- *
- * Alternatively you can implement your own derived class.
- * Derived classes should have:
- *  * A constructor with a signature `new (password: string, encryptedSeed: string, options?: SdkOptions, component?: EventComponent)`
- *  * A static method `afterConfirmSignUp(networkMember: YourClass, originalOptions: SdkOptions) => Promise<void>`
- *
- * Constructor should pass an implementation of `IPlatformEncryptionTools` to the base constructor.
- * This implementation should be compatible with one in other SDKs,
- * it will be used to encrypt and decrypt credentials stored in vault.
- * Alternatively you can provide a stub implementation, with all methods throwing errors,
- * if you are not going to use any features that depend on platform tools.
- *
- * `afterConfirmSignUp` is invoked on every call to `confirmSignUp`, direct or indirect.
- * It allows you to perform some tasks specific to your implementation.
- * You can leave the method body empty if you don't need it.
+ * @deprecated, will be removed in SDK v7
  */
 @profile()
-export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember {
+export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   private readonly _userManagementService
-  protected cognitoUserTokens: CognitoUserTokens
+  protected cognitoUserTokens: CognitoUserTokens | undefined
 
   constructor(
     password: string,
     encryptedSeed: string,
-    cognitoUserTokens: CognitoUserTokens | undefined,
     platformEncryptionTools: IPlatformEncryptionTools,
     options: ParsedOptions,
     component: EventComponent,
+    cognitoUserTokens?: CognitoUserTokens,
   ) {
     super(password, encryptedSeed, platformEncryptionTools, options, component)
     const { accessApiKey, basicOptions } = options
@@ -77,24 +65,20 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     return this.cognitoUserTokens.accessToken
   }
 
-  private static _createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-    return new UserManagementService({ ...basicOptions, accessApiKey })
-  }
-
   /**
    * @description Checks if registration for the user was completed
    * @param username - a valid email, phone number or arbitrary username
    * @param options - object with environment, staging is default { env: 'staging' }
    * @returns `true` if user is uncofirmed in Cognito, and `false` otherwise.
    */
-   static async isUserUnconfirmed(username: string, inputOptions: SdkOptions) {
+  static async isUserUnconfirmed(username: string, inputOptions: SdkOptions) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     return userManagementService.doesUnconfirmedUserExist(username)
   }
 
@@ -128,47 +112,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
 
     const options = getOptionsFromEnvironment(inputOptions)
     const encryptedSeedWithInitializationVector = await KeysService.encryptSeed(seedHexWithMethod, passwordBuffer)
-    return new this(password, encryptedSeedWithInitializationVector, undefined, options)
-  }
-
-  getPublicKeyHexFromDidDocument(didDocument: any) {
-    return Util.getPublicKeyHexFromDidDocument(didDocument)
-  }
-
-  /**
-   * @description Creates DID and anchors it
-   * 1. generate seed/keys
-   * 2. build DID document
-   * 3. sign DID document
-   * 4. store DID document in IPFS
-   * 5. anchor DID with DID document ID from IPFS
-   * @param password - encryption key which will be used to encrypt randomly created seed/keys pair
-   * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
-   * @returns
-   *
-   * did - hash from public key (your decentralized ID)
-   *
-   * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
-   */
-  static async register(password: string, inputOptions: SdkOptions): Promise<{ did: string; encryptedSeed: string }> {
-    await ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: password },
-      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
-    ])
-
-    const options = getOptionsFromEnvironment(inputOptions)
-    return LegacyNetworkMemberWithFactories._register(password, options)
-  }
-
-  static async anchorDid(
-    encryptedSeed: string,
-    password: string,
-    didDocument: any,
-    nonce: number,
-    inputOptions: SdkOptions,
-  ) {
-    const options = getOptionsFromEnvironment(inputOptions)
-    return LegacyNetworkMemberWithFactories._anchorDid(encryptedSeed, password, didDocument, nonce, options)
+    return new this(password, encryptedSeedWithInitializationVector, options)
   }
 
   /**
@@ -237,7 +181,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     return await userManagementService.initiateLogInPasswordless(login, messageParameters)
   }
 
@@ -261,51 +205,13 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
-    const keyManagementService = LegacyNetworkMemberWithFactories._createKeyManagementService(options)
+    const userManagementService = createUserManagementService(options)
+    const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.completeLogInPasswordless(token, confirmationCode)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
 
-    return new this(encryptionKey, encryptedSeed, cognitoUserTokens, options)
-  }
-
-  /**
-   * @description Retrieves a VC based on signup information
-   * @param idToken - idToken received from cognito
-   * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
-   */
-  async getSignupCredentials(idToken: string, inputOptions: SdkOptions): Promise<SignedCredential[]> {
-    await ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: idToken },
-      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
-    ])
-
-    const options = getOptionsFromEnvironment(inputOptions)
-    return this._getSignupCredentials(idToken, options)
-  }
-
-  /**
-   * @description Retrieves a VC based on signup information
-   * @param idToken - idToken received from cognito
-   * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
-   */
-  private async _getSignupCredentials(
-    idToken: string,
-    { basicOptions: { env, keyStorageUrl, issuerUrl }, accessApiKey }: ParsedOptions,
-  ): Promise<SignedCredential[]> {
-    const credentialOfferToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, {
-      env,
-      accessApiKey,
-    })
-
-    const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferToken)
-
-    return WalletStorageService.getSignedCredentials(idToken, credentialOfferResponseToken, {
-      accessApiKey,
-      issuerUrl,
-      keyStorageUrl,
-    })
+    return new this(encryptionKey, encryptedSeed, options, cognitoUserTokens)
   }
 
   /**
@@ -315,7 +221,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: inputOptions }])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const newTokens = await userManagementService.logOut(this.cognitoUserTokens)
     this.cognitoUserTokens = newTokens
   }
@@ -337,7 +243,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     await userManagementService.initiateForgotPassword(login, messageParameters)
   }
 
@@ -362,7 +268,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = this._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     await userManagementService.completeForgotPassword(login, confirmationCode, newPassword)
   }
 
@@ -386,12 +292,12 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
-    const keyManagementService = LegacyNetworkMemberWithFactories._createKeyManagementService(options)
+    const userManagementService = createUserManagementService(options)
+    const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
     const { accessToken } = cognitoUserTokens
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    return new this(encryptionKey, encryptedSeed, cognitoUserTokens, options)
+    return new this(encryptionKey, encryptedSeed, options, cognitoUserTokens)
   }
 
   /**
@@ -432,7 +338,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     LegacyNetworkMemberWithFactories._validateKeys(keyParams)
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
       username,
       password,
@@ -456,7 +362,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
       username,
       password,
@@ -481,7 +387,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
   }
 
@@ -539,7 +445,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
@@ -563,14 +469,14 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
       keyParams = { password: passwordHash, encryptedSeed }
     }
 
-    const keyManagementService = this._createKeyManagementService(options)
+    const keyManagementService = createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       accessToken,
       keyParams,
       !options.otherOptions.skipBackupEncryptedSeed,
     )
 
-    return new self(encryptionKey, updatedEncryptedSeed, cognitoTokens, options)
+    return new self(encryptionKey, updatedEncryptedSeed, options, cognitoTokens)
   }
 
   /**
@@ -595,7 +501,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
@@ -633,8 +539,8 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
-    await userManagementService.resendSignUp(login, messageParameters)
+    const userManagementService = createUserManagementService(options)
+    await userManagementService.resendSignUpByLogin(login, messageParameters)
   }
 
   /**
@@ -660,7 +566,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     // NOTE: This is a passwordless login/sign up flow,
     //       case when user signs up more often
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const doesConfirmedUserExist = await userManagementService.doesConfirmedUserExist(login)
     if (doesConfirmedUserExist) {
       return userManagementService.initiateLogInPasswordless(login, messageParameters)
@@ -717,7 +623,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.changePassword(
       this.cognitoUserTokens,
       oldPassword,
@@ -745,7 +651,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.initiateChangeLogin(
       this.cognitoUserTokens,
       newLogin,
@@ -767,7 +673,7 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     this.cognitoUserTokens = await userManagementService.completeChangeLogin(
       this.cognitoUserTokens,
       newLogin,
@@ -792,9 +698,9 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const keyManagementService = await LegacyNetworkMemberWithFactories._createKeyManagementService(options)
+    const keyManagementService = await createKeyManagementService(options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    return new this(encryptionKey, encryptedSeed, { accessToken }, options)
+    return new this(encryptionKey, encryptedSeed, options, { accessToken })
   }
 
   /**
@@ -807,11 +713,11 @@ export abstract class LegacyNetworkMemberWithFactories extends BaseNetworkMember
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: inputOptions }])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userManagementService = LegacyNetworkMemberWithFactories._createUserManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const tokens = userManagementService.readUserTokensFromSessionStorage()
-    const keyManagementService = LegacyNetworkMemberWithFactories._createKeyManagementService(options)
+    const keyManagementService = createKeyManagementService(options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(tokens.accessToken)
 
-    return new this(encryptionKey, encryptedSeed, tokens, options)
+    return new this(encryptionKey, encryptedSeed, options, tokens)
   }
 }

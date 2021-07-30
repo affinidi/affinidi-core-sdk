@@ -11,11 +11,10 @@ const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, compone
     constructor(
       password: string,
       encryptedSeed: string,
-      cognitoUserTokens: CognitoUserTokens | undefined,
       options: ParsedOptions,
-      componentOverride?: EventComponent,
+      cognitoUserTokens?: CognitoUserTokens,
     ) {
-      super(password, encryptedSeed, cognitoUserTokens, platformEncryptionTools, options, componentOverride ?? component)
+      super(password, encryptedSeed, platformEncryptionTools, options, component, cognitoUserTokens)
     }
   }
 
@@ -31,6 +30,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param username - a valid email, phone number or arbitrary username
      * @param options - object with environment, staging is default { env: 'staging' }
      * @returns `true` if user is uncofirmed in Cognito, and `false` otherwise.
+     * @deprecated
      */
     isUserUnconfirmed: (username: string, options: SdkOptions) => {
       return Wallet.isUserUnconfirmed(username, options)
@@ -42,6 +42,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
      * @param password - optional password, will be generated, if not provided
      * @returns initialized instance of SDK
+     * @deprecated use `createFromUnencryptedSeed` instead
      */
     fromSeed: (seedHexWithMethod: string, options: SdkOptions, password: string = null) => {
       return Wallet.fromSeed(seedHexWithMethod, options, password)
@@ -51,6 +52,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @description Parses JWT and returns DID
      * @param jwt
      * @returns DID of entity who signed JWT
+     * @deprecated use `Util` instead
      */
     getDidFromToken: (jwt: string) => {
       return Util.getDidFromToken(jwt)
@@ -70,11 +72,15 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * did - hash from public key (your decentralized ID)
      *
      * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
+     * @deprecated
      */
     register: (password: string, options: SdkOptions) => {
       return Wallet.register(password, options)
     },
 
+    /**
+     * @deprecated
+     */
     anchorDid: (encryptedSeed: string, password: string, didDocument: any, nonce: number, options: SdkOptions) => {
       return Wallet.anchorDid(encryptedSeed, password, didDocument, nonce, options)
     },
@@ -85,6 +91,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param options - optional parameters with specified environment
      * @param messageParameters - optional parameters with specified welcome message
      * @returns token
+     * @deprecated use `initiateLogInPasswordless` instead
      */
     passwordlessLogin: (login: string, options: SdkOptions, messageParameters?: MessageParameters) => {
       return Wallet.passwordlessLogin(login, options, messageParameters)
@@ -96,6 +103,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param confirmationCode - OTP sent by AWS Cognito/SES
      * @param options - optional parameters for CommonNetworkMember initialization
      * @returns initialized instance of SDK
+     * @deprecated use `completeLogInPasswordless` instead
      */
     completeLoginChallenge: (token: string, confirmationCode: string, inputOptions: SdkOptions) => {
       return Wallet.completeLoginChallenge(token, confirmationCode, inputOptions)
@@ -106,6 +114,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param username - email/phoneNumber, registered in Cognito
      * @param options - optional parameters with specified environment
      * @param messageParameters - optional parameters with specified welcome message
+     * @deprecated use `initiateForgotPassword` instead
      */
     forgotPassword: (login: string, options: SdkOptions, messageParameters?: MessageParameters) => {
       return Wallet.forgotPassword(login, options, messageParameters)
@@ -117,6 +126,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param confirmationCode - OTP sent by AWS Cognito/SES
      * @param newPassword - new password
      * @param options - optional parameters with specified environment
+     * @deprecated use `completeForgotPassword` instead
      */
     forgotPasswordSubmit: (login: string, confirmationCode: string, newPassword: string, options: SdkOptions) => {
       return Wallet.forgotPasswordSubmit(login, confirmationCode, newPassword, options)
@@ -128,6 +138,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param password - password for Cognito user
      * @param options - optional parameters for CommonNetworkMember initialization
      * @returns initialized instance of SDK
+     * @deprecated use `logInWithPassword` instead
      */
     fromLoginAndPassword: (username: string, password: string, inputOptions: SdkOptions) => {
       return Wallet.fromLoginAndPassword(username, password, inputOptions)
@@ -144,6 +155,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param messageParameters - optional parameters with specified welcome message
      * @returns token or, in case when arbitrary username was used, it returns
      * initialized instance of SDK
+     * @deprecated use `signUpWithUsername`, `initiateSignUpByEmail` or `initiateSignUpByPhone` instead
      */
     signUpWithExistsEntity: (
       keyParams: KeyParams,
@@ -165,6 +177,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param messageParameters - optional parameters with specified welcome message
      * @returns token or, in case when arbitrary username was used, it returns
      * initialized instance of SDK
+     * @deprecated use `signUpWithUsername`, `initiateSignUpByEmail` or `initiateSignUpByPhone` instead
      */
     signUp: (login: string, password: string, options: SdkOptions, messageParameters?: MessageParameters) => {
       return Wallet.signUp(login, password, options, messageParameters)
@@ -181,6 +194,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param confirmationCode - OTP sent by AWS Cognito/SES.
      * @param options - optional parameters for CommonNetworkMember initialization
      * @returns initialized instance of SDK
+     * @deprecated use `completeSignUp` instead
      */
     confirmSignUpWithExistsEntity: (
       keyParams: KeyParams,
@@ -199,6 +213,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param confirmationCode - OTP sent by AWS Cognito/SES.
      * @param options - optional parameters for CommonNetworkMember initialization
      * @returns initialized instance of SDK
+     * @deprecated use `completeSignUp` instead
      */
     confirmSignUp: (signUpToken: string, confirmationCode: string, options: SdkOptions) => {
       return Wallet.confirmSignUp(signUpToken, confirmationCode, options)
@@ -209,6 +224,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param username - email/phoneNumber, registered and unconfirmed in Cognito
      * @param options - optional parameters with specified environment
      * @param messageParameters - optional parameters with specified welcome message
+     * @deprecated use `resendSignUp` instead
      */
     resendSignUpConfirmationCode: (login: string, options: SdkOptions, messageParameters?: MessageParameters) => {
       return Wallet.resendSignUpConfirmationCode(login, options, messageParameters)
@@ -221,6 +237,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param options - optional parameters with specified environment
      * @param messageParameters - optional parameters with specified welcome message
      * @returns token
+     * @deprecated use `initiateSignInPasswordless` instead
      */
     signIn: (login: string, options: SdkOptions, messageParameters?: MessageParameters) => {
       return Wallet.signIn(login, options, messageParameters)
@@ -232,6 +249,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param confirmationCode - OTP sent by AWS Cognito/SES
      * @param options - optional parameters for CommonNetworkMember initialization
      * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
+     * @deprecated use `completeSignInPasswordless` instead
      */
     confirmSignIn: (token: string, confirmationCode: string, options: SdkOptions) => {
       return Wallet.confirmSignIn(token, confirmationCode, options)
@@ -239,6 +257,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
 
     /**
      * @description Generates random seed from which keys could be derived
+     * @deprecated use `Util` instead
      */
     generateSeed: (didMethod?: string) => {
       return Util.generateSeed(didMethod)
@@ -248,6 +267,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @description Parses JWT token (request and response tokens of share and offer flows)
      * @param token - JWT
      * @returns parsed object from JWT
+     * @deprecated use `Util` instead
      */
     fromJWT: (token: string) => {
       return Util.fromJWT(token)
@@ -258,6 +278,7 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param accessToken
      * @param options - optional parameters for AffinityWallet initialization
      * @returns initialized instance of SDK
+     * @deprecated use `deserialize` instead
      */
     fromAccessToken: (accessToken: string, options: SdkOptions) => {
       return Wallet.fromAccessToken(accessToken, options)
@@ -268,14 +289,18 @@ export const createLegacyWalletFactories = (platformEncryptionTools: IPlatformEn
      * @param options - optional parameters for AffinityWallet initialization
      * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
      * if user is not logged in.
+     * @deprecated manage state storage and use `serialize`/`deserialize` instead
      */
     init: (options: SdkOptions) => {
       return Wallet.init(options)
     },
 
+    /**
+     * @deprecated use `createFromEncryptedSeedAndPassword` instead
+     */
     legacyConstructor: (password: string, encryptedSeed: string, inputOptions: SdkOptions) => {
       const options = getOptionsFromEnvironment(inputOptions)
-      return new Wallet(password, encryptedSeed, undefined, options)
+      return new Wallet(password, encryptedSeed, options)
     },
   }
 }

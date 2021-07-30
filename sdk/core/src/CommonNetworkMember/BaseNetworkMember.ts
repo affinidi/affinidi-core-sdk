@@ -14,16 +14,6 @@ import { EventComponent, EventCategory, EventName, EventMetadata } from '@affini
 
 import WalletStorageService from '../services/WalletStorageService'
 import HolderService from '../services/HolderService'
-import {
-  PhoneIssuerService,
-  InitiateResponse as PhoneIssuerInitiateResponse,
-  VerifyResponse as PhoneIssuerVerifyResponse,
-} from '../services/PhoneIssuerService'
-import {
-  EmailIssuerService,
-  InitiateResponse as EmailIssuerInitiateResponse,
-  VerifyResponse as EmailIssuerVerifyResponse,
-} from '../services/EmailIssuerService'
 
 import {
   ClaimMetadata,
@@ -53,25 +43,10 @@ import KeyManagementService from '../services/KeyManagementService'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { Util } from './Util'
 
-/**
- * This class is abstract.
- * You can use implementations from wallet-browser-sdk, wallet-expo-sdk or wallet-react-native-sdk as needed.
- *
- * Alternatively you can implement your own derived class.
- * Derived classes should have:
- *  * A constructor with a signature `new (password: string, encryptedSeed: string, options?: SdkOptions, component?: EventComponent)`
- *  * A static method `afterConfirmSignUp(networkMember: YourClass, originalOptions: SdkOptions) => Promise<void>`
- *
- * Constructor should pass an implementation of `IPlatformEncryptionTools` to the base constructor.
- * This implementation should be compatible with one in other SDKs,
- * it will be used to encrypt and decrypt credentials stored in vault.
- * Alternatively you can provide a stub implementation, with all methods throwing errors,
- * if you are not going to use any features that depend on platform tools.
- *
- * `afterConfirmSignUp` is invoked on every call to `confirmSignUp`, direct or indirect.
- * It allows you to perform some tasks specific to your implementation.
- * You can leave the method body empty if you don't need it.
- */
+export const createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
+  return new KeyManagementService({ ...basicOptions, accessApiKey })
+}
+
 @profile()
 export abstract class BaseNetworkMember {
   private _did: string
@@ -90,8 +65,6 @@ export abstract class BaseNetworkMember {
   protected readonly _keyManagementService
   protected readonly _affinity: Affinity
   protected readonly _options
-  private readonly _phoneIssuer: PhoneIssuerService
-  private readonly _emailIssuer: EmailIssuerService
   private _didDocumentKeyId: string
   protected readonly _component: EventComponent
   protected readonly _platformEncryptionTools: IPlatformEncryptionTools
@@ -112,18 +85,15 @@ export abstract class BaseNetworkMember {
       throw new Error('`platformEncryptionTools` must be provided!')
     }
 
-    const { accessApiKey, basicOptions, storageRegion, otherOptions } = options
+    const { accessApiKey, basicOptions, storageRegion } = options
     const {
       issuerUrl,
-      keyStorageUrl,
       revocationUrl,
       metricsUrl,
       registryUrl,
       verifierUrl,
       bloomVaultUrl,
       affinidiVaultUrl,
-      phoneIssuerBasePath,
-      emailIssuerBasePath,
     } = basicOptions
 
     const keysService = new KeysService(encryptedSeed, password)
@@ -138,7 +108,7 @@ export abstract class BaseNetworkMember {
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, sdkVersion })
-    this._keyManagementService = new KeyManagementService({ keyStorageUrl, accessApiKey })
+    this._keyManagementService = createKeyManagementService(options)
     this._didDocumentService = new DidDocumentService(keysService)
     const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
     this._walletStorageService = new WalletStorageService(didAuthService, keysService, platformEncryptionTools, {
@@ -156,8 +126,6 @@ export abstract class BaseNetworkMember {
       metricsUrl: metricsUrl,
       component: component,
     })
-    this._phoneIssuer = new PhoneIssuerService({ basePath: phoneIssuerBasePath })
-    this._emailIssuer = new EmailIssuerService({ basePath: emailIssuerBasePath })
     this._keysService = keysService
 
     this._options = options
@@ -183,10 +151,6 @@ export abstract class BaseNetworkMember {
    */
   get password(): string {
     return this._password
-  }
-
-  protected static _createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-    return new KeyManagementService({ ...basicOptions, accessApiKey })
   }
 
   /**
@@ -733,134 +697,6 @@ export abstract class BaseNetworkMember {
     })
 
     return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
-  }
-
-  /**
-   * @description Initiates the phone number verification flow
-   * @deprecated
-   * @param config - Configuration options
-   * @param config.apiKey - They api access key to the issuer service
-   * @param config.phoneNumber - The phone number to send the confirmation code to
-   * @param config.isWhatsAppNumber - Whether the phone number is a WhatsApp number
-   * @param config.id - The id of the request, this is for the caller to be able to identify the credential in the verify step
-   * @param config.holder - The DID of the user who will recieve the VC (owner of the phone number)
-   * @returns intitiate response data, including the status of the request
-   */
-  async initiatePhoneCredential({
-    apiKey,
-    phoneNumber,
-    isWhatsAppNumber,
-    id,
-    holder,
-  }: {
-    apiKey: string
-    phoneNumber: string
-    isWhatsAppNumber?: boolean
-    id: string
-    holder: string
-  }): Promise<PhoneIssuerInitiateResponse> {
-    await ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: apiKey },
-      { isArray: false, type: 'string', isRequired: true, value: phoneNumber },
-      { isArray: false, type: 'boolean', isRequired: false, value: isWhatsAppNumber },
-      { isArray: false, type: 'string', isRequired: true, value: id },
-      { isArray: false, type: 'string', isRequired: true, value: holder },
-    ])
-
-    return this._phoneIssuer.initiate({ apiKey, phoneNumber, isWhatsAppNumber, id, holder })
-  }
-
-  /**
-   * @description Finishes the phone number verification flow
-   * @deprecated
-   * @param config - Configuration options
-   * @param config.apiKey - They api access key to the issuer service
-   * @param config.code - The code the user recieved
-   * @param config.id - The id of the request, must match the ID given in the initiate step
-   * @param config.holder - The DID of the user who will recieve the VC (owner of the phone number)
-   * @returns verify response data, including the issued VC(s)
-   */
-  async verifyPhoneCredential({
-    apiKey,
-    code,
-    id,
-    holder,
-  }: {
-    apiKey: string
-    code: string
-    id: string
-    holder: string
-  }): Promise<PhoneIssuerVerifyResponse> {
-    await ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: apiKey },
-      { isArray: false, type: 'string', isRequired: true, value: code },
-      { isArray: false, type: 'string', isRequired: true, value: id },
-      { isArray: false, type: 'string', isRequired: true, value: holder },
-    ])
-
-    return this._phoneIssuer.verify({ apiKey, code, id, holder })
-  }
-
-  /**
-   * @description Initiates the email address verification flow
-   * @deprecated
-   * @param config - Configuration options
-   * @param config.apiKey - They api access key to the issuer service
-   * @param config.emailAddress - The email address to send the confirmation code to
-   * @param config.id - The id of the request, this is for the caller to be able to identify the credential in the verify step
-   * @param config.holder - The DID of the user who will recieve the VC (owner of the email address)
-   * @returns intitiate response data, including the status of the request
-   */
-  async initiateEmailCredential({
-    apiKey,
-    emailAddress,
-    id,
-    holder,
-  }: {
-    apiKey: string
-    emailAddress: string
-    id: string
-    holder: string
-  }): Promise<EmailIssuerInitiateResponse> {
-    await ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: apiKey },
-      { isArray: false, type: 'string', isRequired: true, value: emailAddress },
-      { isArray: false, type: 'string', isRequired: true, value: id },
-      { isArray: false, type: 'string', isRequired: true, value: holder },
-    ])
-
-    return this._emailIssuer.initiate({ apiKey, emailAddress, id, holder })
-  }
-
-  /**
-   * @description Finishes the email address verification flow
-   * @deprecated
-   * @param config - Configuration options
-   * @param config.apiKey - They api access key to the issuer service
-   * @param config.code - The code the user recieved
-   * @param config.id - The id of the request, must match the ID given in the initiate step
-   * @param config.holder - The DID of the user who will recieve the VC (owner of the email address)
-   * @returns verify response data, including the issued VC(s)
-   */
-  async verifyEmailCredential({
-    apiKey,
-    code,
-    id,
-    holder,
-  }: {
-    apiKey: string
-    code: string
-    id: string
-    holder: string
-  }): Promise<EmailIssuerVerifyResponse> {
-    await ParametersValidator.validate([
-      { isArray: false, type: 'string', isRequired: true, value: apiKey },
-      { isArray: false, type: 'string', isRequired: true, value: code },
-      { isArray: false, type: 'string', isRequired: true, value: id },
-      { isArray: false, type: 'string', isRequired: true, value: holder },
-    ])
-
-    return this._emailIssuer.verify({ apiKey, code, id, holder })
   }
 
   async verifyDidAuthResponse(

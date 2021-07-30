@@ -8,7 +8,7 @@ import { MessageParameters, SdkOptions } from '../../../src/dto'
 import { TestmailInbox } from '../../../src/test-helpers'
 
 import { getBasicOptionsForEnvironment } from '../../helpers'
-import { AffinidiWalletV6WithEncryption as AffinityWallet, checkIsWallet } from '../../helpers/AffinidiWallet'
+import { AffinidiWalletWithEncryption as AffinityWallet } from '../../helpers/AffinidiWallet'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 import { generateCredentials } from '../../factory/signedCredentials'
 
@@ -54,11 +54,11 @@ parallel('AffinityWallet [OTP]', () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const signUpToken = await AffinityWallet.initiateSignUpByEmail(options, inbox.email, password, messageParameters)
+    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
     checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
-    const commonNetworkMember = await AffinityWallet.completeSignUp(options, signUpToken, signUpCode)
+    const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
     await commonNetworkMember.saveCredentials([openAttestationDocument])
 
     let credentials = await commonNetworkMember.getCredentials(credentialShareRequestToken)
@@ -85,11 +85,11 @@ parallel('AffinityWallet [OTP]', () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
 
-    const signUpToken = await AffinityWallet.initiateSignUpByEmail(options, inbox.email, password, messageParameters)
+    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
     checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
 
-    const commonNetworkMember = await AffinityWallet.completeSignUp(options, signUpToken, signUpCode)
+    const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
 
     const signedCredentials = generateCredentials(4)
 

@@ -5,7 +5,7 @@ import * as __dangerous from './dangerous'
 import { BaseNetworkMember } from './CommonNetworkMember/BaseNetworkMember'
 
 export { SdkOptions } from './dto'
-export { createWalletFactories } from './factories/walletFactories'
+export { createV5CompatibleWalletFactories, createV6WalletFactories } from './factories/walletFactories'
 
 export { __dangerous }
 

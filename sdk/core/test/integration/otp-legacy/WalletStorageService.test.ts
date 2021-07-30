@@ -8,7 +8,7 @@ import { TestmailInbox } from '../../../src/test-helpers'
 
 import { generateCredentials } from '../../factory/signedCredentials'
 import { getBasicOptionsForEnvironment } from '../../helpers'
-import { AffinidiWalletV6WithEncryption as AffinityWallet } from '../../helpers/AffinidiWallet'
+import { AffinidiWalletWithEncryption as AffinityWallet } from '../../helpers/AffinidiWallet'
 
 const { TEST_SECRETS } = process.env
 const { COGNITO_PASSWORD } = JSON.parse(TEST_SECRETS)
@@ -38,10 +38,10 @@ describe('WalletStorageService [OTP]', () => {
   it.skip('full flow with 100+ credentials', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
-    const signUpToken = await AffinityWallet.initiateSignUpByEmail(options, inbox.email, password, messageParameters)
+    const signUpToken = await AffinityWallet.signUp(inbox.email, password, options, messageParameters)
     checkIsString(signUpToken)
     const signUpCode = await waitForOtpCode(inbox)
-    const commonNetworkMember = await AffinityWallet.completeSignUp(options, signUpToken, signUpCode)
+    const commonNetworkMember = await AffinityWallet.confirmSignUp(signUpToken, signUpCode, options)
     console.log('signed up')
 
     const credentialsToSave = generateCredentials(220)

@@ -154,8 +154,13 @@ export default class UserManagementService {
     }
   }
 
-  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
+  private parseSignUpToken(token: string) {
     const [login, shortPassword] = token.split('::')
+    return { login, shortPassword }
+  }
+
+  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
+    const { login, shortPassword } = this.parseSignUpToken(token)
     this._loginShouldBeEmailOrPhoneNumber(login)
     await this._completeSignUp(login, confirmationCode)
     const cognitoTokens = await this.logInWithPassword(login, shortPassword)
@@ -276,7 +281,7 @@ export default class UserManagementService {
     }
   }
 
-  async resendSignUp(login: string, messageParameters?: MessageParameters): Promise<void> {
+  async resendSignUpByLogin(login: string, messageParameters?: MessageParameters): Promise<void> {
     const usernameWithAttributes = this._buildUserAttributes(login)
     const { normalizedUsername } = usernameWithAttributes
     const result = await this._cognitoIdentityService.resendSignUp(usernameWithAttributes, messageParameters)
@@ -290,6 +295,11 @@ export default class UserManagementService {
       default:
         throw new DefaultResultError(result)
     }
+  }
+
+  async resendSignUpByToken(signUpToken: string, messageParameters?: MessageParameters): Promise<void> {
+    const { login } = this.parseSignUpToken(signUpToken)
+    return this.resendSignUpByLogin(login, messageParameters)
   }
 
   private async _withStoredTokens(
@@ -309,6 +319,7 @@ export default class UserManagementService {
 
   async initiateChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, messageParameters?: MessageParameters) {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
+      this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const result = await this._cognitoIdentityService.initiateChangeAttributes(
         accessToken,
         this._buildUserAttributes(newLogin),
