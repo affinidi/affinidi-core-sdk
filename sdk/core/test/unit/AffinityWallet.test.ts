@@ -4,13 +4,13 @@ import sinon from 'sinon'
 import { expect, use as chaiUse } from 'chai'
 import sinonChai from 'sinon-chai'
 
-import { BaseNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
+import { BaseNetworkMember as MockableNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
 import { SdkOptions } from '../../src/dto'
 import KeyManagementService from '../../src/services/KeyManagementService'
 import UserManagementService from '../../src/services/UserManagementService'
 import WalletStorageService from '../../src/services/WalletStorageService'
 
-import { AffinidiWalletWithEncryption as AffinityWallet } from '../helpers/AffinidiWallet'
+import { AffinidiWalletWithEncryption as AffinityWallet, checkIsWallet } from '../helpers/AffinidiWallet'
 import { generateTestDIDs } from '../factory/didFactory'
 
 chaiUse(sinonChai)
@@ -40,7 +40,7 @@ const stubConfirmAuthRequests = async (opts: { walletPassword: string; encrypted
       updatedEncryptedSeed: opts.encryptedSeed,
     }),
 
-    getSignupCredentials: sinon.stub(BaseNetworkMember.prototype, 'getSignupCredentials').resolves([signedCredential]),
+    getSignupCredentials: sinon.stub(MockableNetworkMember.prototype, 'getSignupCredentials').resolves([signedCredential]),
     pullEncryptionKey: sinon
       .stub(KeyManagementService.prototype as any, '_pullEncryptionKey')
       .resolves(opts.walletPassword),
@@ -48,7 +48,7 @@ const stubConfirmAuthRequests = async (opts: { walletPassword: string; encrypted
       encryptedSeed: opts.encryptedSeed,
       encryptionKey: opts.walletPassword,
     }),
-    saveCredentials: sinon.stub(BaseNetworkMember.prototype, 'saveCredentials'),
+    saveCredentials: sinon.stub(MockableNetworkMember.prototype, 'saveCredentials'),
   }
 }
 
@@ -122,7 +122,7 @@ describe('AffinityWallet', () => {
     const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, sdkOptions)
 
     expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(response)
     expect(spys.getSignupCredentials).not.to.have.been.called
   })
 
@@ -133,7 +133,7 @@ describe('AffinityWallet', () => {
     const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
 
     expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(response)
     expect(spys.getSignupCredentials).to.have.been.called
   })
 
@@ -148,7 +148,7 @@ describe('AffinityWallet', () => {
 
     expect(isNew).to.be.true
     expect(affinityWallet.did).to.exist
-    expect(affinityWallet).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(affinityWallet)
     expect(spys.getSignupCredentials).not.to.have.been.called
   })
 
@@ -164,7 +164,7 @@ describe('AffinityWallet', () => {
 
     expect(isNew).to.be.true
     expect(affinityWallet.did).to.exist
-    expect(affinityWallet).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(affinityWallet)
     expect(spys.getSignupCredentials).to.have.been.called
   })
 })

@@ -1,10 +1,8 @@
 import { expect } from 'chai'
 
-import { CommonNetworkMember } from '../../src'
-import { BaseNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
 import { SdkOptions } from '../../src/dto'
 import { getBasicOptionsForEnvironment, waitForConfirmationCodeInput } from '../helpers'
-import { AffinidiWallet as AffinityWallet } from '../helpers/AffinidiWallet'
+import { AffinidiWallet as AffinityWallet, checkIsWallet } from '../helpers/AffinidiWallet'
 
 const signedCredential = require('../factory/signedCredential')
 
@@ -54,10 +52,6 @@ const options: SdkOptions = getBasicOptionsForEnvironment()
 
 function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
-}
-
-function checkIsAffinityWallet(value: CommonNetworkMember | unknown): asserts value is CommonNetworkMember {
-  expect(value).to.be.an.instanceof(BaseNetworkMember)
 }
 
 describe('AffinityWallet', () => {
@@ -183,7 +177,7 @@ describe('AffinityWallet', () => {
     const cognitoUsername = generateUsername()
 
     const networkMemberSignUp = await AffinityWallet.signUp(cognitoUsername, cognitoPassword, options)
-    checkIsAffinityWallet(networkMemberSignUp)
+    checkIsWallet(networkMemberSignUp)
 
     expect(networkMemberSignUp.did).to.exist
 
@@ -194,6 +188,6 @@ describe('AffinityWallet', () => {
       cognitoPassword,
       options,
     )
-    checkIsAffinityWallet(networkMemberFromLoginAndPassword)
+    checkIsWallet(networkMemberFromLoginAndPassword)
   })
 })

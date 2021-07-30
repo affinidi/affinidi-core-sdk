@@ -11,12 +11,11 @@ import {
   getVCEmailPersonV1Context,
 } from '@affinidi/vc-data'
 
-import { BaseNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
 import { PhoneIssuerService } from '../../src/services/PhoneIssuerService'
 import { EmailIssuerService } from '../../src/services/EmailIssuerService'
 import KeyManagementService from '../../src/services/KeyManagementService'
 import WalletStorageService from '../../src/services/WalletStorageService'
-import { AffinidiWallet } from '../helpers/AffinidiWallet'
+import { AffinidiWallet, checkIsWallet } from '../helpers/AffinidiWallet'
 
 import { getAllOptionsForEnvironment } from '../helpers'
 
@@ -286,7 +285,7 @@ describe('CommonNetworkMember', () => {
     const response = await AffinidiWallet.completeLoginChallenge('token', '123456', options)
 
     expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(response)
   })
 
   it('#getShareCredential', () => {
@@ -337,7 +336,7 @@ describe('CommonNetworkMember', () => {
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
     const response = await AffinidiWallet.signUp(username, walletPassword, options)
-    expect(response).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(response)
     if (typeof response === 'string') {
       expect.fail('TS type guard')
     }
@@ -398,7 +397,7 @@ describe('CommonNetworkMember', () => {
     const response = await AffinidiWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
 
     expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(response)
   })
 
   it('#confirmSignUp with arbitrary username', async () => {
@@ -425,7 +424,7 @@ describe('CommonNetworkMember', () => {
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist
-    expect(commonNetworkMember).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(commonNetworkMember)
   })
 
   it('#confirmSignIn logIn scenario', async () => {
@@ -448,7 +447,7 @@ describe('CommonNetworkMember', () => {
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist
-    expect(commonNetworkMember).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(commonNetworkMember)
   })
 
   it('#confirmSignIn logIn scenario (with default SDK options)', async () => {
@@ -471,7 +470,7 @@ describe('CommonNetworkMember', () => {
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist
-    expect(commonNetworkMember).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(commonNetworkMember)
   })
 
   it('#getPublicKeyHexFromDidDocument', async () => {

@@ -7,9 +7,8 @@ import { Affinity } from '@affinidi/common'
 import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
-import { BaseNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMember'
 import UserManagementService from '../../src/services/UserManagementService'
-import { AffinidiWallet } from '../helpers/AffinidiWallet'
+import { AffinidiWallet, checkIsWallet } from '../helpers/AffinidiWallet'
 
 import {
   generateUsername,
@@ -422,10 +421,7 @@ describe('CommonNetworkMember', () => {
     const username = did
 
     const affinityWallet = await AffinidiWallet.signUpWithExistsEntity(keyParams, username, cognitoPassword, options)
-    expect(affinityWallet).to.be.an.instanceof(BaseNetworkMember)
-    if (typeof affinityWallet === 'string') {
-      expect.fail('TS type guard')
-    }
+    checkIsWallet(affinityWallet)
 
     const walletShortDid = affinityWallet.did.split(';elem:')[0]
     expect(walletShortDid).to.equal(did)
@@ -442,10 +438,7 @@ describe('CommonNetworkMember', () => {
     const username = did
 
     const affinityWallet = await AffinidiWallet.signUpWithExistsEntity(keyParams, username, userPassword, options)
-    expect(affinityWallet).to.be.an.instanceof(BaseNetworkMember)
-    if (typeof affinityWallet === 'string') {
-      expect.fail('TS type guard')
-    }
+    checkIsWallet(affinityWallet)
 
     const walletShortDid = affinityWallet.did.split(';elem:')[0]
     expect(walletShortDid).to.equal(did)
@@ -903,19 +896,15 @@ describe('CommonNetworkMember', () => {
     const cognitoUsername = generateUsername()
 
     const signUpNetworkMember = await AffinidiWallet.signUp(cognitoUsername, cognitoPassword, options)
-    expect(signUpNetworkMember).to.be.an.instanceof(BaseNetworkMember)
-    if (typeof signUpNetworkMember === 'string') {
-      expect.fail('TS type guard')
-    }
+    checkIsWallet(signUpNetworkMember)
 
     expect(signUpNetworkMember.did).to.exist
-    expect(signUpNetworkMember).to.be.an.instanceof(BaseNetworkMember)
 
     await signUpNetworkMember.signOut(options)
 
     const fromLoginNetworkMember = await AffinidiWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
 
-    expect(fromLoginNetworkMember).to.be.an.instanceof(BaseNetworkMember)
+    checkIsWallet(fromLoginNetworkMember)
   })
 
   it('#pullEncryptedSeed throws `WAL-1 / 404` WHEN key for userId does not exist', async () => {
