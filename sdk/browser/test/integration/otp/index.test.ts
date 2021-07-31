@@ -71,7 +71,7 @@ describe('AffinityWallet [OTP]', () => {
       ? firstCredential.id
       : firstCredential.data.id
 
-    await commonNetworkMember.deleteCredential(credentialIdToDelete)
+    await commonNetworkMember.deleteCredentialById(credentialIdToDelete)
     credentials = await commonNetworkMember.getCredentials()
 
     const credentialIds = credentials.map((credential: any) => {
@@ -101,7 +101,7 @@ describe('AffinityWallet [OTP]', () => {
 
     const credentialIdToDelete = credentials[1].id
 
-    await commonNetworkMember.deleteCredential(credentialIdToDelete)
+    await commonNetworkMember.deleteCredentialById(credentialIdToDelete)
 
     credentials = await commonNetworkMember.getCredentials()
     const credentialIds = credentials.map((credential: any) => credential.id)

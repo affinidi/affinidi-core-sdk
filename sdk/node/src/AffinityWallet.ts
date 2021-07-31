@@ -67,21 +67,16 @@ export class AffinityWallet extends CoreNetwork<SdkOptions> {
   }
 
   /**
-   * @description Finds the given credentialShareRequestToken by searching all of your credentials
-   * If a token is not given, only returns the given subset of the credentials
-   * 1. pull encrypted VCs (all if token given, otherwise with the given pagination)
-   * 2. decrypt encrypted VCs
-   * 3. filter VCs by type
+   * @description Searches all of VCs for matches for the given credentialShareRequestToken.
+   * If a token is not given returns all the available credentials
    * @param credentialShareRequestToken - JWT received from verifier
    * @returns array of VCs
    */
   async getCredentials(credentialShareRequestToken: string = null): Promise<any[]> {
-    const allCredentials = await this._walletStorageService.fetchAllDecryptedCredentials()
-
     if (credentialShareRequestToken) {
-      return this._walletStorageService.filterCredentials(credentialShareRequestToken, allCredentials)
+      return this.getCredentialsByShareToken(credentialShareRequestToken)
     }
 
-    return allCredentials
+    return this.getAllCredentials()
   }
 }

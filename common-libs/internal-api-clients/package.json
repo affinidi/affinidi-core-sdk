@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/internal-api-clients",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.7",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -42,7 +42,7 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/common": "^2.0.0-beta.3",
+    "@affinidi/common": "^2.0.0-beta.4",
     "lodash.keyby": "^4.6.0",
     "node-fetch": "^2.6.0"
   },

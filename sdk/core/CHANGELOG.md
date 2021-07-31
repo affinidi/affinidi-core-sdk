@@ -1,3 +1,39 @@
+# release 6.0.0-beta.5 (2021-07-26)
+  * passing `sdkVersion` to all api services
+# release 6.0.0-beta.4 (2021-07-23)
+* Created `AffinidiVaultStorageService` for managing credentials at Affinidi vault:
+  - saveCredentials - stores VC in Affinidi vault
+  - searchCredentials - lookups VCs in Affinidi vault
+  - getCredentialById - gets VC by credential id
+  - deleteCredentialById - deletes VC by credential id
+  - deleteAllCredentials - deletes all VCs
+* Created `BloomVaultStorageService` and moved all related code to Bloom vault out of `WalletStorageService`
+* Updated `WalletStorageService` to be as an adapter to combine `AffinidiVaultStorageService` and `BloomVaultStorageService`:
+  - saveCredentials - stores VC in Affinidi vault only using `AffinidiVaultStorageService`
+  - searchCredentials - lookups unique VCs in Affinidi (using `AffinidiVaultStorageService`) and Bloom (using `BloomVaultStorageService`) vaults
+  - getCredentialById - gets VC by credential id from Affinidi vault (using `AffinidiVaultStorageService`), in case not found from Bloom vault (using `BloomVaultStorageService`)
+  - deleteCredentialById - deletes VC by credential id from `AffinidiVaultStorageService`, in case not found from `BloomVaultStorageService`
+  - deleteAllCredentials - deletes all VCs from Affinidi (using `BloomVaultStorageService`) and Bloom (using `AffinidiVaultStorageService`) vaults
+* Updated `CommonNetworkMember`:
+  - added `getCredentialById` - gets VC by credential id
+  - added `getAllCredentials` - gets all VCs
+  - added `getCredentialsByShareToken` - gets VCs by credential share request token
+  - added `deleteCredentialById` - deletes by id
+* Breaking changes:
+  - method `WalletStorageService.filterCredentials` removed, use `getCredentialsByShareToken` instead
+  - method `WalletStorageService.saveCredentials` do not saving VC to Bloom vault anymore, only to Affinidi vault
+  - method `WalletStorageService.deleteCredentialByIndex` removed, use `deleteCredentialById` instead
+  - method `WalletStorageService.fetchAllBlobs` removed, use `getAllCredentials` instead
+  - method `WalletStorageService.fetchAllDecryptedCredentials` removed, use `getAllCredentials` instead
+  - method `WalletStorageService.encryptAndSaveCredentials` removed, use `saveCredentials` instead
+  - method `WalletStorageService.getCredentialByIndex` removed, use `getCredentialById` instead
+  - method `WalletStorageService.deleteCredential` removed, use `deleteCredentialById` instead
+  - method `WalletStorageService.signByVaultKeys` now private and moved to `BloomVaultStorageService._signByVaultKeys`
+  - method `WalletStorageService.authorizeVcVault` now private and moved to `BloomVaultStorageService._authorizeVcVault`
+  - method `WalletStorageService.fetchEncryptedCredentials` removed
+  - method `CommonNetworkMember.deleteCredentialByIndex` removed, use `deleteCredentialById` instead
+  - method `CommonNetworkMember.deleteCredential` removed, use `deleteCredentialById` instead
+  - method `CommonNetworkMember.getCredentialByIndex` removed, use `getCredentialById` instead
 # release 6.0.0-beta.3 (2021-07-19)
   * API client services moved out to `@affinidi/internal-api-clients`
   * `SdkError` is now exported by `@affinidi/common`

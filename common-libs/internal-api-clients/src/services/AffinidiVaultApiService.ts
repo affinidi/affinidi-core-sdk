@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import affinidiVaultSpec from '../openapi/_affinidiVault'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService from './GenericApiService'
+import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = { vaultUrl: string; accessApiKey: string }
+type ConstructorOptions = GenericConstructorOptions & { vaultUrl: string }
 
 export type BlobType = {
   cyphertext: string
@@ -24,11 +24,11 @@ export default class AffinidiVaultApiService extends GenericApiService<ApiType> 
     return this.execute('CreateDidAuthRequest', { params })
   }
 
-  async searchCredentials(accessToken: string, storageRegion: string, types: string[][]) {
+  async searchCredentials(accessToken: string, storageRegion: string, types?: string[][]) {
     return this.execute('SearchCredentials', {
       authorization: accessToken,
       storageRegion,
-      queryParams: { types: JSON.stringify(types) },
+      queryParams: types ? { types: JSON.stringify(types) } : {},
     })
   }
 

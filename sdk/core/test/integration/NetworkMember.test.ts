@@ -17,6 +17,9 @@ import {
   getBasicOptionsForEnvironment,
   testSecrets,
 } from '../helpers'
+import { credentialShareRequestTokenToFilterCredentials } from '../factory/credentialShareRequestToken'
+import { generateCredentials } from '../helpers/generateCredentials'
+import { SignedCredential } from '../../src/dto'
 
 const {
   PASSWORD,
@@ -60,6 +63,16 @@ const emailUnconfirmed = COGNITO_USER_UNCONFIRMED
 const options = getBasicOptionsForEnvironment()
 
 describe('CommonNetworkMember', () => {
+  let randomCredentials: SignedCredential[]
+  before(async () => {
+    randomCredentials = generateCredentials({
+      count: 5,
+      types: ['Credential', 'ProofOfNameCredential'],
+    })
+
+    randomCredentials.sort((a, b) => a.id.localeCompare(b.id))
+  })
+
   const callbackUrl = 'https://kudos-issuer-backend.affinity-project.org/kudos_offering/'
 
   const offeredCredentials = [
@@ -298,7 +311,6 @@ describe('CommonNetworkMember', () => {
 
   it('#resolveDid ignores extra parameter', async () => {
     const optionsWithElemDid = Object.assign({}, options, { didMethod: elemDidMethod } as const)
-
     const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, optionsWithElemDid)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -1046,5 +1058,68 @@ describe('CommonNetworkMember', () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(signedCredentials[0].credentialSubject.data.email).to.eq(decoded.email)
+  })
+
+  it('#saveCredentials', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+    const result = await commonNetworkMember.saveCredentials(randomCredentials)
+    expect(result).to.length(randomCredentials.length)
+    expect(result[0].credentialId).to.eql(randomCredentials[0].id)
+  })
+
+  it('#saveCredentials existing', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    try {
+      await commonNetworkMember.saveCredentials(randomCredentials)
+    } catch (error) {
+      expect(error.code).to.eql('AVT-5')
+    }
+  })
+
+  it('#getCredentialById', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    const result = await commonNetworkMember.getCredentialById(randomCredentials[0].id)
+
+    expect(result.id).to.eql(randomCredentials[0].id)
+  })
+
+  it('#getCredentialById with error', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    try {
+      await commonNetworkMember.getCredentialById('fake_id')
+    } catch (error) {
+      expect(error.code).to.eql('COR-23')
+    }
+  })
+
+  it('#getAllCredentials', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    const result = await commonNetworkMember.getAllCredentials()
+    result.sort((a, b) => a.id.localeCompare(b.id))
+
+    expect(result).to.eql(randomCredentials)
+  })
+
+  it('#getAllCredentials by share token', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+
+    const result = await commonNetworkMember.getCredentialsByShareToken(credentialShareRequestTokenToFilterCredentials)
+    result.sort((a, b) => a.id.localeCompare(b.id))
+
+    expect(result[0].id).to.eql(randomCredentials[0].id)
+  })
+
+  it('#deleteCredentialById', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+    await commonNetworkMember.deleteCredentialById(randomCredentials[0].id)
+  })
+
+  it('#deleteAllCredentials', async () => {
+    const commonNetworkMember = new CommonNetworkMember(password, encryptedSeedElem, options)
+    await commonNetworkMember.deleteAllCredentials()
   })
 })

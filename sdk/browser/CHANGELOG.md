@@ -1,3 +1,5 @@
+# release 6.0.0-beta.4 (2021-07-23)
+* Updated `AffinidiWallet` to use new `WalletStorageService` interface
 # release 5.0.1 (2021-06-21)
 * Removed TestmailInbox from `__dangerous` to fix unnecessary `crypto-random-string` import
 # release 5.0.0 (2021-06-16)
