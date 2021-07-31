@@ -1,7 +1,7 @@
 import { getAccountOwnershipV1Context, VCAccountOwnershipV1, VCSAccountOwnershipV1 } from './v1'
 import { expandVC } from '../../testUtil.test'
 
-describe.only('AccountOwnershipV1', () => {
+describe('AccountOwnershipV1', () => {
   it('expands correctly', async () => {
     expect.assertions(1)
 
