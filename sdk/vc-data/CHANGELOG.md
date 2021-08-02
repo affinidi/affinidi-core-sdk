@@ -1,3 +1,5 @@
+# 1.3.4 (2021-06-04)
+* vc-data account-ownership schema
 # 1.3.0 (2021-06-04)
 * Reorganized dependencies
 #  1.2.5 (2021-05-04)

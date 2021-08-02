@@ -1,5 +1,5 @@
-import { DataAllOfType, DataArrayType, DataObjectType, DataPrimitiveType, DataRecordType, DataRefType, DataType, DataTypeWithOptions, ParsedOperationSpec, ParsedSpec } from "./openapiParser"
-import { RemoveEmpty, Simplify } from "./util"
+import { DataAllOfType, DataAnyOfType, DataArrayType, DataObjectType, DataPrimitiveType, DataRecordType, DataRefType, DataType, DataTypeWithOptions, ParsedOperationSpec, ParsedSpec } from "./openapiParser"
+import { RemoveEmpty, Simplify, Tail } from "./util"
 
 type BuildProperties<TProps extends DataObjectType['properties'], TObjects extends ParsedSpec['objects']> = {
   [key in keyof TProps as TProps[key]['isRequired'] extends true ? key : never]: BuildDataWithOptions<TProps[key], TObjects>
@@ -18,20 +18,36 @@ type BuildObjectData<TData extends DataObjectType, TObjects extends ParsedSpec['
 type BuildObjectDataWithUndefined<TData extends DataObjectType | undefined, TObjects extends ParsedSpec['objects']> =
   TData extends DataObjectType ? BuildObjectData<TData, TObjects> : undefined
 
+type BuildAllOfData<TElementTypes extends readonly DataType[], TObjects extends ParsedSpec['objects']> =
+  TElementTypes['length'] extends 0
+    ? Record<never, never>
+    : BuildData<TElementTypes[0], TObjects> & BuildAllOfData<Tail<TElementTypes>, TObjects>
+
+type BuildAnyOfData<TElementTypes extends readonly DataType[], TObjects extends ParsedSpec['objects']> =
+  TElementTypes['length'] extends 0
+    ? Record<never, never>
+    : TElementTypes extends readonly (infer UDataType)[]
+      ? UDataType extends DataType
+        ? BuildData<UDataType, TObjects>
+        : never
+      : never
+
 type BuildData<TData extends DataType, TObjects extends ParsedSpec['objects']> =
   TData extends DataRefType<infer URef>
-  ? BuildData<TObjects[URef], TObjects>
-  : TData extends DataPrimitiveType<infer UPrimitive>
-  ? UPrimitive
-  : TData extends DataRecordType
-  ? Record<string, any>
-  : TData extends DataArrayType
-  ? BuildDataWithOptions<TData['elementType'], TObjects>[]
-  : TData extends DataObjectType
-  ? BuildObjectData<TData, TObjects>
-  : TData extends DataAllOfType<infer UElementTypes>
-  ? never
-  : never
+    ? BuildData<TObjects[URef], TObjects>
+    : TData extends DataPrimitiveType<infer UPrimitive>
+      ? UPrimitive
+      : TData extends DataRecordType
+        ? Record<string, any>
+        : TData extends DataArrayType
+          ? BuildDataWithOptions<TData['elementType'], TObjects>[]
+          : TData extends DataObjectType
+            ? BuildObjectData<TData, TObjects>
+            : TData extends DataAllOfType<infer UElementTypes>
+              ? BuildAllOfData<UElementTypes, TObjects>
+              : TData extends DataAnyOfType<infer UElementTypes>
+                ? BuildAnyOfData<UElementTypes, TObjects>
+                : never
 
 type BuildDataWithUndefined<TData extends DataType | undefined, TObjects extends ParsedSpec['objects']> =
   TData extends DataType ? BuildData<TData, TObjects> : undefined

@@ -1,5 +1,9 @@
-# release 1.0.0-beta.7 (2021-07-30)
+# release 1.0.0-beta.8 (2021-07-30)
   * Created abstract `DidAuthApiService` and moved all Did auth related logic into it
+# release 1.0.0-beta.7 (2021-07-30)
+  * Added `CloudWalletApiService`
+  * Actualized `openapi` swagger specs
+  * Added one more endpoint into the `IssuerApiService`
 # release 1.0.0-beta.6 (2021-07-26)
   * Moved headers management to `helpers` module
   * Added `X-SDK-Version` header

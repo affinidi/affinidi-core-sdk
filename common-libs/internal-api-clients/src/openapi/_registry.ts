@@ -13,7 +13,9 @@ export default {
             "type": "string"
           }
         },
-        "required": ["hash"],
+        "required": [
+          "hash"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -24,7 +26,9 @@ export default {
             "type": "object"
           }
         },
-        "required": ["document"],
+        "required": [
+          "document"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -34,7 +38,9 @@ export default {
             "type": "string"
           }
         },
-        "required": ["digestHex"],
+        "required": [
+          "digestHex"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -52,7 +58,11 @@ export default {
             "type": "string"
           }
         },
-        "required": ["did", "nonce", "didDocumentAddress"],
+        "required": [
+          "did",
+          "nonce",
+          "didDocumentAddress"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -63,7 +73,9 @@ export default {
             "format": "double"
           }
         },
-        "required": ["transactionCount"],
+        "required": [
+          "transactionCount"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -73,7 +85,9 @@ export default {
             "type": "string"
           }
         },
-        "required": ["ethereumPublicKeyHex"],
+        "required": [
+          "ethereumPublicKeyHex"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -84,7 +98,9 @@ export default {
             "pattern": "^did:(elem|jolo):.*$"
           }
         },
-        "required": ["did"],
+        "required": [
+          "did"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -110,7 +126,12 @@ export default {
             "type": "object"
           }
         },
-        "required": ["did", "didDocumentAddress", "ethereumPublicKeyHex", "transactionSignatureJson"],
+        "required": [
+          "did",
+          "didDocumentAddress",
+          "ethereumPublicKeyHex",
+          "transactionSignatureJson"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -121,7 +142,9 @@ export default {
             "type": "object"
           }
         },
-        "required": ["didDocument"],
+        "required": [
+          "didDocument"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -132,7 +155,9 @@ export default {
             "pattern": "^did:(elem|jolo):.*$"
           }
         },
-        "required": ["did"],
+        "required": [
+          "did"
+        ],
         "type": "object",
         "additionalProperties": false
       }
@@ -141,7 +166,7 @@ export default {
   },
   "info": {
     "title": "affinity-registry",
-    "version": "0.2.2",
+    "version": "0.2.6",
     "description": "Affinity Registry",
     "license": {
       "name": "ISC"
@@ -166,7 +191,9 @@ export default {
         },
         "description": "Put signed by client DID document in IPFS and return hash that links to the document",
         "summary": "Saves DID document in IPFS",
-        "tags": ["DID"],
+        "tags": [
+          "DID"
+        ],
         "security": [],
         "parameters": [],
         "requestBody": {
@@ -197,7 +224,9 @@ export default {
         },
         "description": "Create Anchor transaction for blockchain and return digest hex of it",
         "summary": "Create Anchor transaction",
-        "tags": ["DID"],
+        "tags": [
+          "DID"
+        ],
         "security": [],
         "parameters": [],
         "requestBody": {
@@ -228,7 +257,9 @@ export default {
         },
         "description": "Get transaction count from blockchain for current wallet",
         "summary": "Create Anchor transaction",
-        "tags": ["DID"],
+        "tags": [
+          "DID"
+        ],
         "security": [],
         "parameters": [],
         "requestBody": {
@@ -259,9 +290,20 @@ export default {
         },
         "description": "Anchor DID document in blockchain and return transaction hash",
         "summary": "Anchors DID document",
-        "tags": ["DID"],
+        "tags": [
+          "DID"
+        ],
         "security": [],
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Api-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -290,7 +332,9 @@ export default {
         },
         "description": "Resolve DID document from IPFS",
         "summary": "Resolves DID document",
-        "tags": ["DID"],
+        "tags": [
+          "DID"
+        ],
         "security": [],
         "parameters": [],
         "requestBody": {
