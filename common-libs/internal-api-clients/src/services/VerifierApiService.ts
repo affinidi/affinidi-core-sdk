@@ -18,4 +18,16 @@ export default class VerifierApiService extends GenericApiService<ApiType> {
   async buildCredentialRequest(params: ApiType['BuildCredentialRequest']['requestBody']) {
     return this.execute('BuildCredentialRequest', { params })
   }
+
+  async verifyCredentials(params: ApiType['VerifyCredentials']['requestBody']) {
+    return this.execute('VerifyCredentials', { params })
+  }
+
+  async verifyPresentation(params: ApiType['VerifyPresentation']['requestBody']) {
+    return this.execute('VerifyPresentation', { params })
+  }
+
+  async verifyCredentialShareResponse(params: ApiType['VerifyCredentialShareResponse']['requestBody']) {
+    return this.execute('VerifyCredentialShareResponse', { params })
+  }
 }
