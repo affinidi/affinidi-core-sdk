@@ -156,13 +156,13 @@ export default class ElemDidDocument {
     return this._getDid(seedHex, externalKeys)
   }
 
-  getMyDid(): string {
+  async getMyDid(): Promise<string> {
     const { did } = this._getMyDidConfig()
 
     return did
   }
 
-  getKeyId(did: string = null) {
+  async getKeyId(did: string = null) {
     if (!did) {
       const { shortFormDid } = this._getMyDidConfig()
       did = shortFormDid

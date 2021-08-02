@@ -379,13 +379,13 @@ export class Affinity {
     const { seed, didMethod } = keyService.decryptSeed()
 
     const didDocumentService = new DidDocumentService(keyService)
-    const did = didDocumentService.getMyDid()
+    const did = await didDocumentService.getMyDid()
 
     const signedVc = buildVCV1({
       unsigned: unsignedCredential,
       issuer: {
         did,
-        keyId: didDocumentService.getKeyId(),
+        keyId: await didDocumentService.getKeyId(),
         privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod).toString('hex'),
       },
       getSignSuite: ({ keyId, privateKey, controller }) => {
@@ -499,13 +499,13 @@ export class Affinity {
     const { seed, didMethod } = keyService.decryptSeed()
 
     const didDocumentService = new DidDocumentService(keyService)
-    const did = didDocumentService.getMyDid()
+    const did = await didDocumentService.getMyDid()
 
     const signedVp = buildVPV1({
       unsigned: opts.vp,
       holder: {
         did,
-        keyId: didDocumentService.getKeyId(),
+        keyId: await didDocumentService.getKeyId(),
         privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod).toString('hex'),
       },
       getSignSuite: ({ keyId, privateKey, controller }) => {

@@ -22,16 +22,16 @@ export default class JoloDidDocument {
     return prefix + suffix.toString('hex')
   }
 
-  getMyDid(): string {
+  async getMyDid(): Promise<string> {
     const { seed } = this._keysService.decryptSeed()
     const seedHex = seed.toString('hex')
 
     return this._getDid(seedHex)
   }
 
-  getKeyId(did: string = null) {
+  async getKeyId(did: string = null) {
     if (!did) {
-      did = this.getMyDid()
+      did = await this.getMyDid()
     }
 
     return `${did}#${this._signingKey}`

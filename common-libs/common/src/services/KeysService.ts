@@ -91,7 +91,7 @@ export default class KeysService {
     return createHash('sha256').update(data).digest()
   }
 
-  private static getDerivationPath(didMethod: 'jolo' | 'elem', isAnchoring: boolean) {
+  private static getDerivationPath(didMethod: 'jolo' | 'elem' | 'elem-anchored', isAnchoring: boolean) {
     if (isAnchoring) {
       return etheriumIdentityKey
     }
@@ -100,6 +100,8 @@ export default class KeysService {
       case 'jolo':
         return jolocomIdentityKey
       case 'elem':
+        return elemIdentityPrimaryKey
+      case 'elem-anchored':
         return elemIdentityPrimaryKey
     }
   }
@@ -296,11 +298,11 @@ export default class KeysService {
     return JSON.stringify(serializedSignature)
   }
 
-  private getJWTAdditionalPayload(keyId?: string) {
+  private async getJWTAdditionalPayload(keyId?: string) {
     if (!keyId) {
       const didDocumentService = new DidDocumentService(this)
-      const did = didDocumentService.getMyDid()
-      keyId = didDocumentService.getKeyId()
+      const did = await didDocumentService.getMyDid()
+      keyId = await didDocumentService.getKeyId()
 
       return { kid: keyId, iss: did }
     } else {
@@ -311,8 +313,8 @@ export default class KeysService {
   /**
    * Note that this function modifies the source object for backwards compatibility reasons
    */
-  signJWT<T extends JwtObject>(sourceObject: T, keyId: string = null) {
-    const payload = Object.assign(sourceObject.payload, this.getJWTAdditionalPayload(keyId))
+  async signJWT<T extends JwtObject>(sourceObject: T, keyId: string = null) {
+    const payload = Object.assign(sourceObject.payload, await this.getJWTAdditionalPayload(keyId))
     const jwtObject = Object.assign(sourceObject, { payload })
 
     const toSign = [encode(JSON.stringify(jwtObject.header)), encode(JSON.stringify(jwtObject.payload))].join('.')

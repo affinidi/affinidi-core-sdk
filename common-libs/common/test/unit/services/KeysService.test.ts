@@ -157,7 +157,7 @@ describe('KeysService', () => {
     }
 
     const keysService = new KeysService(encryptedSeed, password)
-    const signedJwtObject = keysService.signJWT(jwtObject)
+    const signedJwtObject = await keysService.signJWT(jwtObject)
     expect(signedJwtObject).to.exist
     expect(signedJwtObject.signature).to.exist
     expect(signedJwtObject.payload.iss).to.exist

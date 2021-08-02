@@ -103,7 +103,7 @@ describe('DidDocumentService', () => {
   it('#getMyDid (when old encryptes seed without did method info)', async () => {
     const keyService = new KeyService(encryptedSeed, demoEncryptionPassword)
     const didDocumentService = new DidDocumentService(keyService)
-    const did = didDocumentService.getMyDid()
+    const did = await didDocumentService.getMyDid()
 
     expect(did).to.exist
     expect(did).to.be.equal(joloDid)
@@ -112,7 +112,7 @@ describe('DidDocumentService', () => {
   it('#getMyDid (jolo)', async () => {
     const keyService = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
     const didDocumentService = new DidDocumentService(keyService)
-    const did = didDocumentService.getMyDid()
+    const did = await didDocumentService.getMyDid()
 
     expect(did).to.exist
     expect(did).to.be.equal(joloDid)
@@ -166,7 +166,7 @@ describe('DidDocumentService', () => {
   it('#getKeyId (jolo)', async () => {
     const keyService = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
     const didDocumentService = new DidDocumentService(keyService)
-    const keyId = didDocumentService.getKeyId()
+    const keyId = await didDocumentService.getKeyId()
 
     expect(keyId).to.exist
     expect(keyId).to.be.equal(`${joloDid}#keys-1`)
@@ -175,7 +175,7 @@ describe('DidDocumentService', () => {
   it('#getKeyId (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
     const didDocumentService = new DidDocumentService(keyService)
-    const keyId = didDocumentService.getKeyId()
+    const keyId = await didDocumentService.getKeyId()
 
     expect(keyId).to.exist
     expect(keyId).to.be.equal(`${elemDidShortForm}#primary`)
