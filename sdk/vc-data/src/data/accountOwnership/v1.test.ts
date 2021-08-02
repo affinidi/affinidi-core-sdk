@@ -60,7 +60,7 @@ describe('AccountOwnershipV1', () => {
                     "@value": "github",
                   },
                 ],
-                "https://schema.org/metaData": Array [
+                "https://schema.affinity-project.org/metaData": Array [
                   Object {
                     "https://schema.affinity-project.org/email": Array [
                       Object {
