@@ -21,7 +21,9 @@ export default {
             "$ref": "#/components/schemas/FreeFormObject"
           }
         },
-        "required": ["credentialOffer"],
+        "required": [
+          "credentialOffer"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -35,7 +37,9 @@ export default {
             "nullable": true
           }
         },
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -64,7 +68,9 @@ export default {
             "nullable": true
           }
         },
-        "required": ["offeredCredentials"],
+        "required": [
+          "offeredCredentials"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -92,7 +98,13 @@ export default {
             "type": "array"
           }
         },
-        "required": ["jti", "errors", "issuer", "isValid", "selectedCredentials"],
+        "required": [
+          "jti",
+          "errors",
+          "issuer",
+          "isValid",
+          "selectedCredentials"
+        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -106,7 +118,89 @@ export default {
             "nullable": true
           }
         },
-        "required": ["credentialOfferResponseToken"],
+        "required": [
+          "credentialOfferResponseToken"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "UnsignedW3cCredential": {
+        "properties": {
+          "@context": {
+            "$ref": "#/components/schemas/FreeFormObject"
+          },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "holder": {
+            "$ref": "#/components/schemas/FreeFormObject"
+          },
+          "credentialSubject": {
+            "$ref": "#/components/schemas/FreeFormObject"
+          },
+          "issuanceDate": {
+            "type": "string"
+          },
+          "expirationDate": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "@context",
+          "id",
+          "type",
+          "holder",
+          "credentialSubject",
+          "issuanceDate"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VCBuildUnsignedOutput": {
+        "properties": {
+          "unsignedVC": {
+            "$ref": "#/components/schemas/UnsignedW3cCredential"
+          },
+          "unsignedCredential": {
+            "$ref": "#/components/schemas/UnsignedW3cCredential"
+          }
+        },
+        "required": [
+          "unsignedVC",
+          "unsignedCredential"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VCBuildUnsignedInput": {
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FreeFormObject"
+          },
+          "holderDid": {
+            "type": "string",
+            "pattern": "^did:(elem|jolo):.*$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "type",
+          "data",
+          "holderDid"
+        ],
         "type": "object",
         "additionalProperties": false
       }
@@ -115,7 +209,7 @@ export default {
   },
   "info": {
     "title": "affinity-issuer",
-    "version": "0.0.75",
+    "version": "0.0.99",
     "description": "Affinity issuer",
     "license": {
       "name": "ISC"
@@ -140,7 +234,9 @@ export default {
         },
         "description": "Build credential offer JWT object from input data.",
         "summary": "Builds credential offer object.",
-        "tags": ["Issuer"],
+        "tags": [
+          "Issuer"
+        ],
         "security": [],
         "parameters": [],
         "requestBody": {
@@ -171,14 +267,58 @@ export default {
         },
         "description": "Verifying JWT token (signature and expiration), validate response against request if requestToken was passed.",
         "summary": "Verifying offer response token.",
-        "tags": ["Issuer"],
+        "tags": [
+          "Issuer"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Api-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyCredentialOfferResponseInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vc/build-unsigned": {
+      "post": {
+        "operationId": "BuildUnsigned",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VCBuildUnsignedOutput"
+                }
+              }
+            },
+            "description": "Ok"
+          }
+        },
+        "description": "Build unsigned VC from input data.\n`unsignedVC` response is become deprecated and will be removed at the future.\nConsumers should use `unsignedCredential` instead.",
+        "summary": "Builds unsigned VC object.",
+        "tags": [
+          "VC"
+        ],
         "security": [],
         "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VerifyCredentialOfferResponseInput"
+                "$ref": "#/components/schemas/VCBuildUnsignedInput"
               }
             }
           }

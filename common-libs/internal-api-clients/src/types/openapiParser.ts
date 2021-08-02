@@ -1,4 +1,4 @@
-import { AllOfObjectSpec, AnyOfObjectSpec, ContentSpec, FieldSpecArrayType, FieldSpecBooleanType, FieldSpecDoubleType, FieldSpecEnumType, FieldSpecPrimitiveType, FieldSpecRecordType, FieldSpecRefType, FieldSpecStringType, GenericApiSpec, ObjectSpec, ObjectSpecOptionNullable, ObjectSpecs, ObjectSpecType, OperationSpec, ParameterSpec, ParameterType, PathSpec, PathSpecs, RequestSpec, RequestSpecWithData, ResponseSpec, ResponseSpecWithData, SimpleObjectSpec } from "./openapi"
+import { AllOfObjectSpec, AnyOfObjectSpec, ContentSpec, FieldSpecArrayType, FieldSpecBooleanType, FieldSpecDoubleType, FieldSpecEnumType, FieldSpecPrimitiveType, FieldSpecRecordType, FieldSpecRefType, FieldSpecStringType, GenericApiSpec, ObjectSpec, ObjectSpecOptionNullable, ObjectSpecs, ObjectSpecType, OneOfObjectSpec, OperationSpec, ParameterSpec, ParameterType, PathSpec, PathSpecs, RequestSpec, RequestSpecWithData, ResponseSpec, ResponseSpecWithData, SimpleObjectSpec } from "./openapi"
 import { SafeGetArray, Simplify } from "./util"
 
 type GenericDataType<TDataType extends string, TAdditionalData extends Record<string, unknown>> = {
@@ -14,6 +14,7 @@ export type DataObjectType = GenericDataType<'object', {
   isAdditionalProperties: boolean,
 }>
 export type DataAllOfType<TElementTypes extends readonly DataType[]> = GenericDataType<'allOf', { allOf: TElementTypes }>
+export type DataAnyOfType<TElementTypes extends readonly DataType[]> = GenericDataType<'anyOf', { anyOf: TElementTypes }>
 export type DataType =
   | DataRefType<string>
   | DataPrimitiveType<string | boolean | number>
@@ -21,6 +22,7 @@ export type DataType =
   | DataArrayType
   | DataObjectType
   | DataAllOfType<readonly DataType[]>
+  | DataAnyOfType<readonly DataType[]>
 
 export type DataTypeWithOptions = DataType & { isNullable: boolean }
 
@@ -64,18 +66,25 @@ type ParseSimpleObjectSpecWithParameters<
   isAdditionalProperties: TObject extends { additionalProperties?: false } ? false : true
 }
 
-type ParseAllOfObjectSpec<UObjectSpecType extends readonly ObjectSpecType[]> = {
+type ParseAllOfObjectSpec<TObjectSpecType extends readonly ObjectSpecType[]> = {
   dataType: 'allOf'
   allOf: {
-    [key in keyof UObjectSpecType]:
-      UObjectSpecType[key] extends UObjectSpecType[number]
-        ? ParseObjectSpecType<UObjectSpecType[key]>
+    [key in keyof TObjectSpecType]:
+      TObjectSpecType[key] extends TObjectSpecType[number]
+        ? ParseObjectSpecType<TObjectSpecType[key]>
         : never
   }
 }
 
-type ParseAnyOfObjectSpec<UObjectSpecType extends readonly ObjectSpecType[]> =
-  ParseObjectSpecType<UObjectSpecType[number]>
+type ParseAnyOfObjectSpec<TObjectSpecType extends readonly ObjectSpecType[]> = {
+  dataType: 'anyOf'
+  anyOf: {
+    [key in keyof TObjectSpecType]:
+      TObjectSpecType[key] extends TObjectSpecType[number]
+        ? ParseObjectSpecType<TObjectSpecType[key]>
+        : never
+  }
+}
 
 type ParseObjectSpecType<TObject extends ObjectSpecType> =
   TObject extends FieldSpecPrimitiveType
@@ -88,7 +97,9 @@ type ParseObjectSpecType<TObject extends ObjectSpecType> =
           ? ParseAllOfObjectSpec<UObjectSpecTypes>
           : TObject extends AnyOfObjectSpec<infer UObjectSpecTypes>
             ? ParseAnyOfObjectSpec<UObjectSpecTypes>
-            : DataErrorType<'Unable to find matching object spec type', TObject>
+            : TObject extends OneOfObjectSpec<infer UObjectSpecTypes>
+              ? ParseAnyOfObjectSpec<UObjectSpecTypes> // we do not make distinction between oneOf and anyOf
+              : DataErrorType<'Unable to find matching object spec type', TObject>
 
 type ParseObjectSpec<TObject extends ObjectSpec> = ParseObjectSpecType<TObject> & {
   isNullable: TObject extends ObjectSpecOptionNullable ? true : false
