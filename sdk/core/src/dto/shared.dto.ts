@@ -15,7 +15,6 @@ import {
   Min,
 } from 'class-validator'
 
-import { FreeFormObject } from '../shared/interfaces'
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
 
 export type Env = 'dev' | 'staging' | 'prod'
@@ -164,11 +163,11 @@ export class CredentialParams {
 
   @IsDefined()
   @IsArray()
-  context: FreeFormObject[]
+  context: unknown[]
 
   @IsDefined()
   @IsObject()
-  credentialSubject: FreeFormObject
+  credentialSubject: unknown
 
   @IsOptional()
   @IsISO8601()
@@ -179,7 +178,7 @@ export class SignedCredential {
   // legacy attributes - to be deleted after support is dropped
   @IsOptional()
   @IsObject()
-  claim?: FreeFormObject
+  claim?: unknown
 
   @IsOptional()
   @IsISO8601()
@@ -192,7 +191,7 @@ export class SignedCredential {
   // current structure according to W3C https://www.w3.org/TR/vc-data-model
   @IsDefined()
   @IsArray()
-  '@context': (FreeFormObject | string)[]
+  '@context': unknown[]
 
   @IsDefined()
   @IsString()
@@ -202,11 +201,11 @@ export class SignedCredential {
   @IsString()
   name?: string
 
-  // NOTE, according to W3C it can be a string or an object
+  // NOTE, according to W3C it be either an URI string or an object with id property
   // https://www.w3.org/TR/vc-data-model/#issuer
   // @Matches(DID) - can be any string (f.e. URL) or an object ^^
   @IsDefined()
-  issuer: string | FreeFormObject
+  issuer: string | { id: string }
 
   @IsOptional()
   @IsISO8601()
@@ -223,7 +222,7 @@ export class SignedCredential {
   // NOTE, according to W3C it can be an object or an array of objects
   // https://www.w3.org/TR/vc-data-model/#credential-subject
   @IsOptional()
-  credentialSubject?: FreeFormObject | FreeFormObject[]
+  credentialSubject?: unknown
 
   @IsDefined()
   @IsObject()
@@ -231,27 +230,27 @@ export class SignedCredential {
 
   @IsOptional()
   @IsObject()
-  credentialStatus?: FreeFormObject
+  credentialStatus?: unknown
 
   @IsOptional()
   @IsArray()
-  verifiableCredential?: FreeFormObject[]
+  verifiableCredential?: unknown[]
 
   @IsOptional()
   @IsObject()
-  credentialSchema?: FreeFormObject
+  credentialSchema?: unknown
 
   @IsOptional()
   @IsObject()
-  refreshService?: FreeFormObject
+  refreshService?: unknown
 
   @IsOptional()
   @IsArray()
-  termsOfUse?: FreeFormObject[]
+  termsOfUse?: unknown[]
 
   @IsOptional()
   @IsArray()
-  evidence?: FreeFormObject[]
+  evidence?: unknown[]
 }
 
 export class CredentialRequirement {
@@ -285,7 +284,7 @@ export class OfferedCredential {
   type: string
 
   @IsOptional()
-  renderInfo?: FreeFormObject
+  renderInfo?: unknown
 }
 
 // export class SignedCredentialContext {
@@ -305,7 +304,7 @@ export class Proof {
 
 export class ClaimMetadata {
   @IsOptional()
-  context?: (FreeFormObject | string) | (FreeFormObject | string)[]
+  context?: unknown
 
   @IsOptional()
   @IsString()
@@ -316,7 +315,7 @@ export class ClaimMetadata {
   type?: string[]
 
   @IsOptional()
-  claimInterface?: FreeFormObject
+  claimInterface?: unknown
 }
 
 export class SignCredentialOptionalInput {

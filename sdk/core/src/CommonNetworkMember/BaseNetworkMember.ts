@@ -5,8 +5,16 @@ import {
   RevocationApiService,
   VerifierApiService,
 } from '@affinidi/internal-api-clients'
-import { buildVCV1Unsigned, buildVCV1Skeleton, buildVPV1Unsigned } from '@affinidi/vc-common'
-import { VCV1, VCV1SubjectBaseMA, VPV1, VCV1Unsigned } from '@affinidi/vc-common'
+import {
+  buildVCV1Skeleton,
+  buildVCV1Unsigned,
+  buildVPV1Unsigned,
+  VCV1,
+  VCV1SubjectBaseMA,
+  VCV1Unsigned,
+  VPV1,
+  VPV1Unsigned,
+} from '@affinidi/vc-common'
 import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { parse } from 'did-resolver'
 
@@ -25,7 +33,7 @@ import {
   KeyParams,
 } from '../dto/shared.dto'
 
-import { FreeFormObject, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformEncryptionTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 
 import {
@@ -285,7 +293,10 @@ export abstract class BaseNetworkMember {
     await BaseNetworkMember._anchorDid(this._encryptedSeed, this._password, didDocument, nonce, this._options)
   }
 
-  getShareCredential(credentialShareRequestToken: string, options: FreeFormObject): SignedCredential[] {
+  getShareCredential(
+    credentialShareRequestToken: string,
+    options: { credentials: SignedCredential[] },
+  ): SignedCredential[] {
     const { credentials } = options
     const credentialShareRequest = Util.fromJWT(credentialShareRequestToken)
     const types = this.getCredentialTypes(credentialShareRequest)
@@ -648,6 +659,10 @@ export abstract class BaseNetworkMember {
     return signedCredentials
   }
 
+  async signUnsignedCredential(unsignedCredential: VCV1Unsigned) {
+    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
+  }
+
   /**
    * @description Signs credential
    * @param claim - data which should be present in VC according to VC schema,
@@ -690,13 +705,13 @@ export abstract class BaseNetworkMember {
         credentialSubject,
         holder: { id: parse(requesterDid).did },
         type: claimMetadata.type,
-        context: claimMetadata.context,
+        context: claimMetadata.context as any,
       }),
       issuanceDate: new Date().toISOString(),
       expirationDate: expiresAt ? new Date(expiresAt).toISOString() : undefined,
     })
 
-    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
+    return this.signUnsignedCredential(unsignedCredential)
   }
 
   async verifyDidAuthResponse(
@@ -924,6 +939,20 @@ export abstract class BaseNetworkMember {
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
 
+  async signUnsignedPresentation(vp: VPV1Unsigned, challenge: string, domain: string) {
+    return this._affinity.signPresentation({
+      vp,
+      encryption: {
+        seed: this._encryptedSeed,
+        key: this._password,
+      },
+      purpose: {
+        challenge,
+        domain,
+      },
+    })
+  }
+
   /**
    * @description Creates VP from VP challenge and credentials
    * @param challenge - challenge with the requested VCs
@@ -938,21 +967,15 @@ export abstract class BaseNetworkMember {
 
     const requestedTypes = this.getCredentialTypes(Util.fromJWT(challenge))
 
-    return this._affinity.signPresentation({
-      vp: buildVPV1Unsigned({
+    return this.signUnsignedPresentation(
+      buildVPV1Unsigned({
         id: `presentationId:${randomBytes(8).toString('hex')}`,
         vcs: vcs.filter((vc) => requestedTypes.includes(vc.type[1])),
         holder: { id: this.did },
       }),
-      encryption: {
-        seed: this._encryptedSeed,
-        key: this._password,
-      },
-      purpose: {
-        challenge,
-        domain,
-      },
-    })
+      challenge,
+      domain,
+    )
   }
 
   /**

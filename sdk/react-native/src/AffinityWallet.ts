@@ -1,5 +1,4 @@
-import { EventComponent } from '@affinidi/affinity-metrics-lib'
-import { createV5CompatibleWalletFactories, createV6WalletFactories } from '@affinidi/wallet-core-sdk'
+import { createV5CompatibleWalletFactories, createV6WalletFactories, EventComponent } from '@affinidi/wallet-core-sdk'
 
 import platformEncryptionTools from './PlatformEncryptionTools'
 
