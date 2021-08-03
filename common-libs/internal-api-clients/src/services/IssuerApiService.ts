@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/common'
 
-import issuerSpec from '../openapi/_issuer'
+import issuerSpec from '../spec/_issuer'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'

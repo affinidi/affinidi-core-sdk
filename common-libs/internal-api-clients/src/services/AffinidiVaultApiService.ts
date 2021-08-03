@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/common'
 
-import affinidiVaultSpec from '../openapi/_affinidiVault'
+import affinidiVaultSpec from '../spec/_affinidiVault'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
