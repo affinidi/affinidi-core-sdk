@@ -38,13 +38,12 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@affinidi/affinity-metrics-lib": "^0.0.25",
-    "@affinidi/common": "^2.0.0-beta.4",
     "@affinidi/wallet-core-sdk": "^6.0.0-beta.5",
     "eccrypto-js": "^5.0.0",
     "randombytes": "^2.1.0"
   },
   "devDependencies": {
+    "@affinidi/common": "^2.0.0-beta.4",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
