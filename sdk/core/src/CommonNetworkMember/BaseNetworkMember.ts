@@ -1148,4 +1148,8 @@ export abstract class BaseNetworkMember {
   async deriveSegmentProof(credential: VCV1, fields: string[], didDocument?: any): Promise<any> {
     return this._affinity.deriveSegmentProof!(credential, fields, didDocument)
   }
+
+  async signJwt(jwtObject: any) {
+    return this._keysService.signJWT(jwtObject)
+  }
 }
