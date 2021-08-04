@@ -115,7 +115,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
       throw new Error('keyTypes is empty')
     }
 
-    const keysSeedSection = platformEncryptionTools.buildExternalKeysSectionForSeed(keyOptions.keyTypes)
+    const keysSeedSection = await platformEncryptionTools.buildExternalKeysSectionForSeed(keyOptions.keyTypes)
 
     const seed = await Util.generateSeed('elem')
     const seedHex = seed.toString('hex')

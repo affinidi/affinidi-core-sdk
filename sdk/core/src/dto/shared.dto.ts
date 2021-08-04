@@ -131,8 +131,9 @@ export class KeyParams {
 export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'
 
 export class KeyOptions {
-  @IsIn(['rsa', 'bbs', 'ecdsa'])
-  keyTypes?: KeyAlgorithmType[]
+  @IsArray()
+  @IsIn(['rsa', 'bbs', 'ecdsa'], { each: true })
+  keyTypes: KeyAlgorithmType[]
 }
 
 export type KeyParamsOrOptions = KeyParams | KeyOptions
