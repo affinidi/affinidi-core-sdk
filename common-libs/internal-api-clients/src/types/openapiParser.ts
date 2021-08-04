@@ -1,4 +1,4 @@
-import { AllOfObjectSpec, AnyOfObjectSpec, ContentSpec, FieldSpecArrayType, FieldSpecBooleanType, FieldSpecDoubleType, FieldSpecEnumType, FieldSpecPrimitiveType, FieldSpecRecordType, FieldSpecRefType, FieldSpecStringType, GenericApiSpec, ObjectSpec, ObjectSpecOptionNullable, ObjectSpecs, ObjectSpecType, OneOfObjectSpec, OperationSpec, ParameterSpec, ParameterType, PathSpec, PathSpecs, RequestSpec, RequestSpecWithData, ResponseSpec, ResponseSpecWithData, SimpleObjectSpec } from "./openapi"
+import { AllOfObjectSpec, AnyOfObjectSpec, ContentSpec, FieldSpecAnyType, FieldSpecArrayType, FieldSpecBooleanType, FieldSpecDoubleType, FieldSpecEnumType, FieldSpecPrimitiveType, FieldSpecRecordType, FieldSpecRefType, FieldSpecStringType, GenericApiSpec, ObjectSpec, ObjectSpecOptionNullable, ObjectSpecs, ObjectSpecType, OneOfObjectSpec, OperationSpec, ParameterSpec, ParameterType, PathSpec, PathSpecs, RequestSpec, RequestSpecWithData, ResponseSpec, ResponseSpecWithData, SimpleObjectSpec } from "./openapi"
 import { SafeGetArray, Simplify } from "./util"
 
 type GenericDataType<TDataType extends string, TAdditionalData extends Record<string, unknown>> = {
@@ -8,6 +8,7 @@ type GenericDataType<TDataType extends string, TAdditionalData extends Record<st
 export type DataRefType<TRefName extends string> = GenericDataType<'ref', { refName: TRefName }>
 export type DataPrimitiveType<TPrimitiveType extends string | boolean | number> = GenericDataType<'primitive', { primitiveType: TPrimitiveType }>
 export type DataRecordType = GenericDataType<'record', Record<never, never>>
+export type DataAnyType = GenericDataType<'any', Record<never, never>>
 export type DataArrayType = GenericDataType<'array', { elementType: DataTypeWithOptions }>
 export type DataObjectType = GenericDataType<'object', {
   properties: Record<string, DataTypeWithOptions & { isRequired: boolean }>,
@@ -19,6 +20,7 @@ export type DataType =
   | DataRefType<string>
   | DataPrimitiveType<string | boolean | number>
   | DataRecordType
+  | DataAnyType
   | DataArrayType
   | DataObjectType
   | DataAllOfType<readonly DataType[]>
@@ -41,7 +43,9 @@ type ParseFieldSpecPrimitiveType<TField extends FieldSpecPrimitiveType> =
             ? DataRecordType
             : TField extends FieldSpecEnumType<infer UEnum>
               ? DataPrimitiveType<UEnum>
-              : DataErrorType<'Unable to find matching primitive type', TField>
+              : TField extends FieldSpecAnyType
+                ? DataAnyType
+                : DataErrorType<'Unable to find matching primitive type', TField>
 
 type ParseFieldSpecArrayType<
   TInnerFieldSpec extends ObjectSpecType,
