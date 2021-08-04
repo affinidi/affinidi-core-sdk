@@ -641,7 +641,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    * @description Serialized the essential data to string that could be later used by `deserialize`
    * @returns string
    */
-  public serialize() {
+  public serializeSession() {
     return JSON.stringify(this.cognitoUserTokens)
   }
 
@@ -651,17 +651,17 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    * @param serializedNetworkMember
    * @returns initialized instance of SDK
    */
-  public static async deserialize<T extends DerivedType<T>>(
+  public static async deserializeSession<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
-    serializedNetworkMember: string,
+    serializedSession: string,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
-      { isArray: false, type: 'string', isRequired: false, value: serializedNetworkMember },
+      { isArray: false, type: 'string', isRequired: true, value: serializedSession },
     ])
 
-    const cognitoTokens = JSON.parse(serializedNetworkMember)
+    const cognitoTokens = JSON.parse(serializedSession)
     const options = getOptionsFromEnvironment(inputOptions)
     const keyManagementService = await createKeyManagementService(options)
     const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(cognitoTokens.accessToken)

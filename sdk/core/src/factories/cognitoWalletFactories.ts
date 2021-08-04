@@ -202,8 +202,8 @@ export const createCognitoWalletFactories = (
      * @param serializedWallet
      * @returns initialized instance of SDK
      */
-    deserialize: (inputOptions: SdkOptions, serializedWallet: string) => {
-      return Wallet.deserialize(inputOptions, serializedWallet)
+    deserializeSession: (inputOptions: SdkOptions, serializedSession: string) => {
+      return Wallet.deserializeSession(inputOptions, serializedSession)
     },
   }
 }

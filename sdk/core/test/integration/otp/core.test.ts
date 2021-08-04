@@ -77,7 +77,7 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     checkIsWallet(originalWallet)
     const { password, encryptedSeed } = originalWallet
-    const { accessToken } = JSON.parse(originalWallet.serialize())
+    const { accessToken } = JSON.parse(originalWallet.serializeSession())
 
     const legacyWallet = new LegacyAffinidiWallet(password, encryptedSeed, options)
     await legacyWallet.storeEncryptedSeed('', '', accessToken)
