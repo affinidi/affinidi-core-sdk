@@ -1,6 +1,6 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 import { createCognitoWalletFactories } from './cognitoWalletFactories'
 import { createCognitolessWalletFactories } from './cognitolessWalletFactories'
 import { createLegacyWalletFactories } from './legacyWalletFactories'
@@ -29,20 +29,26 @@ const createConstructor = <T extends (...args: any) => any>(inputFunction: T) =>
 
 export const createV5CompatibleWalletFactories = (
   platformEncryptionTools: IPlatformEncryptionTools,
+  affinidiCommon: AffinidiCommonConstructor | null,
   component: EventComponent,
 ) => {
-  const { legacyConstructor, ...legacyFactories } = createLegacyWalletFactories(platformEncryptionTools, component)
-  const cognitoFactories = createCognitoWalletFactories(platformEncryptionTools, component)
-  const cognitolessFactories = createCognitolessWalletFactories(platformEncryptionTools, component)
+  const { legacyConstructor, ...legacyFactories } = createLegacyWalletFactories(
+    platformEncryptionTools,
+    affinidiCommon,
+    component,
+  )
+  const cognitoFactories = createCognitoWalletFactories(platformEncryptionTools, affinidiCommon, component)
+  const cognitolessFactories = createCognitolessWalletFactories(platformEncryptionTools, affinidiCommon, component)
   return Object.assign(createConstructor(legacyConstructor), cognitoFactories, cognitolessFactories, legacyFactories)
 }
 
 export const createV6WalletFactories = (
   platformEncryptionTools: IPlatformEncryptionTools,
+  affinidiCommon: AffinidiCommonConstructor | null,
   component: EventComponent,
 ) => {
-  const cognitoFactories = createCognitoWalletFactories(platformEncryptionTools, component)
-  const cognitolessFactories = createCognitolessWalletFactories(platformEncryptionTools, component)
+  const cognitoFactories = createCognitoWalletFactories(platformEncryptionTools, affinidiCommon, component)
+  const cognitolessFactories = createCognitolessWalletFactories(platformEncryptionTools, affinidiCommon, component)
   return {
     ...cognitoFactories,
     ...cognitolessFactories,

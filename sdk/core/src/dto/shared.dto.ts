@@ -122,11 +122,20 @@ export class MessageParameters {
 
 export class KeyParams {
   @IsString()
-  encryptedSeed?: string
+  encryptedSeed: string
 
   @IsString()
-  password?: string
+  password: string
 }
+
+export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'
+
+export class KeyOptions {
+  @IsIn(['rsa', 'bbs', 'ecdsa'])
+  keyTypes?: KeyAlgorithmType[]
+}
+
+export type KeyParamsOrOptions = KeyParams | KeyOptions
 
 export class CognitoUserTokens {
   @IsOptional()

@@ -7,9 +7,13 @@ import {
 import { Util } from '../CommonNetworkMember/Util'
 import { CognitoUserTokens, KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 
-const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, component: EventComponent) => {
+const createWallet = (
+  platformEncryptionTools: IPlatformEncryptionTools,
+  affinidiCommon: AffinidiCommonConstructor | null,
+  component: EventComponent,
+) => {
   class Wallet extends LegacyNetworkMemberWithFactories {
     constructor(
       password: string,
@@ -17,7 +21,7 @@ const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, compone
       options: ParsedOptions,
       cognitoUserTokens?: CognitoUserTokens,
     ) {
-      super(password, encryptedSeed, platformEncryptionTools, options, component, cognitoUserTokens)
+      super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component, cognitoUserTokens)
     }
   }
 
@@ -26,9 +30,10 @@ const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, compone
 
 export const createLegacyWalletFactories = (
   platformEncryptionTools: IPlatformEncryptionTools,
+  affinidiCommon: AffinidiCommonConstructor | null,
   component: EventComponent,
 ) => {
-  const Wallet = createWallet(platformEncryptionTools, component)
+  const Wallet = createWallet(platformEncryptionTools, affinidiCommon, component)
 
   return {
     /**

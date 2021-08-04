@@ -31,9 +31,10 @@ import {
   CredentialRequirement,
   JwtOptions,
   KeyParams,
+  KeyAlgorithmType,
 } from '../dto/shared.dto'
 
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformEncryptionTools, AffinidiCommonConstructor } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 
 import {
@@ -71,7 +72,7 @@ export abstract class BaseNetworkMember {
   private readonly _registryApiService
   private readonly _revocationApiService
   protected readonly _keyManagementService
-  protected readonly _affinity: Affinity
+  protected readonly _affinity
   protected readonly _options
   private _didDocumentKeyId: string
   protected readonly _component: EventComponent
@@ -81,16 +82,13 @@ export abstract class BaseNetworkMember {
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
+    AffinidiCommon: AffinidiCommonConstructor | null,
     options: ParsedOptions,
     component: EventComponent,
   ) {
     if (!password || !encryptedSeed) {
       // TODO: implement appropriate error wrapper
       throw new Error('`password` and `encryptedSeed` must be provided!')
-    }
-
-    if (!platformEncryptionTools?.platformName) {
-      throw new Error('`platformEncryptionTools` must be provided!')
     }
 
     const { accessApiKey, basicOptions, storageRegion } = options
@@ -128,7 +126,7 @@ export abstract class BaseNetworkMember {
     })
     this._jwtService = new JwtService()
     this._holderService = new HolderService({ registryUrl, metricsUrl, accessApiKey }, component)
-    this._affinity = new Affinity({
+    this._affinity = new (AffinidiCommon ?? (Affinity as AffinidiCommonConstructor))({
       apiKey: accessApiKey,
       registryUrl: registryUrl,
       metricsUrl: metricsUrl,
@@ -659,8 +657,16 @@ export abstract class BaseNetworkMember {
     return signedCredentials
   }
 
-  async signUnsignedCredential(unsignedCredential: VCV1Unsigned) {
-    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
+  /**
+   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
+   */
+  async signUnsignedCredential(unsignedCredential: VCV1Unsigned, keyType: KeyAlgorithmType | undefined) {
+    return this._affinity.signUnsignedCredential!(
+      unsignedCredential,
+      this._encryptedSeed,
+      this._password,
+      keyType || 'ecdsa',
+    )
   }
 
   /**
@@ -711,7 +717,7 @@ export abstract class BaseNetworkMember {
       expirationDate: expiresAt ? new Date(expiresAt).toISOString() : undefined,
     })
 
-    return this.signUnsignedCredential(unsignedCredential)
+    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
   }
 
   async verifyDidAuthResponse(
@@ -1137,5 +1143,9 @@ export abstract class BaseNetworkMember {
     const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
 
     return this._platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, object)
+  }
+
+  async deriveSegmentProof(credential: VCV1, fields: string[], didDocument?: any): Promise<any> {
+    return this._affinity.deriveSegmentProof!(credential, fields, didDocument)
   }
 }

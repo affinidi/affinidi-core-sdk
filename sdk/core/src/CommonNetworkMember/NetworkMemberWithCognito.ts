@@ -1,12 +1,21 @@
-import { profile } from '@affinidi/common'
+import { KeysService, profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
+
 import WalletStorageService from '../services/WalletStorageService'
-import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import {
+  CognitoUserTokens,
+  KeyParams,
+  KeyParamsOrOptions,
+  KeyOptions,
+  MessageParameters,
+  SdkOptions,
+} from '../dto/shared.dto'
+import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import UserManagementService from '../services/UserManagementService'
 import { BaseNetworkMember, createKeyManagementService } from './BaseNetworkMember'
+import { Util } from './Util'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -39,13 +48,81 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
+    affinidiCommon: AffinidiCommonConstructor | null,
     options: ParsedOptions,
     component: EventComponent,
     cognitoUserTokens: CognitoUserTokens,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, options, component)
+    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
     this._userManagementService = createUserManagementService(options)
     this.cognitoUserTokens = cognitoUserTokens
+  }
+
+  private static _shouldCallAfterConfirmSignUp(keyParamsOrOptions?: KeyParamsOrOptions) {
+    return !keyParamsOrOptions
+  }
+
+  private static async _createKeyParams(
+    options: ParsedOptions,
+    platformEncryptionTools: IPlatformEncryptionTools,
+    shortPassword: string,
+    keyParamsOrOptions?: KeyParamsOrOptions,
+  ) {
+    if (!keyParamsOrOptions) {
+      return await NetworkMemberWithCognito._createSignUpKeys(shortPassword, options)
+    }
+
+    if ('encryptedSeed' in keyParamsOrOptions) {
+      return keyParamsOrOptions
+    }
+
+    return await NetworkMemberWithCognito._createKeyParamsForOptions(
+      platformEncryptionTools,
+      shortPassword,
+      keyParamsOrOptions,
+    )
+  }
+
+  /**
+   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
+   */
+  private static _createKeyParamsOrOptionsValidator(keyParamsOrOptions?: KeyParamsOrOptions) {
+    if (!keyParamsOrOptions || 'encryptedSeed' in keyParamsOrOptions) {
+      return { isArray: false, type: KeyParams, isRequired: false, value: keyParamsOrOptions }
+    }
+
+    return { isArray: false, type: KeyOptions, isRequired: true, value: keyParamsOrOptions }
+  }
+
+  /**
+   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
+   */
+  private static _validateKeyParamsOrOptions(keyParamsOrOptions?: KeyParamsOrOptions) {
+    if (!!keyParamsOrOptions && 'encryptedSeed' in keyParamsOrOptions) {
+      NetworkMemberWithCognito._validateKeys(keyParamsOrOptions)
+    }
+  }
+
+  /**
+   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
+   */
+  private static async _createKeyParamsForOptions(
+    platformEncryptionTools: IPlatformEncryptionTools,
+    shortPassword: string,
+    keyOptions: KeyOptions,
+  ) {
+    if (!keyOptions.keyTypes?.length) {
+      throw new Error('keyTypes is empty')
+    }
+
+    const keysSeedSection = platformEncryptionTools.buildExternalKeysSectionForSeed(keyOptions.keyTypes)
+
+    const seed = await Util.generateSeed('elem')
+    const seedHex = seed.toString('hex')
+    const fullSeed = `${seedHex}++${'elem'}++${keysSeedSection}`
+
+    const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(shortPassword))
+    return { encryptedSeed, password: shortPassword }
   }
 
   /**
@@ -209,22 +286,21 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   public static async signUpWithUsername<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
+    platformEncryptionTools: IPlatformEncryptionTools,
     username: string,
     password: string,
-    keyParams?: KeyParams,
+    keyParamsOrOptions?: KeyParamsOrOptions,
     messageParameters?: MessageParameters,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
-      { isArray: false, type: KeyParams, isRequired: false, value: keyParams },
+      NetworkMemberWithCognito._createKeyParamsOrOptionsValidator(keyParamsOrOptions),
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
-    if (keyParams) {
-      NetworkMemberWithCognito._validateKeys(keyParams)
-    }
+    NetworkMemberWithCognito._validateKeyParamsOrOptions(keyParamsOrOptions)
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
@@ -233,7 +309,14 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
       password,
       messageParameters,
     )
-    return NetworkMemberWithCognito._confirmSignUp(this, options, cognitoTokens, password, keyParams)
+    return NetworkMemberWithCognito._confirmSignUp(
+      this,
+      options,
+      platformEncryptionTools,
+      cognitoTokens,
+      password,
+      keyParamsOrOptions,
+    )
   }
 
   private static async _initiateSignUpByEmailOrPhone(
@@ -300,20 +383,19 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   public static async completeSignUp<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
+    platformEncryptionTools: IPlatformEncryptionTools,
     signUpToken: string,
     confirmationCode: string,
-    keyParams?: KeyParams,
+    keyParamsOrOptions?: KeyParamsOrOptions,
   ): Promise<InstanceType<T>> {
     ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
-      { isArray: false, type: KeyParams, isRequired: false, value: keyParams },
+      NetworkMemberWithCognito._createKeyParamsOrOptionsValidator(keyParamsOrOptions),
     ])
 
-    if (keyParams) {
-      NetworkMemberWithCognito._validateKeys(keyParams)
-    }
+    NetworkMemberWithCognito._validateKeyParamsOrOptions(keyParamsOrOptions)
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
@@ -321,7 +403,14 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
       signUpToken,
       confirmationCode,
     )
-    return NetworkMemberWithCognito._confirmSignUp(this, options, cognitoTokens, shortPassword, keyParams)
+    return NetworkMemberWithCognito._confirmSignUp(
+      this,
+      options,
+      platformEncryptionTools,
+      cognitoTokens,
+      shortPassword,
+      keyParamsOrOptions,
+    )
   }
 
   private static async _createSignUpKeys(shortPassword: string, options: ParsedOptions) {
@@ -334,21 +423,27 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   private static async _confirmSignUp<T extends DerivedType<T>>(
     self: T,
     options: ParsedOptions,
+    platformEncryptionTools: IPlatformEncryptionTools,
     cognitoTokens: CognitoUserTokens,
     shortPassword?: string,
-    inputKeyParams?: KeyParams,
+    inputKeyParamsOrOptions?: KeyParamsOrOptions,
   ): Promise<InstanceType<T>> {
     const { accessToken } = cognitoTokens
 
     const keyManagementService = createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       accessToken,
-      inputKeyParams ?? (await NetworkMemberWithCognito._createSignUpKeys(shortPassword, options)),
+      await NetworkMemberWithCognito._createKeyParams(
+        options,
+        platformEncryptionTools,
+        shortPassword,
+        inputKeyParamsOrOptions,
+      ),
       !options.otherOptions.skipBackupEncryptedSeed,
     )
 
     const result = new self(encryptionKey, updatedEncryptedSeed, options, cognitoTokens)
-    if (!inputKeyParams) {
+    if (NetworkMemberWithCognito._shouldCallAfterConfirmSignUp(inputKeyParamsOrOptions)) {
       result.afterConfirmSignUp()
     }
 
@@ -450,6 +545,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   public static async completeSignInPasswordless<T extends DerivedType<T>>(
     this: T,
     options: SdkOptions,
+    platformEncryptionTools: IPlatformEncryptionTools,
     signInToken: string,
     confirmationCode: string,
   ): Promise<{ isNew: boolean; wallet: InstanceType<T> }> {
@@ -469,7 +565,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
       case 'signUp':
         return {
           isNew: true,
-          wallet: await this.completeSignUp(options, token.signUpToken, confirmationCode),
+          wallet: await this.completeSignUp(options, platformEncryptionTools, token.signUpToken, confirmationCode),
         }
       default:
         throw new Error(`Incorrect token type '${token.signInType}'`)

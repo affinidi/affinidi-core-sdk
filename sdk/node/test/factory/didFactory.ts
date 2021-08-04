@@ -1,8 +1,8 @@
 const cryptoRandomString = require('crypto-random-string')
 
-import { createWallet } from '../../'
 import { KeysService, DidDocumentService } from '@affinidi/common'
 import { EventComponent, Util } from '@affinidi/wallet-core-sdk'
+import { createWallet } from '../../src'
 
 interface TestDid {
   seed: string
@@ -19,7 +19,9 @@ interface TestJoloDid extends TestDid {
 
 const options = { env: 'dev', apiKey: 'fakeApiKey' } as const
 
-const AffinidiWallet = createWallet(EventComponent.NotImplemented)
+const AffinidiWallet = createWallet(EventComponent.NotImplemented, null, () => {
+  throw new Error('Not implemented')
+})
 
 export const generateTestDIDs = async (): Promise<{
   password: string

@@ -1,7 +1,7 @@
 import { profile, KeysService } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { SdkOptions } from '../dto/shared.dto'
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
@@ -26,10 +26,11 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
+    affinidiCommon: AffinidiCommonConstructor | null,
     options: ParsedOptions,
     component: EventComponent,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, options, component)
+    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
   }
 
   /**

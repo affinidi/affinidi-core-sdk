@@ -2,7 +2,7 @@ import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import { SignedCredential, SdkOptions } from '../dto/shared.dto'
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import WalletStorageService from '../services/WalletStorageService'
@@ -31,10 +31,11 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
+    affinidiCommon: AffinidiCommonConstructor | null,
     options: ParsedOptions,
     component: EventComponent,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, options, component)
+    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
 
     const {
       basicOptions: { phoneIssuerBasePath, emailIssuerBasePath },

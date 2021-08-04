@@ -3,7 +3,7 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import WalletStorageService from '../services/WalletStorageService'
 import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
 import { validateUsername } from '../shared/validateUsername'
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
@@ -45,11 +45,12 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     password: string,
     encryptedSeed: string,
     platformEncryptionTools: IPlatformEncryptionTools,
+    affinidiCommon: AffinidiCommonConstructor | null,
     options: ParsedOptions,
     component: EventComponent,
     cognitoUserTokens?: CognitoUserTokens,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, options, component)
+    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
     const { accessApiKey, basicOptions } = options
     const { clientId, userPoolId, keyStorageUrl } = basicOptions
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })

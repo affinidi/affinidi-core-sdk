@@ -3,12 +3,16 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { NetworkMemberWithCognito, UniversalDerivedType } from '../CommonNetworkMember/NetworkMemberWithCognito'
 import { CognitoUserTokens, KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
 import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 
-const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, component: EventComponent) => {
+const createWallet = (
+  platformEncryptionTools: IPlatformEncryptionTools,
+  affinidiCommon: AffinidiCommonConstructor | null,
+  component: EventComponent,
+) => {
   class Wallet extends NetworkMemberWithCognito {
     constructor(password: string, encryptedSeed: string, options: ParsedOptions, cognitoUserTokens: CognitoUserTokens) {
-      super(password, encryptedSeed, platformEncryptionTools, options, component, cognitoUserTokens)
+      super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component, cognitoUserTokens)
     }
   }
 
@@ -17,9 +21,10 @@ const createWallet = (platformEncryptionTools: IPlatformEncryptionTools, compone
 
 export const createCognitoWalletFactories = (
   platformEncryptionTools: IPlatformEncryptionTools,
+  affinidiCommon: AffinidiCommonConstructor | null,
   component: EventComponent,
 ) => {
-  const Wallet = createWallet(platformEncryptionTools, component)
+  const Wallet = createWallet(platformEncryptionTools, affinidiCommon, component)
 
   return {
     /**
@@ -99,7 +104,14 @@ export const createCognitoWalletFactories = (
       keyParams?: KeyParams,
       messageParameters?: MessageParameters,
     ) => {
-      return Wallet.signUpWithUsername(inputOptions, username, password, keyParams, messageParameters)
+      return Wallet.signUpWithUsername(
+        inputOptions,
+        platformEncryptionTools,
+        username,
+        password,
+        keyParams,
+        messageParameters,
+      )
     },
 
     /**
@@ -151,7 +163,7 @@ export const createCognitoWalletFactories = (
       confirmationCode: string,
       keyParams?: KeyParams,
     ) => {
-      return Wallet.completeSignUp(inputOptions, signUpToken, confirmationCode, keyParams)
+      return Wallet.completeSignUp(inputOptions, platformEncryptionTools, signUpToken, confirmationCode, keyParams)
     },
 
     /**
@@ -184,7 +196,7 @@ export const createCognitoWalletFactories = (
      * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
      */
     completeSignInPasswordless: (options: SdkOptions, signInToken: string, confirmationCode: string) => {
-      return Wallet.completeSignInPasswordless(options, signInToken, confirmationCode)
+      return Wallet.completeSignInPasswordless(options, platformEncryptionTools, signInToken, confirmationCode)
     },
 
     /**

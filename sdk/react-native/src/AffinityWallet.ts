@@ -4,7 +4,12 @@ import platformEncryptionTools from './PlatformEncryptionTools'
 
 export const AffinidiWallet = createV5CompatibleWalletFactories(
   platformEncryptionTools,
+  null,
   EventComponent.AffinidiReactNativeSDK,
 )
 
-export const AffinidiWalletV6 = createV6WalletFactories(platformEncryptionTools, EventComponent.AffinidiReactNativeSDK)
+export const AffinidiWalletV6 = createV6WalletFactories(
+  platformEncryptionTools,
+  null,
+  EventComponent.AffinidiReactNativeSDK,
+)
