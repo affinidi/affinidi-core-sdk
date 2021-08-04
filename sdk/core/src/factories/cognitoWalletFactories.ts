@@ -94,7 +94,6 @@ export const createCognitoWalletFactories = (
      * @param username - arbitrary username
      * @param password - password
      * @param keyParams (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet
-     * @param messageParameters (optional) - parameters with specified welcome message
      * @returns initialized instance of SDK
      */
     signUpWithUsername: (
@@ -102,7 +101,6 @@ export const createCognitoWalletFactories = (
       username: string,
       password: string,
       keyParams?: KeyParams,
-      messageParameters?: MessageParameters,
     ) => {
       return Wallet.signUpWithUsername(
         inputOptions,
@@ -110,7 +108,6 @@ export const createCognitoWalletFactories = (
         username,
         password,
         keyParams,
-        messageParameters,
       )
     },
 

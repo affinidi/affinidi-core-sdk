@@ -339,11 +339,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
-    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
-      username,
-      password,
-      messageParameters,
-    )
+    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     return LegacyNetworkMemberWithFactories._confirmSignUp(this, cognitoTokens, password, keyParams, options)
   }
 
@@ -363,11 +359,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
-    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
-      username,
-      password,
-      messageParameters,
-    )
+    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
       self,
       cognitoTokens,

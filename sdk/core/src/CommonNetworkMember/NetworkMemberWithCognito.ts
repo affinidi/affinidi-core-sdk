@@ -280,7 +280,6 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    * @param username - arbitrary username
    * @param password - password
    * @param keyParams (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet
-   * @param messageParameters (optional) - parameters with specified welcome message
    * @returns initialized instance of SDK
    */
   public static async signUpWithUsername<T extends DerivedType<T>>(
@@ -290,25 +289,19 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     username: string,
     password: string,
     keyParamsOrOptions?: KeyParamsOrOptions,
-    messageParameters?: MessageParameters,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
       NetworkMemberWithCognito._createKeyParamsOrOptionsValidator(keyParamsOrOptions),
-      { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     NetworkMemberWithCognito._validateKeyParamsOrOptions(keyParamsOrOptions)
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
-    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(
-      username,
-      password,
-      messageParameters,
-    )
+    const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     return NetworkMemberWithCognito._confirmSignUp(
       this,
       options,
@@ -613,6 +606,16 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    */
   public async initiateChangeEmail(email: string, messageParameters?: MessageParameters): Promise<string> {
     return this._initiateChangeEmailOrPhone(email, messageParameters)
+  }
+
+  /**
+   * @description Initiates change user attribute (email) flow
+   * @param phone - new phone
+   * @param messageParameters - optional parameters with specified welcome message
+   * @returns token to be used with completeChangeEmailOrPhone
+   */
+   public async initiateChangePhone(phone: string, messageParameters?: MessageParameters): Promise<string> {
+    return this._initiateChangeEmailOrPhone(phone, messageParameters)
   }
 
   /**

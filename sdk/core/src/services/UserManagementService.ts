@@ -72,7 +72,7 @@ export default class UserManagementService {
   private async _signUp(
     usernameWithAttributes: UsernameWithAttributes,
     password: string,
-    messageParameters: MessageParameters,
+    messageParameters?: MessageParameters,
   ): Promise<void> {
     const { normalizedUsername } = usernameWithAttributes
     const result = await this._cognitoIdentityService.trySignUp(usernameWithAttributes, password, messageParameters)
@@ -92,7 +92,7 @@ export default class UserManagementService {
     }
   }
 
-  async signUpWithUsernameAndConfirm(username: string, inputPassword: string, messageParameters: MessageParameters) {
+  async signUpWithUsernameAndConfirm(username: string, inputPassword: string) {
     this._loginShouldBeUsername(username)
     const usernameWithAttributes = this._buildUserAttributes(username)
 
@@ -101,7 +101,7 @@ export default class UserManagementService {
     }
 
     const password = normalizeShortPassword(inputPassword, username)
-    await this._signUp(usernameWithAttributes, password, messageParameters)
+    await this._signUp(usernameWithAttributes, password)
     await this._keyStorageApiService.adminConfirmUser({ username })
     const cognitoTokens = await this.logInWithPassword(username, inputPassword)
     return cognitoTokens
