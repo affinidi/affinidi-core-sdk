@@ -17,7 +17,7 @@ import { extractSDKVersion } from '../../../src/_helpers'
 
 let encryptionKey: string
 let encryptedSeed: string
-let audienceDid: string
+const audienceDid: string = 'did:elem:test'
 const region = 'eu-west-2'
 const reqheaders: Record<string, string> = {}
 
@@ -25,7 +25,6 @@ const createAffinidiStorageService = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
   const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey })
   return new AffinidiVaultStorageService(didAuthService, keysService, testPlatformTools, {
-    audienceDid: audienceDid,
     vaultUrl: STAGING_AFFINIDI_VAULT_URL,
     accessApiKey: undefined,
   })
@@ -47,7 +46,7 @@ describe('AffinidiVaultStorageService', () => {
     const testDids = await generateTestDIDs()
     encryptionKey = testDids.password
     encryptedSeed = testDids.jolo.encryptedSeed
-    audienceDid = testDids.elem.did
+    //audienceDid = testDids.elem.did
 
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
@@ -70,7 +69,7 @@ describe('AffinidiVaultStorageService', () => {
       } as VaultCredential)
 
     const service = createAffinidiStorageService()
-    const credentials = await service.saveCredentials([credential], region)
+    const credentials = await service.saveCredentials([credential], region, audienceDid)
 
     expect(credentials[0].credentialId).to.eql(credential.id)
   })
@@ -84,7 +83,7 @@ describe('AffinidiVaultStorageService', () => {
 
     const service = createAffinidiStorageService()
     try {
-      await service.saveCredentials([credential], region)
+      await service.saveCredentials([credential], region, audienceDid)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }
@@ -109,7 +108,7 @@ describe('AffinidiVaultStorageService', () => {
       })
 
     const service = createAffinidiStorageService()
-    const credentials = await service.searchCredentials(region)
+    const credentials = await service.searchCredentials(region, audienceDid)
     expect(credentials).to.length(2)
     expect(credentials[0].id).to.eql(credential.id)
   })
@@ -133,7 +132,7 @@ describe('AffinidiVaultStorageService', () => {
       })
 
     const service = createAffinidiStorageService()
-    const credentials = await service.searchCredentials(region, [credential.type])
+    const credentials = await service.searchCredentials(region, audienceDid, [credential.type])
     expect(credentials).to.length(2)
     expect(credentials[0].id).to.eql(credential.id)
   })
@@ -147,7 +146,7 @@ describe('AffinidiVaultStorageService', () => {
 
     const service = createAffinidiStorageService()
     try {
-      await service.searchCredentials(region)
+      await service.searchCredentials(region, audienceDid)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }
@@ -164,7 +163,7 @@ describe('AffinidiVaultStorageService', () => {
       } as VaultCredential)
 
     const service = createAffinidiStorageService()
-    const result = await service.getCredentialById(credential.id, region)
+    const result = await service.getCredentialById(credential.id, region, audienceDid)
     expect(result.id).to.eql(credential.id)
   })
 
@@ -177,7 +176,7 @@ describe('AffinidiVaultStorageService', () => {
 
     const service = createAffinidiStorageService()
     try {
-      await service.getCredentialById(credential.id, region)
+      await service.getCredentialById(credential.id, region, audienceDid)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }
@@ -191,7 +190,7 @@ describe('AffinidiVaultStorageService', () => {
       .reply(200, {})
 
     const service = createAffinidiStorageService()
-    await service.deleteCredentialById(credential.id, region)
+    await service.deleteCredentialById(credential.id, region, audienceDid)
   })
 
   it('#deleteCredentialByIdWithError', async () => {
@@ -203,7 +202,7 @@ describe('AffinidiVaultStorageService', () => {
 
     const service = createAffinidiStorageService()
     try {
-      await service.deleteCredentialById(credential.id, region)
+      await service.deleteCredentialById(credential.id, region, audienceDid)
     } catch (error) {
       expect(error.code).to.eql('COM-1')
     }
@@ -236,6 +235,6 @@ describe('AffinidiVaultStorageService', () => {
     }
 
     const service = createAffinidiStorageService()
-    await service.deleteAllCredentials(region)
+    await service.deleteAllCredentials(region, audienceDid)
   })
 })

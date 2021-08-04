@@ -24,7 +24,6 @@ type ConstructorOptions = {
   affinidiVaultUrl: string
   storageRegion: string
   accessApiKey: string
-  audienceDid: string
 }
 
 @profile()
@@ -47,7 +46,6 @@ export default class WalletStorageService {
       platformEncryptionTools,
       {
         accessApiKey: options.accessApiKey,
-        audienceDid: options.audienceDid,
         vaultUrl: options.affinidiVaultUrl,
       },
     )
@@ -99,10 +97,10 @@ export default class WalletStorageService {
     return signedCredentials as SignedCredential[]
   }
 
-  private async _getCredentialsByTypes(storageRegion?: string, types?: string[][]) {
+  private async _getCredentialsByTypes(audienceDid: string, storageRegion?: string, types?: string[][]) {
     storageRegion = storageRegion || this._storageRegion
 
-    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion, types)
+    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion, audienceDid, types)
 
     // should be deleted during migration to affinidi-vault Phase #2
     const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion, types)
@@ -125,18 +123,18 @@ export default class WalletStorageService {
     return uniqueCredentials
   }
 
-  public async saveCredentials(credentials: any[], storageRegion?: string) {
+  public async saveCredentials(credentials: any[], audienceDid: string, storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
-    const responses = await this._affinidiVaultStorageService.saveCredentials(credentials, storageRegion)
+    const responses = await this._affinidiVaultStorageService.saveCredentials(credentials, storageRegion, audienceDid)
 
     return responses
   }
 
-  public async getAllCredentials(storageRegion?: string) {
+  public async getAllCredentials(audienceDid: string, storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
-    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion)
+    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion, audienceDid)
 
     // should be deleted during migration to affinidi-vault Phase #2
     const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion)
@@ -144,11 +142,11 @@ export default class WalletStorageService {
     return this._uniqueCredentials([...credentials, ...bloomCredentials])
   }
 
-  public async getCredentialsByShareToken(token: string, storageRegion?: string) {
+  public async getCredentialsByShareToken(token: string, audienceDid: string, storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
     if (!token) {
-      return this.getAllCredentials()
+      return this.getAllCredentials(audienceDid)
     }
 
     const request = JwtService.fromJWT(token)
@@ -159,21 +157,21 @@ export default class WalletStorageService {
     } = request
 
     if (!credentialRequirements) {
-      return this.getAllCredentials()
+      return this.getAllCredentials(audienceDid)
     }
 
     const requirementTypes = credentialRequirements.map(
       (credentialRequirement: { type: string[] }) => credentialRequirement.type,
     )
 
-    return this._getCredentialsByTypes(storageRegion, requirementTypes)
+    return this._getCredentialsByTypes(audienceDid, storageRegion, requirementTypes)
   }
 
-  public async getCredentialById(credentialId: string, storageRegion?: string): Promise<any> {
+  public async getCredentialById(credentialId: string, audienceDid: string, storageRegion?: string): Promise<any> {
     storageRegion = storageRegion || this._storageRegion
 
     try {
-      return await this._affinidiVaultStorageService.getCredentialById(credentialId, storageRegion)
+      return await this._affinidiVaultStorageService.getCredentialById(credentialId, storageRegion, audienceDid)
     } catch (error) {
       if (error.code !== 'AVT-2') {
         throw error
@@ -184,11 +182,11 @@ export default class WalletStorageService {
     }
   }
 
-  public async deleteCredentialById(credentialId: string, storageRegion?: string) {
+  public async deleteCredentialById(credentialId: string, audienceDid: string, storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
     try {
-      await this._affinidiVaultStorageService.deleteCredentialById(credentialId, storageRegion)
+      await this._affinidiVaultStorageService.deleteCredentialById(credentialId, storageRegion, audienceDid)
     } catch (error) {
       if (error.code !== 'AVT-2') {
         throw error
@@ -199,11 +197,11 @@ export default class WalletStorageService {
     }
   }
 
-  public async deleteAllCredentials(storageRegion?: string): Promise<void> {
+  public async deleteAllCredentials(audienceDid: string, storageRegion?: string): Promise<void> {
     storageRegion = storageRegion || this._storageRegion
 
     try {
-      await this._affinidiVaultStorageService.deleteAllCredentials(storageRegion)
+      await this._affinidiVaultStorageService.deleteAllCredentials(storageRegion, audienceDid)
     } catch (error) {
       throw new SdkErrorFromCode('COR-0', {}, error)
     }

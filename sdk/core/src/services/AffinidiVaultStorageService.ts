@@ -8,13 +8,11 @@ import { extractSDKVersion, isW3cCredential } from '../_helpers'
 
 type AffinidiVaultStorageOptions = {
   accessApiKey: string
-  audienceDid: string
   vaultUrl: string
 }
 
 @profile()
 export default class AffinidiVaultStorageService {
-  private _audienceDid: string
   private _didAuthService: DidAuthService
   private _keysService: KeysService
   private _platformEncryptionTools: IPlatformEncryptionTools
@@ -26,7 +24,6 @@ export default class AffinidiVaultStorageService {
     platformEncryptionTools: IPlatformEncryptionTools,
     options: AffinidiVaultStorageOptions,
   ) {
-    this._audienceDid = options.audienceDid
     this._didAuthService = didAuthService
     this._keysService = keysService
     this._platformEncryptionTools = platformEncryptionTools
@@ -37,8 +34,8 @@ export default class AffinidiVaultStorageService {
     })
   }
 
-  private async _authorizeVcVault(): Promise<string> {
-    const { body } = await this._vaultApiService.createDidAuthRequest({ audienceDid: this._audienceDid })
+  private async _authorizeVcVault(audienceDid: string): Promise<string> {
+    const { body } = await this._vaultApiService.createDidAuthRequest({ audienceDid: audienceDid })
     const responseToken = await this._didAuthService.createDidAuthResponseToken(body)
     return responseToken
   }
@@ -115,8 +112,12 @@ export default class AffinidiVaultStorageService {
     return credential
   }
 
-  public async saveCredentials(credentials: any[], storageRegion: string): Promise<VaultCredential[]> {
-    const token = await this._authorizeVcVault()
+  public async saveCredentials(
+    credentials: any[],
+    storageRegion: string,
+    audienceDid: string,
+  ): Promise<VaultCredential[]> {
+    const token = await this._authorizeVcVault(audienceDid)
 
     const responses: VaultCredential[] = []
 
@@ -134,8 +135,8 @@ export default class AffinidiVaultStorageService {
     return responses
   }
 
-  public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
-    const token = await this._authorizeVcVault()
+  public async searchCredentials(storageRegion: string, audienceDid: string, types?: string[][]): Promise<any[]> {
+    const token = await this._authorizeVcVault(audienceDid)
 
     const hashedTypes = types ? await this._computeTypesHashes(types) : undefined
 
@@ -145,8 +146,8 @@ export default class AffinidiVaultStorageService {
     return credentials
   }
 
-  public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
-    const token = await this._authorizeVcVault()
+  public async getCredentialById(credentialId: string, storageRegion: string, audienceDid: string): Promise<any> {
+    const token = await this._authorizeVcVault(audienceDid)
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
     const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
@@ -157,8 +158,8 @@ export default class AffinidiVaultStorageService {
     return credential
   }
 
-  public async deleteCredentialById(credentialId: string, storageRegion: string): Promise<void> {
-    const token = await this._authorizeVcVault()
+  public async deleteCredentialById(credentialId: string, storageRegion: string, audienceDid: string): Promise<void> {
+    const token = await this._authorizeVcVault(audienceDid)
 
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const hashedId = await this._platformEncryptionTools.computePersonalHash(privateKeyBuffer, credentialId)
@@ -166,11 +167,11 @@ export default class AffinidiVaultStorageService {
     await this._vaultApiService.deleteCredential(token, storageRegion, hashedId)
   }
 
-  public async deleteAllCredentials(storageRegion: string): Promise<void> {
-    const token = await this._authorizeVcVault()
+  public async deleteAllCredentials(storageRegion: string, audienceDid: string): Promise<void> {
+    const token = await this._authorizeVcVault(audienceDid)
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
-    const credentials = await this.searchCredentials(storageRegion)
+    const credentials = await this.searchCredentials(storageRegion, audienceDid)
 
     // this could have perfomance problems when need delete big amount of credentials
     // probably can use some kind of concurrency, but it is unknown what behavior will be at each platform

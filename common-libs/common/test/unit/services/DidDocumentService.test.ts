@@ -121,7 +121,7 @@ describe('DidDocumentService', () => {
   it('#getMyDid (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
     const didDocumentService = new DidDocumentService(keyService)
-    const did = didDocumentService.getMyDid()
+    const did = await didDocumentService.getMyDid()
 
     expect(did).to.exist
     expect(did).to.be.equal(elemDid)

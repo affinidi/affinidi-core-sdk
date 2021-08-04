@@ -109,14 +109,13 @@ export abstract class BaseNetworkMember {
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    this._didDocumentService = new DidDocumentService(keysService)
+    this._didDocumentService = new DidDocumentService(keysService, registryUrl, accessApiKey)
     const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
     this._walletStorageService = new WalletStorageService(didAuthService, keysService, platformEncryptionTools, {
       bloomVaultUrl,
       affinidiVaultUrl,
       accessApiKey,
       storageRegion,
-      audienceDid: this.did,
     })
     this._jwtService = new JwtService()
     this._holderService = new HolderService({ registryUrl, metricsUrl, accessApiKey }, component)
@@ -316,7 +315,8 @@ export abstract class BaseNetworkMember {
 
   /* istanbul ignore next: protected method */
   protected async saveEncryptedCredentials(data: any, storageRegion?: string): Promise<any[]> {
-    return this._walletStorageService.saveCredentials(data, storageRegion)
+    const audienceDid = await this.did()
+    return this._walletStorageService.saveCredentials(data, audienceDid, storageRegion)
   }
 
   /**
@@ -354,8 +354,8 @@ export abstract class BaseNetworkMember {
     const {
       body: { credentialOffer },
     } = await this._issuerApiService.buildCredentialOffer(params)
-
-    const signedObject = this._keysService.signJWT(credentialOffer as any, this.didDocumentKeyId)
+    const didDocumentKeyId = await this.didDocumentKeyId()
+    const signedObject = await this._keysService.signJWT(credentialOffer as any, didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -404,7 +404,7 @@ export abstract class BaseNetworkMember {
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest as any, this.didDocumentKeyId)
+    const signedObject = await this._keysService.signJWT(credentialShareRequest as any, await this.didDocumentKeyId())
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -419,7 +419,7 @@ export abstract class BaseNetworkMember {
 
     const credentialOfferResponse = await this._holderService.buildCredentialOfferResponse(credentialOfferToken)
 
-    const signedObject = this._keysService.signJWT(credentialOfferResponse, this.didDocumentKeyId)
+    const signedObject = await this._keysService.signJWT(credentialOfferResponse, await this.didDocumentKeyId())
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -492,9 +492,7 @@ export abstract class BaseNetworkMember {
       credentialShareRequestToken,
       suppliedCredentials,
     )
-
-    const signedObject = this._keysService.signJWT(credentialResponse, this.didDocumentKeyId)
-
+    const signedObject = await this._keysService.signJWT(credentialResponse, await this.didDocumentKeyId())
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
 
@@ -502,12 +500,12 @@ export abstract class BaseNetworkMember {
    * @description Returns user's DID
    * @returns DID
    */
-  get did() {
+  async did() {
     const didCalculated = this._did
 
     /* istanbul ignore else: code simplicity */
     if (!didCalculated) {
-      this._did = this._didDocumentService.getMyDid()
+      this._did = await this._didDocumentService.getMyDid()
     }
 
     return this._did
@@ -517,9 +515,9 @@ export abstract class BaseNetworkMember {
    * @description Returns user's DID document key ID
    * @returns key ID
    */
-  get didDocumentKeyId() {
+  async didDocumentKeyId() {
     if (!this._didDocumentKeyId) {
-      this._didDocumentKeyId = this._didDocumentService.getKeyId(this.did)
+      this._didDocumentKeyId = await this._didDocumentService.getKeyId(await this.did())
     }
 
     return this._didDocumentKeyId
@@ -775,15 +773,15 @@ export abstract class BaseNetworkMember {
     const isTestEnvironment = process.env.NODE_ENV === 'test'
 
     if (isValid && !isTestEnvironment) {
-      this._sendVCVerifiedPerPartyMetrics(suppliedCredentials)
+      await this._sendVCVerifiedPerPartyMetrics(suppliedCredentials)
     }
 
     return { isValid, did, nonce: jti, suppliedCredentials, errors }
   }
 
   /* istanbul ignore next: private method */
-  private _sendVCVerifiedPerPartyMetrics(credentials: any[]) {
-    const verifierDid = this.did
+  private async _sendVCVerifiedPerPartyMetrics(credentials: any[]) {
+    const verifierDid = await this.did()
 
     for (const credential of credentials) {
       const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_VERIFIED_PER_PARTY)
@@ -919,7 +917,7 @@ export abstract class BaseNetworkMember {
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest as any)
+    const signedObject = await this._keysService.signJWT(credentialShareRequest as any)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -942,7 +940,7 @@ export abstract class BaseNetworkMember {
       vp: buildVPV1Unsigned({
         id: `presentationId:${randomBytes(8).toString('hex')}`,
         vcs: vcs.filter((vc) => requestedTypes.includes(vc.type[1])),
-        holder: { id: this.did },
+        holder: { id: await this.did() },
       }),
       encryption: {
         seed: this._encryptedSeed,
@@ -979,7 +977,7 @@ export abstract class BaseNetworkMember {
       // After validating the VP we need to validate the VP's challenge token
       // to ensure that it was issued from the correct DID and that it hasn't expired.
       try {
-        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.did)
+        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, await this.did())
       } catch (error) {
         return {
           isValid: false,
@@ -1012,7 +1010,8 @@ export abstract class BaseNetworkMember {
    * @returns array of ids for corelated records
    */
   async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
-    const result = await this._walletStorageService.saveCredentials(data, storageRegion)
+    const audienceDid = await this.did()
+    const result = await this._walletStorageService.saveCredentials(data, audienceDid, storageRegion)
 
     this._sendVCSavedMetrics(data)
     // NOTE: what if creds actually were not saved in the vault?
@@ -1028,7 +1027,8 @@ export abstract class BaseNetworkMember {
    * @returns a single VC
    */
   async getCredentialById(credentialId: string, storageRegion?: string): Promise<any> {
-    return this._walletStorageService.getCredentialById(credentialId, storageRegion)
+    const audienceDid = await this.did()
+    return this._walletStorageService.getCredentialById(credentialId, audienceDid, storageRegion)
   }
 
   /**
@@ -1037,7 +1037,8 @@ export abstract class BaseNetworkMember {
    * @returns a single VC
    */
   async getAllCredentials(storageRegion?: string): Promise<any[]> {
-    return this._walletStorageService.getAllCredentials(storageRegion)
+    const audienceDid = await this.did()
+    return this._walletStorageService.getAllCredentials(audienceDid, storageRegion)
   }
 
   /**
@@ -1047,7 +1048,8 @@ export abstract class BaseNetworkMember {
    * @returns a single VC
    */
   async getCredentialsByShareToken(token: string, storageRegion?: string): Promise<any[]> {
-    return this._walletStorageService.getCredentialsByShareToken(token, storageRegion)
+    const audienceDid = await this.did()
+    return this._walletStorageService.getCredentialsByShareToken(token, audienceDid, storageRegion)
   }
 
   /**
@@ -1056,7 +1058,8 @@ export abstract class BaseNetworkMember {
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    */
   async deleteCredentialById(credentialId: string, storageRegion?: string): Promise<void> {
-    return this._walletStorageService.deleteCredentialById(credentialId, storageRegion)
+    const audienceDid = await this.did()
+    return this._walletStorageService.deleteCredentialById(credentialId, audienceDid, storageRegion)
   }
 
   /**
@@ -1064,7 +1067,8 @@ export abstract class BaseNetworkMember {
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
    */
   async deleteAllCredentials(storageRegion?: string): Promise<void> {
-    return this._walletStorageService.deleteAllCredentials(storageRegion)
+    const audienceDid = await this.did()
+    return this._walletStorageService.deleteAllCredentials(audienceDid, storageRegion)
   }
 
   /**

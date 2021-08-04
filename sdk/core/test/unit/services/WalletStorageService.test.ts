@@ -31,6 +31,8 @@ let walletPassword: string
 let encryptedSeed: string
 
 const region = 'eu-west-2'
+const audienceDid =
+  'did:elem:EiDz1CWpWrXmU_QUbaY6TJEe1HAlpS25d7nsZHESbrk6ZQ;elem:initial-state=eyJwcm90ZWN0ZWQiOiJleUp2Y0dWeVlYUnBiMjRpT2lKamNtVmhkR1VpTENKcmFXUWlPaUlqY0hKcGJXRnllU0lzSW1Gc1p5STZJa1ZUTWpVMlN5SjkiLCJwYXlsb2FkIjoiZXlKQVkyOXVkR1Y0ZENJNkltaDBkSEJ6T2k4dmR6TnBaQzV2Y21jdmMyVmpkWEpwZEhrdmRqSWlMQ0p3ZFdKc2FXTkxaWGtpT2x0N0ltbGtJam9pSTNCeWFXMWhjbmtpTENKMWMyRm5aU0k2SW5OcFoyNXBibWNpTENKMGVYQmxJam9pVTJWamNESTFObXN4Vm1WeWFXWnBZMkYwYVc5dVMyVjVNakF4T0NJc0luQjFZbXhwWTB0bGVVaGxlQ0k2SWpBellURmhNR0prWTJKak1HWm1aR1ZoTlRjMU1HSm1NakJsTmpsbU1ESXlaVGRrWkRNMU1qUTNZek5tTWpSbU5XSmxaREUwTnpGbU5HTmhOV1l6TkdKak5DSjlMSHNpYVdRaU9pSWpjbVZqYjNabGNua2lMQ0oxYzJGblpTSTZJbkpsWTI5MlpYSjVJaXdpZEhsd1pTSTZJbE5sWTNBeU5UWnJNVlpsY21sbWFXTmhkR2x2Ymt0bGVUSXdNVGdpTENKd2RXSnNhV05MWlhsSVpYZ2lPaUl3TW1JMU1HTTBaRFk1WkRrMU5tUTNOelJrTWpKaE5qaGhOR0U0WVRkbE5UazJaVGN5TURsaE5UTmpZalU1TVRneFpUWTVPRFpqT1RZek1UazJOelF3TXpZaWZWMHNJbUYxZEdobGJuUnBZMkYwYVc5dUlqcGJJaU53Y21sdFlYSjVJbDBzSW1GemMyVnlkR2x2YmsxbGRHaHZaQ0k2V3lJamNISnBiV0Z5ZVNKZGZRIiwic2lnbmF0dXJlIjoiek1VcDhPQVljUm9ZaXJmOEo5SWRKa2xTSTFSOTlRTlpLZE5fdEo4SkFDRmNIYjMyQWU4WEZvLTZYUDl0bUF1N0ZjeTlJNjhnb2pJa2FDbmZNdmhXYlEifQ'
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
@@ -40,7 +42,6 @@ const createWalletStorageService = () => {
     affinidiVaultUrl: STAGING_AFFINIDI_VAULT_URL,
     accessApiKey: undefined,
     storageRegion: region,
-    audienceDid: '',
   })
 }
 
@@ -77,7 +78,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
 
-    const response = await walletStorageService.saveCredentials([signedCredential])
+    const response = await walletStorageService.saveCredentials([signedCredential], audienceDid)
 
     expect(response[0].credentialId).to.eql(signedCredential.id)
   })
@@ -101,7 +102,7 @@ describe('WalletStorageService', () => {
   it('#getCredentialsByShareToken', async () => {
     sinon
       .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
-      .withArgs(region, [signedCredential.type])
+      .withArgs(region, audienceDid, [signedCredential.type])
       .resolves([signedCredential])
 
     sinon
@@ -113,7 +114,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
 
-    const response = await walletStorageService.getCredentialsByShareToken(credentialShareRequestToken)
+    const response = await walletStorageService.getCredentialsByShareToken(credentialShareRequestToken, audienceDid)
 
     expect(response).to.be.an('array')
     expect(response).to.length(2)
@@ -121,7 +122,10 @@ describe('WalletStorageService', () => {
   })
 
   it('#getCredentialsByShareToken when share request token not provided', async () => {
-    sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+    sinon
+      .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
+      .withArgs(region, audienceDid)
+      .resolves([signedCredential])
 
     sinon
       .stub(BloomVaultStorageService.prototype, 'searchCredentials')
@@ -132,7 +136,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
 
-    const response = await walletStorageService.getCredentialsByShareToken(null)
+    const response = await walletStorageService.getCredentialsByShareToken(null, audienceDid)
 
     expect(response).to.be.an('array')
     expect(response).to.length(2)
@@ -140,7 +144,10 @@ describe('WalletStorageService', () => {
   })
 
   it('#getAllCredentials', async () => {
-    sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+    sinon
+      .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
+      .withArgs(region, audienceDid)
+      .resolves([signedCredential])
 
     sinon
       .stub(BloomVaultStorageService.prototype, 'searchCredentials')
@@ -148,19 +155,22 @@ describe('WalletStorageService', () => {
       .resolves([{ ...signedCredential, id: 'bloomId' }])
 
     const walletStorageService = createWalletStorageService()
-    const response = await walletStorageService.getAllCredentials()
+    const response = await walletStorageService.getAllCredentials(audienceDid)
 
     expect(response).to.be.an('array')
     expect(response).to.length(2)
   })
 
   it('#getAllCredentials distinct duplicates', async () => {
-    sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+    sinon
+      .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
+      .withArgs(region, audienceDid)
+      .resolves([signedCredential])
 
     sinon.stub(BloomVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
     const walletStorageService = createWalletStorageService()
-    const response = await walletStorageService.getAllCredentials()
+    const response = await walletStorageService.getAllCredentials(audienceDid)
 
     expect(response).to.be.an('array')
     expect(response).to.length(1)
@@ -170,11 +180,11 @@ describe('WalletStorageService', () => {
   it('#getCredentialById from Affinidi vault', async () => {
     sinon
       .stub(AffinidiVaultStorageService.prototype, 'getCredentialById')
-      .withArgs(signedCredential.id, region)
+      .withArgs(signedCredential.id, region, audienceDid)
       .resolves(signedCredential)
 
     const walletStorageService = createWalletStorageService()
-    const response = await walletStorageService.getCredentialById(signedCredential.id)
+    const response = await walletStorageService.getCredentialById(signedCredential.id, audienceDid)
 
     expect(response).to.eql(signedCredential)
   })
@@ -182,7 +192,7 @@ describe('WalletStorageService', () => {
   it('#getCredentialById not found in Affinidi vault and checking in Bloom vault', async () => {
     sinon
       .stub(AffinidiVaultStorageService.prototype, 'getCredentialById')
-      .withArgs(signedCredential.id, region)
+      .withArgs(signedCredential.id, region, audienceDid)
       .throws({ code: 'AVT-2' })
 
     sinon
@@ -191,7 +201,7 @@ describe('WalletStorageService', () => {
       .resolves(signedCredential)
 
     const walletStorageService = createWalletStorageService()
-    const response = await walletStorageService.getCredentialById(signedCredential.id)
+    const response = await walletStorageService.getCredentialById(signedCredential.id, audienceDid)
 
     expect(response).to.eql(signedCredential)
   })
@@ -199,7 +209,7 @@ describe('WalletStorageService', () => {
   it('#getCredentialById not found', async () => {
     sinon
       .stub(AffinidiVaultStorageService.prototype, 'getCredentialById')
-      .withArgs(signedCredential.id, region)
+      .withArgs(signedCredential.id, region, audienceDid)
       .throws({ code: 'AVT-2' })
 
     sinon
@@ -209,7 +219,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
     try {
-      await walletStorageService.getCredentialById(signedCredential.id)
+      await walletStorageService.getCredentialById(signedCredential.id, audienceDid)
     } catch (error) {
       expect(error.code).to.eql('AVT-3')
     }
@@ -218,11 +228,11 @@ describe('WalletStorageService', () => {
   it('#deleteCredentialById from Affinidi vault', async () => {
     const affinidiVaultStorageDeleteCall = sinon
       .stub(AffinidiVaultStorageService.prototype, 'deleteCredentialById')
-      .withArgs(signedCredential.id, region)
+      .withArgs(signedCredential.id, region, audienceDid)
       .resolves()
 
     const walletStorageService = createWalletStorageService()
-    await walletStorageService.deleteCredentialById(signedCredential.id)
+    await walletStorageService.deleteCredentialById(signedCredential.id, audienceDid)
 
     expect(affinidiVaultStorageDeleteCall.calledOnce).to.be.true
   })
@@ -230,7 +240,7 @@ describe('WalletStorageService', () => {
   it('#deleteCredentialById not found in Affinidi vault and checking in Bloom vault', async () => {
     const affinidiVaultStorageDeleteCall = sinon
       .stub(AffinidiVaultStorageService.prototype, 'deleteCredentialById')
-      .withArgs(signedCredential.id, region)
+      .withArgs(signedCredential.id, region, audienceDid)
       .throws({ code: 'AVT-2' })
 
     const bloomVaultStorageDeleteCall = sinon
@@ -239,7 +249,7 @@ describe('WalletStorageService', () => {
       .resolves()
 
     const walletStorageService = createWalletStorageService()
-    await walletStorageService.deleteCredentialById(signedCredential.id)
+    await walletStorageService.deleteCredentialById(signedCredential.id, audienceDid)
 
     expect(affinidiVaultStorageDeleteCall.calledOnce).to.be.true
     expect(bloomVaultStorageDeleteCall.calledOnce).to.be.true
@@ -248,7 +258,7 @@ describe('WalletStorageService', () => {
   it('#deleteCredentialById not found', async () => {
     const affinidiVaultStorageDeleteCall = sinon
       .stub(AffinidiVaultStorageService.prototype, 'deleteCredentialById')
-      .withArgs(signedCredential.id, region)
+      .withArgs(signedCredential.id, region, audienceDid)
       .throws({ code: 'AVT-2' })
 
     const bloomVaultStorageDeleteCall = sinon
@@ -258,7 +268,7 @@ describe('WalletStorageService', () => {
 
     const walletStorageService = createWalletStorageService()
     try {
-      await walletStorageService.deleteCredentialById(signedCredential.id)
+      await walletStorageService.deleteCredentialById(signedCredential.id, audienceDid)
     } catch (error) {
       expect(error.code).to.eql('AVT-3')
     }
