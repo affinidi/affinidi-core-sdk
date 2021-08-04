@@ -279,7 +279,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    * @param inputOptiosn - parameters with specified environment
    * @param username - arbitrary username
    * @param password - password
-   * @param keyParams (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet
+   * @param keyParamsOrOptions (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet
    * @returns initialized instance of SDK
    */
   public static async signUpWithUsername<T extends DerivedType<T>>(
@@ -370,7 +370,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    * @param options - optional parameters for BaseNetworkMember initialization
    * @param token - Token returned by initiateSignUp method.
    * @param confirmationCode - OTP sent by AWS Cognito/SES.
-   * @param keyParams (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet.
+   * @param keyParamsOrOptions (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet.
    * @returns initialized instance of SDK
    */
   public static async completeSignUp<T extends DerivedType<T>>(
@@ -614,7 +614,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
    * @param messageParameters - optional parameters with specified welcome message
    * @returns token to be used with completeChangeEmailOrPhone
    */
-   public async initiateChangePhone(phone: string, messageParameters?: MessageParameters): Promise<string> {
+  public async initiateChangePhone(phone: string, messageParameters?: MessageParameters): Promise<string> {
     return this._initiateChangeEmailOrPhone(phone, messageParameters)
   }
 

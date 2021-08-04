@@ -1,7 +1,7 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import { NetworkMemberWithCognito, UniversalDerivedType } from '../CommonNetworkMember/NetworkMemberWithCognito'
-import { CognitoUserTokens, KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
+import { CognitoUserTokens, KeyParamsOrOptions, MessageParameters, SdkOptions } from '../dto/shared.dto'
 import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 
@@ -93,22 +93,16 @@ export const createCognitoWalletFactories = (
      * @param inputOptiosn - parameters with specified environment
      * @param username - arbitrary username
      * @param password - password
-     * @param keyParams (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet
+     * @param keyParamsOrOptions (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet
      * @returns initialized instance of SDK
      */
     signUpWithUsername: (
       inputOptions: SdkOptions,
       username: string,
       password: string,
-      keyParams?: KeyParams,
+      keyParamsOrOptions?: KeyParamsOrOptions,
     ) => {
-      return Wallet.signUpWithUsername(
-        inputOptions,
-        platformEncryptionTools,
-        username,
-        password,
-        keyParams,
-      )
+      return Wallet.signUpWithUsername(inputOptions, platformEncryptionTools, username, password, keyParamsOrOptions)
     },
 
     /**
@@ -151,16 +145,22 @@ export const createCognitoWalletFactories = (
      * @param options - optional parameters for BaseNetworkMember initialization
      * @param token - Token returned by initiateSignUp method.
      * @param confirmationCode - OTP sent by AWS Cognito/SES.
-     * @param keyParams (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet.
+     * @param keyParamsOrOptions (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet.
      * @returns initialized instance of SDK
      */
     completeSignUp: (
       inputOptions: SdkOptions,
       signUpToken: string,
       confirmationCode: string,
-      keyParams?: KeyParams,
+      keyParamsOrOptions?: KeyParamsOrOptions,
     ) => {
-      return Wallet.completeSignUp(inputOptions, platformEncryptionTools, signUpToken, confirmationCode, keyParams)
+      return Wallet.completeSignUp(
+        inputOptions,
+        platformEncryptionTools,
+        signUpToken,
+        confirmationCode,
+        keyParamsOrOptions,
+      )
     },
 
     /**

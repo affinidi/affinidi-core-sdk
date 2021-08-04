@@ -1,5 +1,10 @@
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { JwtService } from '@affinidi/common'
+import { VCV1 } from '@affinidi/vc-common'
+import { SdkOptions } from '../dto'
 import { validateUsername } from '../shared'
+import { getOptionsFromEnvironment } from '../shared/getOptionsFromEnvironment'
+import { AffinidiCommonConstructor } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
 import { DEFAULT_DID_METHOD } from '../_defaultConfig'
@@ -82,5 +87,29 @@ export const Util = {
     }
 
     return 'username'
+  },
+
+  /**
+   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
+   */
+  deriveSegmentProof: (
+    inputOptions: SdkOptions,
+    component: EventComponent,
+    affinidiCommon: AffinidiCommonConstructor,
+    credential: VCV1,
+    fields: string[],
+    didDocument?: any,
+  ) => {
+    const {
+      accessApiKey,
+      basicOptions: { metricsUrl, registryUrl },
+    } = getOptionsFromEnvironment(inputOptions)
+    const affinidi = new affinidiCommon({
+      apiKey: accessApiKey,
+      component,
+      metricsUrl,
+      registryUrl,
+    })
+    return affinidi.deriveSegmentProof!(credential, fields, didDocument)
   },
 }
