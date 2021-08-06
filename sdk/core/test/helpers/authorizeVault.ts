@@ -19,6 +19,7 @@ const decryptSeedResponse: ReturnType<typeof KeysService.decryptSeed> = {
   seed: Buffer.from(seed),
   didMethod,
   seedHexWithMethod,
+  metadata: {},
   externalKeys: null,
   fullSeedHex: null,
 }
