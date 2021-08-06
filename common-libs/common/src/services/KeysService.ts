@@ -91,7 +91,7 @@ export default class KeysService {
     return createHash('sha256').update(data).digest()
   }
 
-  private static getDerivationPath(didMethod: 'jolo' | 'elem', isAnchoring: boolean) {
+  private static getDerivationPath(didMethod: 'jolo' | 'elem' | 'elem-anchored', isAnchoring: boolean) {
     if (isAnchoring) {
       return etheriumIdentityKey
     }
@@ -100,6 +100,8 @@ export default class KeysService {
       case 'jolo':
         return jolocomIdentityKey
       case 'elem':
+        return elemIdentityPrimaryKey
+      case 'elem-anchored':
         return elemIdentityPrimaryKey
     }
   }
@@ -197,6 +199,14 @@ export default class KeysService {
     return this._getExternalKey(keyType, 'public')
   }
 
+  getMetadata(): Record<string, any> {
+    const { metadata } = this.decryptSeed()
+    return metadata
+  }
+  encodeMetadata(metadata:Record<string, any>): string {
+    return encode.encode(JSON.stringify(metadata))
+  }
+
   getExternalPrivateKey(keyType: string) {
     return this._getExternalKey(keyType, 'private')
   }
@@ -220,8 +230,10 @@ export default class KeysService {
     const seedString = seedParts[0]
     let didMethod = seedParts[1]
     const base64EncodedKeys = seedParts[2]
+    const base64EncodedMetadata = seedParts[3]
 
     let externalKeys = []
+    let metadata = {}
     let seed
     if (!didMethod) {
       // to suppoer already created seeds
@@ -241,7 +253,12 @@ export default class KeysService {
       externalKeys = JSON.parse(encode.decode(base64EncodedKeys))
     }
 
-    return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex }
+    if (base64EncodedMetadata) {
+      fullSeedHex = `${fullSeedHex}++${base64EncodedKeys ? '' : '++'}${base64EncodedMetadata}`
+      metadata = JSON.parse(encode.decode(base64EncodedMetadata))
+    }
+
+    return { seed, didMethod, seedHexWithMethod, externalKeys, metadata, fullSeedHex }
   }
 
   static normalizePassword(password: string): Buffer | undefined {
