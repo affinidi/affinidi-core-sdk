@@ -28,12 +28,14 @@ export default class RegistryApiService extends GenericApiService<ApiType> {
     didDocumentAddress,
     ethereumPublicKeyHex,
     transactionSignatureJson,
+    anchoredDidElem,
     nonce,
   }: {
     did: string
     didDocumentAddress: string
     ethereumPublicKeyHex: string
     transactionSignatureJson: string
+    anchoredDidElem?: boolean
     nonce?: number
   }) {
     const params = {
@@ -41,6 +43,7 @@ export default class RegistryApiService extends GenericApiService<ApiType> {
       didDocumentAddress,
       ethereumPublicKeyHex,
       transactionSignatureJson: transactionSignatureJson as any,
+      anchoredDidElem,
       nonce,
     }
     return this.execute('AnchorDid', { params })

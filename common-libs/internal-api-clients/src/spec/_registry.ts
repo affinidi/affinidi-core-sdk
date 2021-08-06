@@ -22,7 +22,8 @@ export default {
       "PutDocumentInIpfsInput": {
         "properties": {
           "document": {
-            "additionalProperties": true,
+            "properties": {},
+            "additionalProperties": {},
             "type": "object"
           }
         },
@@ -115,15 +116,17 @@ export default {
           },
           "nonce": {
             "type": "number",
-            "format": "double",
-            "nullable": true
+            "format": "double"
+          },
+          "anchoredDidElem": {
+            "type": "boolean",
+            "description": "backward compatibility for old versions of sdk."
           },
           "ethereumPublicKeyHex": {
             "type": "string"
           },
           "transactionSignatureJson": {
-            "additionalProperties": true,
-            "type": "object"
+            "type": "string"
           }
         },
         "required": [
@@ -138,7 +141,8 @@ export default {
       "ResolveDidOutput": {
         "properties": {
           "didDocument": {
-            "additionalProperties": true,
+            "properties": {},
+            "additionalProperties": {},
             "type": "object"
           }
         },
@@ -152,7 +156,7 @@ export default {
         "properties": {
           "did": {
             "type": "string",
-            "pattern": "^did:(elem|jolo):.*$"
+            "pattern": "^did:(elem|jolo|key|web):.*$"
           }
         },
         "required": [
@@ -166,10 +170,14 @@ export default {
   },
   "info": {
     "title": "affinity-registry",
-    "version": "0.2.6",
+    "version": "0.3.11",
     "description": "Affinity Registry",
     "license": {
       "name": "ISC"
+    },
+    "contact": {
+      "name": "Denis Popov ",
+      "email": "denis.p@affinidi.com"
     }
   },
   "openapi": "3.0.0",
@@ -179,14 +187,14 @@ export default {
         "operationId": "PutDocumentInIpfs",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PutDocumentInIpfsOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
         "description": "Put signed by client DID document in IPFS and return hash that links to the document",
@@ -197,6 +205,7 @@ export default {
         "security": [],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -212,14 +221,14 @@ export default {
         "operationId": "CreateAnchorTransaction",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateAnchorTransactionOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
         "description": "Create Anchor transaction for blockchain and return digest hex of it",
@@ -230,6 +239,7 @@ export default {
         "security": [],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -245,14 +255,14 @@ export default {
         "operationId": "TransactionCount",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TransactionCountOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
         "description": "Get transaction count from blockchain for current wallet",
@@ -263,6 +273,7 @@ export default {
         "security": [],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -278,14 +289,14 @@ export default {
         "operationId": "AnchorDid",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AnchorDidOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
         "description": "Anchor DID document in blockchain and return transaction hash",
@@ -305,6 +316,48 @@ export default {
           }
         ],
         "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnchorDidInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/did/convert-did-elem": {
+      "post": {
+        "operationId": "ConvertToDidElement",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnchorDidOutput"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "DID"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Api-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -320,14 +373,14 @@ export default {
         "operationId": "ResolveDid",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResolveDidOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
         "description": "Resolve DID document from IPFS",
@@ -338,6 +391,84 @@ export default {
         "security": [],
         "parameters": [],
         "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDidInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/did/anchor-did-element": {
+      "post": {
+        "operationId": "AnchorDidElement",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnchorDidOutput"
+                }
+              }
+            }
+          }
+        },
+        "description": "Anchor DID document via Element DID method",
+        "summary": "Anchors DID Element",
+        "tags": [
+          "DID"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Api-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnchorDidInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/did/resolve-did-element": {
+      "post": {
+        "operationId": "ResolveDidElement",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveDidOutput"
+                }
+              }
+            }
+          }
+        },
+        "description": "Resolve DID Element document from IPFS",
+        "summary": "Resolves DID document anchored via Element Sidetree",
+        "tags": [
+          "DID"
+        ],
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {

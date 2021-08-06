@@ -1,4 +1,4 @@
-import { DataAllOfType, DataAnyOfType, DataArrayType, DataObjectType, DataPrimitiveType, DataRecordType, DataRefType, DataType, DataTypeWithOptions, ParsedOperationSpec, ParsedSpec } from "./openapiParser"
+import { DataAllOfType, DataAnyOfType, DataAnyType, DataArrayType, DataObjectType, DataPrimitiveType, DataRecordType, DataRefType, DataType, DataTypeWithOptions, ParsedOperationSpec, ParsedSpec } from "./openapiParser"
 import { RemoveEmpty, Simplify, Tail } from "./util"
 
 type BuildProperties<TProps extends DataObjectType['properties'], TObjects extends ParsedSpec['objects']> = {
@@ -47,7 +47,9 @@ type BuildData<TData extends DataType, TObjects extends ParsedSpec['objects']> =
               ? BuildAllOfData<UElementTypes, TObjects>
               : TData extends DataAnyOfType<infer UElementTypes>
                 ? BuildAnyOfData<UElementTypes, TObjects>
-                : never
+                : TData extends DataAnyType
+                  ? string | number | boolean | Record<string, any>
+                  : never
 
 type BuildDataWithUndefined<TData extends DataType | undefined, TObjects extends ParsedSpec['objects']> =
   TData extends DataType ? BuildData<TData, TObjects> : undefined
@@ -70,7 +72,7 @@ type BuildOperations<TOperations extends ParsedSpec['operations'], TObjects exte
   [key in keyof TOperations]: BuildOperation<TOperations[key], TObjects>
 }
 
-type BuildApiRawType<TParsedSpec extends ParsedSpec> = 
+type BuildApiRawType<TParsedSpec extends ParsedSpec> =
   BuildOperations<TParsedSpec['operations'], TParsedSpec['objects']>
 
 export type BuiltApiType = Record<string, {

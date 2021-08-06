@@ -28,6 +28,8 @@ export type FieldSpecRecordType = {
   properties?: Record<string, never>
 }
 
+export type FieldSpecAnyType = Record<string, never>
+
 export type FieldSpecRefType<TRefName extends string> = RefSpec<TRefName>
 
 export type FieldSpecPrimitiveType =
@@ -36,6 +38,7 @@ export type FieldSpecPrimitiveType =
   | FieldSpecDoubleType
   | FieldSpecBooleanType
   | FieldSpecRecordType
+  | FieldSpecAnyType
   | FieldSpecRefType<string>
 
 export type FieldSpecArrayType<TElementType extends ObjectSpecType> = {
