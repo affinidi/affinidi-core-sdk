@@ -2,9 +2,10 @@ import KeysService from '../KeysService'
 import JoloDidDocument from './JoloDidDocument'
 import ElemDidDocument from './ElemDidDocument'
 import { parse } from 'did-resolver'
+import ElemAnchoredDidDocument from './ElemAnchoredDidDocument'
 
 export default class DidDocumentService {
-  constructor(keysService: KeysService) {
+  constructor(keysService: KeysService, registryUrl?: string, apiKey?: string) {
     const { didMethod } = keysService.decryptSeed()
 
     let didDocumentService
@@ -14,6 +15,9 @@ export default class DidDocumentService {
         break
       case 'elem':
         didDocumentService = new ElemDidDocument(keysService)
+        break
+      case 'elem-anchored':
+        didDocumentService = new ElemAnchoredDidDocument(keysService, registryUrl, apiKey)
         break
     }
 
