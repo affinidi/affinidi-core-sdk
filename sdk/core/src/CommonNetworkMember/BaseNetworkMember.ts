@@ -46,7 +46,13 @@ import {
 import { randomBytes } from '../shared/randomBytes'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
 
-import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
+import {
+  DEFAULT_DID_METHOD,
+  ELEM_ANCHORED_DID_METHOD,
+  ELEM_DID_METHOD,
+  JOLO_DID_METHOD,
+  SUPPORTED_DID_METHODS,
+} from '../_defaultConfig'
 import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import KeyManagementService from '../services/KeyManagementService'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
@@ -183,14 +189,18 @@ export abstract class BaseNetworkMember {
     const seedHex = seed.toString('hex')
     const seedWithMethod = `${seedHex}++${didMethod}`
     const passwordBuffer = KeysService.normalizePassword(password)
-    const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
+    let encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
 
     const didDocumentService = new DidDocumentService(keysService)
-    const didDocument = await didDocumentService.buildDidDocument()
-    const did = didDocument.id
-
-    await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
+    const didDocument = didMethod === ELEM_ANCHORED_DID_METHOD ? {} : await didDocumentService.buildDidDocument()
+    const { did } = await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
+    if (didMethod === ELEM_ANCHORED_DID_METHOD) {
+      encryptedSeed = await KeysService.encryptSeed(
+        `${seedWithMethod}++++${keysService.encodeMetadata({ anchoredDid: did })}`,
+        passwordBuffer,
+      )
+    }
 
     return { did, encryptedSeed }
   }
@@ -201,7 +211,7 @@ export abstract class BaseNetworkMember {
     didDocument: any,
     nonce: number,
     { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
-  ) {
+  ): Promise<{ did: string }> {
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
 
     const did = didDocument.id
@@ -211,7 +221,7 @@ export abstract class BaseNetworkMember {
     const seedHex = seed.toString('hex')
 
     /* istanbul ignore next: seems options is {} if not passed to the method */
-    if (didMethod !== ELEM_DID_METHOD) {
+    if (didMethod === JOLO_DID_METHOD) {
       const signedDidDocument = await keysService.signDidDocument(didDocument)
 
       const { body: bodyDidDocument } = await api.putDocumentInIpfs({ document: signedDidDocument })
@@ -229,13 +239,28 @@ export abstract class BaseNetworkMember {
       const transactionPublicKey = KeysService.getAnchorTransactionPublicKey(seedHex, didMethod)
       const ethereumPublicKeyHex = transactionPublicKey.toString('hex')
 
-      await api.anchorDid({ did, didDocumentAddress, ethereumPublicKeyHex, transactionSignatureJson, nonce })
+      const { body: didResponse } = await api.anchorDid({
+        did,
+        didDocumentAddress,
+        ethereumPublicKeyHex,
+        transactionSignatureJson,
+        nonce,
+      })
+      return didResponse as { did: string }
     }
 
     // NOTE: for metrics purpose in case of ELEM method
-    if (didMethod === ELEM_DID_METHOD) {
+    if (didMethod === ELEM_DID_METHOD || didMethod === ELEM_ANCHORED_DID_METHOD) {
       try {
-        await api.anchorDid({ did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' })
+        const anchoredDidElem = didMethod === ELEM_ANCHORED_DID_METHOD
+        const { body: didResponse } = await api.anchorDid({
+          did,
+          didDocumentAddress: '',
+          ethereumPublicKeyHex: '',
+          transactionSignatureJson: '',
+          anchoredDidElem,
+        })
+        return didResponse as { did: string }
       } catch (error) {
         console.log('to check logs at the backend', error)
       }
