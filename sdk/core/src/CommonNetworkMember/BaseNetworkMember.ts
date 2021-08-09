@@ -121,7 +121,7 @@ export abstract class BaseNetworkMember {
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    this._didDocumentService = new DidDocumentService(keysService)
+    this._didDocumentService = new DidDocumentService(keysService, registryUrl, accessApiKey)
     const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
     this._walletStorageService = new WalletStorageService(didAuthService, keysService, platformEncryptionTools, {
       bloomVaultUrl,
@@ -192,15 +192,16 @@ export abstract class BaseNetworkMember {
     const passwordBuffer = KeysService.normalizePassword(password)
     let encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
-
     const didDocumentService = new DidDocumentService(keysService)
     const didDocument = isDidElemAnchored
       ? { id: didDocumentService.getMyDid() }
       : await didDocumentService.buildDidDocument()
+    encryptedSeed = await KeysService.encryptSeed(`${seedHex}++${didMethod}`, passwordBuffer)
     const { did } = await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
     if (isDidElemAnchored) {
+      const ds = keysService.decryptSeed()
       encryptedSeed = await KeysService.encryptSeed(
-        `${seedHex}++${didMethod}++++${keysService.encodeMetadata({ anchoredDid: did })}`,
+        `${seedHex}++${didMethod}++++${KeysService.encodeMetadata({ anchoredDid: did })}`,
         passwordBuffer,
       )
     }
@@ -216,7 +217,6 @@ export abstract class BaseNetworkMember {
     { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
   ): Promise<{ did: string }> {
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
-
     const did = didDocument.id
 
     const keysService = new KeysService(encryptedSeed, password)

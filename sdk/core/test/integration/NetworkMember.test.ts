@@ -3,7 +3,7 @@
 import { expect } from 'chai'
 import request from 'supertest'
 import { decode as jwtDecode } from 'jsonwebtoken'
-import { Affinity } from '@affinidi/common'
+import {Affinity, KeysService} from '@affinidi/common'
 import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
@@ -51,6 +51,7 @@ const seedDid = DID_JOLO
 
 const elemDidMethod = 'elem'
 const joloDidMethod = 'jolo'
+const elemDidAnchoredMethod = 'elem-anchored'
 
 const phoneNumber = COGNITO_PHONE_NUMBER
 
@@ -238,6 +239,18 @@ describe('CommonNetworkMember', () => {
     expect(encryptedSeed).to.exist
     const [, didMethod] = did.split(':')
     expect(didMethod).to.be.equal(elemDidMethod)
+  })
+
+  it('.register (elem did anchored method)', async () => {
+    const optionsWithElemDidAnchored = Object.assign({}, options, { didMethod: elemDidAnchoredMethod } as const)
+    const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithElemDidAnchored)
+    expect(did).to.exist
+    expect(encryptedSeed).to.exist
+    const { didMethod: expectedDidMethod, metadata } = KeysService.decryptSeed(encryptedSeed, password)
+    expect(expectedDidMethod).to.be.equal(elemDidAnchoredMethod)
+    expect((metadata as Record<string, any>).anchoredDid).to.exist
+    const commonNetworkMember = new AffinidiWallet(password, encryptedSeed, optionsWithElemDidAnchored)
+    expect((metadata as Record<string, any>).anchoredDid).to.equal(commonNetworkMember.did)
   })
 
   it('.register (jolo did method)', async () => {

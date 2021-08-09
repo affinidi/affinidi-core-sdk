@@ -203,7 +203,7 @@ export default class KeysService {
     const { metadata } = this.decryptSeed()
     return metadata
   }
-  encodeMetadata(metadata:Record<string, any>): string {
+  static encodeMetadata(metadata:Record<string, any>): string {
     return encode.encode(JSON.stringify(metadata))
   }
 
