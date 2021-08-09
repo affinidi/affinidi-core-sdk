@@ -185,19 +185,22 @@ export abstract class BaseNetworkMember {
     options: ParsedOptions,
   ): Promise<{ did: string; encryptedSeed: string }> {
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
+    const isDidElemAnchored = didMethod === ELEM_ANCHORED_DID_METHOD
     const seed = await Util.generateSeed(didMethod)
     const seedHex = seed.toString('hex')
-    const seedWithMethod = `${seedHex}++${didMethod}`
+    const seedWithMethod = `${seedHex}++${isDidElemAnchored ? ELEM_DID_METHOD : didMethod}`
     const passwordBuffer = KeysService.normalizePassword(password)
     let encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
 
     const didDocumentService = new DidDocumentService(keysService)
-    const didDocument = didMethod === ELEM_ANCHORED_DID_METHOD ? {} : await didDocumentService.buildDidDocument()
+    const didDocument = isDidElemAnchored
+      ? { id: didDocumentService.getMyDid() }
+      : await didDocumentService.buildDidDocument()
     const { did } = await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
-    if (didMethod === ELEM_ANCHORED_DID_METHOD) {
+    if (isDidElemAnchored) {
       encryptedSeed = await KeysService.encryptSeed(
-        `${seedWithMethod}++++${keysService.encodeMetadata({ anchoredDid: did })}`,
+        `${seedHex}++${didMethod}++++${keysService.encodeMetadata({ anchoredDid: did })}`,
         passwordBuffer,
       )
     }
