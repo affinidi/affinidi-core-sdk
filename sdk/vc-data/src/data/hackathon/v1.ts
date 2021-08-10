@@ -28,7 +28,7 @@ export const getBaseHackathonContextEntries = () => {
 
 
 type HackathonWinnerV1Mixin = CreateThing<'HackathonWinner', {
-    awardDate: Date
+    awardDate: string
 }>
 
 export type HackathonWinnerV1 = ExtendThing<HackathonWinnerV1Mixin, HackathonEV1>
@@ -43,7 +43,7 @@ export const getVCHackathonWinnerV1Context = () => {
         type: 'HackathonWinner',
         typeIdBase: 'affSchema',
         fields: {
-            awardDate: 'schema',
+            awardDate: 'affSchema',
         },
         vocab: 'schema',
     })

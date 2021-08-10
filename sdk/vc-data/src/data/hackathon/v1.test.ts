@@ -52,6 +52,11 @@ describe('VCGenderPersonV1', () => {
                   "https://schema.affinity-project.org/HackathonE",
                   "https://schema.affinity-project.org/HackathonWinner",
                 ],
+                "https://schema.affinity-project.org/awardDate": Array [
+                  Object {
+                    "@value": "26-14-2021",
+                  },
+                ],
                 "https://schema.org/attendee": Array [
                   Object {
                     "https://schema.org/legalName": Array [
@@ -64,11 +69,6 @@ describe('VCGenderPersonV1', () => {
                         "@value": "A16Z112s",
                       },
                     ],
-                  },
-                ],
-                "https://schema.org/awardDate": Array [
-                  Object {
-                    "@value": "26-14-2021",
                   },
                 ],
                 "https://schema.org/funder": Array [
