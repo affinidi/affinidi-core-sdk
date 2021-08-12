@@ -11,18 +11,16 @@ describe('VCGrantWinnerV1', () => {
         '@type': ['MonetaryGrant', 'GrantWinner'],
         name: 'Huge Amounts of Grant',
         amount: 2000000,
-        projectName: 'New Banking App',
         dateAwarded: '11-08-2021',
         grantOwner: {
           name: 'Bright Fintech',
-          apixId: '1a2b3c-1a2b3c',
         },
         funder: {
           name: 'Monetary Authority',
-          contactPoint: {
+          employee: {
             email: 'funder@organiztion.com',
             name: 'some name',
-            designation: 'CFO',
+            jobTitle: 'CFO',
             telephone: '+91 987654321',
           },
         },
@@ -50,18 +48,23 @@ describe('VCGrantWinnerV1', () => {
                     "@value": "11-08-2021",
                   },
                 ],
-                "https://schema.affinity-project.org/funder": Array [
+                "https://schema.org/amount": Array [
                   Object {
-                    "https://schema.org/contactPoint": Array [
+                    "@value": 2000000,
+                  },
+                ],
+                "https://schema.org/funder": Array [
+                  Object {
+                    "https://schema.org/employee": Array [
                       Object {
-                        "https://schema.org/designation": Array [
-                          Object {
-                            "@value": "CFO",
-                          },
-                        ],
                         "https://schema.org/email": Array [
                           Object {
                             "@value": "funder@organiztion.com",
+                          },
+                        ],
+                        "https://schema.org/jobTitle": Array [
+                          Object {
+                            "@value": "CFO",
                           },
                         ],
                         "https://schema.org/name": Array [
@@ -83,28 +86,13 @@ describe('VCGrantWinnerV1', () => {
                     ],
                   },
                 ],
-                "https://schema.affinity-project.org/grantOwner": Array [
+                "https://schema.org/grantOwner": Array [
                   Object {
-                    "https://schema.org/apixId": Array [
-                      Object {
-                        "@value": "1a2b3c-1a2b3c",
-                      },
-                    ],
                     "https://schema.org/name": Array [
                       Object {
                         "@value": "Bright Fintech",
                       },
                     ],
-                  },
-                ],
-                "https://schema.affinity-project.org/projectName": Array [
-                  Object {
-                    "@value": "New Banking App",
-                  },
-                ],
-                "https://schema.org/amount": Array [
-                  Object {
-                    "@value": 2000000,
                   },
                 ],
                 "https://schema.org/name": Array [

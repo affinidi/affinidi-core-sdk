@@ -11,39 +11,10 @@ import {
 
 import { getBaseV1ContextEntries } from '../base/v1'
 
-type ContactPointMixin = CreateThing<
-    'ContactPointDesignation',
-    {
-        designation: String
-    }
->
-
-export type ContactPoint = ExtendThing<ContactPointMixin, CreateThing<'ContactPoint'>>
-
-type FunderMixin = CreateThing<
-    'Funder',
-    {
-        contactPoint: ContactPoint
-    }
->
-
-export type funder = ExtendThing<FunderMixin, CreateThing<'Organization'>>
-
-type GrantHolderMixin = CreateThing<
-    'GrantOwner',
-    {
-        apixId: String
-    }
->
-
-export type grantOwner = ExtendThing<GrantHolderMixin, CreateThing<'Organization'>>
-
 type GrantWinnerV1Mixin = CreateThing<
     'GrantWinner',
     {
-        grantOwner: grantOwner,
-        funder: funder,
-        projectName: String,
+        grantBeneficiary: CreateThing<'Organization'>,
         dateAwarded: String
     }
 >
@@ -60,9 +31,7 @@ export const getVCGrantWinnerCredentialV1Context = () => {
         type: 'GrantWinner',
         typeIdBase: 'affSchema',
         fields: {
-            grantOwner: 'affSchema',
-            funder: 'affSchema',
-            projectName: 'affSchema',
+            grantBeneficiary: 'schema',
             dateAwarded: 'affSchema',            
         },
         vocab: 'schema',
