@@ -12,8 +12,10 @@ describe('VCGrantWinnerV1', () => {
         name: 'Huge Amounts of Grant',
         amount: 2000000,
         dateAwarded: '11-08-2021',
-        grantOwner: {
+        grantBeneficiary: {
           name: 'Bright Fintech',
+          address: 'Tower 6, floor 7, Fintech Tower',
+          leiCode: 'Unique code for the Organization',
         },
         funder: {
           name: 'Monetary Authority',
@@ -86,8 +88,18 @@ describe('VCGrantWinnerV1', () => {
                     ],
                   },
                 ],
-                "https://schema.org/grantOwner": Array [
+                "https://schema.org/grantBeneficiary": Array [
                   Object {
+                    "https://schema.org/address": Array [
+                      Object {
+                        "@value": "Tower 6, floor 7, Fintech Tower",
+                      },
+                    ],
+                    "https://schema.org/leiCode": Array [
+                      Object {
+                        "@value": "Unique code for the Organization",
+                      },
+                    ],
                     "https://schema.org/name": Array [
                       Object {
                         "@value": "Bright Fintech",
