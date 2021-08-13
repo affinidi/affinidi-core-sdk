@@ -28,25 +28,24 @@ export const createCognitolessWalletFactories = (
 
   return {
     /**
-     * @description Initilizes instance of SDK from seed
-     * @param options - parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
-     * @param seedHexWithMethod - seed for derive keys in string hex format
-     * @param password - optional password, will be generated, if not provided
+     * @description Generates a new DID and creates a new instance of SDK using password
+     * @param options - parameters with specified environment
+     * @param password - password
      * @returns initialized instance of SDK
      */
-    createFromUnencryptedSeed: (inputOptions: SdkOptions, seedHexWithMethod: string, inputPassword?: string) => {
-      return Wallet.createFromUnencryptedSeed(inputOptions, seedHexWithMethod, inputPassword)
+    createWallet: (inputOptions: SdkOptions, inputPassword: string) => {
+      return Wallet.createWallet(inputOptions, inputPassword)
     },
 
     /**
      * @description Initilizes instance of SDK from seed
-     * @param options - parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
-     * @param encryptedSeed - seed for derive keys in string hex format
-     * @param password - optional password, will be generated, if not provided
+     * @param options - parameters with specified environment
+     * @param encryptedSeed - encrypted seed
+     * @param password - password
      * @returns initialized instance of SDK
      */
-    createFromEncryptedSeedAndPassword: (inputOptions: SdkOptions, encryptedSeed: string, password: string) => {
-      return Wallet.createFromEncryptedSeedAndPassword(inputOptions, encryptedSeed, password)
+    openWalletByEncryptedSeed: (inputOptions: SdkOptions, encryptedSeed: string, password: string) => {
+      return Wallet.openWalletByEncryptedSeed(inputOptions, encryptedSeed, password)
     },
   }
 }

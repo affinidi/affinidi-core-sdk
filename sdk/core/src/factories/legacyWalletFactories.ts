@@ -53,7 +53,7 @@ export const createLegacyWalletFactories = (
      * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
      * @param password - optional password, will be generated, if not provided
      * @returns initialized instance of SDK
-     * @deprecated use `createFromUnencryptedSeed` instead
+     * @deprecated
      */
     fromSeed: (seedHexWithMethod: string, options: SdkOptions, password: string = null) => {
       return Wallet.fromSeed(seedHexWithMethod, options, password)
@@ -83,7 +83,7 @@ export const createLegacyWalletFactories = (
      * did - hash from public key (your decentralized ID)
      *
      * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
-     * @deprecated
+     * @deprecated Use `createWallet` instead
      */
     register: (password: string, options: SdkOptions) => {
       return Wallet.register(password, options)
@@ -307,7 +307,7 @@ export const createLegacyWalletFactories = (
     },
 
     /**
-     * @deprecated use `createFromEncryptedSeedAndPassword` instead
+     * @deprecated use `openWalletByEncryptedSeed` instead
      */
     legacyConstructor: (password: string, encryptedSeed: string, inputOptions: SdkOptions) => {
       const options = getOptionsFromEnvironment(inputOptions)

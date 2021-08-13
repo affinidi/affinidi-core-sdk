@@ -1,9 +1,8 @@
-import { profile, KeysService } from '@affinidi/common'
+import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { SdkOptions } from '../dto/shared.dto'
 import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
-import { randomBytes } from '../shared/randomBytes'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { BaseNetworkMember } from './BaseNetworkMember'
 
@@ -34,43 +33,33 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
   }
 
   /**
-   * @description Initilizes instance of SDK from seed
-   * @param options - parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
-   * @param seedHexWithMethod - seed for derive keys in string hex format
-   * @param password - optional password, will be generated, if not provided
-   * @returns initialized instance of SDK
+   * @description Creates DID and anchors it
+   * 1. generate seed/keys
+   * 2. build DID document
+   * 3. sign DID document
+   * 4. store DID document in IPFS
+   * 5. anchor DID with DID document ID from IPFS
+   * @param password - encryption key which will be used to encrypt randomly created seed/keys pair
+   * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+   * @returns
+   *
+   * did - hash from public key (your decentralized ID)
+   *
+   * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
-  static async createFromUnencryptedSeed<T extends DerivedType<T>>(
+  static async createWallet<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
-    seedHexWithMethod: string,
-    inputPassword?: string,
+    password: string,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
-      { isArray: false, type: 'string', isRequired: true, value: seedHexWithMethod },
-      { isArray: false, type: 'string', isRequired: false, value: inputPassword },
+      { isArray: false, type: 'string', isRequired: true, value: password },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const { password, passwordBuffer } = await NetworkMemberWithoutCognito.createPasswordBuffer(inputPassword)
-    const encryptedSeedWithInitializationVector = await KeysService.encryptSeed(seedHexWithMethod, passwordBuffer)
-    return new this(password, encryptedSeedWithInitializationVector, options)
-  }
-
-  private static async createPasswordBuffer(password?: string) {
-    if (password) {
-      return {
-        password,
-        passwordBuffer: KeysService.normalizePassword(password),
-      }
-    }
-
-    const passwordBuffer = await randomBytes(32)
-    return {
-      password: passwordBuffer.toString('hex'),
-      passwordBuffer,
-    }
+    const { encryptedSeed } = await NetworkMemberWithoutCognito._register(password, options)
+    return new this(password, encryptedSeed, options)
   }
 
   /**
@@ -80,7 +69,7 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */
-  static async createFromEncryptedSeedAndPassword<T extends DerivedType<T>>(
+  static async openWalletByEncryptedSeed<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
     encryptedSeed: string,
