@@ -1,8 +1,8 @@
 const cryptoRandomString = require('crypto-random-string')
 
 import { KeysService, DidDocumentService } from '@affinidi/common'
-import { EventComponent, Util } from '@affinidi/wallet-core-sdk'
-import { createWallet } from '../../src'
+import { createV5CompatibleWalletFactories, EventComponent, Util } from '@affinidi/wallet-core-sdk'
+import platformEncryptionTools from '../../src/PlatformEncryptionTools'
 
 interface TestDid {
   seed: string
@@ -19,9 +19,15 @@ interface TestJoloDid extends TestDid {
 
 const options = { env: 'dev', apiKey: 'fakeApiKey' } as const
 
-const AffinidiWallet = createWallet(EventComponent.NotImplemented, null, () => {
-  throw new Error('Not implemented')
-})
+const AffinidiWallet = createV5CompatibleWalletFactories(
+  Object.assign(platformEncryptionTools, {
+    buildExternalKeysSectionForSeed: () => {
+      throw new Error('Not implemented')
+    },
+  }),
+  null,
+  EventComponent.NotImplemented,
+)
 
 export const generateTestDIDs = async (): Promise<{
   password: string
@@ -37,11 +43,7 @@ export const generateTestDIDs = async (): Promise<{
   const joloSeedHex = joloSeed.toString('hex')
   const joloSeedWithMethod = `${joloSeedHex}++${'jolo'}`
 
-  const { encryptedSeed: joloEncryptedSeed } = await AffinidiWallet.createFromUnencryptedSeed(
-    options,
-    joloSeedWithMethod,
-    password,
-  )
+  const { encryptedSeed: joloEncryptedSeed } = await AffinidiWallet.fromSeed(joloSeedWithMethod, options, password)
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
@@ -56,11 +58,7 @@ export const generateTestDIDs = async (): Promise<{
   const elemSeedHex = elemSeed.toString('hex')
   const elemSeedWithMethod = `${elemSeedHex}++${'elem'}`
 
-  const { encryptedSeed: elemEncryptedSeed } = await AffinidiWallet.createFromUnencryptedSeed(
-    options,
-    elemSeedWithMethod,
-    password,
-  )
+  const { encryptedSeed: elemEncryptedSeed } = await AffinidiWallet.fromSeed(elemSeedWithMethod, options, password)
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
@@ -74,9 +72,9 @@ export const generateTestDIDs = async (): Promise<{
   const elemAltSeedHex = elemSeed.toString('hex')
   const elemAltSeedWithMethod = `${elemAltSeedHex}++${'elem'}`
 
-  const { encryptedSeed: elemAltEncryptedSeed } = await AffinidiWallet.createFromUnencryptedSeed(
-    options,
+  const { encryptedSeed: elemAltEncryptedSeed } = await AffinidiWallet.fromSeed(
     elemAltSeedWithMethod,
+    options,
     password,
   )
 
