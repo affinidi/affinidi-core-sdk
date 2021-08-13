@@ -31,7 +31,7 @@ export const getVCGrantWinnerCredentialV1Context = () => {
         type: 'GrantWinner',
         typeIdBase: 'affSchema',
         fields: {
-            grantBeneficiary: 'schema',
+            grantBeneficiary: 'affSchema',
             dateAwarded: 'affSchema',            
         },
         vocab: 'schema',
