@@ -50,6 +50,25 @@ describe('VCGrantWinnerV1', () => {
                     "@value": "11-08-2021",
                   },
                 ],
+                "https://schema.affinity-project.org/grantBeneficiary": Array [
+                  Object {
+                    "https://schema.org/address": Array [
+                      Object {
+                        "@value": "Tower 6, floor 7, Fintech Tower",
+                      },
+                    ],
+                    "https://schema.org/leiCode": Array [
+                      Object {
+                        "@value": "Unique code for the Organization",
+                      },
+                    ],
+                    "https://schema.org/name": Array [
+                      Object {
+                        "@value": "Bright Fintech",
+                      },
+                    ],
+                  },
+                ],
                 "https://schema.org/amount": Array [
                   Object {
                     "@value": 2000000,
@@ -84,25 +103,6 @@ describe('VCGrantWinnerV1', () => {
                     "https://schema.org/name": Array [
                       Object {
                         "@value": "Monetary Authority",
-                      },
-                    ],
-                  },
-                ],
-                "https://schema.org/grantBeneficiary": Array [
-                  Object {
-                    "https://schema.org/address": Array [
-                      Object {
-                        "@value": "Tower 6, floor 7, Fintech Tower",
-                      },
-                    ],
-                    "https://schema.org/leiCode": Array [
-                      Object {
-                        "@value": "Unique code for the Organization",
-                      },
-                    ],
-                    "https://schema.org/name": Array [
-                      Object {
-                        "@value": "Bright Fintech",
                       },
                     ],
                   },
