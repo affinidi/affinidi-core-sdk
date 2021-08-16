@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/common'
 
-import revocationSpec from '../openapi/_revocation'
+import revocationSpec from '../spec/_revocation'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'

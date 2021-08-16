@@ -1,6 +1,8 @@
 import 'mocha'
 import './env'
 
-require('./AffinityWallet.test')
-require('./WalletStorageService.test')
-require('./otp/index.test')
+describe('Browser integration tests', () => {
+  it.skip('no actual browser-specific tests here', () => {
+    // not implemented
+  })
+})

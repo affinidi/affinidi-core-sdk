@@ -60,14 +60,14 @@ describe('UserManagementService', () => {
     const password = randomPassword
 
     const userManagementService = new UserManagementService(constructorOptions)
-    const result = await userManagementService.signUpWithUsernameAndConfirm(username, password, undefined)
+    const result = await userManagementService.signUpWithUsernameAndConfirm(username, password)
 
     expect(result).to.be.a('string')
 
     let responseError
 
     try {
-      await userManagementService.signUpWithUsernameAndConfirm(username, password, undefined)
+      await userManagementService.signUpWithUsernameAndConfirm(username, password)
     } catch (error) {
       responseError = error
     }

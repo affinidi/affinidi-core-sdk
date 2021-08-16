@@ -166,7 +166,7 @@ describe('ProfilerDecorator', () => {
     }
 
     const timeout = 700
-    const schedulingDelta = 100
+    const schedulingDelta = 300
     await AsyncTest.someLongRun(timeout)
     const delta = reporterSpy.firstCall.args[3] - reporterSpy.firstCall.args[2]
     expect(delta).to.be.within(timeout, timeout + schedulingDelta)

@@ -2,8 +2,7 @@
 
 import * as AWSMock from 'aws-sdk-mock'
 import AWS from 'aws-sdk'
-import spies from 'chai-spies'
-import chai, { expect } from 'chai'
+import { expect } from 'chai'
 
 import UserManagementService from '../../../src/services/UserManagementService'
 import { normalizeUsername } from '../../../src/shared/normalizeUsername'
@@ -13,8 +12,6 @@ import cognitoAccessToken from '../../factory/cognitoAccessToken'
 import cognitoAuthSuccessResponse from '../../factory/cognitoAuthSuccessResponse'
 import cognitoInitiateCustomAuthResponse from '../../factory/cognitoInitiateCustomAuthResponse'
 import cognitoSignInWithUsernameResponseToken from '../../factory/cognitoSignInWithUsernameResponseToken'
-
-chai.use(spies)
 
 const email = 'user@email.com'
 const username = 'test_username'
@@ -445,7 +442,7 @@ describe('UserManagementService', () => {
       stubMethod(RESEND_CONFIRMATION_CODE, {})
 
       const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.resendSignUp(email)
+      const response = await userManagementService.resendSignUpByLogin(email)
       expect(response).to.not.exist
     })
 
@@ -459,7 +456,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.resendSignUp(email)
+        await userManagementService.resendSignUpByLogin(email)
       } catch (error) {
         responseError = error
       }
@@ -484,7 +481,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.resendSignUp(email)
+        await userManagementService.resendSignUpByLogin(email)
       } catch (error) {
         responseError = error
       }
@@ -509,7 +506,7 @@ describe('UserManagementService', () => {
       let responseError
 
       try {
-        await userManagementService.resendSignUp(email)
+        await userManagementService.resendSignUpByLogin(email)
       } catch (error) {
         responseError = error
       }
