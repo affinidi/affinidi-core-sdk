@@ -199,7 +199,6 @@ export abstract class BaseNetworkMember {
     encryptedSeed = await KeysService.encryptSeed(`${seedHex}++${didMethod}`, passwordBuffer)
     const { did } = await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
     if (isDidElemAnchored) {
-      const ds = keysService.decryptSeed()
       encryptedSeed = await KeysService.encryptSeed(
         `${seedHex}++${didMethod}++++${KeysService.encodeMetadata({ anchoredDid: did })}`,
         passwordBuffer,

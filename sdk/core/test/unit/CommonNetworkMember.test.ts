@@ -481,7 +481,6 @@ describe('CommonNetworkMember', () => {
 
     expect(publicKeyHex).to.exist
   })
-
   it('#createCredentialShareResponseToken', async () => {
     const suppliedCredentials = [signedCredential]
     const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)

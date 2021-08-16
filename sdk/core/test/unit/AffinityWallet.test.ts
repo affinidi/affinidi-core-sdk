@@ -128,13 +128,16 @@ describe('AffinityWallet', () => {
     expect(spys.getSignupCredentials).not.to.have.been.called
   })
 
-  it('#confirmSignUp with VC issuance', async () => {
+  it.only('#confirmSignUp with VC issuance', async () => {
     const spys = await stubConfirmAuthRequests({ walletPassword, encryptedSeed })
     const options: SdkOptions = { ...sdkOptions, issueSignupCredential: true }
+    const testDid = 'did:elem:test'
+    const anchorStub = sinon.stub(MockableNetworkMember.prototype as any, '_anchorDid').resolves({did: testDid})
+
 
     const response = await AffinityWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
 
-    expect(response.did).to.exist
+    expect(response.did).to.equal(testDid)
     checkIsWallet(response)
     expect(spys.getSignupCredentials).to.have.been.called
   })
