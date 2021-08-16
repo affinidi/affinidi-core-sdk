@@ -15,7 +15,7 @@ import { PhoneIssuerService } from '../../src/services/PhoneIssuerService'
 import { EmailIssuerService } from '../../src/services/EmailIssuerService'
 import KeyManagementService from '../../src/services/KeyManagementService'
 import WalletStorageService from '../../src/services/WalletStorageService'
-import { CommonNetworkMember } from '../helpers/CommonNetworkMember'
+import { AffinidiWallet, checkIsWallet } from '../helpers/AffinidiWallet'
 
 import { getAllOptionsForEnvironment } from '../helpers'
 
@@ -191,20 +191,20 @@ describe('CommonNetworkMember', () => {
 
     nock(registryUrl).post('/api/v1/did/resolve-did').reply(200, { didDocument })
 
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const response = await networkMember.resolveDid(did)
 
     expect(response).to.eql(didDocument)
   })
 
   it('.generateSeed', async () => {
-    const response = await CommonNetworkMember.generateSeed()
+    const response = await AffinidiWallet.generateSeed()
 
     expect(response).to.exist
   })
 
   it('.updateDidDocument /COR-20 (not supported elem did method)', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     const didDcoument = { id: 'did:elem:...' }
 
@@ -220,7 +220,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.updateDidDocument /COR-21 (did document has another did)', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const didDcoument = { id: 'did:jolo:...' }
 
@@ -236,13 +236,13 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#fromSeed create instance of class by the seed', async () => {
-    const commonNetworkMember = await CommonNetworkMember.fromSeed(seedHex, options, walletPassword)
+    const commonNetworkMember = await AffinidiWallet.fromSeed(seedHex, options, walletPassword)
 
     expect(commonNetworkMember.encryptedSeed).to.exist
   })
 
   it('#fromSeed create instance of class by the seed when password is not provided', async () => {
-    const commonNetworkMember = await CommonNetworkMember.fromSeed(seedHex, options)
+    const commonNetworkMember = await AffinidiWallet.fromSeed(seedHex, options)
 
     expect(commonNetworkMember.encryptedSeed).to.exist
   })
@@ -251,9 +251,7 @@ describe('CommonNetworkMember', () => {
     let validationError
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      new CommonNetworkMember(options)
+      new AffinidiWallet(null, null, options)
     } catch (error) {
       validationError = error
     }
@@ -269,7 +267,7 @@ describe('CommonNetworkMember', () => {
       token: cognitoSignInWithUsernameResponseToken,
     })
 
-    const response = await CommonNetworkMember.passwordlessLogin(email, options)
+    const response = await AffinidiWallet.passwordlessLogin(email, options)
 
     expect(response).to.eql(cognitoSignInWithUsernameResponseToken)
   })
@@ -284,10 +282,10 @@ describe('CommonNetworkMember', () => {
       encryptionKey: walletPassword,
     })
 
-    const response = await CommonNetworkMember.completeLoginChallenge('token', '123456', options)
+    const response = await AffinidiWallet.completeLoginChallenge('token', '123456', options)
 
     expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(CommonNetworkMember)
+    checkIsWallet(response)
   })
 
   it('#getShareCredential', () => {
@@ -295,7 +293,7 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
 
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const filteredCredentials = networkMember.getShareCredential(credentialShareRequestToken, { credentials })
 
@@ -305,7 +303,7 @@ describe('CommonNetworkMember', () => {
   it('#signOut', async () => {
     sinon.stub(CognitoIdentityService.prototype, 'logOut')
 
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const response = await networkMember.signOut(options)
 
@@ -317,7 +315,7 @@ describe('CommonNetworkMember', () => {
       .stub(CognitoIdentityService.prototype, 'initiateForgotPassword')
       .resolves(InitiateForgotPasswordResult.Success)
 
-    const response = await CommonNetworkMember.forgotPassword(email, options)
+    const response = await AffinidiWallet.forgotPassword(email, options)
 
     expect(response).to.be.undefined
   })
@@ -327,7 +325,7 @@ describe('CommonNetworkMember', () => {
       .stub(CognitoIdentityService.prototype, 'completeForgotPassword')
       .resolves(CompleteForgotPasswordResult.Success)
 
-    const response = await CommonNetworkMember.forgotPasswordSubmit(email, confirmationCode, walletPassword, options)
+    const response = await AffinidiWallet.forgotPasswordSubmit(email, confirmationCode, walletPassword, options)
 
     expect(response).to.be.undefined
   })
@@ -337,8 +335,8 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
-    const response = await CommonNetworkMember.signUp(username, walletPassword, options)
-    expect(response).to.be.an.instanceof(CommonNetworkMember)
+    const response = await AffinidiWallet.signUp(username, walletPassword, options)
+    checkIsWallet(response)
     if (typeof response === 'string') {
       expect.fail('TS type guard')
     }
@@ -349,7 +347,7 @@ describe('CommonNetworkMember', () => {
   it('#resendSignUpConfirmationCode (with default SDK options)', async () => {
     sinon.stub(CognitoIdentityService.prototype, 'resendSignUp').resolves(ResendSignUpResult.Success)
 
-    const response = await CommonNetworkMember.resendSignUpConfirmationCode(username, options)
+    const response = await AffinidiWallet.resendSignUpConfirmationCode(username, options)
 
     expect(response).to.be.undefined
   })
@@ -367,7 +365,7 @@ describe('CommonNetworkMember', () => {
     let responseError
 
     try {
-      await CommonNetworkMember.signIn(username, options)
+      await AffinidiWallet.signIn(username, options)
     } catch (error) {
       responseError = error
     }
@@ -388,7 +386,7 @@ describe('CommonNetworkMember', () => {
     sinon.stub(CognitoIdentityService.prototype, 'doesUnconfirmedUserExist').resolves(false)
     sinon.stub(KeyStorageApiService.prototype, 'adminDeleteUnconfirmedUser')
 
-    const response = await CommonNetworkMember.signIn(username, options)
+    const response = await AffinidiWallet.signIn(username, options)
 
     expect(response).to.eql(cognitoSignInWithUsernameResponseToken)
   })
@@ -396,10 +394,10 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignUp when username is email (with default SDK options)', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    const response = await CommonNetworkMember.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
+    const response = await AffinidiWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
 
     expect(response.did).to.exist
-    expect(response).to.be.an.instanceof(CommonNetworkMember)
+    checkIsWallet(response)
   })
 
   it('#confirmSignUp with arbitrary username', async () => {
@@ -408,7 +406,7 @@ describe('CommonNetworkMember', () => {
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
     try {
-      await CommonNetworkMember.confirmSignUp(signUpResponseToken, confirmationCode, options)
+      await AffinidiWallet.confirmSignUp(signUpResponseToken, confirmationCode, options)
       expect.fail()
     } catch (err) {
       expect(err.code).to.equal('COR-3')
@@ -418,7 +416,7 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignIn signUp scenario', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
+    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(
       signUpWithEmailResponseToken,
       confirmationCode,
       options,
@@ -426,7 +424,7 @@ describe('CommonNetworkMember', () => {
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsWallet(commonNetworkMember)
   })
 
   it('#confirmSignIn logIn scenario', async () => {
@@ -441,7 +439,7 @@ describe('CommonNetworkMember', () => {
       encryptionKey: undefined,
     })
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
+    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(
       signInResponseToken,
       confirmationCode,
       options,
@@ -449,7 +447,7 @@ describe('CommonNetworkMember', () => {
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsWallet(commonNetworkMember)
   })
 
   it('#confirmSignIn logIn scenario (with default SDK options)', async () => {
@@ -464,7 +462,7 @@ describe('CommonNetworkMember', () => {
       encryptionKey: undefined,
     })
 
-    const { isNew, commonNetworkMember } = await CommonNetworkMember.confirmSignIn(
+    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(
       signInResponseToken,
       confirmationCode,
       options,
@@ -472,11 +470,11 @@ describe('CommonNetworkMember', () => {
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist
-    expect(commonNetworkMember).to.be.an.instanceof(CommonNetworkMember)
+    checkIsWallet(commonNetworkMember)
   })
 
   it('#getPublicKeyHexFromDidDocument', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const publicKeyHex = commonNetworkMember.getPublicKeyHexFromDidDocument(didDocument)
 
     expect(publicKeyHex).to.exist
@@ -484,7 +482,7 @@ describe('CommonNetworkMember', () => {
 
   it('#createCredentialShareResponseToken', async () => {
     const suppliedCredentials = [signedCredential]
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const token = await commonNetworkMember.createCredentialShareResponseToken(
       credentialShareRequestToken,
@@ -495,7 +493,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#createCredentialOfferResponseToken', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const token = await commonNetworkMember.createCredentialOfferResponseToken(credentialOfferToken)
 
@@ -511,7 +509,7 @@ describe('CommonNetworkMember', () => {
     stub.onFirstCall().returns(parsedCredentialShareRequestToken)
     stub.onSecondCall().throws({ code: 'COR-15', httpStatusCode: 404 })
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     let responseError
 
@@ -538,7 +536,7 @@ describe('CommonNetworkMember', () => {
 
     const credentialShareResponseToken = jwt
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     let responseError
 
@@ -564,7 +562,7 @@ describe('CommonNetworkMember', () => {
 
     const credentialShareResponseToken = jwt
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const result = await commonNetworkMember.verifyCredentialShareResponseToken(credentialShareResponseToken)
 
@@ -576,7 +574,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('.did', async () => {
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const myDid = networkMember.did
 
@@ -586,7 +584,7 @@ describe('CommonNetworkMember', () => {
   it('#getDidFromToken', async () => {
     const didFromToken = 'did:jolo:0826b6e46b3df55c29f52b22221dac82f5968fc7f491a2ac474a3ad9cd80eecd'
 
-    const did = CommonNetworkMember.getDidFromToken(jwt)
+    const did = AffinidiWallet.getDidFromToken(jwt)
 
     expect(did).to.exist
     expect(did).to.be.equal(didFromToken)
@@ -594,7 +592,7 @@ describe('CommonNetworkMember', () => {
 
   // test parameter validation errors
   it('throws error when a requried parameter is missing', async () => {
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     let validationError
 
@@ -620,9 +618,7 @@ describe('CommonNetworkMember', () => {
     let validationError
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      await CommonNetworkMember.completeLoginChallenge('token', badConfirmationCode)
+      await AffinidiWallet.completeLoginChallenge('token', badConfirmationCode, { env: 'dev' })
     } catch (error) {
       validationError = error
     }
@@ -639,7 +635,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('throws error when multiple requried parameters are missing', async () => {
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     let validationError
 
@@ -662,7 +658,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('throws error when 2nd requried parameters is missing', async () => {
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     let validationError
 
@@ -683,7 +679,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('throws error when parameter should an array of objects', async () => {
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const offeredCredentials = {
       // should be an array
@@ -693,9 +689,7 @@ describe('CommonNetworkMember', () => {
     let validationError
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      await networkMember.generateCredentialOfferRequestToken(offeredCredentials)
+      await networkMember.generateCredentialOfferRequestToken(offeredCredentials as any)
     } catch (error) {
       validationError = error
     }
@@ -709,7 +703,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('throws error when parameter of an array of objects has a wrong type', async () => {
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const badType = ['Credential', 'TestCred'] // should be string
 
@@ -726,9 +720,7 @@ describe('CommonNetworkMember', () => {
     let validationError
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      await networkMember.generateCredentialOfferRequestToken(offeredCredentials)
+      await networkMember.generateCredentialOfferRequestToken(offeredCredentials as any)
     } catch (error) {
       validationError = error
     }
@@ -741,7 +733,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('throws error when multiple parameters have wrong format', async () => {
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const pwd = 12345678
     const token = '!@#$%^'
@@ -749,9 +741,7 @@ describe('CommonNetworkMember', () => {
     let validationError
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      await networkMember.storeEncryptedSeed(undefined, pwd, token)
+      await networkMember.storeEncryptedSeed(undefined, pwd as any, token)
     } catch (error) {
       validationError = error
     }
@@ -776,7 +766,7 @@ describe('CommonNetworkMember', () => {
     let errorCode
 
     try {
-      await CommonNetworkMember.signUp(username, walletPassword, options)
+      await AffinidiWallet.signUp(username, walletPassword, options)
     } catch (error) {
       errorCode = error.code
       // catching error so the test doesn't throw
@@ -795,7 +785,7 @@ describe('CommonNetworkMember', () => {
     saveSeedStub.onCall(1).throws('UNKNOWN')
     saveSeedStub.onCall(2).throws('UNKNOWN')
 
-    await CommonNetworkMember.signUp(username, walletPassword, options)
+    await AffinidiWallet.signUp(username, walletPassword, options)
 
     expect(saveSeedStub.callCount).to.eql(4)
   })
@@ -814,7 +804,7 @@ describe('CommonNetworkMember', () => {
     let errorCode
 
     try {
-      await CommonNetworkMember.signUp(username, walletPassword, options)
+      await AffinidiWallet.signUp(username, walletPassword, options)
     } catch (error) {
       errorCode = error.code
     }
@@ -832,7 +822,7 @@ describe('CommonNetworkMember', () => {
     try {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      await CommonNetworkMember.completeLoginChallenge(token, null, options, options)
+      await AffinidiWallet.completeLoginChallenge(token, null, options, options)
     } catch (error) {
       validationError = error
     }
@@ -861,7 +851,7 @@ describe('CommonNetworkMember', () => {
     sinon.stub(WalletStorageService, 'getCredentialOffer').resolves(credentialOfferToken)
     sinon.stub(WalletStorageService, 'getSignedCredentials').resolves([signedCredential])
 
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const returnedCredentials = await networkMember.getSignupCredentials(idToken, options)
 
@@ -872,14 +862,12 @@ describe('CommonNetworkMember', () => {
     const options = { env: 'dev', accessApiKey: 'fake' } as const
     const badToken = 12345678
 
-    const networkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     let validationError
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      await networkMember.getSignupCredentials(badToken, options)
+      await networkMember.getSignupCredentials(badToken as any, options)
     } catch (error) {
       validationError = error
     }
@@ -924,7 +912,7 @@ describe('CommonNetworkMember', () => {
       }),
     ]
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const signedCredentials = await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
 
     expect(signedCredentials).to.exist
@@ -973,7 +961,7 @@ describe('CommonNetworkMember', () => {
 
     let responseError
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     try {
       await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
     } catch (error) {
@@ -1019,7 +1007,7 @@ describe('CommonNetworkMember', () => {
       }),
     ]
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const signedCredentials = await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
 
     expect(signedCredentials).to.exist
@@ -1065,7 +1053,7 @@ describe('CommonNetworkMember', () => {
       }),
     ]
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
     const signedCredentials = await commonNetworkMember.signCredentials(credentialOfferResponseToken, credentials)
 
     expect(signedCredentials).to.exist
@@ -1110,7 +1098,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       credentialOfferResponseToken,
@@ -1159,7 +1147,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       credentialOfferResponseToken,
@@ -1207,7 +1195,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       credentialOfferResponseToken,
@@ -1239,7 +1227,7 @@ describe('CommonNetworkMember', () => {
       type: ['PhoneCredentialPersonV1'],
     }
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     const credential = await commonNetworkMember.signCredential(credentialSubject, credentialMetadata, {
       requesterDid: didElem,
@@ -1290,7 +1278,7 @@ describe('CommonNetworkMember', () => {
 
     const expiresAt = new Date(Date.now() - 10 * 60 * 1000).toISOString()
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     let responseError
 
@@ -1343,7 +1331,7 @@ describe('CommonNetworkMember', () => {
 
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const credential = await commonNetworkMember.signCredential(
       credentialSubject,
@@ -1367,7 +1355,7 @@ describe('CommonNetworkMember', () => {
   it('#initiatePhoneCredential calls PhoneIssuerService.initiate with the correct params', async () => {
     const stub = sinon.stub(PhoneIssuerService.prototype, 'initiate')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.initiatePhoneCredential({
       apiKey: 'apiKey',
@@ -1390,7 +1378,7 @@ describe('CommonNetworkMember', () => {
   it('#verifyPhoneCredential calls PhoneIssuerService.verify with the correct params', async () => {
     const stub = sinon.stub(PhoneIssuerService.prototype, 'verify')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.verifyPhoneCredential({
       apiKey: 'apiKey',
@@ -1411,7 +1399,7 @@ describe('CommonNetworkMember', () => {
   it('#initiateEmailCredential calls EmailIssuerService.initiate with the correct params', async () => {
     const stub = sinon.stub(EmailIssuerService.prototype, 'initiate')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.initiateEmailCredential({
       apiKey: 'apiKey',
@@ -1432,7 +1420,7 @@ describe('CommonNetworkMember', () => {
   it('#verifyEmailCredential calls EmailIssuerService.verify with the correct params', async () => {
     const stub = sinon.stub(EmailIssuerService.prototype, 'verify')
 
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     await commonNetworkMember.verifyEmailCredential({
       apiKey: 'apiKey',
@@ -1451,7 +1439,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#generatePresentationChallenge returns a jwt', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
     const presentationChallenge = await commonNetworkMember.generatePresentationChallenge([
       { type: ['PhoneCredentialPersonV1'] },
@@ -1462,8 +1450,8 @@ describe('CommonNetworkMember', () => {
 
   it('#createPresentationFromChallenge returns a signed VPV1', async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1499,8 +1487,8 @@ describe('CommonNetworkMember', () => {
 
   it('#createPresentationFromChallenge filters VCs based on the challenge', async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     const emailVC = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1561,8 +1549,8 @@ describe('CommonNetworkMember', () => {
   it('#verifyPresentation', async () => {
     // TODO resolve why this is failing
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElemAlt, options)
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1604,8 +1592,8 @@ describe('CommonNetworkMember', () => {
 
   it("#verifyPresentation fails when the challenge wasn't signed by the correct party", async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1640,8 +1628,8 @@ describe('CommonNetworkMember', () => {
 
   it('#verifyPresentation fails when the challenge is tampered with', async () => {
     const affinity = new Affinity()
-    const requesterCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedJolo, options)
-    const userCommonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     const vc = await affinity.signCredential(
       buildVCV1Unsigned({
@@ -1679,7 +1667,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#generateDidAuthRequest should throw validation error for invalid "jwtOptions.audienceDid"', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     let validationError
     try {
@@ -1697,7 +1685,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#signCredential should throw validation error for invalid "signCredentialOptionalInput.requesterDid"', async () => {
-    const commonNetworkMember = new CommonNetworkMember(walletPassword, encryptedSeedElem, options)
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
     let validationError
     try {

@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/common'
 
-import keyStorageSpec from '../openapi/_keyStorage'
+import keyStorageSpec from '../spec/_keyStorage'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'

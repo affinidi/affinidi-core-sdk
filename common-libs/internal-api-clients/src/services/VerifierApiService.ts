@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/common'
 
-import verifierSpec from '../openapi/_verifier'
+import verifierSpec from '../spec/_verifier'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
