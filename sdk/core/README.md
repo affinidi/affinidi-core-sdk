@@ -86,9 +86,9 @@ TEST_AGAINST=dev npm run test:integration
 ### Create API-KEY
 
 You should register your entity at Affinity for appropriate environment
-[staging](https://affinity-onboarding-frontend.staging.affinity-project.org/),
+[staging](https://affinity-onboarding-frontend.stg.affinidi.com/),
 [production](https://apikey.affinidi.com/) or
-[dev](https://affinity-onboarding-frontend.dev.affinity-project.org/),
+[dev](https://affinity-onboarding-frontend.dev.affinidi.com/),
 to obtain the `apiKey` and `apiKeyHash` values, one of which should be passed
 via `options` as a required parameter.
 
