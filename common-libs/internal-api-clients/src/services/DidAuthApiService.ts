@@ -4,24 +4,26 @@ import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { RawApiSpec, RequestOptionsForOperation } from '../types/request'
 import { BuiltApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
+import { PossibleDidAuthOperationIdsOf } from '../types/didAuth'
 
 export type DidAuthConstructorOptions = GenericConstructorOptions & {
   audienceDid: string
   didAuthService: DidAuthService
 }
+
 @profile()
 export default abstract class DidAuthApiService<
   TApi extends BuiltApiType,
-  TDidAuthOperationId extends keyof TApi
+  TDidAuthOperationId extends PossibleDidAuthOperationIdsOf<TApi>
 > extends GenericApiService<TApi> {
   private _responseToken?: string
-  private _audienceDid: string
-  private _didAuthService: DidAuthService
-  private _getDidAuthOperationId: string
+  private readonly _audienceDid: string
+  private readonly _didAuthService: DidAuthService
+  private readonly _getDidAuthOperationId: TDidAuthOperationId
 
-  constructor(
+  protected constructor(
     serviceUrl: string,
-    getDidAuthOperationId: string,
+    getDidAuthOperationId: TDidAuthOperationId,
     options: DidAuthConstructorOptions,
     rawSpec: RawApiSpec<TApi>,
   ) {
@@ -37,6 +39,7 @@ export default abstract class DidAuthApiService<
         audienceDid: this._audienceDid,
       },
     } as RequestOptionsForOperation<TApi, TDidAuthOperationId>)
+
     return await this._didAuthService.createDidAuthResponseToken(didAuthRequestToken.body)
   }
 
@@ -48,7 +51,7 @@ export default abstract class DidAuthApiService<
     return this._responseToken
   }
 
-  protected async executeWithDidAuth<TOperationId extends keyof TApi>(
+  protected async executeWithDidAuth<TOperationId extends keyof Omit<TApi, TDidAuthOperationId>>(
     serviceOperationId: TOperationId,
     options: RequestOptionsForOperation<TApi, TOperationId>,
   ): Promise<{ body: TApi[TOperationId]['responseBody']; status: number }> {
