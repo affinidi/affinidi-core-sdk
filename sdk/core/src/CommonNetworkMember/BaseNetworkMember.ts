@@ -110,13 +110,20 @@ export abstract class BaseNetworkMember {
     })
 
     const sdkVersion = extractSDKVersion()
+    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
+
     this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion })
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
-    this._revocationApiService = new RevocationApiService({ revocationUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
     this._didDocumentService = new DidDocumentService(keysService)
-    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
+    this._revocationApiService = new RevocationApiService({
+      didAuthService,
+      revocationUrl,
+      accessApiKey,
+      sdkVersion,
+      audienceDid: this.did,
+    })
     this._walletStorageService = new WalletStorageService(didAuthService, keysService, platformEncryptionTools, {
       bloomVaultUrl,
       affinidiVaultUrl,
@@ -560,13 +567,13 @@ export abstract class BaseNetworkMember {
     return credentialTypes
   }
 
-  async buildRevocationListStatus(unsignedCredential: any, revocationServiceAccessToken: string): Promise<any> {
+  async buildRevocationListStatus(unsignedCredential: any): Promise<any> {
     const credentialId = unsignedCredential.id
     const subjectDid = unsignedCredential.holder?.id
 
     const {
       body: { credentialStatus, revocationListCredential },
-    } = await this._revocationApiService.buildRevocationListStatus(revocationServiceAccessToken, {
+    } = await this._revocationApiService.buildRevocationListStatus({
       credentialId,
       subjectDid,
     })
@@ -582,25 +589,16 @@ export abstract class BaseNetworkMember {
       )
       revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
-      await this._revocationApiService.publishRevocationListCredential(
-        revocationServiceAccessToken,
-        revocationSignedListCredential,
-      )
+      await this._revocationApiService.publishRevocationListCredential(revocationSignedListCredential)
     }
 
     return revokableUnsignedCredential
   }
 
-  async revokeCredential(
-    credentialId: string,
-    revocationReason: string,
-    revocationServiceAccessToken: string,
-  ): Promise<void> {
-    const accessToken = revocationServiceAccessToken
-
+  async revokeCredential(credentialId: string, revocationReason: string): Promise<void> {
     const {
       body: { revocationListCredential },
-    } = await this._revocationApiService.revokeCredential(accessToken, { id: credentialId, revocationReason })
+    } = await this._revocationApiService.revokeCredential({ id: credentialId, revocationReason })
 
     const revocationSignedListCredential = await this._affinity.signCredential(
       revocationListCredential,
@@ -609,7 +607,7 @@ export abstract class BaseNetworkMember {
     )
     revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
-    await this._revocationApiService.publishRevocationListCredential(accessToken, revocationSignedListCredential)
+    await this._revocationApiService.publishRevocationListCredential(revocationSignedListCredential)
   }
 
   /**

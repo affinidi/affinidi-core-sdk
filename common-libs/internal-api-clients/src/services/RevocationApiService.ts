@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import revocationSpec from '../spec/_revocation'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
+import DidAuthApiService, { DidAuthConstructorOptions } from './DidAuthApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { revocationUrl: string }
+type ConstructorOptions = DidAuthConstructorOptions & { revocationUrl: string }
 
 type ApiType = BuildApiType<ParseSpec<typeof revocationSpec>>
 
@@ -14,24 +14,23 @@ type ReplaceFieldsWithAny<T> = {
 }
 
 @profile()
-export default class RevocationApiService extends GenericApiService<ApiType> {
+export default class RevocationApiService extends DidAuthApiService<ApiType, 'CreateDidAuthRequest'> {
   constructor(options: ConstructorOptions) {
-    super(options.revocationUrl, options, revocationSpec)
+    super(options.revocationUrl, 'CreateDidAuthRequest', options, revocationSpec)
   }
 
-  async buildRevocationListStatus(accessToken: string, params: ApiType['BuildRevocationListStatus']['requestBody']) {
-    return this.execute('BuildRevocationListStatus', { authorization: accessToken, params })
+  async buildRevocationListStatus(params: ApiType['BuildRevocationListStatus']['requestBody']) {
+    return this.executeWithDidAuth('BuildRevocationListStatus', { params })
   }
 
   async publishRevocationListCredential(
-    accessToken: string,
     params: ReplaceFieldsWithAny<ApiType['PublishRevocationListCredential']['requestBody']>,
   ) {
-    return this.execute('PublishRevocationListCredential', { authorization: accessToken, params })
+    return this.executeWithDidAuth('PublishRevocationListCredential', { params })
   }
 
-  async revokeCredential(accessToken: string, params: ApiType['RevokeCredential']['requestBody']) {
-    const response = await this.execute('RevokeCredential', { authorization: accessToken, params })
+  async revokeCredential(params: ApiType['RevokeCredential']['requestBody']) {
+    const response = await this.executeWithDidAuth('RevokeCredential', { params })
 
     return response as { body: { revocationListCredential: any } }
   }

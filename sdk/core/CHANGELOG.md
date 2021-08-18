@@ -1,5 +1,10 @@
 # release 6.0.0-beta.8 (2021-08-18)
 * removed did auth related logic from `AffinidiVaultStorageService`
+* Breaking Changes
+  * removed did auth response token parameter from:
+    - `revokeCredential()` method in BaseNetworkMember
+    - `buildRevocationListStatus()` method in BaseNetworkMember
+  
 # release 6.0.0-beta.6 (2021-08-13)
 * Simplified npm dependencies; it is enough to only install `@affinidi/wallet-{PLATFORM}-sdk` now (without other `@affinidi` packages);
   all the relevant types and methods are now exported from `@affinidi/wallet-{PLATFORM}-sdk`.
