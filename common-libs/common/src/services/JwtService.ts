@@ -26,7 +26,7 @@ export default class JwtService {
     return data
   }
 
-  encodeObjectToJWT(jwtObject: any) {
+  encodeObjectToJWT(jwtObject: { header: unknown; payload: unknown; signature: string }) {
     if (!jwtObject.payload || !jwtObject.header || !jwtObject.signature) {
       throw new Error('The JWT is not complete, header / payload / signature are missing')
     }

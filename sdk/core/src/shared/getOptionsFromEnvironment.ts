@@ -145,7 +145,6 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
     emailIssuerBasePath,
     revocationUrl,
     storageRegion,
-    cognitoUserTokens,
     ...otherOptions
   } = options
 
@@ -167,21 +166,19 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
       revocationUrl,
     },
     storageRegion,
-    cognitoUserTokens,
     otherOptions,
   }
 }
 
-export const getOptionsFromEnvironment = <TOptions extends SdkOptions>(options: TOptions) => {
-  const { accessApiKeyOptions, environmentOptions, storageRegion, cognitoUserTokens, otherOptions } = splitOptions(
-    options,
-  )
+export const getOptionsFromEnvironment = (options: SdkOptions) => {
+  const { accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(options)
 
   return {
     basicOptions: getBasicOptionsFromEnvironment(environmentOptions),
     accessApiKey: getAccessApiKeyFromOptions(accessApiKeyOptions),
     storageRegion,
-    cognitoUserTokens,
     otherOptions,
   }
 }
+
+export type ParsedOptions = ReturnType<typeof getOptionsFromEnvironment>

@@ -31,4 +31,7 @@ global.TextEncoder = global.TextEncoder || TextEncoder
 // will be ignored and only app releases will report errors to Sentry.
 // See https://docs.expo.io/guides/using-sentry
 
-export { AffinityWallet, AffinityWallet as AffinidiWallet } from './AffinityWallet'
+import type * as Types from '@affinidi/wallet-core-sdk'
+export { Util } from '@affinidi/wallet-core-sdk'
+export { AffinidiWallet, AffinidiWallet as AffinityWallet, AffinidiWalletV6 } from './AffinityWallet'
+export { Types }

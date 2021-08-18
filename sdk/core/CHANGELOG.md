@@ -1,5 +1,79 @@
-# release 6.0.0-beta.6 (2021-07-30)
-  * removed did auth related logic from `AffinidiVaultStorageService`
+# release 6.0.0-beta.8 (2021-08-18)
+* removed did auth related logic from `AffinidiVaultStorageService`
+# release 6.0.0-beta.6 (2021-08-13)
+* Simplified npm dependencies; it is enough to only install `@affinidi/wallet-{PLATFORM}-sdk` now (without other `@affinidi` packages);
+  all the relevant types and methods are now exported from `@affinidi/wallet-{PLATFORM}-sdk`.
+* Introduced new streamlined set of factories and methods for user management, with clearer return values.
+  - Note that instances returned by non-legacy factories do not have legacy methods, and vice versa.
+  - Note that in new methods, every method accepting confirmation code now also requires to be passed a token,
+    which is the string value returned by a method that sent a confirmation code.
+  - Note that new instance (non-static) methods no longer accept an options object.
+  - Note that signup methods that return "either `string` or `AffinidiWallet`" are deprecated,
+    instead you should either let user to explicitly choose between using an username, email address or phone number,
+    or detect the type of login by invoking `Util.getLoginType`,
+    and then invoke the relevant signup method (`signUpWithUsername` or `initiateSignUpByEmail` or `initiateSignUpByPhone`).
+* Implemented new methods:
+  - In wallet instances:
+    ```
+    signJwt
+    signUnsignedCredential
+    signUnsignedPresentation
+    ```
+  - In new `Util` object:
+    ```
+    generateSeed
+    getDidFromToken
+    getLoginType
+    getPublicKeyHexFromDidDocument
+    fromJWT
+    ```
+* Full list of deprecated methods:
+  - ```
+    new AffinidiWallet()
+    anchorDid
+    changePassword
+    changeUsername
+    completeLoginChallenge
+    confirmChangeUsername
+    confirmSignIn
+    confirmSignUp
+    confirmSignUpWithExistsEntity
+    forgotPassword
+    forgotPasswordSubmit
+    fromAccessToken
+    fromJWT
+    fromLoginAndPassword
+    fromSeed
+    generateSeed
+    getDidFromToken
+    init
+    initiateEmailCredential
+    initiatePhoneCredential
+    isUserUnconfirmed
+    passwordlessLogin
+    pullEncryptedSeed
+    register
+    resendSignUpConfirmationCode
+    signIn
+    signOut
+    signUp
+    signUpWithExistsEntity
+    storeEncryptedSeed
+    verifyEmailCredential
+    verifyPhoneCredential
+    get accessToken
+    ```
+  - Note that these methods will be removed in v7.
+  - If you don't want deprecated methods to pollute your IDE auto-complete suggestions, use `AffinidiWalletV6` instead of `AffinidiWallet`;
+    the only difference between the two is that the former does not contain deprecated methods.
+* Breaking changes
+  - `AffinidiWallet`, `AffinityWallet`, `CommonNetworkMember` are no longer classes;
+    `AffinidiWallet` and `AffinityWallet` are now collections of static methods
+    (although they support being called as `new AffinidiWallet()` for backwards compatibility),
+    and you can no longer extend them or rely on their return value being an instance of `AffinidiWallet`;
+    `CommonNetworkMember` is now only a type.
+  - Nothing `dangerous` is exported now.
+  - `FreeFormObject` is removed.
 # release 6.0.0-beta.5 (2021-07-26)
   * passing `sdkVersion` to all api services
 # release 6.0.0-beta.4 (2021-07-23)

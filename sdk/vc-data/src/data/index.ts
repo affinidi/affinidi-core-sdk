@@ -25,5 +25,7 @@ export * from './phone'
 export * from './trade'
 export * from './winner'
 export * from './accountOwnership'
+export * from './hackathon'
+export * from './grant'
 
 export * from './util'

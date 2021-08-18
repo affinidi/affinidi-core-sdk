@@ -67,7 +67,10 @@ export default class KeyManagementService {
 
   public async pullEncryptionKeyAndStoreEncryptedSeed(accessToken: string, seedHexWithMethod: string) {
     const encryptionKey = await this._pullEncryptionKey(accessToken)
+    await this.storeEncryptedSeed(accessToken, seedHexWithMethod, encryptionKey)
+  }
 
+  private async storeEncryptedSeed(accessToken: string, seedHexWithMethod: string, encryptionKey: string) {
     await retry(
       async (bail) => {
         const errorCodes = ['COR-1', 'WAL-2']
@@ -105,7 +108,7 @@ export default class KeyManagementService {
 
     if (backupUpdatedSeed) {
       const { fullSeedHex } = KeysService.decryptSeed(updatedEncryptedSeed, encryptionKey)
-      await this.pullEncryptionKeyAndStoreEncryptedSeed(accessToken, fullSeedHex)
+      await this.storeEncryptedSeed(accessToken, fullSeedHex, encryptionKey)
     }
 
     return { encryptionKey, updatedEncryptedSeed }

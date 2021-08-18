@@ -1,7 +1,8 @@
 const cryptoRandomString = require('crypto-random-string')
 
-import { AffinidiWallet } from '../../'
 import { KeysService, DidDocumentService } from '@affinidi/common'
+import { createV5CompatibleWalletFactories, EventComponent, Util } from '@affinidi/wallet-core-sdk'
+import platformEncryptionTools from '../../src/PlatformEncryptionTools'
 
 interface TestDid {
   seed: string
@@ -18,6 +19,16 @@ interface TestJoloDid extends TestDid {
 
 const options = { env: 'dev', apiKey: 'fakeApiKey' } as const
 
+const AffinidiWallet = createV5CompatibleWalletFactories(
+  Object.assign(platformEncryptionTools, {
+    buildExternalKeysSectionForSeed: () => {
+      throw new Error('Not implemented')
+    },
+  }),
+  null,
+  EventComponent.NotImplemented,
+)
+
 export const generateTestDIDs = async (): Promise<{
   password: string
   jolo: TestJoloDid
@@ -28,7 +39,7 @@ export const generateTestDIDs = async (): Promise<{
   let didDocumentService
   const password = cryptoRandomString({ length: 32, type: 'ascii-printable' })
 
-  const joloSeed = await AffinidiWallet.generateSeed('jolo')
+  const joloSeed = await Util.generateSeed('jolo')
   const joloSeedHex = joloSeed.toString('hex')
   const joloSeedWithMethod = `${joloSeedHex}++${'jolo'}`
 
@@ -43,7 +54,7 @@ export const generateTestDIDs = async (): Promise<{
   const joloPublicKey = KeysService.getPublicKey(joloSeedHex, 'jolo').toString('hex')
   const joloEthereumPublicKey = KeysService.getAnchorTransactionPublicKey(joloSeedHex, 'jolo').toString('hex')
 
-  const elemSeed = await AffinidiWallet.generateSeed('elem')
+  const elemSeed = await Util.generateSeed('elem')
   const elemSeedHex = elemSeed.toString('hex')
   const elemSeedWithMethod = `${elemSeedHex}++${'elem'}`
 
@@ -57,7 +68,7 @@ export const generateTestDIDs = async (): Promise<{
 
   const elemPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
 
-  const elemAltSeed = await AffinidiWallet.generateSeed('elem')
+  const elemAltSeed = await Util.generateSeed('elem')
   const elemAltSeedHex = elemSeed.toString('hex')
   const elemAltSeedWithMethod = `${elemAltSeedHex}++${'elem'}`
 

@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/common'
 
-import registrySpec from '../openapi/_registry'
+import registrySpec from '../spec/_registry'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'

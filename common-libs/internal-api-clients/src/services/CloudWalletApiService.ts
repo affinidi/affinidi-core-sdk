@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/common'
 
-import cloudWalletSpec from '../openapi/_cloudWallet'
+import cloudWalletSpec from '../spec/_cloudWallet'
 import GenericApiService from './GenericApiService'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'

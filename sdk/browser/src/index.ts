@@ -18,4 +18,7 @@ if (typeof Buffer === 'undefined') global.Buffer = require('buffer').Buffer
 //   },
 // })
 
-export { AffinityWallet, AffinityWallet as AffinidiWallet } from './AffinityWallet'
+import type * as Types from '@affinidi/wallet-core-sdk'
+export { Util } from '@affinidi/wallet-core-sdk'
+export { AffinidiWallet, AffinidiWallet as AffinityWallet, AffinidiWalletV6 } from './AffinityWallet'
+export { Types }
