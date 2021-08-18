@@ -42,6 +42,7 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
+    "@affinidi/affinidi-did-auth-lib": "^1.0.8",
     "@affinidi/common": "^2.0.0-beta.4",
     "lodash.keyby": "^4.6.0",
     "node-fetch": "^2.6.0"
@@ -49,7 +50,6 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/affinidi-did-auth-lib": "^1.0.7",
     "@types/chai": "4.2.12",
     "@types/chai-spies": "1.0.2",
     "@types/lodash.keyby": "^4.6.6",
