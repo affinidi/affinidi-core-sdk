@@ -1,4 +1,5 @@
 import { encodeJson, signEncodedPayload } from './func'
+import base64url from 'base64url'
 
 export const getDidDocumentModel = (primaryPublicKey: string, recoveryPublicKey: string) => ({
   '@context': 'https://w3id.org/did/v1',
@@ -18,20 +19,20 @@ export const getDidDocumentModel = (primaryPublicKey: string, recoveryPublicKey:
   ],
 })
 
-export const getCreatePayload = (didDocumentModel: any, primaryKey: any) => {
+export const getCreatePayload = (didDocumentModel: any, signFn: (payload: Buffer) => Buffer) => {
   // Create the encoded protected header.
   const header = {
     operation: 'create',
     kid: '#primary',
     alg: 'ES256K',
   }
-  return makeSignedOperation(header, didDocumentModel, primaryKey.privateKey)
+  return makeSignedOperation(header, didDocumentModel, signFn)
 }
 
-export const makeSignedOperation = (header: any, payload: any, privateKey: any) => {
+export const makeSignedOperation = (header: any, payload: any, signFn: (payload: Buffer) => Buffer) => {
   const encodedHeader = encodeJson(header)
   const encodedPayload = encodeJson(payload)
-  const signature = signEncodedPayload(encodedHeader, encodedPayload, privateKey)
+  const signature = base64url.encode(signEncodedPayload(encodedHeader, encodedPayload, signFn))
 
   return {
     protected: encodedHeader,

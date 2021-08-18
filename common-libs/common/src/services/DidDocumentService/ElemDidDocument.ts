@@ -1,17 +1,16 @@
 import base64url from 'base64url'
 import { parse } from 'did-resolver'
 
-import { op, func } from './elem-lib'
-
-import KeysService from '../KeysService'
+import { func, op } from './elem-lib'
+import { KeyVault } from './KeyVault'
 
 export default class ElemDidDocument {
-  private readonly _keysService: KeysService
+  private readonly _keyVault: KeyVault
   private readonly _signingKey: string
 
-  constructor(keysService: KeysService) {
+  constructor(keyProvider: KeyVault) {
     this._signingKey = 'primary'
-    this._keysService = keysService
+    this._keyVault = keyProvider
   }
 
   private _extendDIDDocModelByExternalKeys(
@@ -78,36 +77,15 @@ export default class ElemDidDocument {
     }
   }
 
-  private _buildDIDDocModel(
-    seedHex: string,
-    publicKeyPrimary: string = null,
-    privateKeyPrimary: string = null,
-    publicKeyRecovery: string = null,
-    privateKeyRecovery: string = null,
-    externalKeys: any = null,
-  ) {
-    const arePublicPrivateKeysDefined = publicKeyPrimary && privateKeyPrimary
-
-    if (!arePublicPrivateKeysDefined) {
-      const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, 'elem')
-
-      publicKeyPrimary = publicKey.toString('hex')
-      privateKeyPrimary = privateKey.toString('hex')
+  private _buildDIDDocModel(externalKeys: any = null) {
+    if (!this._keyVault.primaryPublicKey()) {
+      throw new Error('Primary Public Key is mandatory')
     }
 
-    const arePublicPrivateRecoveryKeysDefined = publicKeyRecovery && privateKeyRecovery
+    const primaryPublicKey = this._keyVault.primaryPublicKey().toString('hex')
+    const recoveryPublicKey = this._keyVault.recoveryPublicKey()?.toString('hex')
 
-    if (!arePublicPrivateRecoveryKeysDefined) {
-      const { publicKey, privateKey } = KeysService.getAnchorTransactionPublicAndPrivateKeys(seedHex, 'elem')
-
-      publicKeyRecovery = publicKey.toString('hex')
-      privateKeyRecovery = privateKey.toString('hex')
-    }
-
-    const primaryKey = { publicKey: publicKeyPrimary, privateKey: privateKeyPrimary }
-    const recoveryKey = { publicKey: publicKeyRecovery, privateKey: privateKeyRecovery }
-
-    const initialDidDocumentModel = op.getDidDocumentModel(primaryKey.publicKey, recoveryKey.publicKey)
+    const initialDidDocumentModel = op.getDidDocumentModel(primaryPublicKey, recoveryPublicKey)
     const authentication = [`#${this._signingKey}`]
     const assertionMethod = [`#${this._signingKey}`]
 
@@ -121,23 +99,15 @@ export default class ElemDidDocument {
     }
   }
 
-  private _getDid(seedHex: string, externalKeys: any) {
-    const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, 'elem')
+  private _getDid(externalKeys?: any) {
+    const didDocumentModel = this._buildDIDDocModel(externalKeys)
 
-    const primaryKey = {
-      publicKey: publicKey.toString('hex'),
-      privateKey: privateKey.toString('hex'),
-    }
-
-    const didDocumentModel = this._buildDIDDocModel(
-      seedHex,
-      primaryKey.publicKey,
-      primaryKey.privateKey,
-      null,
-      null,
-      externalKeys,
+    const createPayload = op.getCreatePayload(
+      didDocumentModel,
+      (payload: Buffer): Buffer => {
+        return this._keyVault.sign(payload)
+      },
     )
-    const createPayload = op.getCreatePayload(didDocumentModel, primaryKey)
     const didUniqueSuffix = func.getDidUniqueSuffix(createPayload)
 
     const baseElemDID = `did:elem:${didUniqueSuffix}`
@@ -150,10 +120,7 @@ export default class ElemDidDocument {
   }
 
   private _getMyDidConfig() {
-    const { seed, externalKeys } = this._keysService.decryptSeed()
-    const seedHex = seed.toString('hex')
-
-    return this._getDid(seedHex, externalKeys)
+    return this._getDid(this._keyVault.externalKeys())
   }
 
   getMyDid(): string {
@@ -172,10 +139,7 @@ export default class ElemDidDocument {
   }
 
   async buildDidDocument() {
-    const { seed, externalKeys } = this._keysService.decryptSeed()
-    const seedHex = seed.toString('hex')
-
-    const { did, didDocModel } = this._getDid(seedHex, externalKeys)
+    const { did, didDocModel } = this._getDid(this._keyVault.externalKeys())
     const { did: parsedDid } = parse(did)
 
     const prependBaseDID = (field: any) => {
