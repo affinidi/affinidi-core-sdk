@@ -5,12 +5,12 @@ export interface KeyVault {
   /**
    * Primary public key
    */
-  primaryPublicKey(): Buffer
+  primaryPublicKey: Buffer
 
   /**
    * Recovery public key if available
    */
-  recoveryPublicKey(): Buffer
+  recoveryPublicKey: Buffer
 
   /**
    * Array of external keys to be added to the elem object

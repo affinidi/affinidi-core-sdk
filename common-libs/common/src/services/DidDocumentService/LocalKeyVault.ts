@@ -12,7 +12,7 @@ export class LocalKeyVault implements KeyVault {
     this._keyService = keyService
   }
 
-  primaryPublicKey(): Buffer {
+  get primaryPublicKey(): Buffer {
     const { seed } = this._keyService.decryptSeed()
     const seedHex = seed.toString('hex')
 
@@ -20,7 +20,7 @@ export class LocalKeyVault implements KeyVault {
     return publicKey
   }
 
-  recoveryPublicKey(): Buffer {
+  get recoveryPublicKey(): Buffer {
     const { seed } = this._keyService.decryptSeed()
     const seedHex = seed.toString('hex')
 

@@ -78,12 +78,12 @@ export default class ElemDidDocument {
   }
 
   private _buildDIDDocModel(externalKeys: any = null) {
-    if (!this._keyVault.primaryPublicKey()) {
+    if (!this._keyVault.primaryPublicKey) {
       throw new Error('Primary Public Key is mandatory')
     }
 
-    const primaryPublicKey = this._keyVault.primaryPublicKey().toString('hex')
-    const recoveryPublicKey = this._keyVault.recoveryPublicKey()?.toString('hex')
+    const primaryPublicKey = this._keyVault.primaryPublicKey.toString('hex')
+    const recoveryPublicKey = this._keyVault.recoveryPublicKey?.toString('hex')
 
     const initialDidDocumentModel = op.getDidDocumentModel(primaryPublicKey, recoveryPublicKey)
     const authentication = [`#${this._signingKey}`]
