@@ -6,40 +6,39 @@ import * as secp256k1 from 'secp256k1'
  * KeyStore backed implementation when the seed is known
  */
 export class LocalKeyVault implements KeyVault {
-  private _keyService: KeysService
+  private readonly _publicKey: Buffer
+  private readonly _recoveryPublicKey: Buffer
+  private readonly _externalKeys: any[]
+  private readonly _privateKey: Buffer
 
   constructor(keyService: KeysService) {
-    this._keyService = keyService
+    const { seed, externalKeys } = keyService.decryptSeed()
+    this._externalKeys = externalKeys
+
+    const seedHex = seed.toString('hex')
+
+    const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, 'elem')
+    this._publicKey = publicKey
+    this._privateKey = privateKey
+
+    const { publicKey: recoveryPublicKey } = KeysService.getAnchorTransactionPublicAndPrivateKeys(seedHex, 'elem')
+    this._recoveryPublicKey = recoveryPublicKey
   }
 
   get primaryPublicKey(): Buffer {
-    const { seed } = this._keyService.decryptSeed()
-    const seedHex = seed.toString('hex')
-
-    const { publicKey } = KeysService.getPublicAndPrivateKeys(seedHex, 'elem')
-    return publicKey
+    return this._publicKey
   }
 
   get recoveryPublicKey(): Buffer {
-    const { seed } = this._keyService.decryptSeed()
-    const seedHex = seed.toString('hex')
-
-    const { publicKey } = KeysService.getAnchorTransactionPublicAndPrivateKeys(seedHex, 'elem')
-    return publicKey
+    return this._recoveryPublicKey
   }
 
   externalKeys(): any[] {
-    const { externalKeys } = this._keyService.decryptSeed()
-    return externalKeys
+    return this._externalKeys
   }
 
   sign(payload: Buffer): Buffer {
-    const { seed } = this._keyService.decryptSeed()
-    const seedHex = seed.toString('hex')
-
-    const { privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, 'elem')
-
-    const signatureObject = secp256k1.ecdsaSign(payload, privateKey)
+    const signatureObject = secp256k1.ecdsaSign(payload, this._privateKey)
 
     return Buffer.from(signatureObject.signature)
   }
