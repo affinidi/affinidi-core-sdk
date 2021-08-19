@@ -1,7 +1,6 @@
 'use strict'
 
 import { expect } from 'chai'
-import request from 'supertest'
 import { decode as jwtDecode } from 'jsonwebtoken'
 import { Affinity } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
@@ -350,17 +349,6 @@ describe('CommonNetworkMember', () => {
     const fullOptions = getAllOptionsForEnvironment()
     const commonNetworkMember = new AffinidiWallet(password, ISSUER_ELEM_SEED, fullOptions)
     const holderDid = commonNetworkMember.did
-    const didAuthRequestParams = {
-      audienceDid: holderDid,
-    }
-    const issuerServer = `https://revocation-api.${fullOptions.env}.affinity-project.org`
-    const didRequestTokenResponse = await request(issuerServer)
-      .post('/api/v1/did-auth/create-did-auth-request')
-      .send(didAuthRequestParams)
-      .set('Api-Key', fullOptions.accessApiKey)
-
-    expect(didRequestTokenResponse.status).to.equal(200)
-    expect(didRequestTokenResponse.body).to.exist
 
     const credId = new Date().toISOString()
     const unsignedCredential = buildVCV1Unsigned({
