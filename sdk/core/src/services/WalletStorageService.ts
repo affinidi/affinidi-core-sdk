@@ -1,6 +1,6 @@
 import { JwtService, KeysService, profile } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
+import { DidAuthAdapter } from '@affinidi/internal-api-clients'
 
 import { Env } from '../dto/shared.dto'
 
@@ -24,7 +24,7 @@ type ConstructorOptions = {
   affinidiVaultUrl: string
   storageRegion: string
   accessApiKey: string
-  audienceDid: string
+  didAuthAdapter: DidAuthAdapter
 }
 
 @profile()
@@ -34,23 +34,17 @@ export default class WalletStorageService {
   private _affinidiVaultStorageService: AffinidiVaultStorageService
 
   constructor(
-    didAuthService: DidAuthService,
     keysService: KeysService,
     platformEncryptionTools: IPlatformEncryptionTools,
     options: ConstructorOptions,
   ) {
     this._storageRegion = options.storageRegion
 
-    this._affinidiVaultStorageService = new AffinidiVaultStorageService(
-      didAuthService,
-      keysService,
-      platformEncryptionTools,
-      {
-        accessApiKey: options.accessApiKey,
-        audienceDid: options.audienceDid,
-        vaultUrl: options.affinidiVaultUrl,
-      },
-    )
+    this._affinidiVaultStorageService = new AffinidiVaultStorageService(keysService, platformEncryptionTools, {
+      didAuthAdapter: options.didAuthAdapter,
+      accessApiKey: options.accessApiKey,
+      vaultUrl: options.affinidiVaultUrl,
+    })
 
     this._bloomVaultStorageService = new BloomVaultStorageService(keysService, platformEncryptionTools, {
       accessApiKey: options.accessApiKey,

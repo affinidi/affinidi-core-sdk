@@ -1,14 +1,13 @@
 import { profile } from '@affinidi/common'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 
 import { RawApiSpec, RequestOptionsForOperation } from '../types/request'
 import { BuiltApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 import { PossibleDidAuthOperationIdsOf } from '../types/didAuth'
+import { DidAuthAdapter } from '../helpers/DidAuthAdapter'
 
 export type DidAuthConstructorOptions = GenericConstructorOptions & {
-  audienceDid: string
-  didAuthService: DidAuthService
+  didAuthAdapter: DidAuthAdapter
 }
 
 @profile()
@@ -17,8 +16,7 @@ export default abstract class DidAuthApiService<
   TDidAuthOperationId extends PossibleDidAuthOperationIdsOf<TApi>
 > extends GenericApiService<TApi> {
   private _responseToken?: string
-  private readonly _audienceDid: string
-  private readonly _didAuthService: DidAuthService
+  private readonly _didAuthAdapter: DidAuthAdapter
   private readonly _getDidAuthOperationId: TDidAuthOperationId
 
   protected constructor(
@@ -28,23 +26,22 @@ export default abstract class DidAuthApiService<
     rawSpec: RawApiSpec<TApi>,
   ) {
     super(serviceUrl, options, rawSpec)
-    this._audienceDid = options.audienceDid
-    this._didAuthService = options.didAuthService
+    this._didAuthAdapter = options.didAuthAdapter
     this._getDidAuthOperationId = getDidAuthOperationId
   }
 
   private async _createDidAuthToken() {
     const didAuthRequestToken = await this.execute(this._getDidAuthOperationId, {
       params: {
-        audienceDid: this._audienceDid,
+        audienceDid: this._didAuthAdapter.did,
       },
     } as RequestOptionsForOperation<TApi, TDidAuthOperationId>)
 
-    return await this._didAuthService.createDidAuthResponseToken(didAuthRequestToken.body)
+    return await this._didAuthAdapter.createDidAuthResponseToken(didAuthRequestToken.body)
   }
 
   private async _getToken() {
-    if (!this._responseToken || !this._didAuthService.isTokenExpired(this._responseToken)) {
+    if (!this._responseToken || this._didAuthAdapter.isTokenExpired(this._responseToken)) {
       this._responseToken = await this._createDidAuthToken()
     }
 

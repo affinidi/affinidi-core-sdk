@@ -1,41 +1,34 @@
 import { profile, KeysService } from '@affinidi/common'
-import { AffinidiVaultApiService } from '@affinidi/internal-api-clients'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
+import { AffinidiVaultApiService, DidAuthAdapter } from '@affinidi/internal-api-clients'
 
 import { IPlatformEncryptionTools } from '../shared/interfaces'
 import { VaultCredential } from '../dto/vault.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
 
 type AffinidiVaultStorageOptions = {
+  didAuthAdapter: DidAuthAdapter
   accessApiKey: string
-  audienceDid: string
   vaultUrl: string
 }
 
 @profile()
 export default class AffinidiVaultStorageService {
-  private _audienceDid: string
-  private _didAuthService: DidAuthService
   private _keysService: KeysService
   private _platformEncryptionTools: IPlatformEncryptionTools
   private _vaultApiService: AffinidiVaultApiService
 
   constructor(
-    didAuthService: DidAuthService,
     keysService: KeysService,
     platformEncryptionTools: IPlatformEncryptionTools,
     options: AffinidiVaultStorageOptions,
   ) {
-    this._audienceDid = options.audienceDid
-    this._didAuthService = didAuthService
     this._keysService = keysService
     this._platformEncryptionTools = platformEncryptionTools
     this._vaultApiService = new AffinidiVaultApiService({
       vaultUrl: options.vaultUrl,
       accessApiKey: options.accessApiKey,
       sdkVersion: extractSDKVersion(),
-      audienceDid: options.audienceDid,
-      didAuthService: didAuthService,
+      didAuthAdapter: options.didAuthAdapter,
     })
   }
 

@@ -3,8 +3,8 @@
 import nock from 'nock'
 import sinon from 'sinon'
 
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { KeysService } from '@affinidi/common'
+import { DidAuthAdapter } from '@affinidi/internal-api-clients'
 
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
 import { generateTestDIDs } from '../../factory/didFactory'
@@ -23,11 +23,11 @@ const reqheaders: Record<string, string> = {}
 
 const createAffinidiStorageService = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
-  const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey })
-  return new AffinidiVaultStorageService(didAuthService, keysService, testPlatformTools, {
-    audienceDid: audienceDid,
+  const didAuthAdapter = new DidAuthAdapter(audienceDid, { encryptedSeed, encryptionKey })
+  return new AffinidiVaultStorageService(keysService, testPlatformTools, {
     vaultUrl: STAGING_AFFINIDI_VAULT_URL,
     accessApiKey: undefined,
+    didAuthAdapter,
   })
 }
 
@@ -227,7 +227,7 @@ describe('AffinidiVaultStorageService', () => {
 
     nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
 
-    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(true)
+    sinon.stub(DidAuthAdapter.prototype, 'isTokenExpired').returns(false)
 
     for (const cred of getAllResponse.credentials) {
       nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })

@@ -4,6 +4,7 @@ import {
   RegistryApiService,
   RevocationApiService,
   VerifierApiService,
+  DidAuthAdapter,
 } from '@affinidi/internal-api-clients'
 import {
   buildVCV1Skeleton,
@@ -15,7 +16,6 @@ import {
   VPV1,
   VPV1Unsigned,
 } from '@affinidi/vc-common'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { parse } from 'did-resolver'
 
 import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
@@ -110,26 +110,25 @@ export abstract class BaseNetworkMember {
     })
 
     const sdkVersion = extractSDKVersion()
-    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
 
     this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion })
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
     this._didDocumentService = new DidDocumentService(keysService)
+    const didAuthAdapter = new DidAuthAdapter(this.did, { encryptedSeed, encryptionKey: password })
     this._revocationApiService = new RevocationApiService({
-      didAuthService,
       revocationUrl,
       accessApiKey,
       sdkVersion,
-      audienceDid: this.did,
+      didAuthAdapter,
     })
-    this._walletStorageService = new WalletStorageService(didAuthService, keysService, platformEncryptionTools, {
+    this._walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
       bloomVaultUrl,
       affinidiVaultUrl,
       accessApiKey,
       storageRegion,
-      audienceDid: this.did,
+      didAuthAdapter,
     })
     this._jwtService = new JwtService()
     this._holderService = new HolderService({ registryUrl, metricsUrl, accessApiKey }, component)
