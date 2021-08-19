@@ -38,13 +38,7 @@ export const getDidUniqueSuffix = (operation: any) => {
 }
 
 // NOTE check is signatures are the same as sidetree's (see NEP-334)
-export const signEncodedPayload = (
-  encodedHeader: string,
-  encodedPayload: string,
-  signFn: (payload: Buffer) => Buffer,
-): Buffer => {
+export const computePayloadHash = (encodedHeader: string, encodedPayload: string): Buffer => {
   const toBeSigned = `${encodedHeader}.${encodedPayload}`
-  const hash = sha256(toBeSigned)
-
-  return signFn(hash)
+  return sha256(toBeSigned)
 }

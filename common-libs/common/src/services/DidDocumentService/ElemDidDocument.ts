@@ -1,8 +1,9 @@
 import base64url from 'base64url'
 import { parse } from 'did-resolver'
 
-import { func, op } from './elem-lib'
+import { func } from './elem-lib'
 import { KeyVault } from './KeyVault'
+import { computePayloadHash, encodeJson } from './elem-lib/func'
 
 export default class ElemDidDocument {
   private readonly _keyVault: KeyVault
@@ -85,7 +86,7 @@ export default class ElemDidDocument {
     const primaryPublicKey = this._keyVault.primaryPublicKey.toString('hex')
     const recoveryPublicKey = this._keyVault.recoveryPublicKey?.toString('hex')
 
-    const initialDidDocumentModel = op.getDidDocumentModel(primaryPublicKey, recoveryPublicKey)
+    const initialDidDocumentModel = this.buildRawDocumentModel(primaryPublicKey, recoveryPublicKey)
     const authentication = [`#${this._signingKey}`]
     const assertionMethod = [`#${this._signingKey}`]
 
@@ -102,12 +103,7 @@ export default class ElemDidDocument {
   private _getDid(externalKeys?: any) {
     const didDocumentModel = this._buildDIDDocModel(externalKeys)
 
-    const createPayload = op.getCreatePayload(
-      didDocumentModel,
-      (payload: Buffer): Buffer => {
-        return this._keyVault.sign(payload)
-      },
-    )
+    const createPayload = this.createPayload(didDocumentModel)
     const didUniqueSuffix = func.getDidUniqueSuffix(createPayload)
 
     const baseElemDID = `did:elem:${didUniqueSuffix}`
@@ -166,6 +162,51 @@ export default class ElemDidDocument {
       publicKey: (didDocModel.publicKey || []).map(prependBaseDID),
       assertionMethod: (didDocModel.assertionMethod || []).map(prependBaseDID),
       authentication: (didDocModel.authentication || []).map(prependBaseDID),
+    }
+  }
+
+  private createPayload(didDocumentModel: any) {
+    // Create the encoded protected header.
+    const header = {
+      operation: 'create',
+      kid: '#primary',
+      alg: 'ES256K',
+    }
+
+    return this.createSignedOperation(header, didDocumentModel)
+  }
+
+  private createSignedOperation(header: any, payload: any) {
+    const encodedHeader = encodeJson(header)
+    const encodedPayload = encodeJson(payload)
+    const payloadHash = computePayloadHash(encodedHeader, encodedPayload)
+
+    const signature = base64url.encode(this._keyVault.sign(payloadHash))
+
+    return {
+      protected: encodedHeader,
+      payload: encodedPayload,
+      signature,
+    }
+  }
+
+  private buildRawDocumentModel(primaryPublicKey: string, recoveryPublicKey: string) {
+    return {
+      '@context': 'https://w3id.org/did/v1',
+      publicKey: [
+        {
+          id: '#primary',
+          usage: 'signing',
+          type: 'Secp256k1VerificationKey2018',
+          publicKeyHex: primaryPublicKey,
+        },
+        {
+          id: '#recovery',
+          usage: 'recovery',
+          type: 'Secp256k1VerificationKey2018',
+          publicKeyHex: recoveryPublicKey,
+        },
+      ],
     }
   }
 }
