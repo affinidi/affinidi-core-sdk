@@ -1,10 +1,8 @@
 'use strict'
 
 import { expect } from 'chai'
-import request from 'supertest'
 import { decode as jwtDecode } from 'jsonwebtoken'
 import { Affinity } from '@affinidi/common'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import UserManagementService from '../../src/services/UserManagementService'
@@ -351,32 +349,6 @@ describe('CommonNetworkMember', () => {
     const fullOptions = getAllOptionsForEnvironment()
     const commonNetworkMember = new AffinidiWallet(password, ISSUER_ELEM_SEED, fullOptions)
     const holderDid = commonNetworkMember.did
-    const didAuthRequestParams = {
-      audienceDid: holderDid,
-    }
-    const issuerServer = `https://revocation-api.${fullOptions.env}.affinity-project.org`
-    const didRequestTokenResponse = await request(issuerServer)
-      .post('/api/v1/did-auth/create-did-auth-request')
-      .send(didAuthRequestParams)
-      .set('Api-Key', fullOptions.accessApiKey)
-
-    expect(didRequestTokenResponse.status).to.equal(200)
-    expect(didRequestTokenResponse.body).to.exist
-
-    const didRequestToken = didRequestTokenResponse.body
-
-    const holderEncryptedSeed = ISSUER_ELEM_SEED
-    const holderPassword = password
-    const holderDidAuthServiceOptions = {
-      encryptedSeed: holderEncryptedSeed,
-      encryptionKey: holderPassword,
-    }
-    const didAuthService = new DidAuthService(holderDidAuthServiceOptions)
-    const didResponseToken = await didAuthService.createDidAuthResponseToken(didRequestToken)
-
-    expect(didResponseToken).to.exist
-
-    const accessToken = didResponseToken
 
     const credId = new Date().toISOString()
     const unsignedCredential = buildVCV1Unsigned({
@@ -396,10 +368,7 @@ describe('CommonNetworkMember', () => {
       expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
     })
 
-    const revokableUnsignedCredential = await commonNetworkMember.buildRevocationListStatus(
-      unsignedCredential,
-      accessToken,
-    )
+    const revokableUnsignedCredential = await commonNetworkMember.buildRevocationListStatus(unsignedCredential)
 
     const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
     const affinity = new Affinity(affinityOptions)
@@ -409,7 +378,7 @@ describe('CommonNetworkMember', () => {
     const sucessResult = await affinity.validateCredential(createdCredential)
     expect(sucessResult.result).to.equal(true)
 
-    await commonNetworkMember.revokeCredential(revokableUnsignedCredential.id, 'Status changed', accessToken)
+    await commonNetworkMember.revokeCredential(revokableUnsignedCredential.id, 'Status changed')
 
     const failResult = await affinity.validateCredential(createdCredential)
     expect(failResult.result).to.equal(false)

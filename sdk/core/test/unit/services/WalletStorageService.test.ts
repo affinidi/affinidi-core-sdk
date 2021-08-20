@@ -5,8 +5,7 @@ import sinon from 'sinon'
 import { expect } from 'chai'
 
 import { JwtService, KeysService } from '@affinidi/common'
-import { KeyStorageApiService } from '@affinidi/internal-api-clients'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
+import { DidAuthAdapter, KeyStorageApiService } from '@affinidi/internal-api-clients'
 import KeyManagementService from '../../../src/services/KeyManagementService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
 import {
@@ -34,13 +33,13 @@ const region = 'eu-west-2'
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
-  const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: walletPassword })
-  return new WalletStorageService(didAuthService, keysService, testPlatformTools, {
+  const didAuthAdapter = new DidAuthAdapter('', { encryptedSeed, encryptionKey: walletPassword })
+  return new WalletStorageService(keysService, testPlatformTools, {
     bloomVaultUrl: STAGING_BLOOM_VAULT_URL,
     affinidiVaultUrl: STAGING_AFFINIDI_VAULT_URL,
     accessApiKey: undefined,
     storageRegion: region,
-    audienceDid: '',
+    didAuthAdapter,
   })
 }
 

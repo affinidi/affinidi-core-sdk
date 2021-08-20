@@ -3,9 +3,9 @@ import { profile } from '@affinidi/common'
 import affinidiVaultSpec from '../spec/_affinidiVault'
 import { ParseSpec } from '../types/openapiParser'
 import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
+import DidAuthApiService, { DidAuthConstructorOptions } from './DidAuthApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { vaultUrl: string }
+type ConstructorOptions = DidAuthConstructorOptions & { vaultUrl: string }
 
 export type BlobType = {
   cyphertext: string
@@ -15,48 +15,35 @@ export type BlobType = {
 type ApiType = BuildApiType<ParseSpec<typeof affinidiVaultSpec>>
 
 @profile()
-export default class AffinidiVaultApiService extends GenericApiService<ApiType> {
+export default class AffinidiVaultApiService extends DidAuthApiService<ApiType, 'CreateDidAuthRequest'> {
   constructor(options: ConstructorOptions) {
-    super(options.vaultUrl, options, affinidiVaultSpec)
+    super(options.vaultUrl, 'CreateDidAuthRequest', options, affinidiVaultSpec)
   }
 
-  async createDidAuthRequest(params: ApiType['CreateDidAuthRequest']['requestBody']) {
-    return this.execute('CreateDidAuthRequest', { params })
-  }
-
-  async searchCredentials(accessToken: string, storageRegion: string, types?: string[][]) {
-    return this.execute('SearchCredentials', {
-      authorization: accessToken,
+  async searchCredentials(storageRegion: string, types?: string[][]) {
+    return this.executeWithDidAuth('SearchCredentials', {
       storageRegion,
       queryParams: types ? { types: JSON.stringify(types) } : {},
     })
   }
 
-  async getCredential(accessToken: string, storageRegion: string, id: string) {
-    return this.execute('GetCredential', {
-      authorization: accessToken,
+  async getCredential(storageRegion: string, id: string) {
+    return this.executeWithDidAuth('GetCredential', {
       storageRegion,
       pathParams: { id },
     })
   }
 
-  async storeCredential(
-    accessToken: string,
-    storageRegion: string,
-    id: string,
-    params: ApiType['StoreCredential']['requestBody'],
-  ) {
-    return this.execute('StoreCredential', {
-      authorization: accessToken,
+  async storeCredential(storageRegion: string, id: string, params: ApiType['StoreCredential']['requestBody']) {
+    return this.executeWithDidAuth('StoreCredential', {
       storageRegion,
       params,
       pathParams: { id },
     })
   }
 
-  async deleteCredential(accessToken: string, storageRegion: string, id: string) {
-    return this.execute('DeleteCredential', {
-      authorization: accessToken,
+  async deleteCredential(storageRegion: string, id: string) {
+    return this.executeWithDidAuth('DeleteCredential', {
       storageRegion,
       pathParams: { id },
     })

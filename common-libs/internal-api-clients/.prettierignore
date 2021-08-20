@@ -4,4 +4,5 @@ src/types/openapi.ts
 src/types/openapiParser.ts
 # old prettier versions do not support key remapping and crash on this file
 src/types/typeBuilder.ts
-
+# old prettier versions do not support key remapping and crash on this file
+src/types/didAuth.ts
