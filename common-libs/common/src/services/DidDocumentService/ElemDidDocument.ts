@@ -116,7 +116,7 @@ export default class ElemDidDocument {
   }
 
   private _getMyDidConfig() {
-    return this._getDid(this._keyVault.externalKeys())
+    return this._getDid(this._keyVault.externalKeys)
   }
 
   getMyDid(): string {
@@ -135,7 +135,7 @@ export default class ElemDidDocument {
   }
 
   async buildDidDocument() {
-    const { did, didDocModel } = this._getDid(this._keyVault.externalKeys())
+    const { did, didDocModel } = this._getDid(this._keyVault.externalKeys)
     const { did: parsedDid } = parse(did)
 
     const prependBaseDID = (field: any) => {

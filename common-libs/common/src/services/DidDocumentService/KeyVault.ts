@@ -15,7 +15,7 @@ export interface KeyVault {
   /**
    * Array of external keys to be added to the elem object
    */
-  externalKeys(): any[]
+  externalKeys: any[]
 
   /**
    * Sign the given payload with the primary public key

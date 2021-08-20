@@ -33,7 +33,7 @@ export class LocalKeyVault implements KeyVault {
     return this._recoveryPublicKey
   }
 
-  externalKeys(): any[] {
+  get externalKeys(): any[] {
     return this._externalKeys
   }
 
