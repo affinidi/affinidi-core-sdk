@@ -5,7 +5,7 @@ import { expect } from 'chai'
 import { KeysService } from '@affinidi/common'
 import { hmacSha256Verify } from 'eccrypto-js'
 
-import platformEncryptionTools, { PlatformEncryptionTools } from '../../src/PlatformEncryptionTools'
+import platformCryptographyTools from '../../src/PlatformCryptographyTools'
 import { generateTestDIDs } from '../factory/didFactory'
 import { stubDecryptSeed } from '../unit/stubs'
 const signedCredential = require('../factory/signedCredential')
@@ -14,7 +14,7 @@ let seed: string
 let password: string
 let encryptedSeed: string
 
-describe('PlatformEncryptionTools', () => {
+describe('PlatformCryptographyTools', () => {
   before(async () => {
     const testDids = await generateTestDIDs()
     password = testDids.password
@@ -23,17 +23,6 @@ describe('PlatformEncryptionTools', () => {
   })
   afterEach(() => {
     sinon.restore()
-  })
-
-  it('#getEphemKeyPair', async () => {
-    const stub = sinon.stub(PlatformEncryptionTools.prototype, 'isValidPrivateKey')
-
-    stub.onFirstCall().returns(false)
-    stub.onSecondCall().returns(true)
-
-    const response = await platformEncryptionTools.getEphemKeyPair()
-
-    expect(response).to.exist
   })
 
   it('#decryptByPrivateKey', async () => {
@@ -45,7 +34,7 @@ describe('PlatformEncryptionTools', () => {
 
     const keysService = new KeysService(encryptedSeed, password)
     const privateKeyBuffer = keysService.getOwnPrivateKey()
-    const response = await platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, badEncryptedDataObjectString)
+    const response = await platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, badEncryptedDataObjectString)
 
     expect(response).to.eql(badEncryptedDataObject)
   })
@@ -54,7 +43,7 @@ describe('PlatformEncryptionTools', () => {
     const keysService = new KeysService(encryptedSeed, password)
     const privateKey = keysService.getOwnPrivateKey()
 
-    const hash = await platformEncryptionTools.computePersonalHash(privateKey, signedCredential.id)
+    const hash = await platformCryptographyTools.computePersonalHash(privateKey, signedCredential.id)
     const result = await hmacSha256Verify(privateKey, Buffer.from(signedCredential.id), Buffer.from(hash, 'hex'))
 
     expect(result).to.true
@@ -64,8 +53,8 @@ describe('PlatformEncryptionTools', () => {
     const keysService = new KeysService(encryptedSeed, password)
     const privateKey = keysService.getOwnPrivateKey()
 
-    const firstHash = await platformEncryptionTools.computePersonalHash(privateKey, signedCredential.id)
-    const secondHash = await platformEncryptionTools.computePersonalHash(privateKey, signedCredential.id)
+    const firstHash = await platformCryptographyTools.computePersonalHash(privateKey, signedCredential.id)
+    const secondHash = await platformCryptographyTools.computePersonalHash(privateKey, signedCredential.id)
 
     expect(firstHash).to.eql(secondHash)
   })

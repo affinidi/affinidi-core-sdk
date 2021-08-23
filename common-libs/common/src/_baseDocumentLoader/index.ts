@@ -59,7 +59,7 @@ const cachedDocuments = new Map(
   Object.entries(localContexts).map(([url, document]) => [
     url,
     Object.freeze({
-      contextUrl: null,
+      contextUrl: null as string | null,
       document: document as Record<string, any>,
       documentUrl: url,
     }),

@@ -4,6 +4,7 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { Affinity, JwtService, DidDocumentService, DigestService, KeysService, profile } from '@affinidi/common'
 
 import { stripParamsFromDidUrl } from '../_helpers'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 
 type ConstructorOptions = {
@@ -15,16 +16,23 @@ type ConstructorOptions = {
 @profile()
 export default class HolderService {
   private _didMap: Record<string, any> = {}
-  private readonly _affinityService: Affinity
-  private readonly _digestService: DigestService
+  private readonly _affinityService
+  private readonly _digestService
 
-  constructor({ registryUrl, metricsUrl, accessApiKey }: ConstructorOptions, component: EventComponent) {
-    this._affinityService = new Affinity({
-      apiKey: accessApiKey,
-      registryUrl,
-      metricsUrl,
-      component,
-    })
+  constructor(
+    { registryUrl, metricsUrl, accessApiKey }: ConstructorOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
+    component: EventComponent,
+  ) {
+    this._affinityService = new Affinity(
+      {
+        apiKey: accessApiKey,
+        registryUrl,
+        metricsUrl,
+        component,
+      },
+      platformCryptographyTools,
+    )
     this._digestService = new DigestService()
   }
 

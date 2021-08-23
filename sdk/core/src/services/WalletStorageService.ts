@@ -4,7 +4,7 @@ import { DidAuthAdapter } from '@affinidi/internal-api-clients'
 
 import { Env } from '../dto/shared.dto'
 
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
 
 import { SignedCredential } from '../dto/shared.dto'
@@ -29,24 +29,24 @@ type ConstructorOptions = {
 
 @profile()
 export default class WalletStorageService {
-  private _storageRegion: string
-  private _bloomVaultStorageService: BloomVaultStorageService
-  private _affinidiVaultStorageService: AffinidiVaultStorageService
+  private _storageRegion
+  private _bloomVaultStorageService
+  private _affinidiVaultStorageService
 
   constructor(
     keysService: KeysService,
-    platformEncryptionTools: IPlatformEncryptionTools,
+    platformCryptographyTools: IPlatformCryptographyTools,
     options: ConstructorOptions,
   ) {
     this._storageRegion = options.storageRegion
 
-    this._affinidiVaultStorageService = new AffinidiVaultStorageService(keysService, platformEncryptionTools, {
+    this._affinidiVaultStorageService = new AffinidiVaultStorageService(keysService, platformCryptographyTools, {
       didAuthAdapter: options.didAuthAdapter,
       accessApiKey: options.accessApiKey,
       vaultUrl: options.affinidiVaultUrl,
     })
 
-    this._bloomVaultStorageService = new BloomVaultStorageService(keysService, platformEncryptionTools, {
+    this._bloomVaultStorageService = new BloomVaultStorageService(keysService, platformCryptographyTools, {
       accessApiKey: options.accessApiKey,
       vaultUrl: options.bloomVaultUrl,
     })

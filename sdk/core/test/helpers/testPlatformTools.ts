@@ -1,7 +1,8 @@
-import { IPlatformEncryptionTools } from '../../src/shared/interfaces'
+import { ecdsaCryptographyTools } from '@affinidi/common'
+import { IPlatformCryptographyTools } from '../../src/shared/interfaces'
 
-export const testPlatformTools: IPlatformEncryptionTools = {
-  platformName: 'stub',
+export const testPlatformTools: IPlatformCryptographyTools = {
+  ...ecdsaCryptographyTools,
   // eslint-disable-next-line no-unused-vars
   decryptByPrivateKey: async (_privateKeyBuffer: Buffer, data: string) => {
     return JSON.parse(data)
@@ -14,5 +15,13 @@ export const testPlatformTools: IPlatformEncryptionTools = {
   // eslint-disable-next-line no-unused-vars
   computePersonalHash: async (_privateKeyBuffer: Buffer, data: string) => {
     return data
+  },
+  keyGenerators: {
+    bbs: () => {
+      throw new Error('Not implemented')
+    },
+    rsa: () => {
+      throw new Error('Not implemented')
+    },
   },
 }

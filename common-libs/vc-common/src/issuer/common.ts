@@ -15,7 +15,13 @@ export type GetSignSuiteOptions = {
   publicKey?: string
 }
 
-export type GetSignSuiteFn = (options: GetSignSuiteOptions) => any | Promise<any>
+export type SignSuite = {
+  createProof(
+    params: Record<'document' | 'purpose' | 'documentLoader' | 'expansionMap' | 'compactProof', any>,
+  ): any | Promise<any>
+}
+
+export type GetSignSuiteFn = (options: GetSignSuiteOptions) => SignSuite | Promise<SignSuite>
 
 export type GetProofPurposeOptionsOptions = {
   controller: string

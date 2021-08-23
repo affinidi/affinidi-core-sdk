@@ -18,6 +18,7 @@ import {
 import { credentialShareRequestTokenToFilterCredentials } from '../factory/credentialShareRequestToken'
 import { generateCredentials } from '../helpers/generateCredentials'
 import { SignedCredential } from '../../src/dto'
+import { testPlatformTools } from '../helpers/testPlatformTools'
 
 const {
   PASSWORD,
@@ -173,7 +174,7 @@ describe('CommonNetworkMember', () => {
 
     const affinityOptions = Object.assign({}, options, { apiKey: options.accessApiKey })
 
-    const affinity = new Affinity(affinityOptions)
+    const affinity = new Affinity(affinityOptions, testPlatformTools)
     const validateCredentialsResponse = await affinity.validateCredential(signedCredentials[0])
 
     expect(validateCredentialsResponse).to.deep.equal({ result: true, error: '' })
@@ -371,7 +372,7 @@ describe('CommonNetworkMember', () => {
     const revokableUnsignedCredential = await commonNetworkMember.buildRevocationListStatus(unsignedCredential)
 
     const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
-    const affinity = new Affinity(affinityOptions)
+    const affinity = new Affinity(affinityOptions, testPlatformTools)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
     const createdCredential = await affinity.signCredential(revokableUnsignedCredential, ISSUER_ELEM_SEED, password)
 

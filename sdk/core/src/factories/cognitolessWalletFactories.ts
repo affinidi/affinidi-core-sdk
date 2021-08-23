@@ -3,16 +3,12 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { NetworkMemberWithoutCognito, UniversalDerivedType } from '../CommonNetworkMember/NetworkMemberWithoutCognito'
 import { SdkOptions } from '../dto/shared.dto'
 import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 
-const createWallet = (
-  platformEncryptionTools: IPlatformEncryptionTools,
-  affinidiCommon: AffinidiCommonConstructor | null,
-  component: EventComponent,
-) => {
+const createWallet = (platformCryptographyTools: IPlatformCryptographyTools, component: EventComponent) => {
   class Wallet extends NetworkMemberWithoutCognito {
     constructor(password: string, encryptedSeed: string, options: ParsedOptions) {
-      super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
+      super(password, encryptedSeed, platformCryptographyTools, options, component)
     }
   }
 
@@ -20,11 +16,10 @@ const createWallet = (
 }
 
 export const createCognitolessWalletFactories = (
-  platformEncryptionTools: IPlatformEncryptionTools,
-  affinidiCommon: AffinidiCommonConstructor | null,
+  platformCryptographyTools: IPlatformCryptographyTools,
   component: EventComponent,
 ) => {
-  const Wallet = createWallet(platformEncryptionTools, affinidiCommon, component)
+  const Wallet = createWallet(platformCryptographyTools, component)
 
   return {
     /**
@@ -34,7 +29,7 @@ export const createCognitolessWalletFactories = (
      * @returns initialized instance of SDK
      */
     createWallet: (inputOptions: SdkOptions, inputPassword: string) => {
-      return Wallet.createWallet(inputOptions, inputPassword)
+      return Wallet.createWallet(inputOptions, platformCryptographyTools, inputPassword)
     },
 
     /**

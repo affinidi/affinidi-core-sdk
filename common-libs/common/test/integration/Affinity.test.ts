@@ -3,6 +3,7 @@ import { expect } from 'chai'
 import { signedCredential, signedCredentialWithLongFormVerificationMethod } from '../factory/signedCredential'
 import { signedPresentation } from '../factory/signedPresentation'
 import { Affinity } from '../../src'
+import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
 
 const { TEST_SECRETS } = process.env
 const { STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
@@ -12,7 +13,7 @@ const options = {
   apiKey: STAGING_API_KEY_HASH,
 }
 
-const affinity = new Affinity(options)
+const affinity = new Affinity(options, ecdsaCryptographyTools)
 
 describe('Validation Snapshots', () => {
   // TODO: to resolve: expected false to be true

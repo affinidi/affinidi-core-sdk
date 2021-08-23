@@ -5,6 +5,7 @@ import nock from 'nock'
 
 import { KeysService } from '../../src/services'
 import { Affinity } from '../../src'
+import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
 import {
   credential,
   credentialStatus,
@@ -34,7 +35,7 @@ const jwtObject = {
   },
 }
 
-const affinity = new Affinity(options)
+const affinity = new Affinity(options, ecdsaCryptographyTools)
 
 const jwt =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJpbnRlcmFjdGlvblRva2Vu' +
