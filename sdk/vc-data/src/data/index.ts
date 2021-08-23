@@ -27,5 +27,6 @@ export * from './winner'
 export * from './accountOwnership'
 export * from './hackathon'
 export * from './grant'
+export * from './personaldataconsent'
 
 export * from './util'
