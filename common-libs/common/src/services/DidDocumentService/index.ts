@@ -6,6 +6,7 @@ import { LocalKeyVault } from './LocalKeyVault'
 
 export { default as ElemDidDocument } from './ElemDidDocument'
 export { KeyVault } from './KeyVault'
+export { LocalKeyVault } from './LocalKeyVault'
 
 export default class DidDocumentService {
   constructor(keysService: KeysService) {
