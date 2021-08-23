@@ -15,13 +15,13 @@ describe('VCPersonalDataConsentV1', () => {
         consentAttributes: [
           {
             '@type': 'PersonalDataConsentAttribute',
-            name: 'first name',
+            attributeName: 'first name',
             purpose: 'hold',
             status: 'opt-in',
           },
           {
             '@type': 'PersonalDataConsentAttribute',
-            name: 'last name',
+            attributeName: 'last name',
             purpose: 'hold',
             status: 'opt-out',
           },
@@ -49,7 +49,7 @@ describe('VCPersonalDataConsentV1', () => {
                     "@type": Array [
                       "https://schema.affinity-project.org/PersonalDataConsentAttribute",
                     ],
-                    "https://schema.affinity-project.org/name": Array [
+                    "https://schema.affinity-project.org/attributeName": Array [
                       Object {
                         "@value": "first name",
                       },
@@ -69,7 +69,7 @@ describe('VCPersonalDataConsentV1', () => {
                     "@type": Array [
                       "https://schema.affinity-project.org/PersonalDataConsentAttribute",
                     ],
-                    "https://schema.affinity-project.org/name": Array [
+                    "https://schema.affinity-project.org/attributeName": Array [
                       Object {
                         "@value": "last name",
                       },

@@ -7,7 +7,7 @@ type PersonalDataConsentAttribute = CreateThing<
   'PersonalDataConsentAttribute',
   {
     vcId?: string
-    name: string
+    attributeName: string
     purpose: string
     status: 'opt-in' | 'opt-out'
   }
