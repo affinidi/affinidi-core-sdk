@@ -1,6 +1,6 @@
 /* eslint-disable arrow-body-style */
 import createHash from 'create-hash'
-import * as secp256k1 from 'secp256k1'
+
 const base64url = require('base64url')
 const multihashes = require('multihashes')
 
@@ -38,12 +38,7 @@ export const getDidUniqueSuffix = (operation: any) => {
 }
 
 // NOTE check is signatures are the same as sidetree's (see NEP-334)
-export const signEncodedPayload = (encodedHeader: string, encodedPayload: string, privateKey: string) => {
+export const computePayloadHash = (encodedHeader: string, encodedPayload: string): Buffer => {
   const toBeSigned = `${encodedHeader}.${encodedPayload}`
-  const hash = sha256(toBeSigned)
-
-  const privateKeyBuffer = Buffer.from(privateKey, 'hex')
-  const signatureObject = secp256k1.ecdsaSign(hash, privateKeyBuffer)
-
-  return base64url.encode(signatureObject.signature)
+  return sha256(toBeSigned)
 }
