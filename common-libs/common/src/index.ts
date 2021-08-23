@@ -18,4 +18,12 @@ export { Affinity, Affinity as Affinidi } from './Affinity'
 export { profile, ProfileAction } from './shared/profiler/ProfilerDecorator'
 export { SdkError }
 
-export { DidDocumentService, DigestService, JwtService, KeysService, MetricsService } from './services'
+export {
+  ElemDidDocument,
+  KeyVault,
+  DidDocumentService,
+  DigestService,
+  JwtService,
+  KeysService,
+  MetricsService,
+} from './services'

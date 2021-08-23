@@ -2,6 +2,10 @@ import KeysService from '../KeysService'
 import JoloDidDocument from './JoloDidDocument'
 import ElemDidDocument from './ElemDidDocument'
 import { parse } from 'did-resolver'
+import { LocalKeyVault } from './LocalKeyVault'
+
+export { default as ElemDidDocument } from './ElemDidDocument'
+export { KeyVault } from './KeyVault'
 
 export default class DidDocumentService {
   constructor(keysService: KeysService) {
@@ -13,7 +17,7 @@ export default class DidDocumentService {
         didDocumentService = new JoloDidDocument(keysService)
         break
       case 'elem':
-        didDocumentService = new ElemDidDocument(keysService)
+        didDocumentService = new ElemDidDocument(new LocalKeyVault(keysService))
         break
     }
 
