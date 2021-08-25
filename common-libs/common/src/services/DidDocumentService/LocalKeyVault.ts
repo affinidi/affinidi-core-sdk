@@ -42,4 +42,8 @@ export class LocalKeyVault implements KeyVault {
 
     return Buffer.from(signatureObject.signature)
   }
+
+  async signAsync(payload: Buffer): Promise<Buffer> {
+    return this.sign(payload)
+  }
 }
