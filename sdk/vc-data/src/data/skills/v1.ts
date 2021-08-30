@@ -3,7 +3,6 @@ import { VCV1, VCV1Subject } from '@affinidi/vc-common'
 import { PersonEV1, getBaseV1ContextEntries } from '../base/v1'
 import {
   CreateThing,
-  MaybeArray,
   ExtendThing,
   Type,
   ExpandThing,
