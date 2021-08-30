@@ -36,13 +36,12 @@ export const createV5CompatibleWalletFactories = (
   const cognitoFactories = createCognitoWalletFactories(platformCryptographyTools, component)
   const cognitolessFactories = createCognitolessWalletFactories(platformCryptographyTools, component)
   const publicToolsFactories = createPublicToolsFactories(platformCryptographyTools, component)
-  return Object.assign(
-    createConstructor(legacyConstructor),
-    cognitoFactories,
-    cognitolessFactories,
-    publicToolsFactories,
-    legacyFactories,
-  )
+  return Object.assign(createConstructor(legacyConstructor), {
+    ...cognitoFactories,
+    ...cognitolessFactories,
+    ...publicToolsFactories,
+    ...legacyFactories,
+  })
 }
 
 export const createV6WalletFactories = (

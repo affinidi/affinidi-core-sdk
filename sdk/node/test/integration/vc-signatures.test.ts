@@ -1,6 +1,7 @@
 import { Affinidi, generateFullSeed, KeysService } from '@affinidi/common'
 import { expect } from 'chai'
 
+import { getAllOptionsForEnvironment } from '../../../core/test/helpers'
 import platformCryptographyTools from '../../src/PlatformCryptographyTools'
 
 import * as rsaFixtures from '../factory/rsa.fixtures'
@@ -8,9 +9,9 @@ import * as bbsFixtures from '../factory/bbs.fixtures'
 
 import { employmentVCRevoked } from '../factory/employmentVCRevoked'
 
-const registryUrl = process.env.TEST_REGISTRY_URL
-const apiKey = process.env.TEST_API_KEY
-const affinidi = new Affinidi({ registryUrl, apiKey }, platformCryptographyTools)
+const { registryUrl, accessApiKey } = getAllOptionsForEnvironment()
+const affinidiOptions = { registryUrl, apiKey: accessApiKey }
+const affinidi = new Affinidi(affinidiOptions, platformCryptographyTools)
 
 function simpleClonePlainObject<T>(object: T): T {
   return JSON.parse(JSON.stringify(object))
