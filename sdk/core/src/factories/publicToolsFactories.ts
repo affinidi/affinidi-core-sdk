@@ -1,5 +1,5 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
-import { createPublicTools } from '../CommonNetworkMember/PublicTools'
+import { PublicTools } from '../CommonNetworkMember/PublicTools'
 
 import { SdkOptions } from '../dto/shared.dto'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
@@ -16,7 +16,7 @@ export const createPublicToolsFactories = (
      * @returns initialized instance of SDK
      */
     createPublicTools: (inputOptions: SdkOptions) => {
-      return createPublicTools(platformCryptographyTools, inputOptions, component)
+      return new PublicTools(platformCryptographyTools, inputOptions, component)
     },
   }
 }

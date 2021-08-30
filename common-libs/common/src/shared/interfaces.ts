@@ -1,9 +1,26 @@
-import { GetSignSuiteFn, VerifySuite } from '@affinidi/vc-common'
 import { baseDocumentLoader } from '../_baseDocumentLoader'
 
 export interface FreeFormObject {
   [key: string]: any
 }
+
+type GetSignSuiteOptions = {
+  controller: string
+  keyId: string
+  privateKey: string
+  publicKey?: string
+}
+
+type SignSuite = {
+  createProof(params: any): any
+}
+
+type VerifySuite = Partial<{
+  matchProof(params: any): boolean | Promise<boolean>
+  verifyProof(params: any): Promise<any>
+}>
+
+type GetSignSuiteFn = (options: GetSignSuiteOptions) => SignSuite | Promise<SignSuite>
 
 type CreateVerifySuite = (publicKey: Buffer, verificationMethod: string, controller: string) => VerifySuite
 
