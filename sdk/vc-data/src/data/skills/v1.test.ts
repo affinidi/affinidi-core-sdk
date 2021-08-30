@@ -11,7 +11,7 @@ describe('VCSkillsPersonV1', () => {
         '@type': ['Person', 'PersonE', 'SkillsPerson'],
         firstName: 'Bob',
         lastName: 'Belcher',
-        participantEmail: 'bob@thebuilder.com',
+        email: 'bob@thebuilder.com',
         dateOfBirth: '21-09-1994',
         skillName: 'Skills 2021',
         awardedDate: '09-06-2021',
@@ -73,7 +73,7 @@ describe('VCSkillsPersonV1', () => {
                     "@value": "Belcher",
                   },
                 ],
-                "https://schema.org/participantEmail": Array [
+                "https://schema.org/email": Array [
                   Object {
                     "@value": "bob@thebuilder.com",
                   },
