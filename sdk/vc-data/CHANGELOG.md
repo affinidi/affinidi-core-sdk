@@ -1,3 +1,6 @@
+# 1.3.9 (2021-08-30)
+* vc-data skills schema
+
 # 1.3.4 (2021-06-04)
 * vc-data account-ownership schema
 # 1.3.0 (2021-06-04)
