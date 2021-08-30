@@ -1,15 +1,5 @@
-import {
-  buildVCV1,
-  buildVPV1,
-  GetSignSuiteFn,
-  GetVerifySuiteOptions,
-  removeIfExists,
-  SimpleThing,
-  VCV1Subject,
-  VCV1SubjectBaseMA,
-} from '@affinidi/vc-common'
+import { buildVCV1, buildVPV1, removeIfExists, SimpleThing, VCV1Subject, VCV1SubjectBaseMA } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
-import { VerifySuite } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/affinity-metrics-lib'
@@ -269,44 +259,6 @@ export class Affinity {
     return { verified: true }
   }
 
-  private createEcdsaVerifySuite(publicKey: Buffer, verificationMethod: string, controller: string): VerifySuite {
-    return new Secp256k1Signature({
-      key: new Secp256k1Key({
-        publicKeyHex: publicKey.toString('hex'),
-        id: verificationMethod,
-        controller,
-      }),
-    })
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  protected createRsaVerifySuite(_publicKey: Buffer, _verificationMethod: string, _controller: string): VerifySuite {
-    throw new Error('Not implemented')
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  protected createBbsVerifySuite(_publicKey: Buffer, _verificationMethod: string, _controller: string): VerifySuite {
-    throw new Error('Not implemented')
-  }
-
-  private async getVerifySuite(
-    issuerDidDocument: any,
-    { proofType, verificationMethod, controller }: GetVerifySuiteOptions,
-  ) {
-    const publicKey = DidDocumentService.getPublicKey(verificationMethod, issuerDidDocument)
-    const factories = this._platformCryptographyTools.verifySuiteFactories
-    if (proofType in factories) {
-      return factories[proofType as ProofType](publicKey, verificationMethod, controller)
-    }
-
-    throw new Error(`Unsupported proofType: ${proofType}`)
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  private async validateBbsBlsSignatureProof2020(_credential: VCV1, _didDocument: any) {
-    return undefined as any
-  }
-
   public async validateCredential(
     credential: any,
     holderKey?: string,
@@ -435,38 +387,6 @@ export class Affinity {
     }
 
     return { result: true, error: '' }
-  }
-
-  private async getEcdsaSignSuite(keyService: KeysService, did: string, mainKeyId: string) {
-    const { seed, didMethod } = keyService.decryptSeed()
-
-    const issuer = {
-      did,
-      keyId: mainKeyId,
-      privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod).toString('hex'),
-    }
-
-    const getSignSuite: GetSignSuiteFn = ({ keyId, privateKey, controller }) => {
-      return new Secp256k1Signature({
-        key: new Secp256k1Key({
-          id: keyId,
-          controller,
-          privateKeyHex: privateKey,
-        }),
-      })
-    }
-
-    return { issuer, getSignSuite }
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  private async getRsaSignSuite(_keyService: KeysService, _did: string, _mainKeyId: string): Promise<any> {
-    return Promise.reject(new Error('Not implemented'))
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  private async getBbsSignSuite(_keyService: KeysService, _did: string, _mainKeyId: string): Promise<any> {
-    return Promise.reject(new Error('Not implemented'))
   }
 
   private getIssuerForSigning(keySuiteType: KeySuiteType, keyService: KeysService, did: string, mainKeyId: string) {

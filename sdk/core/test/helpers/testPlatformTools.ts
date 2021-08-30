@@ -16,12 +16,4 @@ export const testPlatformTools: IPlatformCryptographyTools = {
   computePersonalHash: async (_privateKeyBuffer: Buffer, data: string) => {
     return data
   },
-  keyGenerators: {
-    bbs: () => {
-      throw new Error('Not implemented')
-    },
-    rsa: () => {
-      throw new Error('Not implemented')
-    },
-  },
 }

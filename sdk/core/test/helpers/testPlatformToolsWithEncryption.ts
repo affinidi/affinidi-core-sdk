@@ -80,13 +80,4 @@ export const testPlatformToolsWithEncryption: IPlatformCryptographyTools = {
 
     return signature
   },
-
-  keyGenerators: {
-    bbs: () => {
-      throw new Error('Not implemented')
-    },
-    rsa: () => {
-      throw new Error('Not implemented')
-    },
-  },
 }

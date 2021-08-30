@@ -74,15 +74,6 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
 
     return signature
   },
-
-  keyGenerators: {
-    bbs: () => {
-      throw new Error('Not implemented')
-    },
-    rsa: () => {
-      throw new Error('Not implemented')
-    },
-  },
 }
 
 export default platformCryptographyTools
