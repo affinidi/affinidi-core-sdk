@@ -1,4 +1,4 @@
-# 2.0.0-beta.5 (2020-08-23)
+# 2.0.0-beta.6 (2020-08-23)
 * export `LocalKeyService`
 # 2.0.0-beta.5 (2020-08-20)
 * `ElemDidDocument` abstracted to use a KeyVault to provide the relevant keys
