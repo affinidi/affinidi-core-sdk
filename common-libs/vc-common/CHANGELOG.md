@@ -1,4 +1,8 @@
-## 1.4.0 (2020-07-01)
+## 1.4.2 (2021-08-30)
+
+Improved types
+
+## 1.4.0 (2021-07-01)
 
 * Added support for "proofValue" field in "proof" entry of the VC
 * SignSuite now accepts optional public key for signing (for BBS+ signing process)
