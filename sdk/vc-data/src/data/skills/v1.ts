@@ -16,20 +16,12 @@ type SkillsPersonV1Mixin = CreateThing<
   {
     firstName: string
     lastName: string
-    participantEmail: string
+    email: string
     dateOfBirth?: string
-    eventName: string
-    eventDescription?: string
-    prizeName: string
-    prizeCurrency?: string
-    prizeAmount?: string
-    transactionLink?: string
-    otherTeamMembers?: MaybeArray<string>
+    skillName: string
     awardedDate: string
     awardedBy: string
-    expiryDate?: string
-    certificate?: string
-    awardeeDescription?: string
+    skillDescription?: string
     profileLink?: string
   }
 >
