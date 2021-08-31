@@ -1,6 +1,7 @@
 export * from './account'
 export * from './address'
 export * from './aml'
+export * from './attendee'
 export * from './base'
 export * from './courtRecordSearch'
 export * from './credit'
