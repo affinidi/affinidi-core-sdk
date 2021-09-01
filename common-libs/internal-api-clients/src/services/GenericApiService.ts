@@ -71,8 +71,8 @@ export default class GenericApiService<TApi extends BuiltApiType> {
 
     // eslint-disable-next-line no-unused-vars
     const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => options.pathParams?.[p1])
-    const url = new URL(path)
-    url.search = new URLSearchParams(options.queryParams ?? {}).toString()
+    const search = new URLSearchParams(options.queryParams ?? {}).toString()
+    const url = new URL(path.endsWith('?') || !search ? path + search : `${path}?${search}`)
 
     const response = await fetch(url, fetchOptions)
     const { status } = response
