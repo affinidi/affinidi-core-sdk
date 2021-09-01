@@ -60,7 +60,7 @@ export default class GenericApiService<TApi extends BuiltApiType> {
     method: string,
     pathTemplate: string,
     headers: ApiRequestHeaders,
-    options: { params?: any; pathParams?: any; queryParams?: any },
+    options: { params?: any; pathParams?: any; queryParams?: Record<string, string> },
   ) {
     const { params } = options
     const fetchOptions = {
@@ -71,8 +71,11 @@ export default class GenericApiService<TApi extends BuiltApiType> {
 
     // eslint-disable-next-line no-unused-vars
     const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => options.pathParams?.[p1])
-    const search = new URLSearchParams(options.queryParams ?? {}).toString()
-    const url = new URL(path.endsWith('?') || !search ? path + search : `${path}?${search}`)
+    const url = new URL(path)
+
+    for (const [name, value] of Object.entries(options.queryParams ?? {})) {
+      url.searchParams.set(name, value)
+    }
 
     const response = await fetch(url, fetchOptions)
     const { status } = response
