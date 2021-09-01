@@ -21,6 +21,7 @@ export { SdkError }
 export {
   ElemDidDocument,
   KeyVault,
+  LocalKeyVault,
   DidDocumentService,
   DigestService,
   JwtService,

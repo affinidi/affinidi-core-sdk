@@ -1,9 +1,13 @@
-# 2.0.0-beta.6 (2021-08-30)
+# 2.0.0-beta.7 (2021-08-30)
 * `Affinity` constructor now requires `IPlatformCryptographyTools` parameter
 * Implemented support for BBS and RSA (key generation, signing, validation), if relevant `IPlatformCryptographyTools` is provided
 * Improved types
 * New `generateSeed` method is exported
 * Document loader now caches schemas loaded frow w3.org and w3id.org
+# 2.0.0-beta.6 (2021-08-23)
+* export `LocalKeyService`
+* Add `asyncSign` to `KeyVault` to simplify usage of the library in async contexts
+* export `LocalKeyService` implements `asyncSign`
 # 2.0.0-beta.5 (2021-08-20)
 * `ElemDidDocument` abstracted to use a KeyVault to provide the relevant keys
 # 2.0.0-beta.4 (2021-07-23)

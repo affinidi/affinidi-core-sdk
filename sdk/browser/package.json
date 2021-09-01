@@ -43,7 +43,7 @@
     "randombytes": "^2.1.0"
   },
   "devDependencies": {
-    "@affinidi/common": "^2.0.0-beta.6",
+    "@affinidi/common": "^2.0.0-beta.7",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
