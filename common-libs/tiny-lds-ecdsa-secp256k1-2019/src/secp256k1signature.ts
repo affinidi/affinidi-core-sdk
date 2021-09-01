@@ -26,7 +26,22 @@ type ProofType = {
 type SignParams = { verifyData: BufferLike; proof: ProofType }
 type VerifyParams = { verifyData: BufferDataLike; proof: ProofType }
 
-export default class Secp256k1Signature extends jsigs.suites.LinkedDataSignature {
+type MatchProofOptions = {
+  proof: ProofType
+  document: unknown
+  purpose: unknown
+  documentLoader: unknown
+  expansionMap: unknown
+}
+
+type LinkedDataSignatureInstance = {
+  createProof(...args: any[]): Promise<unknown>
+  matchProof(options: MatchProofOptions): Promise<boolean>
+  verifyProof(...args: any[]): Promise<unknown>
+}
+const LinkedDataSignature: new (options: unknown) => LinkedDataSignatureInstance = jsigs.suites.LinkedDataSignature
+
+export default class Secp256k1Signature extends LinkedDataSignature {
   private readonly key: Secp256k1Key
   private readonly verificationKeyType: string
 
@@ -87,13 +102,7 @@ export default class Secp256k1Signature extends jsigs.suites.LinkedDataSignature
   }
 
   /** used by linked data signatures and vc libraries */
-  async matchProof(options: {
-    proof: ProofType
-    document: unknown
-    purpose: unknown
-    documentLoader: unknown
-    expansionMap: unknown
-  }): Promise<boolean> {
+  async matchProof(options: MatchProofOptions): Promise<boolean> {
     if (!(await super.matchProof(options))) {
       return false
     }

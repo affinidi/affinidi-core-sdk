@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/vc-common",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "main": "dist/index.js",
   "module": "dist/vc-common.esm.js",
   "typings": "dist/index.d.ts",
@@ -37,7 +37,7 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.0",
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.1",
     "@mattrglobal/jsonld-signatures-bbs": "^0.10.0",
     "eslint-config-react-app": "6.0.0-next.77",
     "jsonld": "^4.0.1",

@@ -2,7 +2,7 @@ import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import { SignedCredential, SdkOptions } from '../dto/shared.dto'
-import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import WalletStorageService from '../services/WalletStorageService'
@@ -30,12 +30,11 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
   constructor(
     password: string,
     encryptedSeed: string,
-    platformEncryptionTools: IPlatformEncryptionTools,
-    affinidiCommon: AffinidiCommonConstructor | null,
+    platformCryptographyTools: IPlatformCryptographyTools,
     options: ParsedOptions,
     component: EventComponent,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
+    super(password, encryptedSeed, platformCryptographyTools, options, component)
 
     const {
       basicOptions: { phoneIssuerBasePath, emailIssuerBasePath },
@@ -191,14 +190,18 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
    *
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
-  static async register(password: string, inputOptions: SdkOptions): Promise<{ did: string; encryptedSeed: string }> {
+  static async register(
+    inputOptions: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
+    password: string,
+  ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: password },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    return LegacyNetworkMember._register(password, options)
+    return LegacyNetworkMember._register(options, platformCryptographyTools, password)
   }
 
   static async anchorDid(

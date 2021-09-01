@@ -1,26 +1,27 @@
+import { ecdsaCryptographyTools, IPlatformCryptographyTools } from '@affinidi/wallet-core-sdk'
 import * as eccrypto from 'eccrypto-js'
 import randomBytes from 'randombytes'
 
-export class PlatformEncryptionTools {
-  platformName = 'react-native'
+const isValidPrivateKey = (privateKey: Buffer) => {
+  const { EC_GROUP_ORDER, ZERO32 } = eccrypto
 
-  isValidPrivateKey(privateKey: Buffer) {
-    const { EC_GROUP_ORDER, ZERO32 } = eccrypto
+  const isValid = privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
+  return isValid
+}
 
-    return privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
+const getEphemKeyPair = async () => {
+  let ephemPrivateKey = await randomBytes(32)
+
+  while (!isValidPrivateKey(ephemPrivateKey)) {
+    ephemPrivateKey = await randomBytes(32)
   }
 
-  getEphemKeyPair(): Buffer {
-    let ephemPrivateKey = randomBytes(32)
+  return ephemPrivateKey
+}
 
-    while (!this.isValidPrivateKey(ephemPrivateKey)) {
-      ephemPrivateKey = randomBytes(32)
-    }
-
-    return ephemPrivateKey
-  }
-
-  async decryptByPrivateKey(privateKeyBuffer: Buffer, encryptedDataString: string): Promise<any> {
+const platformCryptographyTools: IPlatformCryptographyTools = {
+  ...ecdsaCryptographyTools,
+  decryptByPrivateKey: async (privateKeyBuffer, encryptedDataString) => {
     const encryptedDataObject = JSON.parse(encryptedDataString)
 
     const { iv, ephemPublicKey, ciphertext, mac } = encryptedDataObject
@@ -38,16 +39,17 @@ export class PlatformEncryptionTools {
     }
 
     const dataBuffer = await eccrypto.decrypt(privateKeyBuffer, encryptedData)
+    const data = JSON.parse(dataBuffer.toString())
 
-    return JSON.parse(dataBuffer.toString())
-  }
+    return data
+  },
 
-  async encryptByPublicKey(publicKeyBuffer: Buffer, data: unknown): Promise<string> {
+  encryptByPublicKey: async (publicKeyBuffer, data) => {
     const dataString = JSON.stringify(data)
     const dataBuffer = Buffer.from(dataString)
 
-    const randomIv = randomBytes(16)
-    const ephemPrivateKey = this.getEphemKeyPair()
+    const randomIv = await randomBytes(16)
+    const ephemPrivateKey = await getEphemKeyPair()
 
     const options = { iv: randomIv, ephemPrivateKey }
 
@@ -62,19 +64,19 @@ export class PlatformEncryptionTools {
       mac: mac.toString('hex'),
     }
 
-    return JSON.stringify(serializedEncryptedData)
-  }
+    const serializedEncryptedDataString = JSON.stringify(serializedEncryptedData)
 
-  async computePersonalHash(privateKeyBuffer: Buffer, data: string) {
+    return serializedEncryptedDataString
+  },
+
+  computePersonalHash: async (privateKeyBuffer, data) => {
     const dataBuffer = Buffer.from(data)
 
     const signatureBuffer = await eccrypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
     const signature = signatureBuffer.toString('hex')
 
     return signature
-  }
+  },
 }
 
-const platformEncryptionTools = new PlatformEncryptionTools()
-
-export default platformEncryptionTools
+export default platformCryptographyTools

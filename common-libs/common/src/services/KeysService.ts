@@ -5,6 +5,7 @@ import { ecsign } from 'ethereumjs-util'
 
 import { validateDidMethodSupported } from '../_helpers'
 import { randomBytes } from '../shared/randomBytes'
+import { convertDecryptedSeedBufferToString, parseDecryptedSeed } from '../shared/seedTools'
 import DigestService from './DigestService'
 import DidDocumentService from './DidDocumentService'
 
@@ -157,12 +158,8 @@ export default class KeysService {
   }
 
   static async encryptSeed(seedHexWithMethod: string, encryptionKeyBuffer: unknown) {
-    const isMethodAdded = seedHexWithMethod.split('++')[1]
-    let bufferMethod: undefined | 'hex' = undefined
-
-    if (!isMethodAdded) {
-      bufferMethod = 'hex'
-    }
+    // legacy seeds are not actually strings, so should be encoded with hex
+    const bufferMethod = seedHexWithMethod.includes('++') ? undefined : 'hex'
 
     const seedBuffer = Buffer.from(seedHexWithMethod, bufferMethod)
     const iv = await randomBytes(IV_LENGTH)
@@ -214,34 +211,9 @@ export default class KeysService {
     const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, password, iv)
 
     const decryptedBuffer = Buffer.concat([decipher.update(encryptedSeedWtihoutVector), decipher.final()])
+    const decryptedString = convertDecryptedSeedBufferToString(decryptedBuffer)
 
-    const decryptedString = decryptedBuffer.toString()
-    const seedParts = decryptedString.split('++')
-    const seedString = seedParts[0]
-    let didMethod = seedParts[1]
-    const base64EncodedKeys = seedParts[2]
-
-    let externalKeys = []
-    let seed
-    if (!didMethod) {
-      // to suppoer already created seeds
-      didMethod = 'jolo'
-      seed = decryptedBuffer
-    } else {
-      seed = Buffer.from(seedString, 'hex')
-    }
-
-    validateDidMethodSupported(didMethod)
-    const seedHex = seed.toString('hex')
-    const seedHexWithMethod = `${seedHex}++${didMethod}`
-    let fullSeedHex = seedHexWithMethod
-
-    if (base64EncodedKeys) {
-      fullSeedHex = `${fullSeedHex}++${base64EncodedKeys}`
-      externalKeys = JSON.parse(encode.decode(base64EncodedKeys))
-    }
-
-    return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex }
+    return parseDecryptedSeed(decryptedString)
   }
 
   static normalizePassword(password: string): Buffer | undefined {

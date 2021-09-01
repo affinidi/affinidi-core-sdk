@@ -1,4 +1,12 @@
-import { profile, DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
+import {
+  profile,
+  DidDocumentService,
+  JwtService,
+  KeysService,
+  MetricsService,
+  Affinity,
+  generateFullSeed,
+} from '@affinidi/common'
 import {
   IssuerApiService,
   RegistryApiService,
@@ -32,9 +40,10 @@ import {
   JwtOptions,
   KeyParams,
   KeyAlgorithmType,
+  KeyOptions,
 } from '../dto/shared.dto'
 
-import { IPlatformEncryptionTools, AffinidiCommonConstructor } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 
 import {
@@ -76,13 +85,12 @@ export abstract class BaseNetworkMember {
   protected readonly _options
   private _didDocumentKeyId: string
   protected readonly _component: EventComponent
-  protected readonly _platformEncryptionTools: IPlatformEncryptionTools
+  protected readonly _platformCryptographyTools
 
   constructor(
     password: string,
     encryptedSeed: string,
-    platformEncryptionTools: IPlatformEncryptionTools,
-    AffinidiCommon: AffinidiCommonConstructor | null,
+    platformCryptographyTools: IPlatformCryptographyTools,
     options: ParsedOptions,
     component: EventComponent,
   ) {
@@ -123,7 +131,7 @@ export abstract class BaseNetworkMember {
       sdkVersion,
       didAuthAdapter,
     })
-    this._walletStorageService = new WalletStorageService(keysService, platformEncryptionTools, {
+    this._walletStorageService = new WalletStorageService(keysService, platformCryptographyTools, {
       bloomVaultUrl,
       affinidiVaultUrl,
       accessApiKey,
@@ -131,13 +139,20 @@ export abstract class BaseNetworkMember {
       didAuthAdapter,
     })
     this._jwtService = new JwtService()
-    this._holderService = new HolderService({ registryUrl, metricsUrl, accessApiKey }, component)
-    this._affinity = new (AffinidiCommon ?? (Affinity as AffinidiCommonConstructor))({
-      apiKey: accessApiKey,
-      registryUrl: registryUrl,
-      metricsUrl: metricsUrl,
-      component: component,
-    })
+    this._holderService = new HolderService(
+      { registryUrl, metricsUrl, accessApiKey },
+      platformCryptographyTools,
+      component,
+    )
+    this._affinity = new Affinity(
+      {
+        apiKey: accessApiKey,
+        registryUrl: registryUrl,
+        metricsUrl: metricsUrl,
+        component: component,
+      },
+      platformCryptographyTools,
+    )
     this._keysService = keysService
 
     this._options = options
@@ -146,7 +161,7 @@ export abstract class BaseNetworkMember {
     this._password = password
     this._did = null
     this._didDocumentKeyId = null
-    this._platformEncryptionTools = platformEncryptionTools
+    this._platformCryptographyTools = platformCryptographyTools
   }
 
   /**
@@ -181,14 +196,14 @@ export abstract class BaseNetworkMember {
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
   protected static async _register(
-    password: string,
     options: ParsedOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
+    password: string,
+    keyOptions?: KeyOptions,
   ): Promise<{ did: string; encryptedSeed: string }> {
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
-    const seed = await Util.generateSeed(didMethod)
-    const seedHex = seed.toString('hex')
-    const seedWithMethod = `${seedHex}++${didMethod}`
     const passwordBuffer = KeysService.normalizePassword(password)
+    const seedWithMethod = await generateFullSeed(platformCryptographyTools, didMethod, keyOptions)
     const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
 
@@ -654,16 +669,8 @@ export abstract class BaseNetworkMember {
     return signedCredentials
   }
 
-  /**
-   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
-   */
-  async signUnsignedCredential(unsignedCredential: VCV1Unsigned, keyType: KeyAlgorithmType | undefined) {
-    return this._affinity.signUnsignedCredential!(
-      unsignedCredential,
-      this._encryptedSeed,
-      this._password,
-      keyType || 'ecdsa',
-    )
+  async signUnsignedCredential(unsignedCredential: VCV1Unsigned, keyType?: KeyAlgorithmType) {
+    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password, keyType)
   }
 
   /**
@@ -681,6 +688,7 @@ export abstract class BaseNetworkMember {
     claimMetadata: ClaimMetadata,
     signCredentialOptionalInput: SignCredentialOptionalInput,
     expiresAt?: string,
+    keyType?: KeyAlgorithmType,
   ): Promise<VCV1> {
     await ParametersValidator.validate([
       { isArray: false, type: 'object', isRequired: true, value: credentialSubject },
@@ -714,7 +722,7 @@ export abstract class BaseNetworkMember {
       expirationDate: expiresAt ? new Date(expiresAt).toISOString() : undefined,
     })
 
-    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password)
+    return this.signUnsignedCredential(unsignedCredential, keyType)
   }
 
   async verifyDidAuthResponse(
@@ -1115,7 +1123,7 @@ export abstract class BaseNetworkMember {
   async readEncryptedMessage(encryptedMessage: string): Promise<any> {
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
-    return this._platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, encryptedMessage)
+    return this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, encryptedMessage)
   }
 
   /**
@@ -1139,7 +1147,7 @@ export abstract class BaseNetworkMember {
     const publicKeyHex = Util.getPublicKeyHexFromDidDocument(didDocument)
     const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
 
-    return this._platformEncryptionTools.encryptByPublicKey(publicKeyBuffer, object)
+    return this._platformCryptographyTools.encryptByPublicKey(publicKeyBuffer, object)
   }
 
   async signJwt(jwtObject: any) {

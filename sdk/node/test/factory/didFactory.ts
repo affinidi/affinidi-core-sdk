@@ -2,7 +2,7 @@ const cryptoRandomString = require('crypto-random-string')
 
 import { KeysService, DidDocumentService } from '@affinidi/common'
 import { createV5CompatibleWalletFactories, EventComponent, Util } from '@affinidi/wallet-core-sdk'
-import platformEncryptionTools from '../../src/PlatformEncryptionTools'
+import platformCryptographyTools from '../../src/PlatformCryptographyTools'
 
 interface TestDid {
   seed: string
@@ -19,15 +19,7 @@ interface TestJoloDid extends TestDid {
 
 const options = { env: 'dev', apiKey: 'fakeApiKey' } as const
 
-const AffinidiWallet = createV5CompatibleWalletFactories(
-  Object.assign(platformEncryptionTools, {
-    buildExternalKeysSectionForSeed: () => {
-      throw new Error('Not implemented')
-    },
-  }),
-  null,
-  EventComponent.NotImplemented,
-)
+const AffinidiWallet = createV5CompatibleWalletFactories(platformCryptographyTools, EventComponent.NotImplemented)
 
 export const generateTestDIDs = async (): Promise<{
   password: string

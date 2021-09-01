@@ -1,7 +1,7 @@
 import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { SdkOptions } from '../dto/shared.dto'
-import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { BaseNetworkMember } from './BaseNetworkMember'
@@ -24,12 +24,11 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
   constructor(
     password: string,
     encryptedSeed: string,
-    platformEncryptionTools: IPlatformEncryptionTools,
-    affinidiCommon: AffinidiCommonConstructor | null,
+    platformCryptographyTools: IPlatformCryptographyTools,
     options: ParsedOptions,
     component: EventComponent,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
+    super(password, encryptedSeed, platformCryptographyTools, options, component)
   }
 
   /**
@@ -50,6 +49,7 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
   static async createWallet<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
     password: string,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
@@ -58,7 +58,7 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const { encryptedSeed } = await NetworkMemberWithoutCognito._register(password, options)
+    const { encryptedSeed } = await NetworkMemberWithoutCognito._register(options, platformCryptographyTools, password)
     return new this(password, encryptedSeed, options)
   }
 

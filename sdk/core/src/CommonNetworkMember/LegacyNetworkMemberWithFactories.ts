@@ -3,7 +3,7 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import WalletStorageService from '../services/WalletStorageService'
 import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
 import { validateUsername } from '../shared/validateUsername'
-import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
@@ -44,13 +44,12 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
   constructor(
     password: string,
     encryptedSeed: string,
-    platformEncryptionTools: IPlatformEncryptionTools,
-    affinidiCommon: AffinidiCommonConstructor | null,
+    platformCryptographyTools: IPlatformCryptographyTools,
     options: ParsedOptions,
     component: EventComponent,
     cognitoUserTokens?: CognitoUserTokens,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
+    super(password, encryptedSeed, platformCryptographyTools, options, component)
     const { accessApiKey, basicOptions } = options
     const { clientId, userPoolId, keyStorageUrl } = basicOptions
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
@@ -318,6 +317,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     login: string,
     password: string,
     inputOptions: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
@@ -340,7 +340,14 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
-    return LegacyNetworkMemberWithFactories._confirmSignUp(this, cognitoTokens, password, keyParams, options)
+    return LegacyNetworkMemberWithFactories._confirmSignUp(
+      this,
+      options,
+      platformCryptographyTools,
+      cognitoTokens,
+      password,
+      keyParams,
+    )
   }
 
   private static async _signUpByUsernameAutoConfirm<T extends DerivedType<T>>(
@@ -348,6 +355,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     username: string,
     password: string,
     inputOptions: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
     messageParameters?: MessageParameters,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
@@ -362,10 +370,11 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
       self,
+      options,
+      platformCryptographyTools,
       cognitoTokens,
       password,
       undefined,
-      options,
     )
     result.afterConfirmSignUp()
     return result
@@ -405,6 +414,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     login: string,
     password: string,
     inputOptions: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
     messageParameters?: MessageParameters,
   ): Promise<string | InstanceType<T>> {
     const { isUsername } = validateUsername(login)
@@ -418,6 +428,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
       login,
       password,
       inputOptions,
+      platformCryptographyTools,
       messageParameters,
     )
   }
@@ -440,6 +451,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     signUpToken: string,
     confirmationCode: string,
     inputOptions: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
   ): Promise<InstanceType<T>> {
     ParametersValidator.validate([
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
@@ -454,21 +466,33 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
       signUpToken,
       confirmationCode,
     )
-    return LegacyNetworkMemberWithFactories._confirmSignUp(this, cognitoTokens, shortPassword, keyParams, options)
+    return LegacyNetworkMemberWithFactories._confirmSignUp(
+      this,
+      options,
+      platformCryptographyTools,
+      cognitoTokens,
+      shortPassword,
+      keyParams,
+    )
   }
 
   private static async _confirmSignUp<T extends DerivedType<T>>(
     self: T,
+    options: ParsedOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
     cognitoTokens: CognitoUserTokens,
     shortPassword: string,
     keyParams: KeyParams,
-    options: ParsedOptions,
   ): Promise<InstanceType<T>> {
     const { accessToken } = cognitoTokens
 
     if (!keyParams?.encryptedSeed) {
       const passwordHash = WalletStorageService.hashFromString(shortPassword)
-      const registerResult = await LegacyNetworkMemberWithFactories._register(passwordHash, options)
+      const registerResult = await LegacyNetworkMemberWithFactories._register(
+        options,
+        platformCryptographyTools,
+        passwordHash,
+      )
       const encryptedSeed = registerResult.encryptedSeed
       keyParams = { password: passwordHash, encryptedSeed }
     }
@@ -497,6 +521,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     signUpToken: string,
     confirmationCode: string,
     inputOptions: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
   ): Promise<InstanceType<T>> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
@@ -512,10 +537,11 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     )
     const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
       this,
+      options,
+      platformCryptographyTools,
       cognitoTokens,
       shortPassword,
       undefined,
-      options,
     )
     await result.afterConfirmSignUp()
     return result
@@ -597,6 +623,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     token: string,
     confirmationCode: string,
     options: SdkOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
   ): Promise<{ isNew: boolean; commonNetworkMember: InstanceType<T> }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
@@ -609,7 +636,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const isSignUpToken = token.split('::')[1] !== undefined
 
     if (isSignUpToken) {
-      const commonNetworkMember = await this.confirmSignUp(token, confirmationCode, options)
+      const commonNetworkMember = await this.confirmSignUp(token, confirmationCode, options, platformCryptographyTools)
 
       return { isNew: true, commonNetworkMember }
     }

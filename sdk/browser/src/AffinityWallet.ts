@@ -1,15 +1,10 @@
 import { createV5CompatibleWalletFactories, createV6WalletFactories, EventComponent } from '@affinidi/wallet-core-sdk'
 
-import platformEncryptionTools from './PlatformEncryptionTools'
+import platformCryptographyTools from './PlatformCryptographyTools'
 
 export const AffinidiWallet = createV5CompatibleWalletFactories(
-  platformEncryptionTools,
-  null,
+  platformCryptographyTools,
   EventComponent.AffinidiBrowserSDK,
 )
 
-export const AffinidiWalletV6 = createV6WalletFactories(
-  platformEncryptionTools,
-  null,
-  EventComponent.AffinidiBrowserSDK,
-)
+export const AffinidiWalletV6 = createV6WalletFactories(platformCryptographyTools, EventComponent.AffinidiBrowserSDK)
