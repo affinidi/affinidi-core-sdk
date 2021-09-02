@@ -5,6 +5,7 @@
     "esModuleInterop": true,
     "target": "ES2019",
     "noImplicitAny": true,
+    "strictBindCallApply": true,
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",

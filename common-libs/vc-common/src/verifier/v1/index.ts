@@ -259,7 +259,14 @@ export type GetVerifySuiteOptions = {
   proofType: string
 }
 
-export type GetVerifySuiteFn = (options: GetVerifySuiteOptions) => any | Promise<any>
+export type VerifySuite = Partial<{
+  matchProof(params: Record<'proof' | 'document' | 'documentLoader' | 'expansionMap', any>): boolean | Promise<boolean>
+  verifyProof(
+    params: Record<'proof' | 'document' | 'purpose' | 'documentLoader' | 'expansionMap' | 'compactProof', any>,
+  ): Promise<any>
+}>
+
+export type GetVerifySuiteFn = (options: GetVerifySuiteOptions) => VerifySuite | Promise<VerifySuite>
 
 export type GetVerifierProofPurposeOptionsOptions = {
   proofPurpose: string

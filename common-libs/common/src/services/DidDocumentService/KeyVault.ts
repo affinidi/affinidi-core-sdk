@@ -23,4 +23,11 @@ export interface KeyVault {
    * @param payload payload to be signed
    */
   sign(payload: Buffer): Buffer
+
+  /**
+   * Sign the given payload with the primary public key. Same as sign but async.
+   *
+   * @param payload payload to be signed
+   */
+  signAsync?(payload: Buffer): Promise<Buffer>
 }

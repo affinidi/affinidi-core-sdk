@@ -1,3 +1,4 @@
 import 'mocha'
 
-require('./PlatformEncryptionTools.test')
+require('./PlatformCryptographyTools.test')
+require('./vc-signatures.test')

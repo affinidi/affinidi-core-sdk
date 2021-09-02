@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/tiny-lds-ecdsa-secp256k1-2019",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "tiny version of lds-ecdsa-secp256k1-2019",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

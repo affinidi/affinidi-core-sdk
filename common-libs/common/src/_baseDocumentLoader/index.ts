@@ -50,21 +50,31 @@ if (!fetch) {
   fetch = require('node-fetch')
 }
 
+// Domains with schemas that never change and can be cached,
+// as opposed to domains with documents that change dynamically
+// (such as https://affinity-revocation.staging.affinity-project.org/api/v1/revocation/revocation-list-2020-credentials/1)
+const domainsToCache = ['https://www.w3.org/', 'https://w3id.org/']
+
+const cachedDocuments = new Map(
+  Object.entries(localContexts).map(([url, document]) => [
+    url,
+    Object.freeze({
+      contextUrl: null as string | null,
+      document: document as Record<string, any>,
+      documentUrl: url,
+    }),
+  ]),
+)
+
 export const baseDocumentLoader = async (url: string) => {
   const loader = async (url: string) => {
-    if (url.indexOf('http:') !== 0 && url.indexOf('https:') !== 0) {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
       throw new Error('URL could not be deferenced; only "http" and "https" URLs are supported')
     }
 
-    // If we have a local copy of the context do no make a request
-    const localContext = localContexts[url]
-
-    if (typeof localContext !== 'undefined') {
-      return {
-        contextUrl: null,
-        document: localContext,
-        documentUrl: url,
-      }
+    // If we have a cached copy of the context do not make a request
+    if (cachedDocuments.has(url)) {
+      return cachedDocuments.get(url)
     }
 
     let res: Response
@@ -115,6 +125,12 @@ export const baseDocumentLoader = async (url: string) => {
       ) {
         doc = await loader(prependBase(url, alternate.target))
       }
+    }
+
+    if (domainsToCache.some((domain) => url.startsWith(domain))) {
+      const result = Object.freeze(doc)
+      cachedDocuments.set(url, result)
+      return result
     }
 
     return doc

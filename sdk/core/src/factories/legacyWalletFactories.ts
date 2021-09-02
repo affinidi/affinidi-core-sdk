@@ -7,13 +7,9 @@ import {
 import { Util } from '../CommonNetworkMember/Util'
 import { CognitoUserTokens, KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 
-const createWallet = (
-  platformEncryptionTools: IPlatformEncryptionTools,
-  affinidiCommon: AffinidiCommonConstructor | null,
-  component: EventComponent,
-) => {
+const createWallet = (platformCryptographyTools: IPlatformCryptographyTools, component: EventComponent) => {
   class Wallet extends LegacyNetworkMemberWithFactories {
     constructor(
       password: string,
@@ -21,7 +17,7 @@ const createWallet = (
       options: ParsedOptions,
       cognitoUserTokens?: CognitoUserTokens,
     ) {
-      super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component, cognitoUserTokens)
+      super(password, encryptedSeed, platformCryptographyTools, options, component, cognitoUserTokens)
     }
   }
 
@@ -29,11 +25,10 @@ const createWallet = (
 }
 
 export const createLegacyWalletFactories = (
-  platformEncryptionTools: IPlatformEncryptionTools,
-  affinidiCommon: AffinidiCommonConstructor | null,
+  platformCryptographyTools: IPlatformCryptographyTools,
   component: EventComponent,
 ) => {
-  const Wallet = createWallet(platformEncryptionTools, affinidiCommon, component)
+  const Wallet = createWallet(platformCryptographyTools, component)
 
   return {
     /**
@@ -86,7 +81,7 @@ export const createLegacyWalletFactories = (
      * @deprecated Use `createWallet` instead
      */
     register: (password: string, options: SdkOptions) => {
-      return Wallet.register(password, options)
+      return Wallet.register(options, platformCryptographyTools, password)
     },
 
     /**
@@ -175,7 +170,14 @@ export const createLegacyWalletFactories = (
       options: SdkOptions,
       messageParameters?: MessageParameters,
     ) => {
-      return Wallet.signUpWithExistsEntity(keyParams, login, password, options, messageParameters)
+      return Wallet.signUpWithExistsEntity(
+        keyParams,
+        login,
+        password,
+        options,
+        platformCryptographyTools,
+        messageParameters,
+      )
     },
 
     /**
@@ -191,7 +193,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `signUpWithUsername`, `initiateSignUpByEmail` or `initiateSignUpByPhone` instead
      */
     signUp: (login: string, password: string, options: SdkOptions, messageParameters?: MessageParameters) => {
-      return Wallet.signUp(login, password, options, messageParameters)
+      return Wallet.signUp(login, password, options, platformCryptographyTools, messageParameters)
     },
 
     /**
@@ -213,7 +215,13 @@ export const createLegacyWalletFactories = (
       confirmationCode: string,
       options: SdkOptions,
     ) => {
-      return Wallet.confirmSignUpWithExistsEntity(keyParams, signUpToken, confirmationCode, options)
+      return Wallet.confirmSignUpWithExistsEntity(
+        keyParams,
+        signUpToken,
+        confirmationCode,
+        options,
+        platformCryptographyTools,
+      )
     },
 
     /**
@@ -227,7 +235,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `completeSignUp` instead
      */
     confirmSignUp: (signUpToken: string, confirmationCode: string, options: SdkOptions) => {
-      return Wallet.confirmSignUp(signUpToken, confirmationCode, options)
+      return Wallet.confirmSignUp(signUpToken, confirmationCode, options, platformCryptographyTools)
     },
 
     /**
@@ -263,7 +271,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `completeSignInPasswordless` instead
      */
     confirmSignIn: (token: string, confirmationCode: string, options: SdkOptions) => {
-      return Wallet.confirmSignIn(token, confirmationCode, options)
+      return Wallet.confirmSignIn(token, confirmationCode, options, platformCryptographyTools)
     },
 
     /**

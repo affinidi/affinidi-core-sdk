@@ -1,9 +1,10 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
-import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { createCognitoWalletFactories } from './cognitoWalletFactories'
 import { createCognitolessWalletFactories } from './cognitolessWalletFactories'
 import { createLegacyWalletFactories } from './legacyWalletFactories'
+import { createPublicToolsFactories } from './publicToolsFactories'
 
 /**
  * Turns any arrow function into a constructor of its return value accepting the same arguments
@@ -28,29 +29,31 @@ const createConstructor = <T extends (...args: any) => any>(inputFunction: T) =>
 }
 
 export const createV5CompatibleWalletFactories = (
-  platformEncryptionTools: IPlatformEncryptionTools,
-  affinidiCommon: AffinidiCommonConstructor | null,
+  platformCryptographyTools: IPlatformCryptographyTools,
   component: EventComponent,
 ) => {
-  const { legacyConstructor, ...legacyFactories } = createLegacyWalletFactories(
-    platformEncryptionTools,
-    affinidiCommon,
-    component,
-  )
-  const cognitoFactories = createCognitoWalletFactories(platformEncryptionTools, affinidiCommon, component)
-  const cognitolessFactories = createCognitolessWalletFactories(platformEncryptionTools, affinidiCommon, component)
-  return Object.assign(createConstructor(legacyConstructor), cognitoFactories, cognitolessFactories, legacyFactories)
+  const { legacyConstructor, ...legacyFactories } = createLegacyWalletFactories(platformCryptographyTools, component)
+  const cognitoFactories = createCognitoWalletFactories(platformCryptographyTools, component)
+  const cognitolessFactories = createCognitolessWalletFactories(platformCryptographyTools, component)
+  const publicToolsFactories = createPublicToolsFactories(platformCryptographyTools, component)
+  return Object.assign(createConstructor(legacyConstructor), {
+    ...cognitoFactories,
+    ...cognitolessFactories,
+    ...publicToolsFactories,
+    ...legacyFactories,
+  })
 }
 
 export const createV6WalletFactories = (
-  platformEncryptionTools: IPlatformEncryptionTools,
-  affinidiCommon: AffinidiCommonConstructor | null,
+  platformCryptographyTools: IPlatformCryptographyTools,
   component: EventComponent,
 ) => {
-  const cognitoFactories = createCognitoWalletFactories(platformEncryptionTools, affinidiCommon, component)
-  const cognitolessFactories = createCognitolessWalletFactories(platformEncryptionTools, affinidiCommon, component)
+  const cognitoFactories = createCognitoWalletFactories(platformCryptographyTools, component)
+  const cognitolessFactories = createCognitolessWalletFactories(platformCryptographyTools, component)
+  const publicToolsFactories = createPublicToolsFactories(platformCryptographyTools, component)
   return {
     ...cognitoFactories,
     ...cognitolessFactories,
+    ...publicToolsFactories,
   }
 }
