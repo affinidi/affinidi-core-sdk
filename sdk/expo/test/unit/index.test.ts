@@ -1,3 +1,3 @@
 import 'mocha'
 
-require('./PlatformEncryptionTools.test')
+require('./PlatformCryptographyTools.test')

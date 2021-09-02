@@ -1,4 +1,4 @@
-import { KeysService, profile } from '@affinidi/common'
+import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import WalletStorageService from '../services/WalletStorageService'
@@ -10,12 +10,11 @@ import {
   MessageParameters,
   SdkOptions,
 } from '../dto/shared.dto'
-import { AffinidiCommonConstructor, IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import UserManagementService from '../services/UserManagementService'
 import { BaseNetworkMember, createKeyManagementService } from './BaseNetworkMember'
-import { Util } from './Util'
 
 type GenericConstructor<T> = new (
   password: string,
@@ -47,82 +46,54 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   constructor(
     password: string,
     encryptedSeed: string,
-    platformEncryptionTools: IPlatformEncryptionTools,
-    affinidiCommon: AffinidiCommonConstructor | null,
+    platformCryptographyTools: IPlatformCryptographyTools,
     options: ParsedOptions,
     component: EventComponent,
     cognitoUserTokens: CognitoUserTokens,
   ) {
-    super(password, encryptedSeed, platformEncryptionTools, affinidiCommon, options, component)
+    super(password, encryptedSeed, platformCryptographyTools, options, component)
     this._userManagementService = createUserManagementService(options)
     this.cognitoUserTokens = cognitoUserTokens
   }
 
+  private static _isKeyParams(keyParamsOrOptions?: KeyParamsOrOptions): keyParamsOrOptions is KeyParams {
+    return !!keyParamsOrOptions && 'encryptedSeed' in keyParamsOrOptions
+  }
+
   private static _shouldCallAfterConfirmSignUp(keyParamsOrOptions?: KeyParamsOrOptions) {
-    return !keyParamsOrOptions
+    return !NetworkMemberWithCognito._isKeyParams(keyParamsOrOptions)
   }
 
   private static async _createKeyParams(
     options: ParsedOptions,
-    platformEncryptionTools: IPlatformEncryptionTools,
+    platformCryptographyTools: IPlatformCryptographyTools,
     shortPassword: string,
     keyParamsOrOptions?: KeyParamsOrOptions,
   ) {
-    if (!keyParamsOrOptions) {
-      return await NetworkMemberWithCognito._createSignUpKeys(shortPassword, options)
-    }
-
-    if ('encryptedSeed' in keyParamsOrOptions) {
+    if (NetworkMemberWithCognito._isKeyParams(keyParamsOrOptions)) {
       return keyParamsOrOptions
     }
 
-    return await NetworkMemberWithCognito._createKeyParamsForOptions(
-      platformEncryptionTools,
+    return await NetworkMemberWithCognito._createSignUpKeys(
+      options,
+      platformCryptographyTools,
       shortPassword,
       keyParamsOrOptions,
     )
   }
 
-  /**
-   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
-   */
   private static _createKeyParamsOrOptionsValidator(keyParamsOrOptions?: KeyParamsOrOptions) {
-    if (!keyParamsOrOptions || 'encryptedSeed' in keyParamsOrOptions) {
+    if (!keyParamsOrOptions || NetworkMemberWithCognito._isKeyParams(keyParamsOrOptions)) {
       return { isArray: false, type: KeyParams, isRequired: false, value: keyParamsOrOptions }
     }
 
     return { isArray: false, type: KeyOptions, isRequired: true, value: keyParamsOrOptions }
   }
 
-  /**
-   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
-   */
   private static _validateKeyParamsOrOptions(keyParamsOrOptions?: KeyParamsOrOptions) {
-    if (!!keyParamsOrOptions && 'encryptedSeed' in keyParamsOrOptions) {
+    if (NetworkMemberWithCognito._isKeyParams(keyParamsOrOptions)) {
       NetworkMemberWithCognito._validateKeys(keyParamsOrOptions)
     }
-  }
-
-  /**
-   * @deprecated Temporary implementation; refactor by 6.0 release (FTL-1707)
-   */
-  private static async _createKeyParamsForOptions(
-    platformEncryptionTools: IPlatformEncryptionTools,
-    shortPassword: string,
-    keyOptions: KeyOptions,
-  ) {
-    if (!keyOptions.keyTypes?.length) {
-      throw new Error('keyTypes is empty')
-    }
-
-    const keysSeedSection = await platformEncryptionTools.buildExternalKeysSectionForSeed(keyOptions.keyTypes)
-
-    const seed = await Util.generateSeed('elem')
-    const seedHex = seed.toString('hex')
-    const fullSeed = `${seedHex}++${'elem'}++${keysSeedSection}`
-
-    const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(shortPassword))
-    return { encryptedSeed, password: shortPassword }
   }
 
   /**
@@ -285,7 +256,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   public static async signUpWithUsername<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
-    platformEncryptionTools: IPlatformEncryptionTools,
+    platformCryptographyTools: IPlatformCryptographyTools,
     username: string,
     password: string,
     keyParamsOrOptions?: KeyParamsOrOptions,
@@ -305,7 +276,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     return NetworkMemberWithCognito._confirmSignUp(
       this,
       options,
-      platformEncryptionTools,
+      platformCryptographyTools,
       cognitoTokens,
       password,
       keyParamsOrOptions,
@@ -376,7 +347,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   public static async completeSignUp<T extends DerivedType<T>>(
     this: T,
     inputOptions: SdkOptions,
-    platformEncryptionTools: IPlatformEncryptionTools,
+    platformCryptographyTools: IPlatformCryptographyTools,
     signUpToken: string,
     confirmationCode: string,
     keyParamsOrOptions?: KeyParamsOrOptions,
@@ -399,16 +370,26 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
     return NetworkMemberWithCognito._confirmSignUp(
       this,
       options,
-      platformEncryptionTools,
+      platformCryptographyTools,
       cognitoTokens,
       shortPassword,
       keyParamsOrOptions,
     )
   }
 
-  private static async _createSignUpKeys(shortPassword: string, options: ParsedOptions) {
+  private static async _createSignUpKeys(
+    options: ParsedOptions,
+    platformCryptographyTools: IPlatformCryptographyTools,
+    shortPassword: string,
+    keyOptions?: KeyOptions,
+  ) {
     const passwordHash = WalletStorageService.hashFromString(shortPassword)
-    const registerResult = await NetworkMemberWithCognito._register(passwordHash, options)
+    const registerResult = await NetworkMemberWithCognito._register(
+      options,
+      platformCryptographyTools,
+      passwordHash,
+      keyOptions,
+    )
     const encryptedSeed = registerResult.encryptedSeed
     return { password: passwordHash, encryptedSeed }
   }
@@ -416,7 +397,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   private static async _confirmSignUp<T extends DerivedType<T>>(
     self: T,
     options: ParsedOptions,
-    platformEncryptionTools: IPlatformEncryptionTools,
+    platformCryptographyTools: IPlatformCryptographyTools,
     cognitoTokens: CognitoUserTokens,
     shortPassword?: string,
     inputKeyParamsOrOptions?: KeyParamsOrOptions,
@@ -428,7 +409,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
       accessToken,
       await NetworkMemberWithCognito._createKeyParams(
         options,
-        platformEncryptionTools,
+        platformCryptographyTools,
         shortPassword,
         inputKeyParamsOrOptions,
       ),
@@ -538,7 +519,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
   public static async completeSignInPasswordless<T extends DerivedType<T>>(
     this: T,
     options: SdkOptions,
-    platformEncryptionTools: IPlatformEncryptionTools,
+    platformCryptographyTools: IPlatformCryptographyTools,
     signInToken: string,
     confirmationCode: string,
   ): Promise<{ isNew: boolean; wallet: InstanceType<T> }> {
@@ -558,7 +539,7 @@ export abstract class NetworkMemberWithCognito extends BaseNetworkMember {
       case 'signUp':
         return {
           isNew: true,
-          wallet: await this.completeSignUp(options, platformEncryptionTools, token.signUpToken, confirmationCode),
+          wallet: await this.completeSignUp(options, platformCryptographyTools, token.signUpToken, confirmationCode),
         }
       default:
         throw new Error(`Incorrect token type '${token.signInType}'`)

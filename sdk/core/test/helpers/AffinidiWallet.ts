@@ -5,19 +5,17 @@ import { BaseNetworkMember } from '../../src/CommonNetworkMember/BaseNetworkMemb
 import { testPlatformTools } from './testPlatformTools'
 import { testPlatformToolsWithEncryption } from './testPlatformToolsWithEncryption'
 
-export const AffinidiWallet = createV5CompatibleWalletFactories(testPlatformTools, null, EventComponent.AffinidiCore)
+export const AffinidiWallet = createV5CompatibleWalletFactories(testPlatformTools, EventComponent.AffinidiCore)
 
 export const AffinidiWalletWithEncryption = createV5CompatibleWalletFactories(
   testPlatformToolsWithEncryption,
-  null,
   EventComponent.AffinidiCore,
 )
 
-export const AffinidiWalletV6 = createV6WalletFactories(testPlatformTools, null, EventComponent.AffinidiCore)
+export const AffinidiWalletV6 = createV6WalletFactories(testPlatformTools, EventComponent.AffinidiCore)
 
 export const AffinidiWalletV6WithEncryption = createV6WalletFactories(
   testPlatformToolsWithEncryption,
-  null,
   EventComponent.AffinidiCore,
 )
 

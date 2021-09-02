@@ -39,6 +39,7 @@ import cognitoUserTokens from '../factory/cognitoUserTokens'
 import credentialShareRequestToken from '../factory/credentialShareRequestToken'
 import parsedCredentialShareRequestToken from '../factory/parsedCredentialShareRequestToken'
 import parsedCredentialShareResponseToken from '../factory/parsedCredentialShareResponseToken'
+import { testPlatformTools } from '../helpers/testPlatformTools'
 
 let walletPassword: string
 
@@ -1449,7 +1450,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#createPresentationFromChallenge returns a signed VPV1', async () => {
-    const affinity = new Affinity()
+    const affinity = new Affinity({}, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
@@ -1486,7 +1487,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#createPresentationFromChallenge filters VCs based on the challenge', async () => {
-    const affinity = new Affinity()
+    const affinity = new Affinity({}, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
@@ -1548,7 +1549,7 @@ describe('CommonNetworkMember', () => {
 
   it('#verifyPresentation', async () => {
     // TODO resolve why this is failing
-    const affinity = new Affinity()
+    const affinity = new Affinity({}, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
 
@@ -1591,7 +1592,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it("#verifyPresentation fails when the challenge wasn't signed by the correct party", async () => {
-    const affinity = new Affinity()
+    const affinity = new Affinity({}, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
@@ -1627,7 +1628,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#verifyPresentation fails when the challenge is tampered with', async () => {
-    const affinity = new Affinity()
+    const affinity = new Affinity({}, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 

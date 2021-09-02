@@ -21,9 +21,16 @@ export { SdkError }
 export {
   ElemDidDocument,
   KeyVault,
+  LocalKeyVault,
   DidDocumentService,
   DigestService,
   JwtService,
   KeysService,
   MetricsService,
 } from './services'
+
+export { IPlatformCryptographyTools } from './shared/interfaces'
+
+export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
+
+export { generateFullSeed } from './shared/seedTools'

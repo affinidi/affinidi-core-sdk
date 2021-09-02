@@ -1,3 +1,6 @@
+# release 6.0.0-beta.9 (2021-08-30)
+* Refactoring
+* `confirmSignUp` with non-empty `KeyOptions` now follows the same flow as with empty `KeyOptions`; the only difference is in a way seed is generated
 # release 6.0.0-beta.8 (2021-08-18)
 * removed did auth related logic from `AffinidiVaultStorageService`
 * Breaking Changes

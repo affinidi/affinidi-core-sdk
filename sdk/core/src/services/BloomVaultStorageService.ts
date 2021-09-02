@@ -3,7 +3,7 @@ import { BloomVaultApiService } from '@affinidi/internal-api-clients'
 
 import { toRpcSig, ecsign } from 'ethereumjs-util'
 
-import { IPlatformEncryptionTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
@@ -44,17 +44,17 @@ const hashPersonalMessage = (message: Buffer): Buffer => {
 
 @profile()
 export default class BloomVaultStorageService {
-  private _keysService: KeysService
-  private _platformEncryptionTools: IPlatformEncryptionTools
-  private _vaultApiService: BloomVaultApiService
+  private _keysService
+  private _platformCryptographyTools
+  private _vaultApiService
 
   constructor(
     keysService: KeysService,
-    platformEncryptionTools: IPlatformEncryptionTools,
+    platformCryptographyTools: IPlatformCryptographyTools,
     options: BloomVaultStorageOptions,
   ) {
     this._keysService = keysService
-    this._platformEncryptionTools = platformEncryptionTools
+    this._platformCryptographyTools = platformCryptographyTools
     this._vaultApiService = new BloomVaultApiService({
       vaultUrl: options.vaultUrl,
       accessApiKey: options.accessApiKey,
@@ -181,7 +181,7 @@ export default class BloomVaultStorageService {
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const allBlobs = await this._fetchAllBlobs(accessToken, storageRegion)
     for (const blob of allBlobs) {
-      const credential = await this._platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
+      const credential = await this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
 
       let credentialId = credential?.id
       if (!isW3cCredential(credential)) {
@@ -212,7 +212,7 @@ export default class BloomVaultStorageService {
     const allBlobs = await this._fetchAllBlobs(accessToken, storageRegion)
     const allCredentials: any[] = []
     for (const blob of allBlobs) {
-      const credential = await this._platformEncryptionTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
+      const credential = await this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
       allCredentials.push(credential)
     }
 
@@ -249,7 +249,7 @@ export default class BloomVaultStorageService {
     const credentialBlob = await this._findCredentialById(accessToken, credentialId, storageRegion)
 
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
-    const credential = await this._platformEncryptionTools.decryptByPrivateKey(
+    const credential = await this._platformCryptographyTools.decryptByPrivateKey(
       privateKeyBuffer,
       credentialBlob.cyphertext,
     )
