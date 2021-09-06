@@ -25,8 +25,6 @@ type BusinessReferenceV1 = CreateThing<
   }
 >
 
-// export type BusinessReferenceV1 = ExtendThing<BusinessReferenceV1Mixin, EducationalOccupationalCredentialEV1>
-
 export type VCSBusinessReferenceV1 = VCV1Subject<ExpandThing<BusinessReferenceV1>>
 
 export type VCBusinessReferenceV1 = VCV1<VCSBusinessReferenceV1, Type<'BusinessReferenceCredentialV1'>>
