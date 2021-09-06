@@ -22,13 +22,13 @@ describe('VCGenderPersonV1', () => {
           recognizedBy: {
             '@type': ['Organization', 'OrganizationE'],
             legalName: 'StandardChartered',
+            leiCode: 'ABSSSW',
             employee: {
               name: 'XYZ',
               email: 'xyz@gmail.com',
               jobTitle: 'Director',
               department: 'Innovation',
               areaServed: 'Singapore',
-              leiCode: 'ABSSSW',
             },
           },
         },
@@ -116,11 +116,6 @@ describe('VCGenderPersonV1', () => {
                                 "@value": "Director",
                               },
                             ],
-                            "https://schema.org/leiCode": Array [
-                              Object {
-                                "@value": "ABSSSW",
-                              },
-                            ],
                             "https://schema.org/name": Array [
                               Object {
                                 "@value": "XYZ",
@@ -131,6 +126,11 @@ describe('VCGenderPersonV1', () => {
                         "https://schema.org/legalName": Array [
                           Object {
                             "@value": "StandardChartered",
+                          },
+                        ],
+                        "https://schema.org/leiCode": Array [
+                          Object {
+                            "@value": "ABSSSW",
                           },
                         ],
                       },

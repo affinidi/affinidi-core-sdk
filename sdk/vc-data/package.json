@@ -20,7 +20,7 @@
     "build": "tsdx build --tsconfig ./tsconfig.build.json",
     "test": "tsdx test",
     "test:watch": "tsdx test --watch",
-    "lint": "tsdx lint src --fix",
+    "lint": "tsdx lint src",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint",
     "test:coverage": "tsdx test --coverage",
