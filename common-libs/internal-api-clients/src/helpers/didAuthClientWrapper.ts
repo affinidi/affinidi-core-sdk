@@ -1,12 +1,12 @@
-import { FullServiceOptions, ServiceOptions } from './GenericApiService'
-import { DidAuthAdapter } from '../helpers/DidAuthAdapter'
-import { DidAuthSession } from '../helpers/DidAuthManager'
+import { FullClientOptions, ClientOptions } from './client'
+import { DidAuthAdapter } from './DidAuthAdapter'
+import { DidAuthSession } from './DidAuthManager'
 
-export type DidAuthConstructorOptions = ServiceOptions & {
+export type DidAuthConstructorOptions = ClientOptions & {
   didAuthAdapter: DidAuthAdapter
 }
 
-type BasicApiMethodType = (serviceOptions: FullServiceOptions, requestOptions: any) => Promise<unknown>
+type BasicApiMethodType = (clientOptions: FullClientOptions, requestOptions: any) => Promise<unknown>
 
 type MappedMethod<TMethod extends BasicApiMethodType> = (
   didAuthSession: DidAuthSession,
@@ -14,7 +14,7 @@ type MappedMethod<TMethod extends BasicApiMethodType> = (
 ) => ReturnType<TMethod>
 
 type DidAuthApiMethodType = (
-  serviceOptions: FullServiceOptions,
+  clientOptions: FullClientOptions,
   requestOptions: { params: { audienceDid: string } },
 ) => Promise<{ body: string }>
 
@@ -30,16 +30,16 @@ export const wrapWithDidAuth = <TMethods>(
   didAuthMethod: DidAuthApiMethodType,
   methods: TMethods,
 ): MappedMethods<TMethods> => {
-  const createRequestToken = async (serviceOptions: FullServiceOptions, audienceDid: string) => {
-    const response = await didAuthMethod(serviceOptions, { params: { audienceDid } })
+  const createRequestToken = async (clientOptions: FullClientOptions, audienceDid: string) => {
+    const response = await didAuthMethod(clientOptions, { params: { audienceDid } })
     return response.body
   }
 
   const result: Record<string, any> = {}
   Object.entries(methods).forEach(([key, method]: [string, BasicApiMethodType]) => {
-    result[key] = async (didAuthSession: DidAuthSession, serviceOptions: FullServiceOptions, requestOptions: any) => {
-      const responseToken = await didAuthSession.getResponseToken((did) => createRequestToken(serviceOptions, did))
-      return method(serviceOptions, {
+    result[key] = async (didAuthSession: DidAuthSession, clientOptions: FullClientOptions, requestOptions: any) => {
+      const responseToken = await didAuthSession.getResponseToken((did) => createRequestToken(clientOptions, did))
+      return method(clientOptions, {
         ...requestOptions,
         authorization: responseToken,
       })

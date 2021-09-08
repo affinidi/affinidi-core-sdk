@@ -1,9 +1,9 @@
 import { profile } from '@affinidi/tools-common'
 
+import { createClientFactory, createClientOptions } from '../helpers/client'
 import { createDidAuthSession } from '../helpers/DidAuthManager'
+import { DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import revocationSpec from '../spec/_revocation'
-import { DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from './DidAuthApiService'
-import { createServiceFactory, createServiceOptions } from './GenericApiService'
 
 type ConstructorOptions = DidAuthConstructorOptions & { revocationUrl: string }
 
@@ -11,8 +11,8 @@ type ReplaceFieldsWithAny<T> = {
   [key in keyof T]: any
 }
 
-const { CreateDidAuthRequest, ...otherMethods } = createServiceFactory(revocationSpec).createInstance()
-const service = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
+const { CreateDidAuthRequest, ...otherMethods } = createClientFactory(revocationSpec).createInstance()
+const client = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
 
 @profile()
 export default class RevocationApiService {
@@ -21,21 +21,21 @@ export default class RevocationApiService {
 
   constructor(options: ConstructorOptions) {
     this.didAuthSession = createDidAuthSession(options.didAuthAdapter)
-    this.options = createServiceOptions(options.revocationUrl, options)
+    this.options = createClientOptions(options.revocationUrl, options)
   }
 
-  async buildRevocationListStatus(params: GetParams<typeof service.BuildRevocationListStatus>) {
-    return service.BuildRevocationListStatus(this.didAuthSession, this.options, { params })
+  async buildRevocationListStatus(params: GetParams<typeof client.BuildRevocationListStatus>) {
+    return client.BuildRevocationListStatus(this.didAuthSession, this.options, { params })
   }
 
   async publishRevocationListCredential(
-    params: ReplaceFieldsWithAny<GetParams<typeof service.PublishRevocationListCredential>>,
+    params: ReplaceFieldsWithAny<GetParams<typeof client.PublishRevocationListCredential>>,
   ) {
-    return service.PublishRevocationListCredential(this.didAuthSession, this.options, { params })
+    return client.PublishRevocationListCredential(this.didAuthSession, this.options, { params })
   }
 
-  async revokeCredential(params: GetParams<typeof service.RevokeCredential>) {
-    const response = await service.RevokeCredential(this.didAuthSession, this.options, { params })
+  async revokeCredential(params: GetParams<typeof client.RevokeCredential>) {
+    const response = await client.RevokeCredential(this.didAuthSession, this.options, { params })
 
     return response as { body: { revocationListCredential: any } }
   }

@@ -1,27 +1,27 @@
 import { profile } from '@affinidi/tools-common'
 
+import { ClientOptions, createClientFactory, createClientOptions } from '../helpers/client'
 import bloomVaultSpec from '../spec/_bloomVault'
-import { createServiceFactory, createServiceOptions, ServiceOptions } from './GenericApiService'
 
-type ConstructorOptions = ServiceOptions & { vaultUrl: string }
+type ConstructorOptions = ClientOptions & { vaultUrl: string }
 
 export type BlobType = {
   cyphertext: string
   id: number
 }
 
-const service = createServiceFactory(bloomVaultSpec).createInstance()
+const client = createClientFactory(bloomVaultSpec).createInstance()
 
 @profile()
 export default class BloomVaultApiService {
   private readonly options
 
   constructor({ vaultUrl, ...otherOptions }: ConstructorOptions) {
-    this.options = createServiceOptions(vaultUrl, otherOptions)
+    this.options = createClientOptions(vaultUrl, otherOptions)
   }
 
   async requestAuthToken({ did, storageRegion }: { did: string; storageRegion: string }) {
-    return service.RequestAuthToken(this.options, {
+    return client.RequestAuthToken(this.options, {
       storageRegion,
       queryParams: { did },
     })
@@ -29,7 +29,7 @@ export default class BloomVaultApiService {
 
   async validateAuthToken(params: { accessToken: string; signature: string; did: string; storageRegion: string }) {
     const { accessToken, signature, did, storageRegion } = params
-    return service.ValidateAuthToken(this.options, {
+    return client.ValidateAuthToken(this.options, {
       storageRegion,
       params: { accessToken, signature, did },
     })
@@ -37,7 +37,7 @@ export default class BloomVaultApiService {
 
   async postCredential(params: { accessToken: string; cyphertext: string; storageRegion: string }) {
     const { accessToken, cyphertext, storageRegion } = params
-    return service.PostCredential(this.options, {
+    return client.PostCredential(this.options, {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       params: { cyphertext },
@@ -46,7 +46,7 @@ export default class BloomVaultApiService {
 
   async deleteCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
-    return service.DeleteCredentials(this.options, {
+    return client.DeleteCredentials(this.options, {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       pathParams: { start: `${start}`, end: `${end}` },
@@ -55,7 +55,7 @@ export default class BloomVaultApiService {
 
   async getCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
-    return service.GetCredentials(this.options, {
+    return client.GetCredentials(this.options, {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       pathParams: { start: `${start}`, end: `${end}` },

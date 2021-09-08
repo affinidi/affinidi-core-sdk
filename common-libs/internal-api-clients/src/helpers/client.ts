@@ -2,11 +2,11 @@ import keyBy from 'lodash.keyby'
 import FetchType from 'node-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
-import { createAdditionalHeaders, createHeaders } from '../helpers/headers'
 import { GenericApiSpec } from '../types/openapi'
 import { ParseSpec } from '../types/openapiParser'
 import { RawApiSpec, ResponseForOperation, RequestOptionsForOperation, RequestOptions } from '../types/request'
 import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } from '../types/typeBuilder'
+import { createAdditionalHeaders, createHeaders } from './headers'
 
 let fetch: typeof FetchType
 
@@ -17,28 +17,28 @@ if (!fetch) {
 }
 
 type MethodTypeByOperation<TOperation extends BuiltApiOperationType> = (
-  serviceOptions: FullServiceOptions,
+  clientOptions: FullClientOptions,
   requestOptions: RequestOptionsForOperation<TOperation>,
 ) => Promise<ResponseForOperation<TOperation>>
 
-type ServiceTypeByApi<TApi extends BuiltApiType> = {
+type ClientTypeByApi<TApi extends BuiltApiType> = {
   [key in keyof TApi]: MethodTypeByOperation<TApi[key]>
 }
 
-export type ServiceTypeByRawSpec<TRawSpec extends GenericApiSpec> = ServiceTypeByApi<
+export type ClientTypeByRawSpec<TRawSpec extends GenericApiSpec> = ClientTypeByApi<
   BuildApiTypeWithoutConstraint<ParseSpec<TRawSpec>>
 >
 
-export type FullServiceOptions = {
+export type FullClientOptions = {
   accessApiKey: string
   sdkVersion?: string
   serviceUrl: string
 }
 
-export type ServiceOptions = Omit<FullServiceOptions, 'serviceUrl'>
+export type ClientOptions = Omit<FullClientOptions, 'serviceUrl'>
 
-export type ServiceFactoryByRawSpec<TRawSpec extends GenericApiSpec> = {
-  createInstance(): ServiceTypeByRawSpec<TRawSpec>
+export type ClientFactoryByRawSpec<TRawSpec extends GenericApiSpec> = {
+  createInstance(): ClientTypeByRawSpec<TRawSpec>
 }
 
 type GetRequestOptions<TOperation extends MethodTypeByOperation<any>> = Parameters<TOperation>[1]
@@ -75,14 +75,14 @@ const executeByOptions = async <TResponse>(
   method: string,
   pathTemplate: string,
   { authorization, params, pathParams, queryParams, storageRegion }: RequestOptions<any, any, any>,
-  serviceOptions: FullServiceOptions,
+  clientOptions: FullClientOptions,
 ) => {
-  if (!serviceOptions.serviceUrl) {
+  if (!clientOptions.serviceUrl) {
     throw new Error('Service URL is empty')
   }
 
   const headers = {
-    ...createHeaders(serviceOptions),
+    ...createHeaders(clientOptions),
     ...createAdditionalHeaders({ authorization, storageRegion }),
   }
   const fetchOptions = {
@@ -93,7 +93,7 @@ const executeByOptions = async <TResponse>(
 
   // eslint-disable-next-line no-unused-vars
   const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => pathParams?.[p1])
-  const url = new URL(`${serviceOptions.serviceUrl}${path}`)
+  const url = new URL(`${clientOptions.serviceUrl}${path}`)
 
   for (const [name, value] of Object.entries(queryParams ?? {})) {
     url.searchParams.set(name, value as string)
@@ -112,15 +112,15 @@ const executeByOptions = async <TResponse>(
   return { body: jsonResponse as TResponse, status }
 }
 
-export const createServiceFactory = <TApiSpec extends GenericApiSpec>(
+export const createClientFactory = <TApiSpec extends GenericApiSpec>(
   rawSpec: TApiSpec,
-): ServiceFactoryByRawSpec<TApiSpec> => {
+): ClientFactoryByRawSpec<TApiSpec> => {
   const specGroupByOperationId = parseSpec(rawSpec)
 
   const result: Record<string, any> = {}
   Object.entries(specGroupByOperationId).forEach(([serviceOperationId, { method, path }]) => {
-    result[serviceOperationId] = (serviceOptions: FullServiceOptions, requestOptions: RequestOptions<any, any, any>) =>
-      executeByOptions(method, path, requestOptions, serviceOptions)
+    result[serviceOperationId] = (clientOptions: FullClientOptions, requestOptions: RequestOptions<any, any, any>) =>
+      executeByOptions(method, path, requestOptions, clientOptions)
   })
 
   return {
@@ -130,7 +130,7 @@ export const createServiceFactory = <TApiSpec extends GenericApiSpec>(
   } as any
 }
 
-export const createServiceOptions = (serviceUrl: string, otherOptions: ServiceOptions): FullServiceOptions => {
+export const createClientOptions = (serviceUrl: string, otherOptions: ClientOptions): FullClientOptions => {
   return {
     ...otherOptions,
     serviceUrl,
