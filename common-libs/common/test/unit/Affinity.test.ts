@@ -504,9 +504,10 @@ describe('Affinity', () => {
         .times(1)
         .reply(200, { didDocument: testDocument })
 
-      const affinity1 = new Affinity({
-        registryUrl: 'https://affinity-registry.cachetest1.affinity-project.org',
-      }, ecdsaCryptographyTools)
+      const affinity1 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest1.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
       const result1 = await affinity1.resolveDid('cache-test')
       expect(result1).to.deep.equal(testDocument)
       const result2 = await affinity1.resolveDid('cache-test')
@@ -523,9 +524,10 @@ describe('Affinity', () => {
         .times(1)
         .reply(200, { didDocument: testDocument })
 
-      const affinity2 = new Affinity({
-        registryUrl: 'https://affinity-registry.cachetest2.affinity-project.org',
-      }, ecdsaCryptographyTools)
+      const affinity2 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest2.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
       const result1 = await affinity2.resolveDid('cache-test1')
       expect(result1).to.deep.equal(testDocument)
       try {
@@ -550,15 +552,17 @@ describe('Affinity', () => {
         .times(1)
         .reply(200, { didDocument: testDocument4 })
 
-      const affinity3 = new Affinity({
-        registryUrl: 'https://affinity-registry.cachetest3.affinity-project.org',
-      }, ecdsaCryptographyTools)
+      const affinity3 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest3.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
       const result3 = await affinity3.resolveDid('cache-test')
       expect(result3).to.deep.equal(testDocument3)
 
-      const affinity4 = new Affinity({
-        registryUrl: 'https://affinity-registry.cachetest4.affinity-project.org',
-      }, ecdsaCryptographyTools)
+      const affinity4 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest4.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
       const result4 = await affinity4.resolveDid('cache-test')
       expect(result4).to.deep.equal(testDocument4)
     })

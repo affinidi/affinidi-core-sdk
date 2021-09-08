@@ -25,7 +25,9 @@ const getService = (options: ConstructorOptions) => {
 
 const resolveDid = async ({ service, cache }: ServiceWithCache, did: string) => {
   if (!cache.has(did)) {
-    const { body: { didDocument } } = await service.resolveDid({ did })
+    const {
+      body: { didDocument },
+    } = await service.resolveDid({ did })
     cache.set(did, didDocument)
   }
 
