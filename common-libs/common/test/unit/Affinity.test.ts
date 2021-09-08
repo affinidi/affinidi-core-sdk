@@ -566,5 +566,33 @@ describe('Affinity', () => {
       const result4 = await affinity4.resolveDid('cache-test')
       expect(result4).to.deep.equal(testDocument4)
     })
+
+    it('does not cache errors', async () => {
+      const testDocument = { cache: 'test' }
+
+      const affinity5 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest5.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
+
+      nock('https://affinity-registry.cachetest5.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(500, { message: 'first call fail' })
+      try {
+        await affinity5.resolveDid('cache-test')
+        expect.fail('should fail because nock is configured to return 500')
+      } catch (error) {
+        expect(error._originalError.message).to.equal('first call fail')
+      }
+
+      nock('https://affinity-registry.cachetest5.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(200, { didDocument: testDocument })
+
+      const result = await affinity5.resolveDid('cache-test')
+      expect(result).to.deep.equal(testDocument)
+    })
   })
 })

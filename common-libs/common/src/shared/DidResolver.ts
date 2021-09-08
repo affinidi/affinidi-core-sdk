@@ -1,9 +1,9 @@
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 
-type CachedResults = Map<string, Record<string, any>>
+type CachedPromises = Map<string, Promise<Record<string, any>>>
 type ServiceWithCache = {
   service: RegistryApiService
-  cache: CachedResults
+  cache: CachedPromises
 }
 
 type ConstructorOptions = ConstructorParameters<typeof RegistryApiService>[0]
@@ -25,10 +25,18 @@ const getService = (options: ConstructorOptions) => {
 
 const resolveDid = async ({ service, cache }: ServiceWithCache, did: string) => {
   if (!cache.has(did)) {
-    const {
-      body: { didDocument },
-    } = await service.resolveDid({ did })
-    cache.set(did, didDocument)
+    cache.set(did, new Promise((resolve, reject) => {
+      service.resolveDid({ did })
+        .then(({ body }) => {
+          const { didDocument } = body
+          resolve(didDocument)
+        })
+        .catch((reason) => {
+          // Don't cache fails
+          cache.delete(did)
+          reject(reason)
+        })
+    }))
   }
 
   return cache.get(did)
