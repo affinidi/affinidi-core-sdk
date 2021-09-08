@@ -5,6 +5,7 @@ import { BuiltApiType } from '../types/typeBuilder'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 import { PossibleDidAuthOperationIdsOf } from '../types/didAuth'
 import { DidAuthAdapter } from '../helpers/DidAuthAdapter'
+import { createDidAuthSession, DidAuthSession } from '../helpers/DidAuthManager'
 
 export type DidAuthConstructorOptions = GenericConstructorOptions & {
   didAuthAdapter: DidAuthAdapter
@@ -15,8 +16,7 @@ export default abstract class DidAuthApiService<
   TApi extends BuiltApiType,
   TDidAuthOperationId extends PossibleDidAuthOperationIdsOf<TApi>
 > extends GenericApiService<TApi> {
-  private _responseToken?: string
-  private readonly _didAuthAdapter: DidAuthAdapter
+  private readonly _didAuthSession: DidAuthSession
   private readonly _getDidAuthOperationId: TDidAuthOperationId
 
   protected constructor(
@@ -26,26 +26,14 @@ export default abstract class DidAuthApiService<
     rawSpec: RawApiSpec<TApi>,
   ) {
     super(serviceUrl, options, rawSpec)
-    this._didAuthAdapter = options.didAuthAdapter
+    this._didAuthSession = createDidAuthSession(options.didAuthAdapter)
     this._getDidAuthOperationId = getDidAuthOperationId
   }
 
-  private async _createDidAuthToken() {
-    const didAuthRequestToken = await this.execute(this._getDidAuthOperationId, {
-      params: {
-        audienceDid: this._didAuthAdapter.did,
-      },
-    } as RequestOptionsForOperation<TApi, TDidAuthOperationId>)
-
-    return await this._didAuthAdapter.createDidAuthResponseToken(didAuthRequestToken.body)
-  }
-
   private async _getToken() {
-    if (!this._responseToken || this._didAuthAdapter.isTokenExpired(this._responseToken)) {
-      this._responseToken = await this._createDidAuthToken()
-    }
-
-    return this._responseToken
+    return this._didAuthSession.getResponseToken((audienceDid) => this.execute(this._getDidAuthOperationId, {
+      params: { audienceDid },
+    } as RequestOptionsForOperation<TApi, TDidAuthOperationId>))
   }
 
   protected async executeWithDidAuth<TOperationId extends keyof Omit<TApi, TDidAuthOperationId>>(
