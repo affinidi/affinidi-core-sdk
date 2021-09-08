@@ -17,7 +17,7 @@ type BasicRequestOptions = {
   storageRegion?: string
 }
 
-type RequestOptions<
+export type RequestOptions<
   TParams extends OptionalRecord,
   TQuery extends OptionalRecord,
   TPath extends OptionalRecord

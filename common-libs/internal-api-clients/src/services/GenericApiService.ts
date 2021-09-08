@@ -5,7 +5,7 @@ import { SdkError } from '@affinidi/tools-common'
 import { createAdditionalHeaders, createHeaders } from '../helpers/headers'
 import { GenericApiSpec } from '../types/openapi'
 import { ParseSpec } from '../types/openapiParser'
-import { RawApiSpec, ResponseForOperation, RequestOptionsForOperation } from '../types/request'
+import { RawApiSpec, ResponseForOperation, RequestOptionsForOperation, RequestOptions } from '../types/request'
 import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } from '../types/typeBuilder'
 
 let fetch: typeof FetchType
@@ -36,13 +36,6 @@ export type FullServiceOptions = {
 }
 
 export type ServiceOptions = Omit<FullServiceOptions, 'serviceUrl'>
-
-export type RequestOptions = {
-  params?: any
-  pathParams?: any
-  queryParams?: Record<string, string>
-  headerParams?: Record<string, string>
-}
 
 export type ServiceFactoryByRawSpec<TRawSpec extends GenericApiSpec> = {
   createInstance(): ServiceTypeByRawSpec<TRawSpec>
@@ -81,14 +74,17 @@ const parseSpec = <TApi extends BuiltApiType>(rawSpec: RawApiSpec<TApi>) => {
 const executeByOptions = async <TResponse>(
   method: string,
   pathTemplate: string,
-  requestOptions: RequestOptions,
+  { authorization, params, pathParams, queryParams, storageRegion }: RequestOptions<any, any, any>,
   serviceOptions: FullServiceOptions,
 ) => {
+  if (!serviceOptions.serviceUrl) {
+    throw new Error('Service URL is empty')
+  }
+
   const headers = {
     ...createHeaders(serviceOptions),
-    ...createAdditionalHeaders(requestOptions.headerParams ?? {}),
+    ...createAdditionalHeaders({ authorization, storageRegion }),
   }
-  const { params } = requestOptions
   const fetchOptions = {
     headers,
     method,
@@ -96,11 +92,11 @@ const executeByOptions = async <TResponse>(
   }
 
   // eslint-disable-next-line no-unused-vars
-  const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => requestOptions.pathParams?.[p1])
+  const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => pathParams?.[p1])
   const url = new URL(`${serviceOptions.serviceUrl}${path}`)
 
-  for (const [name, value] of Object.entries(requestOptions.queryParams ?? {})) {
-    url.searchParams.set(name, value)
+  for (const [name, value] of Object.entries(queryParams ?? {})) {
+    url.searchParams.set(name, value as string)
   }
 
   const response = await fetch(url, fetchOptions)
@@ -123,7 +119,7 @@ export const createServiceFactory = <TApiSpec extends GenericApiSpec>(
 
   const result: Record<string, any> = {}
   Object.entries(specGroupByOperationId).forEach(([serviceOperationId, { method, path }]) => {
-    result[serviceOperationId] = (serviceOptions: FullServiceOptions, requestOptions: RequestOptions) =>
+    result[serviceOperationId] = (serviceOptions: FullServiceOptions, requestOptions: RequestOptions<any, any, any>) =>
       executeByOptions(method, path, requestOptions, serviceOptions)
   })
 
@@ -135,10 +131,6 @@ export const createServiceFactory = <TApiSpec extends GenericApiSpec>(
 }
 
 export const createServiceOptions = (serviceUrl: string, otherOptions: ServiceOptions): FullServiceOptions => {
-  if (!serviceUrl) {
-    throw new Error('Service URL is empty')
-  }
-
   return {
     ...otherOptions,
     serviceUrl,

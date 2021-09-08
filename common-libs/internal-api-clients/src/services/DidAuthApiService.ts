@@ -37,10 +37,11 @@ export const wrapWithDidAuth = <TMethods>(
 
   const result: Record<string, any> = {}
   Object.entries(methods).forEach(([key, method]: [string, BasicApiMethodType]) => {
-    result[key] = (didAuthSession: DidAuthSession, serviceOptions: FullServiceOptions, requestOptions: any) => {
-      method(serviceOptions, {
+    result[key] = async (didAuthSession: DidAuthSession, serviceOptions: FullServiceOptions, requestOptions: any) => {
+      const responseToken = await didAuthSession.getResponseToken((did) => createRequestToken(serviceOptions, did))
+      return method(serviceOptions, {
         ...requestOptions,
-        authorization: didAuthSession.getResponseToken((did) => createRequestToken(serviceOptions, did)),
+        authorization: responseToken,
       })
     }
   })
