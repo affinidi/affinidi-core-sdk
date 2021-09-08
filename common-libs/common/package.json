@@ -40,6 +40,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "^0.0.25",
+    "@affinidi/internal-api-clients": "^1.0.0-beta.10",
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.1",
     "@affinidi/vc-common": "^1.4.2",
     "base64url": "^3.0.1",
