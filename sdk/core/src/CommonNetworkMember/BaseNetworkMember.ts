@@ -271,10 +271,7 @@ export abstract class BaseNetworkMember {
   async resolveDid(did: string) {
     await ParametersValidator.validate([{ isArray: false, type: 'did', isRequired: true, value: did }])
 
-    const { body } = await this._registryApiService.resolveDid({ did })
-    const { didDocument } = body
-
-    return didDocument
+    return this._affinity.resolveDid(did)
   }
 
   /**

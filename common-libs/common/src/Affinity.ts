@@ -9,7 +9,7 @@ import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
 import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
-import { RegistryApiService } from '@affinidi/internal-api-clients'
+import { DidResolver } from './shared/DidResolver'
 
 const revocationList = require('vc-revocation-list') // eslint-disable-line
 
@@ -17,13 +17,13 @@ type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
 
 export class Affinity {
-  private readonly _registryService
+  private readonly _didResolver
   private readonly _metricsService
   private readonly _digestService
   private readonly _platformCryptographyTools
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
-    this._registryService = new RegistryApiService({
+    this._didResolver = new DidResolver({
       registryUrl: options.registryUrl ?? DEFAULT_REGISTRY_URL,
       accessApiKey: options.apiKey,
     })
@@ -47,8 +47,7 @@ export class Affinity {
   }
 
   async resolveDid(did: string): Promise<any> {
-    const result = await this._registryService.resolveDid({ did })
-    return result.body.didDocument
+    return this._didResolver.resolveDid(did)
   }
 
   async validateJWT(encryptedtoken: string, initialEncryptedtoken?: string, didDocument?: any) {
