@@ -1,11 +1,11 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClientFactory, createClientOptions, GetParams } from '../helpers/client'
+import { ClientOptions, createClient, createClientOptions, GetParams } from '../helpers/client'
 import issuerSpec from '../spec/_issuer'
 
 type ConstructorOptions = ClientOptions & { issuerUrl: string }
 
-const client = createClientFactory(issuerSpec).createInstance()
+const client = createClient(issuerSpec)
 
 @profile()
 export default class IssuerApiService {

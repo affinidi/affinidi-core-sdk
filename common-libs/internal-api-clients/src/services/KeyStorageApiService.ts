@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClientFactory, createClientOptions, GetParams } from '../helpers/client'
+import { ClientOptions, createClient, createClientOptions, GetParams } from '../helpers/client'
 import keyStorageSpec from '../spec/_keyStorage'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
@@ -30,7 +30,7 @@ type Env = 'dev' | 'staging' | 'prod'
 
 type ConstructorOptions = ClientOptions & { keyStorageUrl: string }
 
-const client = createClientFactory(keyStorageSpec).createInstance()
+const client = createClient(keyStorageSpec)
 
 @profile()
 export default class KeyStorageApiService {

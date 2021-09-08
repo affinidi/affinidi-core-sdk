@@ -1,11 +1,11 @@
 import { profile } from '@affinidi/tools-common'
 
 import cloudWalletSpec from '../spec/_cloudWallet'
-import { createClientFactory, createClientOptions, GetParams } from '../helpers/client'
+import { createClient, createClientOptions, GetParams } from '../helpers/client'
 
 type ConstructorOptions = { cloudWalletUrl: string; accessApiKey: string }
 
-const client = createClientFactory(cloudWalletSpec).createInstance()
+const client = createClient(cloudWalletSpec)
 
 @profile()
 export default class CloudWalletApiService {

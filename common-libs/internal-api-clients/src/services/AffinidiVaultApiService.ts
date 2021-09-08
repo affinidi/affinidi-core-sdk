@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
 
-import { createClientFactory, createClientOptions } from '../helpers/client'
+import { createClient, createClientOptions } from '../helpers/client'
 import { createDidAuthSession } from '../helpers/DidAuthManager'
 import { DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import affinidiVaultSpec from '../spec/_affinidiVault'
@@ -12,7 +12,7 @@ export type BlobType = {
   id: number
 }
 
-const { CreateDidAuthRequest, ...otherMethods } = createClientFactory(affinidiVaultSpec).createInstance()
+const { CreateDidAuthRequest, ...otherMethods } = createClient(affinidiVaultSpec)
 const client = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
 
 @profile()

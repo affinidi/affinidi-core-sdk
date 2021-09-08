@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClientFactory, createClientOptions } from '../helpers/client'
+import { ClientOptions, createClient, createClientOptions } from '../helpers/client'
 import bloomVaultSpec from '../spec/_bloomVault'
 
 type ConstructorOptions = ClientOptions & { vaultUrl: string }
@@ -10,7 +10,7 @@ export type BlobType = {
   id: number
 }
 
-const client = createClientFactory(bloomVaultSpec).createInstance()
+const client = createClient(bloomVaultSpec)
 
 @profile()
 export default class BloomVaultApiService {

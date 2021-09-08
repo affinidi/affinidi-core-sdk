@@ -37,8 +37,8 @@ export type FullClientOptions = {
 
 export type ClientOptions = Omit<FullClientOptions, 'serviceUrl'>
 
-export type ClientFactoryByRawSpec<TRawSpec extends GenericApiSpec> = {
-  createInstance(): ClientTypeByRawSpec<TRawSpec>
+export type ClientFactoryByRawSpec = {
+  <TRawSpec extends GenericApiSpec>(rawSpec: TRawSpec): ClientTypeByRawSpec<TRawSpec>
 }
 
 type GetRequestOptions<TOperation extends MethodTypeByOperation<any>> = Parameters<TOperation>[1]
@@ -112,9 +112,9 @@ const executeByOptions = async <TResponse>(
   return { body: jsonResponse as TResponse, status }
 }
 
-export const createClientFactory = <TApiSpec extends GenericApiSpec>(
+export const createClient: ClientFactoryByRawSpec = <TApiSpec extends GenericApiSpec>(
   rawSpec: TApiSpec,
-): ClientFactoryByRawSpec<TApiSpec> => {
+) => {
   const specGroupByOperationId = parseSpec(rawSpec)
 
   const result: Record<string, any> = {}
@@ -123,11 +123,7 @@ export const createClientFactory = <TApiSpec extends GenericApiSpec>(
       executeByOptions(method, path, requestOptions, clientOptions)
   })
 
-  return {
-    createInstance() {
-      return result
-    },
-  } as any
+  return result as any
 }
 
 export const createClientOptions = (serviceUrl: string, otherOptions: ClientOptions): FullClientOptions => {

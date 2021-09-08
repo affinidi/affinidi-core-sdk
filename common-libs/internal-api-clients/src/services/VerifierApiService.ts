@@ -1,11 +1,11 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClientFactory, createClientOptions, GetParams } from '../helpers/client'
+import { ClientOptions, createClient, createClientOptions, GetParams } from '../helpers/client'
 import verifierSpec from '../spec/_verifier'
 
 type ConstructorOptions = ClientOptions & { verifierUrl: string }
 
-const client = createClientFactory(verifierSpec).createInstance()
+const client = createClient(verifierSpec)
 
 @profile()
 export default class VerifierApiService {

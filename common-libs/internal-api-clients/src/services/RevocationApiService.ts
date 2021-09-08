@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
 
-import { createClientFactory, createClientOptions } from '../helpers/client'
+import { createClient, createClientOptions } from '../helpers/client'
 import { createDidAuthSession } from '../helpers/DidAuthManager'
 import { DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import revocationSpec from '../spec/_revocation'
@@ -11,7 +11,7 @@ type ReplaceFieldsWithAny<T> = {
   [key in keyof T]: any
 }
 
-const { CreateDidAuthRequest, ...otherMethods } = createClientFactory(revocationSpec).createInstance()
+const { CreateDidAuthRequest, ...otherMethods } = createClient(revocationSpec)
 const client = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
 
 @profile()

@@ -1,11 +1,11 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClientFactory, createClientOptions, GetParams } from '../helpers/client'
+import { ClientOptions, createClient, createClientOptions, GetParams } from '../helpers/client'
 import registrySpec from '../spec/_registry'
 
 type ConstructorOptions = ClientOptions & { registryUrl: string }
 
-const client = createClientFactory(registrySpec).createInstance()
+const client = createClient(registrySpec)
 
 @profile()
 export default class RegistryApiService {
