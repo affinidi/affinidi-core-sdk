@@ -6,7 +6,7 @@ import { createAdditionalHeaders, createHeaders } from '../helpers/headers'
 import { GenericApiSpec } from '../types/openapi'
 import { ParseSpec } from '../types/openapiParser'
 import { RawApiSpec, ResponseForOperation, RequestOptionsForOperation } from '../types/request'
-import { BuildApiType, BuiltApiOperationType, BuiltApiType } from '../types/typeBuilder'
+import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } from '../types/typeBuilder'
 
 let fetch: typeof FetchType
 
@@ -25,9 +25,9 @@ type ServiceTypeByApi<TApi extends BuiltApiType> = {
   [key in keyof TApi]: MethodTypeByOperation<TApi[key]>
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-export type ServiceTypeByRawSpec<TRawSpec extends GenericApiSpec> = ServiceTypeByApi<BuildApiType<ParseSpec<TRawSpec>>>
+export type ServiceTypeByRawSpec<TRawSpec extends GenericApiSpec> = ServiceTypeByApi<
+  BuildApiTypeWithoutConstraint<ParseSpec<TRawSpec>>
+>
 
 export type FullServiceOptions = {
   accessApiKey: string

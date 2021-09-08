@@ -83,3 +83,8 @@ export type BuiltApiOperationType = {
 export type BuiltApiType = Record<string, BuiltApiOperationType>
 
 export type BuildApiType<TParsedSpec extends ParsedSpec> = Simplify<BuildApiRawType<TParsedSpec>>
+
+export type BuildApiTypeWithoutConstraint<TParsedSpec> =
+  TParsedSpec extends ParsedSpec
+    ? BuildApiType<TParsedSpec>
+    : never

@@ -23,9 +23,8 @@ type MappedMethods<TMethods> = {
 }
 
 type GetRequestOptions<TOperation extends MappedMethod<any>> = Parameters<TOperation>[2]
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-export type GetParams<TOperation extends MappedMethod<any>> = GetRequestOptions<TOperation>['params']
+type ExtractField<TObject, TField extends string> = TObject extends Record<TField, unknown> ? TObject[TField] : never
+export type GetParams<TOperation extends MappedMethod<any>> = ExtractField<GetRequestOptions<TOperation>, 'params'>
 
 export const wrapWithDidAuth = <TMethods>(
   didAuthMethod: DidAuthApiMethodType,
