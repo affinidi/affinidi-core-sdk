@@ -1,27 +1,27 @@
 import { profile } from '@affinidi/tools-common'
 
 import bloomVaultSpec from '../spec/_bloomVault'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
+import { createServiceFactory, createServiceOptions, ServiceOptions } from './GenericApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { vaultUrl: string }
+type ConstructorOptions = ServiceOptions & { vaultUrl: string }
 
 export type BlobType = {
   cyphertext: string
   id: number
 }
 
-type ApiType = BuildApiType<ParseSpec<typeof bloomVaultSpec>>
+const service = createServiceFactory(bloomVaultSpec).createInstance()
 
 @profile()
-export default class BloomVaultApiService extends GenericApiService<ApiType> {
-  constructor(options: ConstructorOptions) {
-    super(options.vaultUrl, options, bloomVaultSpec)
+export default class BloomVaultApiService {
+  private readonly options
+
+  constructor({ vaultUrl, ...otherOptions }: ConstructorOptions) {
+    this.options = createServiceOptions(vaultUrl, otherOptions)
   }
 
   async requestAuthToken({ did, storageRegion }: { did: string; storageRegion: string }) {
-    return this.execute('RequestAuthToken', {
+    return service.RequestAuthToken(this.options, {
       storageRegion,
       queryParams: { did },
     })
@@ -29,7 +29,7 @@ export default class BloomVaultApiService extends GenericApiService<ApiType> {
 
   async validateAuthToken(params: { accessToken: string; signature: string; did: string; storageRegion: string }) {
     const { accessToken, signature, did, storageRegion } = params
-    return this.execute('ValidateAuthToken', {
+    return service.ValidateAuthToken(this.options, {
       storageRegion,
       params: { accessToken, signature, did },
     })
@@ -37,7 +37,7 @@ export default class BloomVaultApiService extends GenericApiService<ApiType> {
 
   async postCredential(params: { accessToken: string; cyphertext: string; storageRegion: string }) {
     const { accessToken, cyphertext, storageRegion } = params
-    return this.execute('PostCredential', {
+    return service.PostCredential(this.options, {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       params: { cyphertext },
@@ -46,7 +46,7 @@ export default class BloomVaultApiService extends GenericApiService<ApiType> {
 
   async deleteCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
-    return this.execute('DeleteCredentials', {
+    return service.DeleteCredentials(this.options, {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       pathParams: { start: `${start}`, end: `${end}` },
@@ -55,7 +55,7 @@ export default class BloomVaultApiService extends GenericApiService<ApiType> {
 
   async getCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
-    return this.execute('GetCredentials', {
+    return service.GetCredentials(this.options, {
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       pathParams: { start: `${start}`, end: `${end}` },

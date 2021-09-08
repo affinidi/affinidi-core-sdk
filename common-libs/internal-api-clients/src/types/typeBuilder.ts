@@ -73,11 +73,13 @@ type BuildOperations<TOperations extends ParsedSpec['operations'], TObjects exte
 type BuildApiRawType<TParsedSpec extends ParsedSpec> =
   BuildOperations<TParsedSpec['operations'], TParsedSpec['objects']>
 
-export type BuiltApiType = Record<string, {
+export type BuiltApiOperationType = {
   pathParams?: Record<string, any>
   queryParams?: Record<string, any>
   requestBody?: any
   responseBody?: any
-}>
+}
+
+export type BuiltApiType = Record<string, BuiltApiOperationType>
 
 export type BuildApiType<TParsedSpec extends ParsedSpec> = Simplify<BuildApiRawType<TParsedSpec>>

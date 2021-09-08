@@ -1,4 +1,4 @@
-import { BuiltApiType } from './typeBuilder'
+import { BuiltApiOperationType, BuiltApiType } from './typeBuilder'
 import { Simplify } from './util'
 
 export type RawApiSpec<TApi extends BuiltApiType> = {
@@ -26,6 +26,16 @@ type RequestOptions<
   WithOptionalField<'queryParams', TQuery> &
   WithOptionalField<'pathParams', TPath>
 
-export type RequestOptionsForOperation<TApi extends BuiltApiType, TOperationId extends keyof TApi> = Simplify<
-  RequestOptions<TApi[TOperationId]['requestBody'], TApi[TOperationId]['queryParams'], TApi[TOperationId]['pathParams']>
+export type RequestOptionsForOperation<TOperation extends BuiltApiOperationType> = Simplify<
+  RequestOptions<TOperation['requestBody'], TOperation['queryParams'], TOperation['pathParams']>
 >
+
+export type ResponseForOperation<TOperation extends BuiltApiOperationType> = {
+  body: TOperation['responseBody']
+  status: number
+}
+
+export type RequestOptionsForOperationId<
+  TApi extends BuiltApiType,
+  TOperationId extends keyof TApi
+> = RequestOptionsForOperation<TApi[TOperationId]>

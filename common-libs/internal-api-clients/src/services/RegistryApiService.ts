@@ -1,26 +1,26 @@
 import { profile } from '@affinidi/tools-common'
 
 import registrySpec from '../spec/_registry'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
+import { createServiceFactory, createServiceOptions, GetParams, ServiceOptions } from './GenericApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { registryUrl: string }
+type ConstructorOptions = ServiceOptions & { registryUrl: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof registrySpec>>
+const service = createServiceFactory(registrySpec).createInstance()
 
 @profile()
-export default class RegistryApiService extends GenericApiService<ApiType> {
+export default class RegistryApiService {
+  private readonly options
+
   constructor(options: ConstructorOptions) {
-    super(options.registryUrl, options, registrySpec)
+    this.options = createServiceOptions(options.registryUrl, options)
   }
 
-  async putDocumentInIpfs(params: ApiType['PutDocumentInIpfs']['requestBody']) {
-    return this.execute('PutDocumentInIpfs', { params })
+  async putDocumentInIpfs(params: GetParams<typeof service.PutDocumentInIpfs>) {
+    return service.PutDocumentInIpfs(this.options, { params })
   }
 
-  async createAnchorTransaction(params: ApiType['CreateAnchorTransaction']['requestBody']) {
-    return this.execute('CreateAnchorTransaction', { params })
+  async createAnchorTransaction(params: GetParams<typeof service.CreateAnchorTransaction>) {
+    return service.CreateAnchorTransaction(this.options, { params })
   }
 
   async anchorDid({
@@ -43,14 +43,14 @@ export default class RegistryApiService extends GenericApiService<ApiType> {
       transactionSignatureJson: transactionSignatureJson as any,
       nonce,
     }
-    return this.execute('AnchorDid', { params })
+    return service.AnchorDid(this.options, { params })
   }
 
-  async resolveDid(params: ApiType['ResolveDid']['requestBody']) {
-    return this.execute('ResolveDid', { params })
+  async resolveDid(params: GetParams<typeof service.ResolveDid>) {
+    return service.ResolveDid(this.options, { params })
   }
 
-  async transactionCount(params: ApiType['TransactionCount']['requestBody']) {
-    return this.execute('TransactionCount', { params })
+  async transactionCount(params: GetParams<typeof service.TransactionCount>) {
+    return service.TransactionCount(this.options, { params })
   }
 }

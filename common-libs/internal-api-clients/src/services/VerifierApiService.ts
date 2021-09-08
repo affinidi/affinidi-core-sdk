@@ -1,33 +1,33 @@
 import { profile } from '@affinidi/tools-common'
 
 import verifierSpec from '../spec/_verifier'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
+import { createServiceFactory, createServiceOptions, GetParams, ServiceOptions } from './GenericApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { verifierUrl: string }
+type ConstructorOptions = ServiceOptions & { verifierUrl: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof verifierSpec>>
+const service = createServiceFactory(verifierSpec).createInstance()
 
 @profile()
-export default class VerifierApiService extends GenericApiService<ApiType> {
+export default class VerifierApiService {
+  private readonly options
+
   constructor(options: ConstructorOptions) {
-    super(options.verifierUrl, options, verifierSpec)
+    this.options = createServiceOptions(options.verifierUrl, options)
   }
 
-  async buildCredentialRequest(params: ApiType['BuildCredentialRequest']['requestBody']) {
-    return this.execute('BuildCredentialRequest', { params })
+  async buildCredentialRequest(params: GetParams<typeof service.BuildCredentialRequest>) {
+    return service.BuildCredentialRequest(this.options, { params })
   }
 
-  async verifyCredentials(params: ApiType['VerifyCredentials']['requestBody']) {
-    return this.execute('VerifyCredentials', { params })
+  async verifyCredentials(params: GetParams<typeof service.VerifyCredentials>) {
+    return service.VerifyCredentials(this.options, { params })
   }
 
-  async verifyPresentation(params: ApiType['VerifyPresentation']['requestBody']) {
-    return this.execute('VerifyPresentation', { params })
+  async verifyPresentation(params: GetParams<typeof service.VerifyPresentation>) {
+    return service.VerifyPresentation(this.options, { params })
   }
 
-  async verifyCredentialShareResponse(params: ApiType['VerifyCredentialShareResponse']['requestBody']) {
-    return this.execute('VerifyCredentialShareResponse', { params })
+  async verifyCredentialShareResponse(params: GetParams<typeof service.VerifyCredentialShareResponse>) {
+    return service.VerifyCredentialShareResponse(this.options, { params })
   }
 }

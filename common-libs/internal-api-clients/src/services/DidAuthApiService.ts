@@ -1,48 +1,50 @@
-import { profile } from '@affinidi/tools-common'
-
-import { RawApiSpec, RequestOptionsForOperation } from '../types/request'
-import { BuiltApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
-import { PossibleDidAuthOperationIdsOf } from '../types/didAuth'
+import { FullServiceOptions, ServiceOptions } from './GenericApiService'
 import { DidAuthAdapter } from '../helpers/DidAuthAdapter'
-import { createDidAuthSession, DidAuthSession } from '../helpers/DidAuthManager'
+import { DidAuthSession } from '../helpers/DidAuthManager'
 
-export type DidAuthConstructorOptions = GenericConstructorOptions & {
+export type DidAuthConstructorOptions = ServiceOptions & {
   didAuthAdapter: DidAuthAdapter
 }
 
-@profile()
-export default abstract class DidAuthApiService<
-  TApi extends BuiltApiType,
-  TDidAuthOperationId extends PossibleDidAuthOperationIdsOf<TApi>
-> extends GenericApiService<TApi> {
-  private readonly _didAuthSession: DidAuthSession
-  private readonly _getDidAuthOperationId: TDidAuthOperationId
+type BasicApiMethodType = (serviceOptions: FullServiceOptions, requestOptions: any) => Promise<unknown>
 
-  protected constructor(
-    serviceUrl: string,
-    getDidAuthOperationId: TDidAuthOperationId,
-    options: DidAuthConstructorOptions,
-    rawSpec: RawApiSpec<TApi>,
-  ) {
-    super(serviceUrl, options, rawSpec)
-    this._didAuthSession = createDidAuthSession(options.didAuthAdapter)
-    this._getDidAuthOperationId = getDidAuthOperationId
+type MappedMethod<TMethod extends BasicApiMethodType> = (
+  didAuthSession: DidAuthSession,
+  ...rest: Parameters<TMethod>
+) => ReturnType<TMethod>
+
+type DidAuthApiMethodType = (
+  serviceOptions: FullServiceOptions,
+  requestOptions: { params: { audienceDid: string } },
+) => Promise<{ body: string }>
+
+type MappedMethods<TMethods> = {
+  [key in keyof TMethods]: TMethods[key] extends BasicApiMethodType ? MappedMethod<TMethods[key]> : never
+}
+
+type GetRequestOptions<TOperation extends MappedMethod<any>> = Parameters<TOperation>[2]
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+export type GetParams<TOperation extends MappedMethod<any>> = GetRequestOptions<TOperation>['params']
+
+export const wrapWithDidAuth = <TMethods>(
+  didAuthMethod: DidAuthApiMethodType,
+  methods: TMethods,
+): MappedMethods<TMethods> => {
+  const createRequestToken = async (serviceOptions: FullServiceOptions, audienceDid: string) => {
+    const response = await didAuthMethod(serviceOptions, { params: { audienceDid } })
+    return response.body
   }
 
-  private async _getToken() {
-    return this._didAuthSession.getResponseToken((audienceDid) => this.execute(this._getDidAuthOperationId, {
-      params: { audienceDid },
-    } as RequestOptionsForOperation<TApi, TDidAuthOperationId>))
-  }
+  const result: Record<string, any> = {}
+  Object.entries(methods).forEach(([key, method]: [string, BasicApiMethodType]) => {
+    result[key] = (didAuthSession: DidAuthSession, serviceOptions: FullServiceOptions, requestOptions: any) => {
+      method(serviceOptions, {
+        ...requestOptions,
+        authorization: didAuthSession.getResponseToken((did) => createRequestToken(serviceOptions, did)),
+      })
+    }
+  })
 
-  protected async executeWithDidAuth<TOperationId extends keyof Omit<TApi, TDidAuthOperationId>>(
-    serviceOperationId: TOperationId,
-    options: RequestOptionsForOperation<TApi, TOperationId>,
-  ): Promise<{ body: TApi[TOperationId]['responseBody']; status: number }> {
-    return super.execute(serviceOperationId, {
-      ...options,
-      authorization: await this._getToken(),
-    })
-  }
+  return result as any
 }

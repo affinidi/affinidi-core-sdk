@@ -1,29 +1,29 @@
 import { profile } from '@affinidi/tools-common'
 
 import cloudWalletSpec from '../spec/_cloudWallet'
-import GenericApiService from './GenericApiService'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
+import { createServiceFactory, createServiceOptions, GetParams } from './GenericApiService'
 
 type ConstructorOptions = { cloudWalletUrl: string; accessApiKey: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof cloudWalletSpec>>
+const service = createServiceFactory(cloudWalletSpec).createInstance()
 
 @profile()
-export default class CloudWalletApiService extends GenericApiService<ApiType> {
+export default class CloudWalletApiService {
+  private readonly options
+
   constructor(options: ConstructorOptions) {
-    super(options.cloudWalletUrl, options, cloudWalletSpec)
+    this.options = createServiceOptions(options.cloudWalletUrl, options)
   }
 
-  async login(params: ApiType['Login']['requestBody']) {
-    return this.execute('Login', { params })
+  async login(params: GetParams<typeof service.Login>) {
+    return service.Login(this.options, { params })
   }
 
-  async signCredential(params: ApiType['SignCredential']['requestBody'], accessToken: string) {
-    return this.execute('SignCredential', { params, authorization: accessToken })
+  async signCredential(params: GetParams<typeof service.SignCredential>, accessToken: string) {
+    return service.SignCredential(this.options, { params, authorization: accessToken })
   }
 
-  async storeCredentials(params: ApiType['StoreCredentials']['requestBody'], accessToken: string) {
-    return this.execute('StoreCredentials', { params, authorization: accessToken })
+  async storeCredentials(params: GetParams<typeof service.StoreCredentials>, accessToken: string) {
+    return service.StoreCredentials(this.options, { params, authorization: accessToken })
   }
 }
