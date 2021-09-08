@@ -1,4 +1,4 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import cloudWalletSpec from '../spec/_cloudWallet'
 import GenericApiService from './GenericApiService'

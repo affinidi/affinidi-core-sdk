@@ -1,4 +1,4 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import issuerSpec from '../spec/_issuer'
 import { ParseSpec } from '../types/openapiParser'

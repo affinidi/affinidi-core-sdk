@@ -1,4 +1,4 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import registrySpec from '../spec/_registry'
 import { ParseSpec } from '../types/openapiParser'

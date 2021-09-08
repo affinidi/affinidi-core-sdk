@@ -1,4 +1,4 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import bloomVaultSpec from '../spec/_bloomVault'
 import GenericApiService, { GenericConstructorOptions } from './GenericApiService'

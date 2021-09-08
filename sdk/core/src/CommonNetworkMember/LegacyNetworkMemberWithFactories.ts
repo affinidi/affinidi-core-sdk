@@ -1,5 +1,6 @@
-import { profile, KeysService } from '@affinidi/common'
+import { KeysService } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
+import { profile } from '@affinidi/tools-common'
 import WalletStorageService from '../services/WalletStorageService'
 import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
 import { validateUsername } from '../shared/validateUsername'

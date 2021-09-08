@@ -1,4 +1,4 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import verifierSpec from '../spec/_verifier'
 import { ParseSpec } from '../types/openapiParser'

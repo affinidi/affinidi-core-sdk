@@ -1,6 +1,6 @@
 import keyBy from 'lodash.keyby'
 import FetchType from 'node-fetch'
-import { profile, SdkError } from '@affinidi/common'
+import { profile, SdkError } from '@affinidi/tools-common'
 
 import { BuiltApiType } from '../types/typeBuilder'
 import { ApiRequestHeaders, createHeaders, getExtendedHeaders } from '../helpers/headers'

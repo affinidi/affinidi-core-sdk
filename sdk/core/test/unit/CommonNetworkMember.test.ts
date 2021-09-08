@@ -1,8 +1,9 @@
 import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
-import { Affinity, JwtService, KeysService, DidDocumentService, SdkError } from '@affinidi/common'
+import { Affinity, JwtService, KeysService, DidDocumentService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { SdkError } from '@affinidi/tools-common'
 import { buildVCV1Skeleton, buildVCV1Unsigned } from '@affinidi/vc-common'
 import {
   VCSPhonePersonV1,

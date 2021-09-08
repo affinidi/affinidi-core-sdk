@@ -1,4 +1,4 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import revocationSpec from '../spec/_revocation'
 import { ParseSpec } from '../types/openapiParser'

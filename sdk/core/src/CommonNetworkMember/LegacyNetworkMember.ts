@@ -1,5 +1,5 @@
-import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
+import { profile } from '@affinidi/tools-common'
 
 import { SignedCredential, SdkOptions } from '../dto/shared.dto'
 import { IPlatformCryptographyTools } from '../shared/interfaces'

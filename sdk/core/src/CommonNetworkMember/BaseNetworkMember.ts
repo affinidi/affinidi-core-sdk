@@ -1,5 +1,4 @@
 import {
-  profile,
   DidDocumentService,
   JwtService,
   KeysService,
@@ -14,6 +13,7 @@ import {
   VerifierApiService,
   DidAuthAdapter,
 } from '@affinidi/internal-api-clients'
+import { profile } from '@affinidi/tools-common'
 import {
   buildVCV1Skeleton,
   buildVCV1Unsigned,

@@ -1,4 +1,4 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import affinidiVaultSpec from '../spec/_affinidiVault'
 import { ParseSpec } from '../types/openapiParser'

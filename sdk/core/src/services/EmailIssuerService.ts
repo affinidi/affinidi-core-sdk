@@ -4,7 +4,7 @@ import {
   InlineResponse2001 as _VerifyResponse,
 } from '@affinidi/issuer-email-ses-client'
 import { VCEmailPersonV1 } from '@affinidi/vc-data'
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : never
 type ApiInitiatePostPromise = ReturnType<ReturnType<typeof Api>['apiInitiatePost']>
