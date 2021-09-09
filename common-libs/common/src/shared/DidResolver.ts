@@ -23,10 +23,11 @@ const getService = (options: ConstructorOptions) => {
   return services.get(cacheKey)
 }
 
-const resolveDid = async ({ service, cache }: ServiceWithCache, did: string) => {
+const resolveDid = ({ service, cache }: ServiceWithCache, did: string) => {
   if (!cache.has(did)) {
-    cache.set(did, new Promise((resolve, reject) => {
-      service.resolveDid({ did })
+    const promise = new Promise((resolve, reject) => {
+      service
+        .resolveDid({ did })
         .then(({ body }) => {
           const { didDocument } = body
           resolve(didDocument)
@@ -36,7 +37,8 @@ const resolveDid = async ({ service, cache }: ServiceWithCache, did: string) => 
           cache.delete(did)
           reject(reason)
         })
-    }))
+    })
+    cache.set(did, promise)
   }
 
   return cache.get(did)
