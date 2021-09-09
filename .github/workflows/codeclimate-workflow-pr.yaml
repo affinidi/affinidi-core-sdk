@@ -30,7 +30,7 @@ jobs:
           name: test-reporter
           path: ./tmp/cc-test-reporter
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Link
         run: npm run link
       - name: Bootstrap

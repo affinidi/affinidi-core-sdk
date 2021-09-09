@@ -26,7 +26,7 @@ jobs:
           name: test-reporter
           path: ./tmp/cc-test-reporter
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
       - name: Link
