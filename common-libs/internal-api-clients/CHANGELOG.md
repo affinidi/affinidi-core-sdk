@@ -1,3 +1,6 @@
+# release 1.0.0-beta.11 (2021-09-09)
+  * Inheritance replaced with composition
+  * `@affinidi/common` dependency replaced with `@affinidi/tools-common`
 # release 1.0.0-beta.8 (2021-08-02)
   * Created abstract `DidAuthApiService` and moved all Did auth related logic into it
 # release 1.0.0-beta.7 (2021-07-30)

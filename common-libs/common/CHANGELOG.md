@@ -1,3 +1,6 @@
+# 2.0.0-beta.8 (2021-09-09)
+* DIDs are now resolved using `RegistryApiService` from `@affinidi/internal-api-clients`
+* Resolved DIDs are cached
 # 2.0.0-beta.7 (2021-08-30)
 * `Affinity` constructor now requires `IPlatformCryptographyTools` parameter
 * Implemented support for BBS and RSA (key generation, signing, validation), if relevant `IPlatformCryptographyTools` is provided
