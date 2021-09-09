@@ -1,5 +1,5 @@
 import keyBy from 'lodash.keyby'
-import mapValues from 'lodash.mapValues'
+import mapValues from 'lodash.mapvalues'
 import FetchType from 'node-fetch'
 import { SdkError } from '@affinidi/tools-common'
 

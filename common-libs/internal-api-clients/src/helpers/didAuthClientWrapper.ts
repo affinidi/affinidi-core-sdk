@@ -1,4 +1,4 @@
-import mapValues from 'lodash.mapValues'
+import mapValues from 'lodash.mapvalues'
 import { FullClientOptions, ClientOptions } from './client'
 import { DidAuthAdapter } from './DidAuthAdapter'
 import { DidAuthSession } from './DidAuthManager'
