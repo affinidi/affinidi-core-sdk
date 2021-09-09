@@ -35,6 +35,8 @@ jobs:
         run: npm run bootstrap
       - name: Lerna checkLicenses
         run: npm run checkLicenses
+      - name: Build
+        run: npm run build
       - name: Lint packages
         run: npm run lint
       - uses: paambaati/codeclimate-action@v2.6.0

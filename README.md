@@ -71,7 +71,7 @@ You need to to use an API Key when you initialize the SDK. Here are the steps re
 
 The following commands should be supported by all projects in monorepo
 
-* `prepare`: should build package
+* `build`: should build package
 * `lint`: should run lint
 * `checkLicenses`: should check licenses
 * `test:unit`: should run unit tests, if any
