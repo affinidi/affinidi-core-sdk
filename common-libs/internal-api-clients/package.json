@@ -45,6 +45,7 @@
     "@affinidi/affinidi-did-auth-lib": "^1.0.8",
     "@affinidi/tools-common": "^1.0.0-beta.1",
     "lodash.keyby": "^4.6.0",
+    "lodash.mapvalues": "^4.6.0",
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
@@ -53,6 +54,7 @@
     "@types/chai": "4.2.12",
     "@types/chai-spies": "1.0.2",
     "@types/lodash.keyby": "^4.6.6",
+    "@types/lodash.mapvalues": "^4.6.6",
     "@types/mocha": "5.2.7",
     "@types/node-fetch": "^2.5.4",
     "@types/sinon": "9.0.4",

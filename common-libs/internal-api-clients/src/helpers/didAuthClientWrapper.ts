@@ -1,3 +1,4 @@
+import mapValues from 'lodash.mapValues'
 import { FullClientOptions, ClientOptions } from './client'
 import { DidAuthAdapter } from './DidAuthAdapter'
 import { DidAuthSession } from './DidAuthManager'
@@ -35,16 +36,10 @@ export const wrapWithDidAuth = <TMethods>(
     return response.body
   }
 
-  const result: Record<string, any> = {}
-  Object.entries(methods).forEach(([key, method]: [string, BasicApiMethodType]) => {
-    result[key] = async (didAuthSession: DidAuthSession, clientOptions: FullClientOptions, requestOptions: any) => {
-      const responseToken = await didAuthSession.getResponseToken((did) => createRequestToken(clientOptions, did))
-      return method(clientOptions, {
-        ...requestOptions,
-        authorization: responseToken,
-      })
+  return mapValues(methods as any, (method) => {
+    return async (didAuthSession: DidAuthSession, clientOptions: FullClientOptions, requestOptions: any) => {
+      const authorization = await didAuthSession.getResponseToken((did) => createRequestToken(clientOptions, did))
+      return method(clientOptions, { ...requestOptions, authorization })
     }
-  })
-
-  return result as any
+  }) as any
 }

@@ -1,10 +1,11 @@
 import keyBy from 'lodash.keyby'
+import mapValues from 'lodash.mapValues'
 import FetchType from 'node-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
 import { GenericApiSpec } from '../types/openapi'
 import { ParseSpec } from '../types/openapiParser'
-import { RawApiSpec, ResponseForOperation, RequestOptionsForOperation, RequestOptions } from '../types/request'
+import { ResponseForOperation, RequestOptionsForOperation, RequestOptions } from '../types/request'
 import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } from '../types/typeBuilder'
 import { createAdditionalHeaders, createHeaders } from './headers'
 
@@ -44,7 +45,7 @@ export type ClientFactoryByRawSpec = {
 type GetRequestOptions<TOperation extends MethodTypeByOperation<any>> = Parameters<TOperation>[1]
 export type GetParams<TOperation extends MethodTypeByOperation<any>> = GetRequestOptions<TOperation>['params']
 
-const parseSpec = <TApi extends BuiltApiType>(rawSpec: RawApiSpec<TApi>) => {
+const parseSpec = (rawSpec: GenericApiSpec) => {
   const basePath = rawSpec.servers[0].url
 
   const spec = Object.entries(rawSpec.paths).flatMap(([operationPath, operation]) => {
@@ -68,10 +69,10 @@ const parseSpec = <TApi extends BuiltApiType>(rawSpec: RawApiSpec<TApi>) => {
     })
   })
 
-  return keyBy(spec, 'operationId') as Record<keyof TApi, typeof spec[number]>
+  return keyBy(spec, 'operationId')
 }
 
-const executeByOptions = async <TResponse>(
+const executeByOptions = async (
   method: string,
   pathTemplate: string,
   { authorization, params, pathParams, queryParams, storageRegion }: RequestOptions<any, any, any>,
@@ -109,21 +110,16 @@ const executeByOptions = async <TResponse>(
   }
 
   const jsonResponse = status.toString() === '204' ? {} : await response.json()
-  return { body: jsonResponse as TResponse, status }
+  return { body: jsonResponse, status }
 }
 
-export const createClient: ClientFactoryByRawSpec = <TApiSpec extends GenericApiSpec>(
-  rawSpec: TApiSpec,
-) => {
-  const specGroupByOperationId = parseSpec(rawSpec)
-
-  const result: Record<string, any> = {}
-  Object.entries(specGroupByOperationId).forEach(([serviceOperationId, { method, path }]) => {
-    result[serviceOperationId] = (clientOptions: FullClientOptions, requestOptions: RequestOptions<any, any, any>) =>
+export const createClient: ClientFactoryByRawSpec = <TApiSpec extends GenericApiSpec>(rawSpec: TApiSpec) => {
+  type ClientType = ClientTypeByRawSpec<TApiSpec>
+  const specGroupByOperationId: Record<keyof ClientType, { path: string; method: string }> = parseSpec(rawSpec) as any
+  return mapValues(specGroupByOperationId, ({ path, method }) => {
+    return (clientOptions: FullClientOptions, requestOptions: RequestOptions<any, any, any>) =>
       executeByOptions(method, path, requestOptions, clientOptions)
-  })
-
-  return result as any
+  }) as any // to avoid TS2589 "Type instantiation is excessively deep and possibly infinite"
 }
 
 export const createClientOptions = (serviceUrl: string, otherOptions: ClientOptions): FullClientOptions => {
