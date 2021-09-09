@@ -17,7 +17,6 @@
     "test:watch": "tsdx test --watch",
     "lint": "tsdx lint src",
     "lint:fix": "tsdx lint src --fix",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint",
     "test:coverage": "tsdx test --coverage",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.verifier_util.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",

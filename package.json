@@ -12,7 +12,7 @@
     "version": "lerna version",
     "lint": "lerna run --parallel lint",
     "build": "lerna run build",
-    "bootstrap": "lerna bootstrap --ignore-scripts",
+    "bootstrap": "lerna bootstrap",
     "publish": "lerna publish",
     "test": "lerna run --parallel test",
     "test:coverage": "lerna run --parallel test:coverage",

@@ -8,7 +8,6 @@
     "build": "npm run tsc",
     "buildDocs": "typedoc --out docs src",
     "start": "npm run build && node dist/index.js",
-    "prepare": "npm run build",
     "tsc": "tsc -p tsconfig-build.json",
     "lint": "eslint src/** test/**",
     "test": "npm run test:unit && npm run test:integration",
