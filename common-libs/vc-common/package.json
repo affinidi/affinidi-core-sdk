@@ -26,7 +26,7 @@
     "lint:fix": "tsdx lint src --fix",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "dependencies": {
     "did-resolver": "^3.1.0",

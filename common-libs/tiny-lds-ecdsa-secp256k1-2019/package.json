@@ -21,7 +21,7 @@
     "prepublishOnly": "npm run test && npm run lint",
     "test:coverage": "tsdx test --coverage",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.verifier_util.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "repository": {
     "type": "git",

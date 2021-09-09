@@ -15,7 +15,7 @@
     "test:coverage:codeclimate": "npm run test:coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.common_li.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev) || echo \"lcov file is empty. There is no tests\"",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "repository": {
     "type": "git",
