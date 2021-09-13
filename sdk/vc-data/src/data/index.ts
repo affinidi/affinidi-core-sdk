@@ -29,6 +29,7 @@ export * from './winner'
 export * from './accountOwnership'
 export * from './hackathon'
 export * from './grant'
+export * from './participant'
 export * from './personaldataconsent'
 export * from './businessReference'
 
