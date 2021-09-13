@@ -1,3 +1,6 @@
+# 1.4.0 (2021-08-30)
+* vc-data participant schema
+
 # 1.3.8 (2021-08-26)
 * vc-data attendee schema
 
