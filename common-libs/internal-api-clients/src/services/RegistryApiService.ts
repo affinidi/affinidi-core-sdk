@@ -1,26 +1,26 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClient, createClientOptions, GetParams } from '../helpers/client'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import registrySpec from '../spec/_registry'
 
 type ConstructorOptions = ClientOptions & { registryUrl: string }
 
-const client = createClient(registrySpec)
+const clientMethods = createClientMethods(registrySpec)
 
 @profile()
 export default class RegistryApiService {
-  private readonly options
+  private readonly client
 
   constructor(options: ConstructorOptions) {
-    this.options = createClientOptions(options.registryUrl, options)
+    this.client = createClient(clientMethods, options.registryUrl, options)
   }
 
-  async putDocumentInIpfs(params: GetParams<typeof client.PutDocumentInIpfs>) {
-    return client.PutDocumentInIpfs(this.options, { params })
+  async putDocumentInIpfs(params: GetParams<typeof clientMethods.PutDocumentInIpfs>) {
+    return this.client.PutDocumentInIpfs({ params })
   }
 
-  async createAnchorTransaction(params: GetParams<typeof client.CreateAnchorTransaction>) {
-    return client.CreateAnchorTransaction(this.options, { params })
+  async createAnchorTransaction(params: GetParams<typeof clientMethods.CreateAnchorTransaction>) {
+    return this.client.CreateAnchorTransaction({ params })
   }
 
   async anchorDid({
@@ -43,14 +43,14 @@ export default class RegistryApiService {
       transactionSignatureJson: transactionSignatureJson as any,
       nonce,
     }
-    return client.AnchorDid(this.options, { params })
+    return this.client.AnchorDid({ params })
   }
 
-  async resolveDid(params: GetParams<typeof client.ResolveDid>) {
-    return client.ResolveDid(this.options, { params })
+  async resolveDid(params: GetParams<typeof clientMethods.ResolveDid>) {
+    return this.client.ResolveDid({ params })
   }
 
-  async transactionCount(params: GetParams<typeof client.TransactionCount>) {
-    return client.TransactionCount(this.options, { params })
+  async transactionCount(params: GetParams<typeof clientMethods.TransactionCount>) {
+    return this.client.TransactionCount({ params })
   }
 }

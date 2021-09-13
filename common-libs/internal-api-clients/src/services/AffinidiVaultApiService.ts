@@ -1,8 +1,8 @@
 import { profile } from '@affinidi/tools-common'
 
-import { createClient, createClientOptions } from '../helpers/client'
+import { createClientMethods } from '../helpers/client'
 import { createDidAuthSession } from '../helpers/DidAuthManager'
-import { DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
+import { createClient, DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import affinidiVaultSpec from '../spec/_affinidiVault'
 
 type ConstructorOptions = DidAuthConstructorOptions & { vaultUrl: string }
@@ -12,35 +12,34 @@ export type BlobType = {
   id: number
 }
 
-const { CreateDidAuthRequest, ...otherMethods } = createClient(affinidiVaultSpec)
-const client = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
+const { CreateDidAuthRequest, ...otherMethods } = createClientMethods(affinidiVaultSpec)
+const clientMethods = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
 
 @profile()
 export default class AffinidiVaultApiService {
-  private readonly didAuthSession
-  private readonly options
+  private readonly client
 
   constructor(options: ConstructorOptions) {
-    this.didAuthSession = createDidAuthSession(options.didAuthAdapter)
-    this.options = createClientOptions(options.vaultUrl, options)
+    const didAuthSession = createDidAuthSession(options.didAuthAdapter)
+    this.client = createClient(clientMethods, didAuthSession, options.vaultUrl, options)
   }
 
   async searchCredentials(storageRegion: string, types?: string[][]) {
-    return client.SearchCredentials(this.didAuthSession, this.options, {
+    return this.client.SearchCredentials({
       storageRegion,
       queryParams: types ? { types: JSON.stringify(types) } : {},
     })
   }
 
   async getCredential(storageRegion: string, id: string) {
-    return client.GetCredential(this.didAuthSession, this.options, {
+    return this.client.GetCredential({
       storageRegion,
       pathParams: { id },
     })
   }
 
-  async storeCredential(storageRegion: string, id: string, params: GetParams<typeof client.StoreCredential>) {
-    return client.StoreCredential(this.didAuthSession, this.options, {
+  async storeCredential(storageRegion: string, id: string, params: GetParams<typeof clientMethods.StoreCredential>) {
+    return this.client.StoreCredential({
       storageRegion,
       params,
       pathParams: { id },
@@ -48,7 +47,7 @@ export default class AffinidiVaultApiService {
   }
 
   async deleteCredential(storageRegion: string, id: string) {
-    return client.DeleteCredential(this.didAuthSession, this.options, {
+    return this.client.DeleteCredential({
       storageRegion,
       pathParams: { id },
     })

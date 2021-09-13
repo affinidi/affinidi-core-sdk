@@ -1,29 +1,29 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClient, createClientOptions, GetParams } from '../helpers/client'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import issuerSpec from '../spec/_issuer'
 
 type ConstructorOptions = ClientOptions & { issuerUrl: string }
 
-const client = createClient(issuerSpec)
+const clientMethods = createClientMethods(issuerSpec)
 
 @profile()
 export default class IssuerApiService {
-  private readonly options
+  private readonly client
 
   constructor(options: ConstructorOptions) {
-    this.options = createClientOptions(options.issuerUrl, options)
+    this.client = createClient(clientMethods, options.issuerUrl, options)
   }
 
-  async buildCredentialOffer(params: GetParams<typeof client.BuildCredentialOffer>) {
-    return client.BuildCredentialOffer(this.options, { params })
+  async buildCredentialOffer(params: GetParams<typeof clientMethods.BuildCredentialOffer>) {
+    return this.client.BuildCredentialOffer({ params })
   }
 
-  async verifyCredentialOfferResponse(params: GetParams<typeof client.VerifyCredentialOfferResponse>) {
-    return client.VerifyCredentialOfferResponse(this.options, { params })
+  async verifyCredentialOfferResponse(params: GetParams<typeof clientMethods.VerifyCredentialOfferResponse>) {
+    return this.client.VerifyCredentialOfferResponse({ params })
   }
 
-  async buildUnsignedCredentials(params: GetParams<typeof client.BuildUnsigned>) {
-    return client.BuildUnsigned(this.options, { params })
+  async buildUnsignedCredentials(params: GetParams<typeof clientMethods.BuildUnsigned>) {
+    return this.client.BuildUnsigned({ params })
   }
 }

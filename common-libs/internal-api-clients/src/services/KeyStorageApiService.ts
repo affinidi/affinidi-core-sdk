@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClient, createClientOptions, GetParams } from '../helpers/client'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import keyStorageSpec from '../spec/_keyStorage'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
@@ -30,41 +30,41 @@ type Env = 'dev' | 'staging' | 'prod'
 
 type ConstructorOptions = ClientOptions & { keyStorageUrl: string }
 
-const client = createClient(keyStorageSpec)
+const clientMethods = createClientMethods(keyStorageSpec)
 
 @profile()
 export default class KeyStorageApiService {
-  private readonly options
+  private readonly client
 
   constructor(options: ConstructorOptions) {
-    this.options = createClientOptions(options.keyStorageUrl, options)
+    this.client = createClient(clientMethods, options.keyStorageUrl, options)
   }
 
-  async storeTemplate(params: GetParams<typeof client.StoreTemplate>) {
-    return client.StoreTemplate(this.options, { params })
+  async storeTemplate(params: GetParams<typeof clientMethods.StoreTemplate>) {
+    return this.client.StoreTemplate({ params })
   }
 
   async readMyKey({ accessToken }: { accessToken: string }) {
-    return client.ReadMyKey(this.options, { authorization: accessToken })
+    return this.client.ReadMyKey({ authorization: accessToken })
   }
 
-  async storeMyKey(accessToken: string, params: GetParams<typeof client.StoreMyKey>) {
-    return client.StoreMyKey(this.options, { authorization: accessToken, params })
+  async storeMyKey(accessToken: string, params: GetParams<typeof clientMethods.StoreMyKey>) {
+    return this.client.StoreMyKey({ authorization: accessToken, params })
   }
 
-  async adminConfirmUser(params: GetParams<typeof client.AdminConfirmUser>) {
-    return client.AdminConfirmUser(this.options, { params })
+  async adminConfirmUser(params: GetParams<typeof clientMethods.AdminConfirmUser>) {
+    return this.client.AdminConfirmUser({ params })
   }
 
-  async adminDeleteUnconfirmedUser(params: GetParams<typeof client.AdminDeleteUnconfirmedUser>) {
-    return client.AdminDeleteUnconfirmedUser(this.options, { params })
+  async adminDeleteUnconfirmedUser(params: GetParams<typeof clientMethods.AdminDeleteUnconfirmedUser>) {
+    return this.client.AdminDeleteUnconfirmedUser({ params })
   }
 
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {
-    return client.GetCredentialOffer(this.options, { authorization: accessToken, queryParams: { env } })
+    return this.client.GetCredentialOffer({ authorization: accessToken, queryParams: { env } })
   }
 
   async getSignedCredential(accessToken: string, params: GetSignedCredentialRequest) {
-    return client.GetSignedCredential(this.options, { authorization: accessToken, params })
+    return this.client.GetSignedCredential({ authorization: accessToken, params })
   }
 }

@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
 
-import { ClientOptions, createClient, createClientOptions } from '../helpers/client'
+import { ClientOptions, createClient, createClientMethods } from '../helpers/client'
 import bloomVaultSpec from '../spec/_bloomVault'
 
 type ConstructorOptions = ClientOptions & { vaultUrl: string }
@@ -10,18 +10,18 @@ export type BlobType = {
   id: number
 }
 
-const client = createClient(bloomVaultSpec)
+const clientMethods = createClientMethods(bloomVaultSpec)
 
 @profile()
 export default class BloomVaultApiService {
-  private readonly options
+  private readonly client
 
   constructor({ vaultUrl, ...otherOptions }: ConstructorOptions) {
-    this.options = createClientOptions(vaultUrl, otherOptions)
+    this.client = createClient(clientMethods, vaultUrl, otherOptions)
   }
 
   async requestAuthToken({ did, storageRegion }: { did: string; storageRegion: string }) {
-    return client.RequestAuthToken(this.options, {
+    return this.client.RequestAuthToken({
       storageRegion,
       queryParams: { did },
     })
@@ -29,7 +29,7 @@ export default class BloomVaultApiService {
 
   async validateAuthToken(params: { accessToken: string; signature: string; did: string; storageRegion: string }) {
     const { accessToken, signature, did, storageRegion } = params
-    return client.ValidateAuthToken(this.options, {
+    return this.client.ValidateAuthToken({
       storageRegion,
       params: { accessToken, signature, did },
     })
@@ -37,7 +37,7 @@ export default class BloomVaultApiService {
 
   async postCredential(params: { accessToken: string; cyphertext: string; storageRegion: string }) {
     const { accessToken, cyphertext, storageRegion } = params
-    return client.PostCredential(this.options, {
+    return this.client.PostCredential({
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       params: { cyphertext },
@@ -46,7 +46,7 @@ export default class BloomVaultApiService {
 
   async deleteCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
-    return client.DeleteCredentials(this.options, {
+    return this.client.DeleteCredentials({
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       pathParams: { start: `${start}`, end: `${end}` },
@@ -55,7 +55,7 @@ export default class BloomVaultApiService {
 
   async getCredentials(params: { accessToken: string; start: number; end: number; storageRegion: string }) {
     const { accessToken, start, end, storageRegion } = params
-    return client.GetCredentials(this.options, {
+    return this.client.GetCredentials({
       authorization: `Bearer ${accessToken}`,
       storageRegion,
       pathParams: { start: `${start}`, end: `${end}` },
