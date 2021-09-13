@@ -22,8 +22,8 @@ type ParticipantPersonV1Mixin = CreateThing<
     eventDescription?: string
     transactionLink?: string
     otherTeamMembers?: MaybeArray<string>
-    participationDate: string
     awardedBy: string
+    participationDate: string
     profileLink?: string
   }
 >
