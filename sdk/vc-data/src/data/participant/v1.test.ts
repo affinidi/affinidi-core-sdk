@@ -46,11 +46,6 @@ describe('VCParticipantPersonV1', () => {
                     "@value": "Affinidi",
                   },
                 ],
-                "https://schema.org/participationDate": Array [
-                  Object {
-                    "@value": "09-06-2021",
-                  },
-                ],
                 "https://schema.org/certificate": Array [
                   Object {
                     "@value": "",
@@ -89,6 +84,11 @@ describe('VCParticipantPersonV1', () => {
                 "https://schema.org/participantEmail": Array [
                   Object {
                     "@value": "bob@thebuilder.com",
+                  },
+                ],
+                "https://schema.org/participationDate": Array [
+                  Object {
+                    "@value": "09-06-2021",
                   },
                 ],
                 "https://schema.org/profileLink": Array [
