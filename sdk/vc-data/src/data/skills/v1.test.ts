@@ -48,19 +48,14 @@ describe('VCSkillsPersonV1', () => {
                     "@value": "09-06-2021",
                   },
                 ],
-                "https://schema.org/skillDescription": Array [
-                  Object {
-                    "@value": "Awesome Skill",
-                  },
-                ],
                 "https://schema.org/dateOfBirth": Array [
                   Object {
                     "@value": "21-09-1994",
                   },
                 ],
-                "https://schema.org/skillsName": Array [
+                "https://schema.org/email": Array [
                   Object {
-                    "@value": "Skills 2021",
+                    "@value": "bob@thebuilder.com",
                   },
                 ],
                 "https://schema.org/firstName": Array [
@@ -73,14 +68,19 @@ describe('VCSkillsPersonV1', () => {
                     "@value": "Belcher",
                   },
                 ],
-                "https://schema.org/email": Array [
-                  Object {
-                    "@value": "bob@thebuilder.com",
-                  },
-                ],
                 "https://schema.org/profileLink": Array [
                   Object {
                     "@value": "linkedin.com",
+                  },
+                ],
+                "https://schema.org/skillDescription": Array [
+                  Object {
+                    "@value": "Awesome Skill",
+                  },
+                ],
+                "https://schema.org/skillName": Array [
+                  Object {
+                    "@value": "Skills 2021",
                   },
                 ],
               },
