@@ -1,8 +1,8 @@
 import sinon from 'sinon'
 import * as chai from 'chai'
-import { profile, ProfileAction } from '../../../../src'
-import { ConsoleReporter } from '../../../../src/shared/profiler/ConsoleReporter'
-import { DefaultProfilerActivator } from '../../../../src/shared/profiler/DefaultProfilerActivator'
+import { profile, ProfileAction } from '../../src'
+import { ConsoleReporter } from '../../src/profiler/ConsoleReporter'
+import { DefaultProfilerActivator } from '../../src/profiler/DefaultProfilerActivator'
 
 class SdkOptions {
   didMethod?: 'jolo' | 'elem'

@@ -1,9 +1,9 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
+import { createClientMethods } from '../helpers/client'
+import { createDidAuthSession } from '../helpers/DidAuthManager'
+import { createClient, DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import affinidiVaultSpec from '../spec/_affinidiVault'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import DidAuthApiService, { DidAuthConstructorOptions } from './DidAuthApiService'
 
 type ConstructorOptions = DidAuthConstructorOptions & { vaultUrl: string }
 
@@ -12,30 +12,34 @@ export type BlobType = {
   id: number
 }
 
-type ApiType = BuildApiType<ParseSpec<typeof affinidiVaultSpec>>
+const { CreateDidAuthRequest, ...otherMethods } = createClientMethods(affinidiVaultSpec)
+const clientMethods = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
 
 @profile()
-export default class AffinidiVaultApiService extends DidAuthApiService<ApiType, 'CreateDidAuthRequest'> {
+export default class AffinidiVaultApiService {
+  private readonly client
+
   constructor(options: ConstructorOptions) {
-    super(options.vaultUrl, 'CreateDidAuthRequest', options, affinidiVaultSpec)
+    const didAuthSession = createDidAuthSession(options.didAuthAdapter)
+    this.client = createClient(clientMethods, didAuthSession, options.vaultUrl, options)
   }
 
   async searchCredentials(storageRegion: string, types?: string[][]) {
-    return this.executeWithDidAuth('SearchCredentials', {
+    return this.client.SearchCredentials({
       storageRegion,
       queryParams: types ? { types: JSON.stringify(types) } : {},
     })
   }
 
   async getCredential(storageRegion: string, id: string) {
-    return this.executeWithDidAuth('GetCredential', {
+    return this.client.GetCredential({
       storageRegion,
       pathParams: { id },
     })
   }
 
-  async storeCredential(storageRegion: string, id: string, params: ApiType['StoreCredential']['requestBody']) {
-    return this.executeWithDidAuth('StoreCredential', {
+  async storeCredential(storageRegion: string, id: string, params: GetParams<typeof clientMethods.StoreCredential>) {
+    return this.client.StoreCredential({
       storageRegion,
       params,
       pathParams: { id },
@@ -43,7 +47,7 @@ export default class AffinidiVaultApiService extends DidAuthApiService<ApiType, 
   }
 
   async deleteCredential(storageRegion: string, id: string) {
-    return this.executeWithDidAuth('DeleteCredential', {
+    return this.client.DeleteCredential({
       storageRegion,
       pathParams: { id },
     })

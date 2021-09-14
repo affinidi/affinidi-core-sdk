@@ -1,33 +1,33 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
+import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import verifierSpec from '../spec/_verifier'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { verifierUrl: string }
+type ConstructorOptions = ClientOptions & { verifierUrl: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof verifierSpec>>
+const clientMethods = createClientMethods(verifierSpec)
 
 @profile()
-export default class VerifierApiService extends GenericApiService<ApiType> {
+export default class VerifierApiService {
+  private readonly client
+
   constructor(options: ConstructorOptions) {
-    super(options.verifierUrl, options, verifierSpec)
+    this.client = createClient(clientMethods, options.verifierUrl, options)
   }
 
-  async buildCredentialRequest(params: ApiType['BuildCredentialRequest']['requestBody']) {
-    return this.execute('BuildCredentialRequest', { params })
+  async buildCredentialRequest(params: GetParams<typeof clientMethods.BuildCredentialRequest>) {
+    return this.client.BuildCredentialRequest({ params })
   }
 
-  async verifyCredentials(params: ApiType['VerifyCredentials']['requestBody']) {
-    return this.execute('VerifyCredentials', { params })
+  async verifyCredentials(params: GetParams<typeof clientMethods.VerifyCredentials>) {
+    return this.client.VerifyCredentials({ params })
   }
 
-  async verifyPresentation(params: ApiType['VerifyPresentation']['requestBody']) {
-    return this.execute('VerifyPresentation', { params })
+  async verifyPresentation(params: GetParams<typeof clientMethods.VerifyPresentation>) {
+    return this.client.VerifyPresentation({ params })
   }
 
-  async verifyCredentialShareResponse(params: ApiType['VerifyCredentialShareResponse']['requestBody']) {
-    return this.execute('VerifyCredentialShareResponse', { params })
+  async verifyCredentialShareResponse(params: GetParams<typeof clientMethods.VerifyCredentialShareResponse>) {
+    return this.client.VerifyCredentialShareResponse({ params })
   }
 }

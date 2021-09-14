@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/internal-api-clients",
-  "version": "1.0.0-beta.10",
+  "version": "1.0.0-beta.11",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -8,7 +8,6 @@
     "build": "npm run tsc",
     "buildDocs": "typedoc --out docs src",
     "start": "npm run build && node dist/index.js",
-    "prepare": "npm run build",
     "tsc": "tsc -p tsconfig-build.json",
     "lint": "eslint src/** test/**",
     "test": "npm run test:unit && npm run test:integration",
@@ -16,7 +15,7 @@
     "test:integration": "cross-env NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
     "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.core.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "publishConfig": {
     "access": "public"
@@ -42,9 +41,10 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/affinidi-did-auth-lib": "^1.0.8",
-    "@affinidi/common": "^2.0.0-beta.6",
+    "@affinidi/affinidi-did-auth-lib": "1.0.8",
+    "@affinidi/tools-common": "^1.0.0-beta.1",
     "lodash.keyby": "^4.6.0",
+    "lodash.mapvalues": "^4.6.0",
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
@@ -53,6 +53,7 @@
     "@types/chai": "4.2.12",
     "@types/chai-spies": "1.0.2",
     "@types/lodash.keyby": "^4.6.6",
+    "@types/lodash.mapvalues": "^4.6.6",
     "@types/mocha": "5.2.7",
     "@types/node-fetch": "^2.5.4",
     "@types/sinon": "9.0.4",
@@ -70,7 +71,7 @@
     "sinon": "9.0.2",
     "ts-node": "8.10.2",
     "typedoc": "0.16.11",
-    "typescript": "^4.3.2"
+    "typescript": "^4.4.3"
   },
   "gitHead": "5420b34bac444d42d16b336a7ae95f47741d150c"
 }

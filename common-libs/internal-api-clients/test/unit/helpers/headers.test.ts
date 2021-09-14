@@ -1,7 +1,7 @@
 'use strict'
 
 import { expect } from 'chai'
-import { createHeaders, getExtendedHeaders } from '../../../src/helpers/headers'
+import { createHeaders, createAdditionalHeaders } from '../../../src/helpers/headers'
 
 const fakeAccessApiKey = 'fakeAccessApiKey'
 const fakeAuthToken = Math.random().toString(36).substring(7)
@@ -33,37 +33,19 @@ describe('Headers Helpers', () => {
   })
 
   it('#getExtendedHeaders', async () => {
-    const headers = createHeaders({
-      accessApiKey: fakeAccessApiKey,
-      sdkVersion: fakeSDKVersion,
-    })
-
-    const extendedHeaders = getExtendedHeaders(headers, {
+    const extendedHeaders = createAdditionalHeaders({
       authorization: fakeAuthToken,
       storageRegion: fakeRegion,
     })
 
-    expect(extendedHeaders['Accept']).to.eql('application/json')
-    expect(extendedHeaders['Api-Key']).to.eql(fakeAccessApiKey)
     expect(extendedHeaders['Authorization']).to.eql(fakeAuthToken)
-    expect(extendedHeaders['Content-Type']).to.eql('application/json')
-    expect(extendedHeaders['X-SDK-Version']).to.eql(fakeSDKVersion)
     expect(extendedHeaders['X-DST-REGION']).to.eql(fakeRegion)
   })
 
   it('#getExtendedHeaders with empty options', async () => {
-    const headers = createHeaders({
-      accessApiKey: fakeAccessApiKey,
-      sdkVersion: fakeSDKVersion,
-    })
+    const extendedHeaders = createAdditionalHeaders({})
 
-    const extendedHeaders = getExtendedHeaders(headers, {})
-
-    expect(extendedHeaders['Accept']).to.eql('application/json')
-    expect(extendedHeaders['Api-Key']).to.eql(fakeAccessApiKey)
     expect(extendedHeaders['Authorization']).to.be.undefined
-    expect(extendedHeaders['Content-Type']).to.eql('application/json')
-    expect(extendedHeaders['X-SDK-Version']).to.eql(fakeSDKVersion)
     expect(extendedHeaders['X-DST-REGION']).to.be.undefined
   })
 })

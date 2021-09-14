@@ -1,5 +1,5 @@
-import { profile } from '@affinidi/common'
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
+import { profile } from '@affinidi/tools-common'
 
 import WalletStorageService from '../services/WalletStorageService'
 import {

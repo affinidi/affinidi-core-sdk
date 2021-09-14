@@ -29,6 +29,12 @@ jobs:
         run: npm run checkLicenses
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Build the package
+        run: npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Lint packages
+        run: npm run lint
       - name: Run tests
         run: npm test
         env:
@@ -36,10 +42,6 @@ jobs:
           TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
           TESTMAIL_API_KEY: ${{secrets.TESTMAIL_API_KEY}}
           TESTMAIL_NS: ${{secrets.TESTMAIL_NS}}
-      - name: Build the package
-        run: npm run build
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
       - uses: actions/setup-node@v1
         with:
           node-version: 14

@@ -1,3 +1,5 @@
+# release 6.0.0-beta.11 (2021-09-09)
+* DIDs are now resolved using `Affinity` from `@affinidi/common`, which caches the resolved results.
 # release 6.0.0-beta.9 (2021-08-30)
 * Refactoring
 * `confirmSignUp` with non-empty `KeyOptions` now follows the same flow as with empty `KeyOptions`; the only difference is in a way seed is generated

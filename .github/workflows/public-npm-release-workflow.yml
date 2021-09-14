@@ -15,7 +15,7 @@ jobs:
       - name: Install npm v7
         run: npm install -g npm@7
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
       - name: Lerna link
@@ -26,12 +26,14 @@ jobs:
         run: npm run bootstrap
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
-      - name: Run tests
-        run: npm test
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
       - name: Build the package
         run: npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
+      - name: Lint packages
+        run: npm run lint
+      - name: Run tests
+        run: npm test
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
       - uses: actions/setup-node@v1
@@ -39,8 +41,6 @@ jobs:
           node-version: 14
           registry-url: "https://registry.npmjs.org"
           scope: "@affinidi"
-      - name: Install npm v7
-        run: npm install -g npm@7
       - name: Publish to npmjs.org
         run: npm run exec -- --scope @affinidi/${{ github.event.client_payload.packageName }} npm publish -- --access public
         env:

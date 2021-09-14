@@ -6,16 +6,10 @@ import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/
 
 import { AffinityOptions, EventOptions } from './dto/shared.dto'
 import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
-import {
-  RegistryResolveDidService,
-  DidDocumentService,
-  KeysService,
-  DigestService,
-  JwtService,
-  MetricsService,
-} from './services'
+import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
+import { DidResolver } from './shared/DidResolver'
 
 const revocationList = require('vc-revocation-list') // eslint-disable-line
 
@@ -23,27 +17,22 @@ type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
 
 export class Affinity {
-  private readonly _apiKey: string // TODO: this should be _accessApiKey
-  private readonly _registryUrl: string
-  private readonly _metricsUrl: string
+  private readonly _didResolver
   private readonly _metricsService
   private readonly _digestService
   private readonly _platformCryptographyTools
-  private readonly _registryResolveDidService: RegistryResolveDidService
-  protected _component: EventComponent
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
-    this._apiKey = options.apiKey
-    this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
-    this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
-    this._component = options.component || EventComponent.AffinidiCommon
+    this._didResolver = new DidResolver({
+      registryUrl: options.registryUrl ?? DEFAULT_REGISTRY_URL,
+      accessApiKey: options.apiKey,
+    })
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
-      metricsUrl: this._metricsUrl,
-      accessApiKey: this._apiKey,
-      component: this._component,
+      metricsUrl: options.metricsUrl ?? DEFAULT_METRICS_URL,
+      accessApiKey: options.apiKey,
+      component: options.component || EventComponent.AffinidiCommon,
     })
-    this._registryResolveDidService = new RegistryResolveDidService(this._registryUrl, this._apiKey)
     this._platformCryptographyTools = platformCryptographyTools
   }
 
@@ -58,7 +47,7 @@ export class Affinity {
   }
 
   async resolveDid(did: string): Promise<any> {
-    return this._registryResolveDidService.resolveDid(did)
+    return this._didResolver.resolveDid(did)
   }
 
   async validateJWT(encryptedtoken: string, initialEncryptedtoken?: string, didDocument?: any) {
@@ -421,7 +410,7 @@ export class Affinity {
     keySuiteType: KeySuiteType = 'ecdsa',
   ): Promise<VCV1<TSubject>> {
     const keyService = new KeysService(encryptedSeed, encryptionKey)
-    const didDocumentService = new DidDocumentService(keyService, this._registryResolveDidService)
+    const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
     const mainKeyId = didDocumentService.getKeyId()
     const issuer = this.getIssuerForSigning(keySuiteType, keyService, did, mainKeyId)
@@ -527,7 +516,7 @@ export class Affinity {
     const keyService = new KeysService(opts.encryption.seed, opts.encryption.key)
     const { seed, didMethod } = keyService.decryptSeed()
 
-    const didDocumentService = new DidDocumentService(keyService, this._registryResolveDidService)
+    const didDocumentService = new DidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
     const signedVp = buildVPV1({

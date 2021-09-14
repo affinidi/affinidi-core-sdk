@@ -144,9 +144,5 @@ export type GenericApiSpec = {
     schemas: ObjectSpecs<string>
   }
   paths: PathSpecs<string>
-  servers: Readonly<
-    {
-      url: string
-    }[]
-  >
+  servers: readonly [{ url: string }]
 }

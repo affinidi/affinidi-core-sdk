@@ -2,7 +2,7 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
-import { SdkError } from '@affinidi/common'
+import { SdkError } from '@affinidi/tools-common'
 import {
   AffinidiWalletV6 as AffinidiWallet,
   AffinidiWallet as LegacyAffinidiWallet,

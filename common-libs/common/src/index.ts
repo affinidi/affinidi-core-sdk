@@ -1,5 +1,3 @@
-import SdkError from './shared/SdkError'
-
 if (typeof Buffer === 'undefined') {
   global.Buffer = require('buffer').Buffer
 }
@@ -15,8 +13,6 @@ if (typeof process.version === 'undefined') {
 }
 
 export { Affinity, Affinity as Affinidi } from './Affinity'
-export { profile, ProfileAction } from './shared/profiler/ProfilerDecorator'
-export { SdkError }
 
 export {
   ElemDidDocument,

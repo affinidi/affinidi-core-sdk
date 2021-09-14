@@ -3,8 +3,8 @@ import {
   InlineResponse200 as _InitiateResponse,
   InlineResponse2001 as _VerifyResponse,
 } from '@affinidi/issuer-phone-twilio-client'
+import { profile } from '@affinidi/tools-common'
 import { VCPhonePersonV1, VCAccountPersonV1 } from '@affinidi/vc-data'
-import { profile } from '@affinidi/common'
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : never
 type ApiInitiatePostPromise = ReturnType<ReturnType<typeof Api>['apiInitiatePost']>

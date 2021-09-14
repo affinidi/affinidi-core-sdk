@@ -1,36 +1,40 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
+import { createClientMethods } from '../helpers/client'
+import { createDidAuthSession } from '../helpers/DidAuthManager'
+import { createClient, DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import revocationSpec from '../spec/_revocation'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import DidAuthApiService, { DidAuthConstructorOptions } from './DidAuthApiService'
 
 type ConstructorOptions = DidAuthConstructorOptions & { revocationUrl: string }
-
-type ApiType = BuildApiType<ParseSpec<typeof revocationSpec>>
 
 type ReplaceFieldsWithAny<T> = {
   [key in keyof T]: any
 }
 
+const { CreateDidAuthRequest, ...otherMethods } = createClientMethods(revocationSpec)
+const clientMethods = wrapWithDidAuth(CreateDidAuthRequest, otherMethods)
+
 @profile()
-export default class RevocationApiService extends DidAuthApiService<ApiType, 'CreateDidAuthRequest'> {
+export default class RevocationApiService {
+  private readonly client
+
   constructor(options: ConstructorOptions) {
-    super(options.revocationUrl, 'CreateDidAuthRequest', options, revocationSpec)
+    const didAuthSession = createDidAuthSession(options.didAuthAdapter)
+    this.client = createClient(clientMethods, didAuthSession, options.revocationUrl, options)
   }
 
-  async buildRevocationListStatus(params: ApiType['BuildRevocationListStatus']['requestBody']) {
-    return this.executeWithDidAuth('BuildRevocationListStatus', { params })
+  async buildRevocationListStatus(params: GetParams<typeof clientMethods.BuildRevocationListStatus>) {
+    return this.client.BuildRevocationListStatus({ params })
   }
 
   async publishRevocationListCredential(
-    params: ReplaceFieldsWithAny<ApiType['PublishRevocationListCredential']['requestBody']>,
+    params: ReplaceFieldsWithAny<GetParams<typeof clientMethods.PublishRevocationListCredential>>,
   ) {
-    return this.executeWithDidAuth('PublishRevocationListCredential', { params })
+    return this.client.PublishRevocationListCredential({ params })
   }
 
-  async revokeCredential(params: ApiType['RevokeCredential']['requestBody']) {
-    const response = await this.executeWithDidAuth('RevokeCredential', { params })
+  async revokeCredential(params: GetParams<typeof clientMethods.RevokeCredential>) {
+    const response = await this.client.RevokeCredential({ params })
 
     return response as { body: { revocationListCredential: any } }
   }

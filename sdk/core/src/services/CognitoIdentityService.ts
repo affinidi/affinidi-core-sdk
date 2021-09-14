@@ -1,5 +1,5 @@
 import { CognitoIdentityServiceProvider } from 'aws-sdk'
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 let fetch: any
 

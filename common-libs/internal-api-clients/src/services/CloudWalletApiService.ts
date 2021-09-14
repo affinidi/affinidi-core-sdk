@@ -1,29 +1,29 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import cloudWalletSpec from '../spec/_cloudWallet'
-import GenericApiService from './GenericApiService'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
+import { createClient, createClientMethods, GetParams } from '../helpers/client'
 
 type ConstructorOptions = { cloudWalletUrl: string; accessApiKey: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof cloudWalletSpec>>
+const clientMethods = createClientMethods(cloudWalletSpec)
 
 @profile()
-export default class CloudWalletApiService extends GenericApiService<ApiType> {
+export default class CloudWalletApiService {
+  private readonly client
+
   constructor(options: ConstructorOptions) {
-    super(options.cloudWalletUrl, options, cloudWalletSpec)
+    this.client = createClient(clientMethods, options.cloudWalletUrl, options)
   }
 
-  async login(params: ApiType['Login']['requestBody']) {
-    return this.execute('Login', { params })
+  async login(params: GetParams<typeof clientMethods.Login>) {
+    return this.client.Login({ params })
   }
 
-  async signCredential(params: ApiType['SignCredential']['requestBody'], accessToken: string) {
-    return this.execute('SignCredential', { params, authorization: accessToken })
+  async signCredential(params: GetParams<typeof clientMethods.SignCredential>, accessToken: string) {
+    return this.client.SignCredential({ params, authorization: accessToken })
   }
 
-  async storeCredentials(params: ApiType['StoreCredentials']['requestBody'], accessToken: string) {
-    return this.execute('StoreCredentials', { params, authorization: accessToken })
+  async storeCredentials(params: GetParams<typeof clientMethods.StoreCredentials>, accessToken: string) {
+    return this.client.StoreCredentials({ params, authorization: accessToken })
   }
 }
