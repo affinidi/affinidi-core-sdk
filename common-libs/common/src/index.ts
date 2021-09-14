@@ -27,6 +27,7 @@ export {
   JwtService,
   KeysService,
   MetricsService,
+  RegistryResolveDidService,
 } from './services'
 
 export { IPlatformCryptographyTools } from './shared/interfaces'
