@@ -1,28 +1,24 @@
 import KeysService from '../KeysService'
 import JoloDidDocument from './JoloDidDocument'
 import ElemDidDocument from './ElemDidDocument'
+import ElemAnchoredDidDocument from './ElemAnchoredDidDocument'
 import { parse } from 'did-resolver'
 import { LocalKeyVault } from './LocalKeyVault'
+import { RegistryResolveDidService } from '../RegistryResolveDidService'
 
 export { default as ElemDidDocument } from './ElemDidDocument'
 export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
 
 export default class DidDocumentService {
-  constructor(keysService: KeysService) {
+  constructor(keysService: KeysService, registryResolveDidService?: RegistryResolveDidService) {
     const { didMethod } = keysService.decryptSeed()
 
-    let didDocumentService
-    switch (didMethod) {
-      case 'jolo':
-        didDocumentService = new JoloDidDocument(keysService)
-        break
-      case 'elem':
-        didDocumentService = new ElemDidDocument(new LocalKeyVault(keysService))
-        break
-    }
-
-    return didDocumentService
+    return {
+      jolo: new JoloDidDocument(keysService),
+      elem: new ElemDidDocument(new LocalKeyVault(keysService)),
+      'elem-anchored': new ElemAnchoredDidDocument(keysService, registryResolveDidService),
+    }[didMethod]
   }
 
   getMyDid() {

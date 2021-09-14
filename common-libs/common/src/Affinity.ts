@@ -6,16 +6,18 @@ import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/
 
 import { AffinityOptions, EventOptions } from './dto/shared.dto'
 import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
-import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
+import {
+  RegistryResolveDidService,
+  DidDocumentService,
+  KeysService,
+  DigestService,
+  JwtService,
+  MetricsService,
+} from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
 
 const revocationList = require('vc-revocation-list') // eslint-disable-line
-let fetch: any
-
-if (!fetch) {
-  fetch = require('node-fetch')
-}
 
 type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
@@ -27,6 +29,7 @@ export class Affinity {
   private readonly _metricsService
   private readonly _digestService
   private readonly _platformCryptographyTools
+  private readonly _registryResolveDidService: RegistryResolveDidService
   protected _component: EventComponent
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
@@ -40,6 +43,7 @@ export class Affinity {
       accessApiKey: this._apiKey,
       component: this._component,
     })
+    this._registryResolveDidService = new RegistryResolveDidService(this._registryUrl, this._apiKey)
     this._platformCryptographyTools = platformCryptographyTools
   }
 
@@ -54,25 +58,7 @@ export class Affinity {
   }
 
   async resolveDid(did: string): Promise<any> {
-    const url = `${this._registryUrl}/api/v1/did/resolve-did`
-    const body = JSON.stringify({ did }, null, 2)
-
-    const headers = { Accept: 'application/json', 'Api-Key': this._apiKey, 'Content-Type': 'application/json' }
-
-    const response = await fetch(url, { method: 'POST', headers, body })
-    const result = await response.json()
-
-    if (response.status.toString().startsWith('2')) {
-      return result.didDocument
-    } else {
-      let error = new Error(result)
-
-      if (result.message) {
-        error = new Error(result.message)
-      }
-
-      throw error
-    }
+    return this._registryResolveDidService.resolveDid(did)
   }
 
   async validateJWT(encryptedtoken: string, initialEncryptedtoken?: string, didDocument?: any) {
@@ -435,7 +421,7 @@ export class Affinity {
     keySuiteType: KeySuiteType = 'ecdsa',
   ): Promise<VCV1<TSubject>> {
     const keyService = new KeysService(encryptedSeed, encryptionKey)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = new DidDocumentService(keyService, this._registryResolveDidService)
     const did = didDocumentService.getMyDid()
     const mainKeyId = didDocumentService.getKeyId()
     const issuer = this.getIssuerForSigning(keySuiteType, keyService, did, mainKeyId)
@@ -541,7 +527,7 @@ export class Affinity {
     const keyService = new KeysService(opts.encryption.seed, opts.encryption.key)
     const { seed, didMethod } = keyService.decryptSeed()
 
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = new DidDocumentService(keyService, this._registryResolveDidService)
     const did = didDocumentService.getMyDid()
 
     const signedVp = buildVPV1({

@@ -92,7 +92,7 @@ export default class KeysService {
     return createHash('sha256').update(data).digest()
   }
 
-  private static getDerivationPath(didMethod: 'jolo' | 'elem', isAnchoring: boolean) {
+  private static getDerivationPath(didMethod: 'jolo' | 'elem' | 'elem-anchored', isAnchoring: boolean) {
     if (isAnchoring) {
       return etheriumIdentityKey
     }
@@ -101,6 +101,7 @@ export default class KeysService {
       case 'jolo':
         return jolocomIdentityKey
       case 'elem':
+      case 'elem-anchored':
         return elemIdentityPrimaryKey
     }
   }
@@ -200,6 +201,11 @@ export default class KeysService {
 
   decryptSeed() {
     return KeysService.decryptSeed(this._encryptedSeed, this._password)
+  }
+
+  getMetadata(): Record<string, any> {
+    const { metadata } = this.decryptSeed()
+    return metadata
   }
 
   static decryptSeed(encryptedSeed: string, encryptionKey: string) {

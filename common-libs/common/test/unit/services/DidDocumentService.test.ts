@@ -28,6 +28,14 @@ const encryptedSeedElem =
   '26fd7d484102945b986b724d0ffbe49894a410d2592046b1b6' +
   'f6d18b619e97a2033f0ec7a6630fdcd3827a0dd70b3c439ab4' +
   '76b3fc264b639c84935d6e5d6fcabb3d027d411ae5d74d570fd16d604b038a9250ce4ac271fd6a86d8401ac52c52'
+const encryptedSeedElemAnchored =
+  '58a387ea33ffa071707a4e3fdf4e9042f11e8512fcc51193b066' +
+  '73c3f7b6c7edf7acdb2ee70eda9c69f39640b472cb38c78bb661dd' +
+  '7bdf1cefbf5eefb30625a3eb6b64776238cf8585edea5410f956566cb0' +
+  '16f6a567ee9561801c0f12b445aa5c9255aa6c68842bb82ae1c7a6c823c0a' +
+  '4f6c4f50a420e18c4513b226e798d9bfbd4ec746f45a0d3a7b43e09ac1348332' +
+  'a3a54748a0f8b5ea917c273f7303be545dde3b95ac6dc5ded4f548fca00bbcc5e8' +
+  '00a61b0f36885ce50e986370045c190f6054c0bf1992740ebaf2874eb7f6f'
 
 const encryptedSeedJolo =
   'e172340f2dbed5853dd089ee9a8f4fb5dddb41c275a10a3f749f9' +
@@ -42,6 +50,7 @@ const joloMethodId = '94f928808d7cbe228a86e6b2ba7549f873e0080be0ed7e04b957c2bcf7
 const joloDid = `did:${joloMethod}:${joloMethodId}`
 const joloDidKey = `${joloDid}#keys-1`
 const elemDidShortForm = 'did:elem:EiD5Rx3mRfvGTD-IBzjtOs0k5nLMwiPgZyd2_TYuGBK0cw'
+const elemAnchoredDid = 'did:elem:EiD5Rx3mRfvGTD-IBzjtOs0k5nLMwiPgZyd2_TYuGBK0cw'
 const elemDid =
   elemDidShortForm +
   ';elem:initial-state=eyJwcm90ZWN0ZWQiOiJleUp2Y0dWeVl' +
@@ -127,6 +136,15 @@ describe('DidDocumentService', () => {
     expect(did).to.be.equal(elemDid)
   })
 
+  it('#getMyDid (elem-anchored)', async () => {
+    const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
+    const didDocumentService = new DidDocumentService(keyService)
+    const did = didDocumentService.getMyDid()
+
+    expect(did).to.exist
+    expect(did).to.be.equal(elemAnchoredDid)
+  })
+
   it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys RSA)', async () => {
     const keyService = new KeyService(elemRSAEncryptedSeed, password)
     const didDocumentService = new DidDocumentService(keyService)
@@ -181,6 +199,15 @@ describe('DidDocumentService', () => {
     expect(keyId).to.be.equal(`${elemDidShortForm}#primary`)
   })
 
+  it('#getKeyId (elem-anchored)', async () => {
+    const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
+    const didDocumentService = new DidDocumentService(keyService)
+    const keyId = didDocumentService.getKeyId()
+
+    expect(keyId).to.exist
+    expect(keyId).to.be.equal(`${elemAnchoredDid}#primary`)
+  })
+
   it('#buildDidDocument (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
     const didDocumentService = new DidDocumentService(keyService)
@@ -188,6 +215,16 @@ describe('DidDocumentService', () => {
 
     expect(didDocument.id).to.exist
     expect(didDocument.id).to.be.equal(elemDidShortForm)
+  })
+
+  it('#buildDidDocument (elem-anchored)', async () => {
+    const fakeRegistryResolveDidService = { resolveDid: () => ({ id: elemAnchoredDid }) }
+    const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
+    const didDocumentService = new DidDocumentService(keyService, fakeRegistryResolveDidService as any)
+    const didDocument = await didDocumentService.buildDidDocument()
+
+    expect(didDocument.id).to.exist
+    expect(didDocument.id).to.be.equal(elemAnchoredDid)
   })
 
   it('#buildDidDocument (jolo)', async () => {

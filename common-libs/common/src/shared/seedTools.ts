@@ -10,35 +10,46 @@ export type KeyOptions = {
   keyTypes: KeyAlgorithmType[]
 }
 
+export type ParseDecryptedSeedResult = {
+  seed: Buffer
+  didMethod: string
+  seedHexWithMethod: string
+  fullSeedHex: string
+  externalKeys?: any[]
+  metadata?: Record<string, any>
+}
+
 export const getDecryptedSeedParts = (decryptedSeed: string) => {
   const seedParts = decryptedSeed.split('++')
   const seedHex = seedParts[0]
   const didMethod = seedParts[1]
   const base64EncodedKeys = seedParts[2]
+  const base64EncodedMetadata = seedParts[3]
 
-  return { seedHex, didMethod, base64EncodedKeys }
+  return { seedHex, didMethod, base64EncodedKeys, base64EncodedMetadata }
 }
 
-export const parseDecryptedSeed = (decryptedSeed: string) => {
-  const { seedHex, didMethod, base64EncodedKeys } = getDecryptedSeedParts(decryptedSeed)
+export const parseDecryptedSeed = (decryptedSeed: string): ParseDecryptedSeedResult => {
+  const { seedHex, didMethod, base64EncodedKeys, base64EncodedMetadata } = getDecryptedSeedParts(decryptedSeed)
 
   validateDidMethodSupported(didMethod)
   const seedHexWithMethod = `${seedHex}++${didMethod}`
   const seed = Buffer.from(seedHex, 'hex')
+  let fullSeedHex = seedHexWithMethod
+  let externalKeys
+  let metadata
 
-  if (!base64EncodedKeys) {
-    return {
-      seed,
-      didMethod,
-      seedHexWithMethod,
-      fullSeedHex: seedHexWithMethod,
-    }
+  if (base64EncodedKeys) {
+    fullSeedHex = `${fullSeedHex}++${base64EncodedKeys}`
+    externalKeys = JSON.parse(base64url.decode(base64EncodedKeys))
   }
 
-  const fullSeedHex = `${seedHexWithMethod}++${base64EncodedKeys}`
-  const externalKeys = JSON.parse(base64url.decode(base64EncodedKeys))
+  if (base64EncodedMetadata) {
+    fullSeedHex = `${fullSeedHex}++${base64EncodedKeys ? '' : '++'}${base64EncodedMetadata}`
+    metadata = JSON.parse(base64url.decode(base64EncodedMetadata))
+  }
 
-  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex }
+  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex, metadata }
 }
 
 export const generateFullSeed = async (
