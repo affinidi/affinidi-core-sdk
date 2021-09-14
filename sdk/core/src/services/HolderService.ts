@@ -1,7 +1,8 @@
 import uniq from 'lodash.uniq'
 
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
-import { Affinity, JwtService, DidDocumentService, DigestService, KeysService, profile } from '@affinidi/common'
+import { Affinity, JwtService, DidDocumentService, DigestService, KeysService } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
 import { stripParamsFromDidUrl } from '../_helpers'
 import { IPlatformCryptographyTools } from '../shared/interfaces'

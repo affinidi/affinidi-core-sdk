@@ -21,9 +21,8 @@ type updateHeadersOptions = {
   storageRegion?: string
 }
 
-export const getExtendedHeaders = (headers: ApiRequestHeaders, options: updateHeadersOptions): ApiRequestHeaders => {
+export const createAdditionalHeaders = (options: updateHeadersOptions): ApiRequestHeaders => {
   return {
-    ...headers,
     ...(options.authorization && { Authorization: options.authorization }),
     ...(options.storageRegion && { 'X-DST-REGION': options.storageRegion }),
   }

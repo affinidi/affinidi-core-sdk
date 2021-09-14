@@ -494,4 +494,105 @@ describe('Affinity', () => {
     const { seed: decryptedSeed } = KeysService.decryptSeed(encryptedSeed, password)
     expect(decryptedSeed.toString('hex')).to.be.equal(joloSeed)
   })
+
+  describe('#resolveDid caching', () => {
+    it('uses cache', async () => {
+      const testDocument = { cache: 'test' }
+
+      const mock = nock('https://affinity-registry.cachetest1.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(200, { didDocument: testDocument })
+
+      const affinity1 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest1.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
+      const result1 = await affinity1.resolveDid('cache-test')
+      expect(result1).to.deep.equal(testDocument)
+      const result2 = await affinity1.resolveDid('cache-test')
+      expect(result2).to.deep.equal(testDocument)
+
+      mock.done()
+    })
+
+    it('correctly handles different urls', async () => {
+      const testDocument = { cache: 'test' }
+
+      nock('https://affinity-registry.cachetest2.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(200, { didDocument: testDocument })
+
+      const affinity2 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest2.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
+      const result1 = await affinity2.resolveDid('cache-test1')
+      expect(result1).to.deep.equal(testDocument)
+      try {
+        await affinity2.resolveDid('cache-test2')
+        expect.fail('Second call should fail because DID is different and nock is only configured to respond once')
+      } catch (err) {
+        expect(err.message).to.contain('Nock: No match for request')
+      }
+    })
+
+    it('correctly handles different service urls', async () => {
+      const testDocument3 = { cache: 'test3' }
+      const testDocument4 = { cache: 'test4' }
+
+      nock('https://affinity-registry.cachetest3.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(200, { didDocument: testDocument3 })
+
+      nock('https://affinity-registry.cachetest4.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(200, { didDocument: testDocument4 })
+
+      const affinity3 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest3.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
+      const result3 = await affinity3.resolveDid('cache-test')
+      expect(result3).to.deep.equal(testDocument3)
+
+      const affinity4 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest4.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
+      const result4 = await affinity4.resolveDid('cache-test')
+      expect(result4).to.deep.equal(testDocument4)
+    })
+
+    it('does not cache errors', async () => {
+      const testDocument = { cache: 'test' }
+
+      const affinity5 = new Affinity(
+        { registryUrl: 'https://affinity-registry.cachetest5.affinity-project.org' },
+        ecdsaCryptographyTools,
+      )
+
+      nock('https://affinity-registry.cachetest5.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(500, { message: 'first call fail' })
+      try {
+        await affinity5.resolveDid('cache-test')
+        expect.fail('should fail because nock is configured to return 500')
+      } catch (error) {
+        expect(error._originalError.message).to.equal('first call fail')
+      }
+
+      nock('https://affinity-registry.cachetest5.affinity-project.org')
+        .post('/api/v1/did/resolve-did', /cache-test/gi)
+        .times(1)
+        .reply(200, { didDocument: testDocument })
+
+      const result = await affinity5.resolveDid('cache-test')
+      expect(result).to.deep.equal(testDocument)
+    })
+  })
 })

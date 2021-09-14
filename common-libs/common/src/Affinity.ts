@@ -9,36 +9,29 @@ import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
 import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
+import { DidResolver } from './shared/DidResolver'
 
 const revocationList = require('vc-revocation-list') // eslint-disable-line
-let fetch: any
-
-if (!fetch) {
-  fetch = require('node-fetch')
-}
 
 type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
 
 export class Affinity {
-  private readonly _apiKey: string // TODO: this should be _accessApiKey
-  private readonly _registryUrl: string
-  private readonly _metricsUrl: string
+  private readonly _didResolver
   private readonly _metricsService
   private readonly _digestService
   private readonly _platformCryptographyTools
-  protected _component: EventComponent
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
-    this._apiKey = options.apiKey
-    this._registryUrl = options.registryUrl || DEFAULT_REGISTRY_URL
-    this._metricsUrl = options.metricsUrl || DEFAULT_METRICS_URL
-    this._component = options.component || EventComponent.AffinidiCommon
+    this._didResolver = new DidResolver({
+      registryUrl: options.registryUrl ?? DEFAULT_REGISTRY_URL,
+      accessApiKey: options.apiKey,
+    })
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
-      metricsUrl: this._metricsUrl,
-      accessApiKey: this._apiKey,
-      component: this._component,
+      metricsUrl: options.metricsUrl ?? DEFAULT_METRICS_URL,
+      accessApiKey: options.apiKey,
+      component: options.component || EventComponent.AffinidiCommon,
     })
     this._platformCryptographyTools = platformCryptographyTools
   }
@@ -54,25 +47,7 @@ export class Affinity {
   }
 
   async resolveDid(did: string): Promise<any> {
-    const url = `${this._registryUrl}/api/v1/did/resolve-did`
-    const body = JSON.stringify({ did }, null, 2)
-
-    const headers = { Accept: 'application/json', 'Api-Key': this._apiKey, 'Content-Type': 'application/json' }
-
-    const response = await fetch(url, { method: 'POST', headers, body })
-    const result = await response.json()
-
-    if (response.status.toString().startsWith('2')) {
-      return result.didDocument
-    } else {
-      let error = new Error(result)
-
-      if (result.message) {
-        error = new Error(result.message)
-      }
-
-      throw error
-    }
+    return this._didResolver.resolveDid(did)
   }
 
   async validateJWT(encryptedtoken: string, initialEncryptedtoken?: string, didDocument?: any) {

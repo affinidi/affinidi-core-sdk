@@ -1,5 +1,6 @@
-import { profile, KeysService } from '@affinidi/common'
+import { KeysService } from '@affinidi/common'
 import { AffinidiVaultApiService, DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { profile } from '@affinidi/tools-common'
 
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { VaultCredential } from '../dto/vault.dto'

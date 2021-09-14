@@ -1,4 +1,4 @@
-import { SdkError } from '@affinidi/common'
+import { SdkError } from '@affinidi/tools-common'
 
 export default class SdkErrorFromCode extends SdkError {
   constructor(code: string, context: unknown = {}, originalError: unknown = {}) {

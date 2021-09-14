@@ -1,6 +1,7 @@
-import { JwtService, KeysService, profile } from '@affinidi/common'
+import { JwtService, KeysService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { profile } from '@affinidi/tools-common'
 
 import { Env } from '../dto/shared.dto'
 

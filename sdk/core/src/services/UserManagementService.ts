@@ -1,5 +1,5 @@
-import { profile } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { profile } from '@affinidi/tools-common'
 
 import { CognitoUserTokens, MessageParameters } from '../dto/shared.dto'
 import { validateUsername } from '../shared'

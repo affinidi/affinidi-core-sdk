@@ -1,29 +1,29 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
+import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import issuerSpec from '../spec/_issuer'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { issuerUrl: string }
+type ConstructorOptions = ClientOptions & { issuerUrl: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof issuerSpec>>
+const clientMethods = createClientMethods(issuerSpec)
 
 @profile()
-export default class IssuerApiService extends GenericApiService<ApiType> {
+export default class IssuerApiService {
+  private readonly client
+
   constructor(options: ConstructorOptions) {
-    super(options.issuerUrl, options, issuerSpec)
+    this.client = createClient(clientMethods, options.issuerUrl, options)
   }
 
-  async buildCredentialOffer(params: ApiType['BuildCredentialOffer']['requestBody']) {
-    return this.execute('BuildCredentialOffer', { params })
+  async buildCredentialOffer(params: GetParams<typeof clientMethods.BuildCredentialOffer>) {
+    return this.client.BuildCredentialOffer({ params })
   }
 
-  async verifyCredentialOfferResponse(params: ApiType['VerifyCredentialOfferResponse']['requestBody']) {
-    return this.execute('VerifyCredentialOfferResponse', { params })
+  async verifyCredentialOfferResponse(params: GetParams<typeof clientMethods.VerifyCredentialOfferResponse>) {
+    return this.client.VerifyCredentialOfferResponse({ params })
   }
 
-  async buildUnsignedCredentials(params: ApiType['BuildUnsigned']['requestBody']) {
-    return this.execute('BuildUnsigned', { params })
+  async buildUnsignedCredentials(params: GetParams<typeof clientMethods.BuildUnsigned>) {
+    return this.client.BuildUnsigned({ params })
   }
 }
