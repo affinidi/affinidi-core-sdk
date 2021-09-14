@@ -23,7 +23,6 @@ export {
   JwtService,
   KeysService,
   MetricsService,
-  RegistryResolveDidService,
 } from './services'
 
 export { IPlatformCryptographyTools } from './shared/interfaces'
@@ -31,3 +30,5 @@ export { IPlatformCryptographyTools } from './shared/interfaces'
 export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
 
 export { generateFullSeed } from './shared/seedTools'
+
+export { DidResolver } from './shared/DidResolver'
