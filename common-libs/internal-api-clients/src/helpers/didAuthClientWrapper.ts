@@ -30,15 +30,15 @@ type DidAuthApiMethodType = (
   requestOptions: { params: { audienceDid: string } },
 ) => Promise<{ body: string }>
 
-type MappedMethods<TMethods> = {
-  [key in keyof TMethods]: TMethods[key] extends BasicApiMethodType ? MappedMethod<TMethods[key]> : never
+type MappedMethods<TMethods extends Record<keyof TMethods, BasicApiMethodType>> = {
+  [key in keyof TMethods]: MappedMethod<TMethods[key]>
 }
 
 export type GetParams<TOperation extends MappedMethod<any>> = TOperation extends MappedMethod<infer UOriginalMethod>
   ? ExtractOriginalRequestOptions<UOriginalMethod>['params']
   : never
 
-export const wrapWithDidAuth = <TMethods>(
+export const wrapWithDidAuth = <TMethods extends Record<keyof TMethods, BasicApiMethodType>>(
   didAuthMethod: DidAuthApiMethodType,
   methods: TMethods,
 ): MappedMethods<TMethods> => {
@@ -47,10 +47,10 @@ export const wrapWithDidAuth = <TMethods>(
     return response.body
   }
 
-  return mapFunctions(methods as any, (method) => {
+  return mapFunctions(methods, (method) => {
     return async (self: ThisData, requestOptions: any) => {
       const authorization = await self.didAuthSession.getResponseToken((did) => createRequestToken(self, did))
-      return method.call(this, { ...requestOptions, authorization })
+      return method.call(self, { ...requestOptions, authorization })
     }
   }) as any
 }
