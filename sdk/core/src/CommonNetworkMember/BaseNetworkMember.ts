@@ -1,6 +1,6 @@
 import {
   DidDocumentService,
-  RegistryResolveDidService,
+  DidResolver,
   JwtService,
   KeysService,
   MetricsService,
@@ -124,10 +124,7 @@ export abstract class BaseNetworkMember {
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    this._didDocumentService = new DidDocumentService(
-      keysService,
-      new RegistryResolveDidService(registryUrl, accessApiKey),
-    )
+    this._didDocumentService = new DidDocumentService(keysService, new DidResolver({ registryUrl, accessApiKey }))
     const didAuthAdapter = new DidAuthAdapter(this.did, { encryptedSeed, encryptionKey: password })
     this._revocationApiService = new RevocationApiService({
       revocationUrl,
