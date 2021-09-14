@@ -1,5 +1,4 @@
 import keyBy from 'lodash.keyby'
-import mapValues from 'lodash.mapvalues'
 import type FetchType from 'node-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
@@ -8,6 +7,7 @@ import { ParseSpec } from '../types/openapiParser'
 import { ResponseForOperation, RequestOptionsForOperation, RequestOptions } from '../types/request'
 import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } from '../types/typeBuilder'
 import { createAdditionalHeaders, createHeaders } from './headers'
+import { mapFunctions } from './mapFunctions'
 
 let fetch: typeof FetchType
 
@@ -116,18 +116,9 @@ const executeByOptions = async (
 export const createClientMethods: ClientFactoryByRawSpec = <TApiSpec extends GenericApiSpec>(rawSpec: TApiSpec) => {
   type ClientType = ClientTypeByRawSpec<TApiSpec>
   const specGroupByOperationId: Record<keyof ClientType, { path: string; method: string }> = parseSpec(rawSpec) as any
-  return mapValues(specGroupByOperationId, ({ path, method }, key) => {
-    // we could simply return a function here, but then it would not have a display name
-    // and wouldn't show up in stacktraces properly,
-    // so we have to make a temporary object here in order for function to get a display name
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#inferred_function_names
-    const functionObject = {
-      [key]: async function (this: ThisData, requestOptions: RequestOptions<any, any, any>) {
-        return executeByOptions(method, path, requestOptions, this)
-      },
-    }
-
-    return functionObject[key] as any
+  return mapFunctions(specGroupByOperationId, ({ path, method }) => {
+    return (self: ThisData, requestOptions: RequestOptions<any, any, any>) =>
+      executeByOptions(method, path, requestOptions, self)
   }) as any // to avoid TS2589 "Type instantiation is excessively deep and possibly infinite"
 }
 

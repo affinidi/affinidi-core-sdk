@@ -1,7 +1,7 @@
-import mapValues from 'lodash.mapvalues'
 import { ThisData as BasicThisData, ClientOptions, createThisData } from './client'
 import { DidAuthAdapter } from './DidAuthAdapter'
 import { DidAuthSession } from './DidAuthManager'
+import { mapFunctions } from './mapFunctions'
 
 export type DidAuthConstructorOptions = ClientOptions & {
   didAuthAdapter: DidAuthAdapter
@@ -47,19 +47,11 @@ export const wrapWithDidAuth = <TMethods>(
     return response.body
   }
 
-  return mapValues(methods as any, (method, key) => {
-    // we could simply return a function here, but then it would not have a display name
-    // and wouldn't show up in stacktraces properly,
-    // so we have to make a temporary object here in order for function to get a display name
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#inferred_function_names
-    const functionObject = {
-      [key]: async function (this: ThisData, requestOptions: any) {
-        const authorization = await this.didAuthSession.getResponseToken((did) => createRequestToken(this, did))
-        return method.call(this, { ...requestOptions, authorization })
-      },
+  return mapFunctions(methods as any, (method) => {
+    return async (self: ThisData, requestOptions: any) => {
+      const authorization = await self.didAuthSession.getResponseToken((did) => createRequestToken(self, did))
+      return method.call(this, { ...requestOptions, authorization })
     }
-
-    return functionObject[key]
   }) as any
 }
 
