@@ -1,6 +1,6 @@
 import keyBy from 'lodash.keyby'
 import mapValues from 'lodash.mapvalues'
-import FetchType from 'node-fetch'
+import type FetchType from 'node-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
 import { GenericApiSpec } from '../types/openapi'
