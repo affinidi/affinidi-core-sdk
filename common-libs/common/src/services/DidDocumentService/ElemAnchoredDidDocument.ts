@@ -6,10 +6,10 @@ export default class ElemDidDocument {
   private readonly _signingKey: string
   private readonly _didResolver: DidResolver
 
-  constructor(keysService: KeysService, didRosolver: DidResolver) {
+  constructor(keysService: KeysService, didResolver: DidResolver) {
     this._signingKey = 'primary'
     this._keysService = keysService
-    this._didResolver = didRosolver
+    this._didResolver = didResolver
   }
 
   getMyDid(): string {
