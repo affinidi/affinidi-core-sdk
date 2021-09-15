@@ -41,6 +41,23 @@ export const parseDecryptedSeed = (decryptedSeed: string) => {
   return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex }
 }
 
+const generateAdditionalKeys = async (cryptographyTools: IPlatformCryptographyTools, keyOptions: KeyOptions) => {
+  const filteredKeyTypes = keyOptions.keyTypes.flatMap((externalKeyType) => {
+    if (externalKeyType === 'ecdsa') {
+      return []
+    }
+
+    return [externalKeyType]
+  })
+
+  return Promise.all(
+    filteredKeyTypes.map(async (externalKeyType) => ({
+      externalKeyType,
+      keyInfo: await cryptographyTools.keyGenerators[externalKeyType](),
+    })),
+  )
+}
+
 export const generateFullSeed = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   didMethod: string,
@@ -53,28 +70,19 @@ export const generateFullSeed = async (
     return seedWithMethod
   }
 
-  const additionalKeys = []
-  // eslint-disable-next-line no-restricted-syntax
-  for (const externalKeyType of keyOptions.keyTypes) {
-    if (externalKeyType === 'ecdsa') {
-      throw new Error('Please provide key type from the list: `rsa`, `bbs`. Some of your keys is not implemented!')
-    }
-
-    const { keyFormat, privateKey, publicKey } = await platformCryptographyTools.keyGenerators[externalKeyType]()
-
-    additionalKeys.push({
+  const additionalKeys = await generateAdditionalKeys(platformCryptographyTools, keyOptions)
+  const keysSeedSectionContent = additionalKeys.map(
+    ({ externalKeyType, keyInfo: { keyFormat, privateKey, publicKey } }) => ({
       type: externalKeyType,
       format: keyFormat,
       private: privateKey,
       public: publicKey,
       permissions: ['authentication', 'assertionMethod'],
-    })
-  }
+    }),
+  )
 
-  const keysSeedSection = base64url.encode(JSON.stringify(additionalKeys))
-
-  const fullSeed = `${seedWithMethod}++${keysSeedSection}`
-  return fullSeed
+  const keysSeedSection = base64url.encode(JSON.stringify(keysSeedSectionContent))
+  return `${seedWithMethod}++${keysSeedSection}`
 }
 
 export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer) => {
