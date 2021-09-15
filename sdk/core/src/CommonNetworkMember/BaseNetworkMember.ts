@@ -76,7 +76,8 @@ export abstract class BaseNetworkMember {
   private readonly _jwtService: JwtService
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
-  private readonly _didDocumentService: DidDocumentService
+  private readonly _didResolver: DidResolver
+  private readonly _didDocumentService
   private readonly _issuerApiService
   private readonly _verifierApiService
   private readonly _registryApiService
@@ -124,7 +125,8 @@ export abstract class BaseNetworkMember {
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    this._didDocumentService = new DidDocumentService(keysService, new DidResolver({ registryUrl, accessApiKey }))
+    this._didResolver = new DidResolver({ registryUrl, accessApiKey })
+    this._didDocumentService = DidDocumentService.createDidDocumentService(keysService, this._didResolver)
     const didAuthAdapter = new DidAuthAdapter(this.did, { encryptedSeed, encryptionKey: password })
     this._revocationApiService = new RevocationApiService({
       revocationUrl,
@@ -208,7 +210,11 @@ export abstract class BaseNetworkMember {
     const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
 
-    const didDocumentService = new DidDocumentService(keysService)
+    const didResolver = new DidResolver({
+      registryUrl: options.basicOptions.registryUrl,
+      accessApiKey: options.accessApiKey,
+    })
+    const didDocumentService = DidDocumentService.createDidDocumentService(keysService, didResolver)
     const didDocument = await didDocumentService.buildDidDocument()
     const did = didDocument.id
 
