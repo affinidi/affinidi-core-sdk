@@ -31,6 +31,24 @@ export default class DidDocumentService {
     }[didMethod]
   }
 
+  getMyDid() {
+    return 'did:...'
+  }
+
+  getKeyId(did: string = null) {
+    if (!did) {
+      did = this.getMyDid()
+    }
+
+    const signingKey = 'primary'
+
+    return `${did}#${signingKey}`
+  }
+
+  async buildDidDocument(): Promise<any> {
+    return { id: 'did:...' }
+  }
+
   static getPublicKey(fulleKeyId: string, didDocument: any, keyId?: string): Buffer {
     // Support finding the publicKey with the short form DID + fragment or full keyId
     if (!keyId) {
