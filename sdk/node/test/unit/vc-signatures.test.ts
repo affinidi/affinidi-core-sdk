@@ -40,58 +40,6 @@ describe('VC Signatures', () => {
     expect(publicKey).to.be.string
   })
 
-  describe('#buildExternalKeysSectionForSeed', () => {
-    afterEach(() => sinon.restore())
-
-    it('should generate keys section for a single key', async () => {
-      const rsaKey = await platformCryptographyTools.keyGenerators.rsa()
-      const rsaStub = sinon.stub(platformCryptographyTools.keyGenerators, 'rsa').resolves(rsaKey)
-
-      const seedHexWithMethod = await generateFullSeed(platformCryptographyTools, 'jolo', { keyTypes: ['rsa'] })
-      const keysSeedSection = seedHexWithMethod.split('++')[2]
-      expect(JSON.parse(base64url.decode(keysSeedSection))).to.deep.eq([
-        {
-          type: 'rsa',
-          permissions: ['authentication', 'assertionMethod'],
-          format: rsaKey.keyFormat,
-          private: rsaKey.privateKey,
-          public: rsaKey.publicKey,
-        },
-      ])
-      expect(rsaStub).to.have.been.calledOnce
-    })
-
-    it('should generate keys section for multiple keys', async () => {
-      const rsaKey = await platformCryptographyTools.keyGenerators.rsa()
-      const rsaStub = sinon.stub(platformCryptographyTools.keyGenerators, 'rsa').resolves(rsaKey)
-
-      const bbsKey = await platformCryptographyTools.keyGenerators.bbs()
-      const bbsStub = sinon.stub(platformCryptographyTools.keyGenerators, 'bbs').resolves(bbsKey)
-
-      const seedHexWithMethod = await generateFullSeed(platformCryptographyTools, 'jolo', { keyTypes: ['rsa', 'bbs'] })
-      const keysSeedSection = seedHexWithMethod.split('++')[2]
-      expect(JSON.parse(base64url.decode(keysSeedSection))).to.deep.eq([
-        {
-          type: 'rsa',
-          permissions: ['authentication', 'assertionMethod'],
-          format: rsaKey.keyFormat,
-          private: rsaKey.privateKey,
-          public: rsaKey.publicKey,
-        },
-        {
-          type: 'bbs',
-          permissions: ['authentication', 'assertionMethod'],
-          format: bbsKey.keyFormat,
-          private: bbsKey.privateKey,
-          public: bbsKey.publicKey,
-        },
-      ])
-
-      expect(rsaStub).to.have.been.calledOnce
-      expect(bbsStub).to.have.been.calledOnce
-    })
-  })
-
   describe('[ECDSA]', () => {
     const { issuerEncryptedSeed, issuerEncryptionKey, issuerDidDocument, unsignedCredential } = rsaFixtures
 

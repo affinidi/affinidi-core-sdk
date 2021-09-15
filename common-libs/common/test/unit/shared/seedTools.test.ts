@@ -1,5 +1,4 @@
-// import base64url from "base64url";
-
+import base64url from 'base64url'
 import { generateFullSeed, parseDecryptedSeed } from '../../../src/shared/seedTools'
 import { IPlatformCryptographyTools } from '../../../src'
 import { expect } from 'chai'
@@ -10,8 +9,8 @@ describe('didTools', () => {
   before(() => {
     cryptoTools = {
       keyGenerators: {
-        rsa: () => Promise.resolve({ keyFormat: 'pem', privateKey: 'private', publicKey: 'public' }),
-        bbs: () => Promise.resolve({ keyFormat: 'pem', privateKey: 'private', publicKey: 'public' }),
+        rsa: () => Promise.resolve({ keyFormat: 'pem', privateKey: 'privatersa', publicKey: 'publicrsa' }),
+        bbs: () => Promise.resolve({ keyFormat: 'pem', privateKey: 'privatebbs', publicKey: 'publicbbs' }),
       },
     } as any
   })
@@ -40,6 +39,46 @@ describe('didTools', () => {
 
       expect(seed).to.be.exist
       expect(seed.includes('++elem++;additionalData')).to.be.true
+    })
+
+    it('should generate keys section for a single key', async () => {
+      const seedHexWithMethod = await generateFullSeed(cryptoTools, 'jolo', { keyTypes: ['rsa'] })
+      const additionalDataSeedSection = seedHexWithMethod.split('++;additionalData:')[1]
+
+      expect(JSON.parse(base64url.decode(additionalDataSeedSection))).to.deep.eq({
+        keys: [
+          {
+            type: 'rsa',
+            permissions: ['authentication', 'assertionMethod'],
+            format: 'pem',
+            private: 'privatersa',
+            public: 'publicrsa',
+          },
+        ],
+      })
+    })
+    it('should generate keys section for multiple keys', async () => {
+      const seedHexWithMethod = await generateFullSeed(cryptoTools, 'jolo', { keyTypes: ['rsa', 'bbs'] })
+      const additionalDataSeedSection = seedHexWithMethod.split('++;additionalData:')[1]
+
+      expect(JSON.parse(base64url.decode(additionalDataSeedSection))).to.deep.eq({
+        keys: [
+          {
+            type: 'rsa',
+            permissions: ['authentication', 'assertionMethod'],
+            format: 'pem',
+            private: 'privatersa',
+            public: 'publicrsa',
+          },
+          {
+            type: 'bbs',
+            permissions: ['authentication', 'assertionMethod'],
+            format: 'pem',
+            private: 'privatebbs',
+            public: 'publicbbs',
+          },
+        ],
+      })
     })
   })
 
