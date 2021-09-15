@@ -1,3 +1,5 @@
+# release 6.0.0-beta.12 (2021-09-15)
+* Updated internal dependencies
 # release 6.0.0-beta.11 (2021-09-09)
 * DIDs are now resolved using `Affinity` from `@affinidi/common`, which caches the resolved results.
 # release 6.0.0-beta.9 (2021-08-30)

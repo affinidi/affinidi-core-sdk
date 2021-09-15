@@ -1,3 +1,5 @@
+# 2.0.0-beta.9 (2021-09-15)
+* Support for ecdsa keys in seed generation
 # 2.0.0-beta.8 (2021-09-09)
 * DIDs are now resolved using `RegistryApiService` from `@affinidi/internal-api-clients`
 * Resolved DIDs are cached
