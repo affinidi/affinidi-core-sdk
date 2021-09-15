@@ -113,7 +113,7 @@ describe('DidDocumentService', () => {
 
   it('#getMyDid (when old encryptes seed without did method info)', async () => {
     const keyService = new KeyService(encryptedSeed, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
     expect(did).to.exist
@@ -122,7 +122,7 @@ describe('DidDocumentService', () => {
 
   it('#getMyDid (jolo)', async () => {
     const keyService = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
     expect(did).to.exist
@@ -131,7 +131,7 @@ describe('DidDocumentService', () => {
 
   it('#getMyDid (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
     expect(did).to.exist
@@ -140,7 +140,7 @@ describe('DidDocumentService', () => {
 
   it('#getMyDid (elem-anchored)', async () => {
     const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
     expect(did).to.exist
@@ -149,7 +149,7 @@ describe('DidDocumentService', () => {
 
   it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys RSA)', async () => {
     const keyService = new KeyService(elemRSAEncryptedSeed, password)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
     const didDocument = await didDocumentService.buildDidDocument()
     const rsaPublicKey = didDocument.publicKey.find((key: any) => key.type === 'RsaVerificationKey2018')
@@ -167,7 +167,7 @@ describe('DidDocumentService', () => {
 
   it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys BBS)', async () => {
     const keyService = new KeyService(elemBBSEncryptedSeed, password)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
     const didDocument = await didDocumentService.buildDidDocument()
     const bbsPublicKey = didDocument.publicKey.find((key: any) => key.type === 'Bls12381G2Key2020')
@@ -185,7 +185,7 @@ describe('DidDocumentService', () => {
 
   it('#getKeyId (jolo)', async () => {
     const keyService = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const keyId = didDocumentService.getKeyId()
 
     expect(keyId).to.exist
@@ -194,7 +194,7 @@ describe('DidDocumentService', () => {
 
   it('#getKeyId (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const keyId = didDocumentService.getKeyId()
 
     expect(keyId).to.exist
@@ -203,7 +203,7 @@ describe('DidDocumentService', () => {
 
   it('#getKeyId (elem-anchored)', async () => {
     const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const keyId = didDocumentService.getKeyId()
 
     expect(keyId).to.exist
@@ -212,7 +212,7 @@ describe('DidDocumentService', () => {
 
   it('#buildDidDocument (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const didDocument = await didDocumentService.buildDidDocument()
 
     expect(didDocument.id).to.exist
@@ -222,7 +222,10 @@ describe('DidDocumentService', () => {
   it('#buildDidDocument (elem-anchored)', async () => {
     const fakeRegistryResolveDidService = { resolveDid: () => ({ id: elemAnchoredDid }) }
     const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService, fakeRegistryResolveDidService as any)
+    const didDocumentService = DidDocumentService.createDidDocumentService(
+      keyService,
+      fakeRegistryResolveDidService as any,
+    )
     const didDocument = await didDocumentService.buildDidDocument()
 
     expect(didDocument.id).to.exist
@@ -231,7 +234,7 @@ describe('DidDocumentService', () => {
 
   it('#buildDidDocument (jolo)', async () => {
     const keyService = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const didDocument = await didDocumentService.buildDidDocument()
 
     expect(didDocument.id).to.exist
@@ -241,8 +244,8 @@ describe('DidDocumentService', () => {
   it('!getPublicKey', async () => {
     const keyService1 = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
     const keyService2 = new KeyService(encryptedSeedElem, demoEncryptionPassword)
-    const didDocumentServiceJolo = new DidDocumentService(keyService1)
-    const didDocumentServiceElem = new DidDocumentService(keyService2)
+    const didDocumentServiceJolo = DidDocumentService.createDidDocumentService(keyService1)
+    const didDocumentServiceElem = DidDocumentService.createDidDocumentService(keyService2)
     const didDocumentJolo = await didDocumentServiceJolo.buildDidDocument()
     const didDocumentElem = await didDocumentServiceElem.buildDidDocument()
 

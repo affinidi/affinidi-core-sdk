@@ -36,7 +36,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const joloDidDocument = await didDocumentService.buildDidDocument()
   const joloDid = joloDidDocument.id
 
@@ -51,7 +51,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemDidDocument = await didDocumentService.buildDidDocument()
   const elemDid = await didDocumentService.getMyDid()
 
@@ -69,7 +69,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(elemAltEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemAltDidDocument = await didDocumentService.buildDidDocument()
   const elemAltDid = await didDocumentService.getMyDid()
 
@@ -82,7 +82,7 @@ export const generateTestDIDs = async (): Promise<{
       encryptedSeed: joloEncryptedSeed,
       seedHex: joloSeedHex,
       did: joloDid,
-      didDocument: joloDidDocument,
+      didDocument: joloDidDocument as any,
       publicKey: joloPublicKey,
       publicEthereumKey: joloEthereumPublicKey,
     },
@@ -91,7 +91,7 @@ export const generateTestDIDs = async (): Promise<{
       encryptedSeed: elemEncryptedSeed,
       seedHex: elemSeedHex,
       did: elemDid,
-      didDocument: elemDidDocument,
+      didDocument: elemDidDocument as any,
       publicKey: elemPublicKey,
     },
     elemAlt: {
@@ -99,7 +99,7 @@ export const generateTestDIDs = async (): Promise<{
       encryptedSeed: elemAltEncryptedSeed,
       seedHex: elemAltSeedHex,
       did: elemAltDid,
-      didDocument: elemAltDidDocument,
+      didDocument: elemAltDidDocument as any,
       publicKey: elemAltPublicKey,
     },
   }
