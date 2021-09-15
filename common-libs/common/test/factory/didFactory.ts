@@ -38,7 +38,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const joloDidDocument = await didDocumentService.buildDidDocument()
   const joloDid = joloDidDocument.id
 
@@ -53,7 +53,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemDidDocument = await didDocumentService.buildDidDocument()
   const elemDid = await didDocumentService.getMyDid()
 
@@ -114,7 +114,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemRSAEncryptedSeed, password)
   const elemRSAPublicKeyRSA = keysService.getExternalPublicKey('rsa').toString()
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemRSADidDocument = await didDocumentService.buildDidDocument()
   const elemRSADid = await didDocumentService.getMyDid()
 
@@ -140,7 +140,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemBBSEncryptedSeed, password)
   const elemBBSPublicKeyBBS = keysService.getExternalPublicKey('bbs').toString()
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemBBSDidDocument = await didDocumentService.buildDidDocument()
   const elemBBSDid = await didDocumentService.getMyDid()
 
@@ -153,7 +153,7 @@ export const generateTestDIDs = async (): Promise<{
       encryptedSeed: joloEncryptedSeed,
       seedHex: joloSeedHex,
       did: joloDid,
-      didDocument: joloDidDocument,
+      didDocument: joloDidDocument as any,
       publicKey: joloPublicKey,
       publicEthereumKey: joloEthereumPublicKey,
     },
@@ -162,7 +162,7 @@ export const generateTestDIDs = async (): Promise<{
       encryptedSeed: elemEncryptedSeed,
       seedHex: elemSeedHex,
       did: elemDid,
-      didDocument: elemDidDocument,
+      didDocument: elemDidDocument as any,
       publicKey: elemPublicKey,
     },
     elemWithRSA: {
@@ -170,7 +170,7 @@ export const generateTestDIDs = async (): Promise<{
       encryptedSeed: elemRSAEncryptedSeed,
       seedHex: elemRSASeedHex,
       did: elemRSADid,
-      didDocument: elemRSADidDocument,
+      didDocument: elemRSADidDocument as any,
       publicKey: elemRSAPublicKey,
       publicRSAKey: elemRSAPublicKeyRSA,
     },
@@ -179,7 +179,7 @@ export const generateTestDIDs = async (): Promise<{
       encryptedSeed: elemBBSEncryptedSeed,
       seedHex: elemBBSSeedHex,
       did: elemBBSDid,
-      didDocument: elemBBSDidDocument,
+      didDocument: elemBBSDidDocument as any,
       publicKey: elemBBSPublicKey,
       publicBBSKey: elemBBSPublicKeyBBS,
     },
