@@ -20,7 +20,7 @@ describe('didTools', () => {
       const seed = await generateFullSeed(cryptoTools as IPlatformCryptographyTools, 'elem')
 
       expect(seed).to.be.exist
-      expect(/.*(\+\+elem)$/.test(seed)).to.be.true
+      expect(seed.includes('++elem')).to.be.true
     })
 
     it('should generate simple seed with method and additional info (keys)', async () => {
@@ -29,7 +29,7 @@ describe('didTools', () => {
       })
 
       expect(seed).to.be.exist
-      expect(/.*(\+\+elem\+\+;additionalData:).*$/.test(seed)).to.be.true
+      expect(seed.includes('++elem++;additionalData')).to.be.true
     })
 
     it('should generate simple seed with method and additional info (meta)', async () => {
@@ -39,7 +39,7 @@ describe('didTools', () => {
       })
 
       expect(seed).to.be.exist
-      expect(/.*(\+\+elem\+\+;additionalData:).*$/.test(seed)).to.be.true
+      expect(seed.includes('++elem++;additionalData')).to.be.true
     })
   })
 
