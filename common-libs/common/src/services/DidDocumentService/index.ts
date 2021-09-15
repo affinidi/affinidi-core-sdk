@@ -11,7 +11,14 @@ export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
 
 export default class DidDocumentService {
+  /**
+   * @deprecated use DidDocumentService.createDidDocumentService instead
+   */
   constructor(keysService: KeysService, didResolver?: DidResolver) {
+    return DidDocumentService.createDidDocumentService(keysService, didResolver)
+  }
+
+  static createDidDocumentService(keysService: KeysService, didResolver?: DidResolver) {
     const { didMethod } = keysService.decryptSeed()
 
     return {
