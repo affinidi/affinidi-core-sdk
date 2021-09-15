@@ -19,76 +19,87 @@ export type ParseDecryptedSeedResult = {
   metadata?: Record<string, any>
 }
 
+const ADDITIONAL_DATA_SEPARATOR = '++;additionalData:'
+const EXTERNAL_KEYS_KEY = 'keys'
+const METADATA_KEY = 'meta'
+
+/**
+ * Responsible for parsing decrypted seed
+ * As the format is changing from version to version we need to support old formats
+ * `${seedHex}++${didMethod}` - old format, backwards compatibility
+ * `${seedHex}++${didMethod}++${base64EncodedKeys, can contain '++'}` - old format, backwards compatibility
+ * `${seedHex}++${didMethod}++;additionalData:${base64EncodedData, contains both keys and metadata}` - final format
+ */
 export const getDecryptedSeedParts = (decryptedSeed: string) => {
   const seedParts = decryptedSeed.split('++')
   const seedHex = seedParts[0]
   const didMethod = seedParts[1]
-  const base64EncodedKeys = seedParts[2]
-  const base64EncodedMetadata = seedParts[3]
+  const additionalDataSeparatorIndex = decryptedSeed.indexOf(ADDITIONAL_DATA_SEPARATOR)
+  const additionalDataIndex =
+    additionalDataSeparatorIndex > 0 && additionalDataSeparatorIndex + ADDITIONAL_DATA_SEPARATOR.length
+  const base64EncodedAdditionalData = additionalDataIndex && decryptedSeed.slice(additionalDataIndex)
+  // backwards compatibility
+  const base64EncodedKeys = !additionalDataIndex ? seedParts[2] : undefined
 
-  return { seedHex, didMethod, base64EncodedKeys, base64EncodedMetadata }
+  return { seedHex, didMethod, base64EncodedKeys, base64EncodedAdditionalData }
 }
 
 export const parseDecryptedSeed = (decryptedSeed: string): ParseDecryptedSeedResult => {
-  const { seedHex, didMethod, base64EncodedKeys, base64EncodedMetadata } = getDecryptedSeedParts(decryptedSeed)
+  const { seedHex, didMethod, base64EncodedKeys, base64EncodedAdditionalData } = getDecryptedSeedParts(decryptedSeed)
 
   validateDidMethodSupported(didMethod)
   const seedHexWithMethod = `${seedHex}++${didMethod}`
   const seed = Buffer.from(seedHex, 'hex')
-  let fullSeedHex = seedHexWithMethod
-  let externalKeys
-  let metadata
+  const additionalData = base64EncodedAdditionalData && JSON.parse(base64url.decode(base64EncodedAdditionalData))
+  const parsedFromBase64ExternalKeys = base64EncodedKeys && JSON.parse(base64url.decode(base64EncodedKeys))
+  const externalKeys = additionalData?.[EXTERNAL_KEYS_KEY] || parsedFromBase64ExternalKeys
+  const metadata = additionalData?.[METADATA_KEY]
 
-  if (base64EncodedKeys) {
-    fullSeedHex = `${fullSeedHex}++${base64EncodedKeys}`
-    externalKeys = JSON.parse(base64url.decode(base64EncodedKeys))
-  }
-
-  if (base64EncodedMetadata) {
-    fullSeedHex = `${fullSeedHex}++${base64EncodedKeys ? '' : '++'}${base64EncodedMetadata}`
-    metadata = JSON.parse(base64url.decode(base64EncodedMetadata))
-  }
-
-  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex, metadata }
+  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata }
 }
+
+const generateExternalKeys = async (platformCryptographyTools: IPlatformCryptographyTools, keyOptions: KeyOptions) =>
+  Promise.all(
+    keyOptions.keyTypes.map(async (externalKeyType) => {
+      if (externalKeyType === 'ecdsa') {
+        throw new Error('Please provide key type from the list: `rsa`, `bbs`. Some of your keys is not implemented!')
+      }
+
+      const { keyFormat, privateKey, publicKey } = await platformCryptographyTools.keyGenerators[externalKeyType]()
+      return {
+        type: externalKeyType,
+        format: keyFormat,
+        private: privateKey,
+        public: publicKey,
+        permissions: ['authentication', 'assertionMethod'],
+      }
+    }),
+  )
 
 export const generateFullSeed = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   didMethod: string,
   keyOptions?: KeyOptions,
-) => {
+  metadata?: Record<string, any>,
+): Promise<string> => {
   const seed = await randomBytes(32)
   const seedHex = seed.toString('hex')
   const seedWithMethod = `${seedHex}++${didMethod}`
-  if (!keyOptions) {
+
+  if (!keyOptions && !metadata) {
     return seedWithMethod
   }
 
-  const additionalKeys = []
-  // eslint-disable-next-line no-restricted-syntax
-  for (const externalKeyType of keyOptions.keyTypes) {
-    if (externalKeyType === 'ecdsa') {
-      throw new Error('Please provide key type from the list: `rsa`, `bbs`. Some of your keys is not implemented!')
-    }
-
-    const { keyFormat, privateKey, publicKey } = await platformCryptographyTools.keyGenerators[externalKeyType]()
-
-    additionalKeys.push({
-      type: externalKeyType,
-      format: keyFormat,
-      private: privateKey,
-      public: publicKey,
-      permissions: ['authentication', 'assertionMethod'],
-    })
+  const additionalData = {
+    ...(metadata && { [METADATA_KEY]: metadata }),
+    ...(keyOptions && { [EXTERNAL_KEYS_KEY]: await generateExternalKeys(platformCryptographyTools, keyOptions) }),
   }
+  const additionalDataSection = base64url.encode(JSON.stringify(additionalData))
 
-  const keysSeedSection = base64url.encode(JSON.stringify(additionalKeys))
-
-  const fullSeed = `${seedWithMethod}++${keysSeedSection}`
-  return fullSeed
+  return `${seedWithMethod}${ADDITIONAL_DATA_SEPARATOR}${additionalDataSection}`
 }
 
-export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer) => {
+export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer): string => {
   const decryptedSeedString = decryptedSeed.toString()
   if (decryptedSeedString.includes('++')) {
     return decryptedSeedString
@@ -99,7 +110,7 @@ export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer) => {
   return `${seedHex}++jolo`
 }
 
-export const isLegacyDecryptedSeed = (decryptedSeed: Buffer) => {
+export const isLegacyDecryptedSeed = (decryptedSeed: Buffer): boolean => {
   const decryptedSeedString = decryptedSeed.toString()
   return !decryptedSeedString.includes('++')
 }
