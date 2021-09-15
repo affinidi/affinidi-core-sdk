@@ -18,7 +18,10 @@ export default class DidDocumentService {
     return DidDocumentService.createDidDocumentService(keysService, didResolver)
   }
 
-  static createDidDocumentService(keysService: KeysService, didResolver?: DidResolver): JoloDidDocument | ElemDidDocument | ElemAnchoredDidDocument {
+  static createDidDocumentService(
+    keysService: KeysService,
+    didResolver?: DidResolver,
+  ): JoloDidDocument | ElemDidDocument | ElemAnchoredDidDocument {
     const { didMethod } = keysService.decryptSeed()
 
     return {
