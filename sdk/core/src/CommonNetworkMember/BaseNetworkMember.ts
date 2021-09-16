@@ -65,6 +65,16 @@ export const createKeyManagementService = ({ basicOptions, accessApiKey }: Parse
   return new KeyManagementService({ ...basicOptions, accessApiKey })
 }
 
+export type StaticDependencies = {
+  platformCryptographyTools: IPlatformCryptographyTools
+  eventComponent: EventComponent
+}
+
+export type ConstructorUserData = {
+  password: string
+  encryptedSeed: string
+}
+
 @profile()
 export abstract class BaseNetworkMember {
   private _did: string
@@ -88,11 +98,9 @@ export abstract class BaseNetworkMember {
   protected readonly _platformCryptographyTools
 
   constructor(
-    password: string,
-    encryptedSeed: string,
-    platformCryptographyTools: IPlatformCryptographyTools,
+    { password, encryptedSeed }: ConstructorUserData,
+    { platformCryptographyTools, eventComponent }: StaticDependencies,
     options: ParsedOptions,
-    component: EventComponent,
   ) {
     if (!password || !encryptedSeed) {
       // TODO: implement appropriate error wrapper
@@ -114,7 +122,7 @@ export abstract class BaseNetworkMember {
     this._metricsService = new MetricsService({
       metricsUrl,
       accessApiKey: accessApiKey,
-      component: component,
+      component: eventComponent,
     })
 
     const sdkVersion = extractSDKVersion()
@@ -142,21 +150,21 @@ export abstract class BaseNetworkMember {
     this._holderService = new HolderService(
       { registryUrl, metricsUrl, accessApiKey },
       platformCryptographyTools,
-      component,
+      eventComponent,
     )
     this._affinity = new Affinity(
       {
         apiKey: accessApiKey,
         registryUrl: registryUrl,
         metricsUrl: metricsUrl,
-        component: component,
+        component: eventComponent,
       },
       platformCryptographyTools,
     )
     this._keysService = keysService
 
     this._options = options
-    this._component = component
+    this._component = eventComponent
     this._encryptedSeed = encryptedSeed
     this._password = password
     this._did = null
@@ -196,14 +204,14 @@ export abstract class BaseNetworkMember {
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
   protected static async _register(
+    dependencies: StaticDependencies,
     options: ParsedOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
     password: string,
     keyOptions?: KeyOptions,
   ): Promise<{ did: string; encryptedSeed: string }> {
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
     const passwordBuffer = KeysService.normalizePassword(password)
-    const seedWithMethod = await generateFullSeed(platformCryptographyTools, didMethod, keyOptions)
+    const seedWithMethod = await generateFullSeed(dependencies.platformCryptographyTools, didMethod, keyOptions)
     const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
 

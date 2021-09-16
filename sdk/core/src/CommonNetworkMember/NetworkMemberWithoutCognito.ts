@@ -1,34 +1,13 @@
-import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { profile } from '@affinidi/tools-common'
 import { SdkOptions } from '../dto/shared.dto'
-import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import { BaseNetworkMember } from './BaseNetworkMember'
-
-type GenericConstructor<T> = new (password: string, encryptedSeed: string, options: ParsedOptions) => T
-type Constructor<T> = GenericConstructor<T> & GenericConstructor<NetworkMemberWithoutCognito>
-type AbstractStaticMethods = Record<never, never>
-type ConstructorKeys<T> = {
-  [P in keyof T]: T[P] extends new (...args: unknown[]) => unknown ? P : never
-}[keyof T]
-type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
-type DerivedTypeForOptions<TInstance> = Constructor<TInstance> &
-  AbstractStaticMethods &
-  OmitConstructor<typeof NetworkMemberWithoutCognito>
-type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<T>>
-export type UniversalDerivedType = DerivedType<DerivedTypeForOptions<NetworkMemberWithoutCognito>>
+import { BaseNetworkMember, StaticDependencies, ConstructorUserData } from './BaseNetworkMember'
 
 @profile()
-export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
-  constructor(
-    password: string,
-    encryptedSeed: string,
-    platformCryptographyTools: IPlatformCryptographyTools,
-    options: ParsedOptions,
-    component: EventComponent,
-  ) {
-    super(password, encryptedSeed, platformCryptographyTools, options, component)
+export class NetworkMemberWithoutCognito extends BaseNetworkMember {
+  constructor(userData: ConstructorUserData, dependencies: StaticDependencies, options: ParsedOptions) {
+    super(userData, dependencies, options)
   }
 
   /**
@@ -46,20 +25,15 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
    *
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
-  static async createWallet<T extends DerivedType<T>>(
-    this: T,
-    inputOptions: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
-    password: string,
-  ): Promise<InstanceType<T>> {
+  static async createWallet(dependencies: StaticDependencies, inputOptions: SdkOptions, password: string) {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: true, value: password },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const { encryptedSeed } = await NetworkMemberWithoutCognito._register(options, platformCryptographyTools, password)
-    return new this(password, encryptedSeed, options)
+    const { encryptedSeed } = await NetworkMemberWithoutCognito._register(dependencies, options, password)
+    return new NetworkMemberWithoutCognito({ password, encryptedSeed }, dependencies, options)
   }
 
   /**
@@ -69,12 +43,12 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */
-  static async openWalletByEncryptedSeed<T extends DerivedType<T>>(
-    this: T,
+  static async openWalletByEncryptedSeed(
+    dependencies: StaticDependencies,
     inputOptions: SdkOptions,
     encryptedSeed: string,
     password: string,
-  ): Promise<InstanceType<T>> {
+  ) {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: true, value: encryptedSeed },
@@ -82,6 +56,6 @@ export abstract class NetworkMemberWithoutCognito extends BaseNetworkMember {
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    return new this(password, encryptedSeed, options)
+    return new this({ password, encryptedSeed }, dependencies, options)
   }
 }
