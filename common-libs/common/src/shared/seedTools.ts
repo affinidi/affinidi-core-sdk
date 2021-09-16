@@ -58,13 +58,17 @@ export const parseDecryptedSeed = (decryptedSeed: string): ParseDecryptedSeedRes
   return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata }
 }
 
-const generateExternalKeys = async (platformCryptographyTools: IPlatformCryptographyTools, keyOptions: KeyOptions) =>
-  Promise.all(
-    keyOptions.keyTypes.map(async (externalKeyType) => {
-      if (externalKeyType === 'ecdsa') {
-        throw new Error('Please provide key type from the list: `rsa`, `bbs`. Some of your keys is not implemented!')
-      }
+const generateAdditionalKeys = async (cryptographyTools: IPlatformCryptographyTools, keyOptions: KeyOptions) => {
+  const filteredKeyTypes = keyOptions.keyTypes.flatMap((externalKeyType) => {
+    if (externalKeyType === 'ecdsa') {
+      return []
+    }
 
+    return [externalKeyType]
+  })
+
+  return Promise.all(
+    filteredKeyTypes.map(async (externalKeyType) => {
       const { keyFormat, privateKey, publicKey } = await platformCryptographyTools.keyGenerators[externalKeyType]()
       return {
         type: externalKeyType,
@@ -75,6 +79,7 @@ const generateExternalKeys = async (platformCryptographyTools: IPlatformCryptogr
       }
     }),
   )
+}
 
 export const generateFullSeed = async (
   platformCryptographyTools: IPlatformCryptographyTools,
@@ -92,7 +97,7 @@ export const generateFullSeed = async (
 
   const additionalData = {
     ...(metadata && { [METADATA_KEY]: metadata }),
-    ...(keyOptions && { [EXTERNAL_KEYS_KEY]: await generateExternalKeys(platformCryptographyTools, keyOptions) }),
+    ...(keyOptions && { [EXTERNAL_KEYS_KEY]: await generateAdditionalKeys(platformCryptographyTools, keyOptions) }),
   }
   const additionalDataSection = base64url.encode(JSON.stringify(additionalData))
 
