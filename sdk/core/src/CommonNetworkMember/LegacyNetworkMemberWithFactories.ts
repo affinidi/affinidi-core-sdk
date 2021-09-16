@@ -2,10 +2,11 @@ import { KeysService } from '@affinidi/common'
 import { profile } from '@affinidi/tools-common'
 import WalletStorageService from '../services/WalletStorageService'
 import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
-import { validateUsername } from '../shared/validateUsername'
+import { withDidData } from '../shared/getDidData'
+import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
-import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
+import { validateUsername } from '../shared/validateUsername'
 import UserManagementService from '../services/UserManagementService'
 import { StaticDependencies, ConstructorUserData, createKeyManagementService } from './BaseNetworkMember'
 import { LegacyNetworkMember } from './LegacyNetworkMember'
@@ -15,7 +16,7 @@ const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptio
 }
 
 type UserDataWithCognito = ConstructorUserData & {
-  cognitoUserTokens?: CognitoUserTokens
+  cognitoUserTokens: CognitoUserTokens | undefined
 }
 
 /**
@@ -89,11 +90,11 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     }
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const userData = {
+    const userData = withDidData({
       encryptedSeed: await KeysService.encryptSeed(seedHexWithMethod, passwordBuffer),
       password,
-    }
-    return new LegacyNetworkMemberWithFactories(userData, dependencies, options)
+    })
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens: undefined }, dependencies, options)
   }
 
   /**
@@ -189,15 +190,9 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.completeLogInPasswordless(token, confirmationCode)
-    const { accessToken } = cognitoUserTokens
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    const userData = {
-      cognitoUserTokens,
-      encryptedSeed,
-      password: encryptionKey,
-    }
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
 
-    return new LegacyNetworkMemberWithFactories(userData, dependencies, options)
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -281,14 +276,8 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
-    const { accessToken } = cognitoUserTokens
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    const userData = {
-      cognitoUserTokens,
-      encryptedSeed,
-      password: encryptionKey,
-    }
-    return new LegacyNetworkMemberWithFactories(userData, dependencies, options)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -457,12 +446,10 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   private static async _confirmSignUp(
     dependencies: StaticDependencies,
     options: ParsedOptions,
-    cognitoTokens: CognitoUserTokens,
+    cognitoUserTokens: CognitoUserTokens,
     shortPassword: string,
     keyParams: KeyParams,
   ) {
-    const { accessToken } = cognitoTokens
-
     if (!keyParams?.encryptedSeed) {
       const passwordHash = WalletStorageService.hashFromString(shortPassword)
       const registerResult = await LegacyNetworkMemberWithFactories._register(dependencies, options, passwordHash)
@@ -472,18 +459,17 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
 
     const keyManagementService = createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
-      accessToken,
+      cognitoUserTokens.accessToken,
       keyParams,
       !options.otherOptions.skipBackupEncryptedSeed,
     )
 
-    const userData = {
-      cognitoUserTokens: cognitoTokens,
+    const userData = withDidData({
       encryptedSeed: updatedEncryptedSeed,
       password: encryptionKey,
-    }
+    })
 
-    return new LegacyNetworkMemberWithFactories(userData, dependencies, options)
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -713,13 +699,9 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
 
     const options = getOptionsFromEnvironment(inputOptions)
     const keyManagementService = await createKeyManagementService(options)
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    const userData = {
-      cognitoUserTokens: { accessToken },
-      encryptedSeed,
-      password: encryptionKey,
-    }
-    return new LegacyNetworkMemberWithFactories(userData, dependencies, options)
+    const userData = await keyManagementService.pullUserData(accessToken)
+    const cognitoUserTokens = { accessToken }
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -733,16 +715,25 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
-    const tokens = userManagementService.readUserTokensFromSessionStorage()
+    const cognitoUserTokens = userManagementService.readUserTokensFromSessionStorage()
     const keyManagementService = createKeyManagementService(options)
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(tokens.accessToken)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
+  }
 
-    const userData = {
-      cognitoUserTokens: tokens,
-      encryptedSeed,
-      password: encryptionKey,
+  static legacyConstructor(
+    dependencies: StaticDependencies,
+    password: string,
+    encryptedSeed: string,
+    inputOptions: SdkOptions,
+  ) {
+    if (!encryptedSeed || !password) {
+      // TODO: implement appropriate error wrapper
+      throw new Error('`password` and `encryptedSeed` must be provided!')
     }
 
-    return new LegacyNetworkMemberWithFactories(userData, dependencies, options)
+    const options = getOptionsFromEnvironment(inputOptions)
+    const userData = withDidData({ encryptedSeed, password })
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens: undefined }, dependencies, options)
   }
 }

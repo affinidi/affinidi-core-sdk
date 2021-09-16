@@ -71,21 +71,22 @@ export type StaticDependencies = {
 }
 
 export type ConstructorUserData = {
-  password: string
+  did: string
+  didDocumentKeyId: string
   encryptedSeed: string
+  password: string
 }
 
 @profile()
 export abstract class BaseNetworkMember {
-  private _did: string
+  protected readonly _did: string
   private readonly _encryptedSeed: string
-  private _password: string
+  private readonly _password: string
   protected readonly _walletStorageService: WalletStorageService
   protected readonly _keysService: KeysService
   private readonly _jwtService: JwtService
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
-  private readonly _didDocumentService: DidDocumentService
   private readonly _issuerApiService
   private readonly _verifierApiService
   private readonly _registryApiService
@@ -93,18 +94,18 @@ export abstract class BaseNetworkMember {
   protected readonly _keyManagementService
   protected readonly _affinity
   protected readonly _options
-  private _didDocumentKeyId: string
+  protected readonly _didDocumentKeyId: string
   protected readonly _component: EventComponent
   protected readonly _platformCryptographyTools
 
   constructor(
-    { password, encryptedSeed }: ConstructorUserData,
+    { did, didDocumentKeyId, encryptedSeed, password }: ConstructorUserData,
     { platformCryptographyTools, eventComponent }: StaticDependencies,
     options: ParsedOptions,
   ) {
-    if (!password || !encryptedSeed) {
+    if (!did || !didDocumentKeyId || !encryptedSeed || !password) {
       // TODO: implement appropriate error wrapper
-      throw new Error('`password` and `encryptedSeed` must be provided!')
+      throw new Error('`did`, `didDocumentKeyId`, `encryptedSeed` and `password` must be provided!')
     }
 
     const { accessApiKey, basicOptions, storageRegion } = options
@@ -131,8 +132,7 @@ export abstract class BaseNetworkMember {
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    this._didDocumentService = new DidDocumentService(keysService)
-    const didAuthAdapter = new DidAuthAdapter(this.did, { encryptedSeed, encryptionKey: password })
+    const didAuthAdapter = new DidAuthAdapter(did, { encryptedSeed, encryptionKey: password })
     this._revocationApiService = new RevocationApiService({
       revocationUrl,
       accessApiKey,
@@ -167,8 +167,8 @@ export abstract class BaseNetworkMember {
     this._component = eventComponent
     this._encryptedSeed = encryptedSeed
     this._password = password
-    this._did = null
-    this._didDocumentKeyId = null
+    this._did = did
+    this._didDocumentKeyId = didDocumentKeyId
     this._platformCryptographyTools = platformCryptographyTools
   }
 
@@ -208,7 +208,7 @@ export abstract class BaseNetworkMember {
     options: ParsedOptions,
     password: string,
     keyOptions?: KeyOptions,
-  ): Promise<{ did: string; encryptedSeed: string }> {
+  ) {
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
     const passwordBuffer = KeysService.normalizePassword(password)
     const seedWithMethod = await generateFullSeed(dependencies.platformCryptographyTools, didMethod, keyOptions)
@@ -218,10 +218,11 @@ export abstract class BaseNetworkMember {
     const didDocumentService = new DidDocumentService(keysService)
     const didDocument = await didDocumentService.buildDidDocument()
     const did = didDocument.id
+    const didDocumentKeyId = didDocumentService.getKeyId()
 
     await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
 
-    return { did, encryptedSeed }
+    return { did, didDocumentKeyId, encryptedSeed }
   }
 
   protected static async _anchorDid(
@@ -297,13 +298,12 @@ export abstract class BaseNetworkMember {
       throw new SdkErrorFromCode('COR-20', { did })
     }
 
-    const instanceDid = this.did
+    const instanceDid = this._did
     if (instanceDid !== did) {
       throw new SdkErrorFromCode('COR-21', { did, instanceDid })
     }
 
-    const keysService = new KeysService(this._encryptedSeed, this._password)
-    const { seed, didMethod } = keysService.decryptSeed()
+    const { seed, didMethod } = this._keysService.decryptSeed()
     const seedHex = seed.toString('hex')
     const transactionPublicKey = KeysService.getAnchorTransactionPublicKey(seedHex, didMethod)
     const ethereumPublicKeyHex = transactionPublicKey.toString('hex')
@@ -390,7 +390,7 @@ export abstract class BaseNetworkMember {
       body: { credentialOffer },
     } = await this._issuerApiService.buildCredentialOffer(params)
 
-    const signedObject = this._keysService.signJWT(credentialOffer as any, this.didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialOffer as any, this._didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -439,7 +439,7 @@ export abstract class BaseNetworkMember {
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest as any, this.didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialShareRequest as any, this._didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -454,7 +454,7 @@ export abstract class BaseNetworkMember {
 
     const credentialOfferResponse = await this._holderService.buildCredentialOfferResponse(credentialOfferToken)
 
-    const signedObject = this._keysService.signJWT(credentialOfferResponse, this.didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialOfferResponse, this._didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -528,36 +528,16 @@ export abstract class BaseNetworkMember {
       suppliedCredentials,
     )
 
-    const signedObject = this._keysService.signJWT(credentialResponse, this.didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialResponse, this._didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
-
   /**
    * @description Returns user's DID
    * @returns DID
    */
   get did() {
-    const didCalculated = this._did
-
-    /* istanbul ignore else: code simplicity */
-    if (!didCalculated) {
-      this._did = this._didDocumentService.getMyDid()
-    }
-
     return this._did
-  }
-
-  /**
-   * @description Returns user's DID document key ID
-   * @returns key ID
-   */
-  get didDocumentKeyId() {
-    if (!this._didDocumentKeyId) {
-      this._didDocumentKeyId = this._didDocumentService.getKeyId(this.did)
-    }
-
-    return this._didDocumentKeyId
   }
 
   /**
@@ -814,7 +794,7 @@ export abstract class BaseNetworkMember {
 
   /* istanbul ignore next: private method */
   private _sendVCVerifiedPerPartyMetrics(credentials: any[]) {
-    const verifierDid = this.did
+    const verifierDid = this._did
 
     for (const credential of credentials) {
       const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_VERIFIED_PER_PARTY)
@@ -987,7 +967,7 @@ export abstract class BaseNetworkMember {
       buildVPV1Unsigned({
         id: `presentationId:${randomBytes(8).toString('hex')}`,
         vcs: vcs.filter((vc) => requestedTypes.includes(vc.type[1])),
-        holder: { id: this.did },
+        holder: { id: this._did },
       }),
       challenge,
       domain,
@@ -1018,7 +998,7 @@ export abstract class BaseNetworkMember {
       // After validating the VP we need to validate the VP's challenge token
       // to ensure that it was issued from the correct DID and that it hasn't expired.
       try {
-        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.did)
+        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this._did)
       } catch (error) {
         return {
           isValid: false,

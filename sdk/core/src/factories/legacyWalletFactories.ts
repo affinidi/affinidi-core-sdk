@@ -3,7 +3,6 @@ import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { LegacyNetworkMemberWithFactories as Wallet } from '../CommonNetworkMember/LegacyNetworkMemberWithFactories'
 import { Util } from '../CommonNetworkMember/Util'
 import { KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
-import { getOptionsFromEnvironment } from '../shared/getOptionsFromEnvironment'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 
 export const createLegacyWalletFactories = (
@@ -287,8 +286,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `openWalletByEncryptedSeed` instead
      */
     legacyConstructor: (password: string, encryptedSeed: string, inputOptions: SdkOptions) => {
-      const options = getOptionsFromEnvironment(inputOptions)
-      return new Wallet({ password, encryptedSeed }, dependencies, options)
+      return Wallet.legacyConstructor(dependencies, password, encryptedSeed, inputOptions)
     },
   }
 }

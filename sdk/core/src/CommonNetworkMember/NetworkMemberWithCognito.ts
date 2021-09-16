@@ -1,6 +1,8 @@
 import { profile } from '@affinidi/tools-common'
 
+import UserManagementService from '../services/UserManagementService'
 import WalletStorageService from '../services/WalletStorageService'
+import { withDidData } from '../shared/getDidData'
 import {
   CognitoUserTokens,
   KeyParams,
@@ -11,7 +13,6 @@ import {
 } from '../dto/shared.dto'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import UserManagementService from '../services/UserManagementService'
 import {
   BaseNetworkMember,
   StaticDependencies,
@@ -119,15 +120,8 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.completeLogInPasswordless(token, confirmationCode)
-    const { accessToken } = cognitoUserTokens
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    const userData = {
-      cognitoUserTokens,
-      encryptedSeed,
-      password: encryptionKey,
-    }
-
-    return new NetworkMemberWithCognito(userData, dependencies, options)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -222,14 +216,8 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
-    const { accessToken } = cognitoUserTokens
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    const userData = {
-      cognitoUserTokens,
-      encryptedSeed,
-      password: encryptionKey,
-    }
-    return new NetworkMemberWithCognito(userData, dependencies, options)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -369,26 +357,23 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
   private static async _confirmSignUp(
     dependencies: StaticDependencies,
     options: ParsedOptions,
-    cognitoTokens: CognitoUserTokens,
+    cognitoUserTokens: CognitoUserTokens,
     shortPassword?: string,
     inputKeyParamsOrOptions?: KeyParamsOrOptions,
   ) {
-    const { accessToken } = cognitoTokens
-
     const keyManagementService = createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
-      accessToken,
+      cognitoUserTokens.accessToken,
       await NetworkMemberWithCognito._createKeyParams(dependencies, options, shortPassword, inputKeyParamsOrOptions),
       !options.otherOptions.skipBackupEncryptedSeed,
     )
 
-    const userData = {
-      cognitoUserTokens: cognitoTokens,
+    const userData = withDidData({
       encryptedSeed: updatedEncryptedSeed,
       password: encryptionKey,
-    }
+    })
 
-    const result = new NetworkMemberWithCognito(userData, dependencies, options)
+    const result = new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
     if (NetworkMemberWithCognito._shouldCallAfterConfirmSignUp(inputKeyParamsOrOptions)) {
       result.afterConfirmSignUp()
     }
@@ -612,15 +597,10 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       { isArray: false, type: 'string', isRequired: true, value: serializedSession },
     ])
 
-    const cognitoTokens = JSON.parse(serializedSession)
+    const cognitoUserTokens = JSON.parse(serializedSession)
     const options = getOptionsFromEnvironment(inputOptions)
     const keyManagementService = await createKeyManagementService(options)
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(cognitoTokens.accessToken)
-    const userData = {
-      cognitoUserTokens: cognitoTokens,
-      encryptedSeed,
-      password: encryptionKey,
-    }
-    return new NetworkMemberWithCognito(userData, dependencies, options)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 }

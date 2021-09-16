@@ -1,7 +1,8 @@
 import { profile } from '@affinidi/tools-common'
 import { SdkOptions } from '../dto/shared.dto'
-import { ParametersValidator } from '../shared/ParametersValidator'
+import { withDidData } from '../shared/getDidData'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
+import { ParametersValidator } from '../shared/ParametersValidator'
 import { BaseNetworkMember, StaticDependencies, ConstructorUserData } from './BaseNetworkMember'
 
 @profile()
@@ -32,8 +33,8 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const { encryptedSeed } = await NetworkMemberWithoutCognito._register(dependencies, options, password)
-    return new NetworkMemberWithoutCognito({ password, encryptedSeed }, dependencies, options)
+    const userData = await NetworkMemberWithoutCognito._register(dependencies, options, password)
+    return new NetworkMemberWithoutCognito({ ...userData, password }, dependencies, options)
   }
 
   /**
@@ -56,6 +57,6 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    return new this({ password, encryptedSeed }, dependencies, options)
+    return new NetworkMemberWithoutCognito(withDidData({ password, encryptedSeed }), dependencies, options)
   }
 }
