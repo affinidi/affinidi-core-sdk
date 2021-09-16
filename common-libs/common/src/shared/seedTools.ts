@@ -69,7 +69,7 @@ const generateAdditionalKeys = async (cryptographyTools: IPlatformCryptographyTo
 
   return Promise.all(
     filteredKeyTypes.map(async (externalKeyType) => {
-      const { keyFormat, privateKey, publicKey } = await platformCryptographyTools.keyGenerators[externalKeyType]()
+      const { keyFormat, privateKey, publicKey } = await cryptographyTools.keyGenerators[externalKeyType]()
       return {
         type: externalKeyType,
         format: keyFormat,
