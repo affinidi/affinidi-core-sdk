@@ -29,12 +29,14 @@ export default class RegistryApiService {
     ethereumPublicKeyHex,
     transactionSignatureJson,
     nonce,
+    anchoredDidElem,
   }: {
     did: string
     didDocumentAddress: string
     ethereumPublicKeyHex: string
     transactionSignatureJson: string
     nonce?: number
+    anchoredDidElem?: boolean
   }) {
     const params = {
       did,
@@ -42,6 +44,7 @@ export default class RegistryApiService {
       ethereumPublicKeyHex,
       transactionSignatureJson: transactionSignatureJson as any,
       nonce,
+      anchoredDidElem,
     }
     return this.client.AnchorDid({ params })
   }
