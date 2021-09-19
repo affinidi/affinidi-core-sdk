@@ -29,15 +29,15 @@ const encryptedSeedElem =
   'f6d18b619e97a2033f0ec7a6630fdcd3827a0dd70b3c439ab4' +
   '76b3fc264b639c84935d6e5d6fcabb3d027d411ae5d74d570fd16d604b038a9250ce4ac271fd6a86d8401ac52c52'
 const encryptedSeedElemAnchored =
-  '763d540853e9fa8efb8f36c43954564c0f3cdad23750743f85b' +
-  'f60a03acc3a1324aec85f1c69bd638fe68d844ee88a949ddd31' +
-  'c5b21c71a94b56eca9faace58be4becfcf92503a70263f5530a' +
-  '3c24a6426ae610701c5d056da6569857094832606c4b64e9598' +
-  '7a8eb39333bfe3d5d2c39819378279da7e84d6db3cc421aa04d' +
-  '4cf28a73e402688b12616d40e7a2ab000856545f3da97773e4b' +
-  'bac1ef15a6900e142cc6d0f001b7fa94d26a6ee91b93f1cf076' +
-  '62ca26daa923d270cd11a34c388fe4e9910714c5b3894f8fa06' +
-  '9acf727a15f16bb877977fd014e4fa922743e83a90311a73cd3d27c7b56e44d328330708'
+  'e7697091e36dc34575bdbaf72dbb2fe608cabbc9ce08978d3f' +
+  '6b1b3863c0179c6460bd04ccf9595522ac4860c809abc920a7' +
+  'f318a1747f8c3723341d4ead0f09cad7eeb3143555342d9bfd' +
+  '24a9ffd4e90a7e016e6ec1b2c3257cfe8f3f290dd0568e3ed1' +
+  'd9c439ce628e07a6d2389983bb3217586e8387af08274cab1e' +
+  '95f9b4f8476efd3a2d07701333fc79009109341229f1e40d81' +
+  '39d553e796560560c6d669ad5e8d3215ef9cd8e80bc624636e' +
+  'aba04af70f4287597cfd5b4cdaf9beb8ff34719fa092f9ddae' +
+  '8333d97b35727fd0d450385ae42fdf374c5cf0b70675336537449ae9fb004f36505c4055e8a13130'
 
 const encryptedSeedJolo =
   'e172340f2dbed5853dd089ee9a8f4fb5dddb41c275a10a3f749f9' +
@@ -52,7 +52,7 @@ const joloMethodId = '94f928808d7cbe228a86e6b2ba7549f873e0080be0ed7e04b957c2bcf7
 const joloDid = `did:${joloMethod}:${joloMethodId}`
 const joloDidKey = `${joloDid}#keys-1`
 const elemDidShortForm = 'did:elem:EiD5Rx3mRfvGTD-IBzjtOs0k5nLMwiPgZyd2_TYuGBK0cw'
-const elemAnchoredDid = 'did:elem-anchored:EiD5Rx3mRfvGTD-IBzjtOs0k5nLMwiPgZyd2_TYuGBK0cw'
+const elemAnchoredDid = elemDidShortForm
 const elemDid =
   elemDidShortForm +
   ';elem:initial-state=eyJwcm90ZWN0ZWQiOiJleUp2Y0dWeVl' +

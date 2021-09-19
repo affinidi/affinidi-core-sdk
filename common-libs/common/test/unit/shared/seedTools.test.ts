@@ -1,5 +1,5 @@
 import base64url from 'base64url'
-import { generateFullSeed, parseDecryptedSeed } from '../../../src/shared/seedTools'
+import { ADDITIONAL_DATA_SEPARATOR, generateFullSeed, parseDecryptedSeed } from '../../../src/shared/seedTools'
 import { IPlatformCryptographyTools } from '../../../src'
 import { expect } from 'chai'
 
@@ -28,7 +28,7 @@ describe('didTools', () => {
       })
 
       expect(seed).to.be.exist
-      expect(seed.includes('++elem++;additionalData')).to.be.true
+      expect(seed.includes(`++elem${ADDITIONAL_DATA_SEPARATOR}`)).to.be.true
     })
 
     it('should generate simple seed with method and additional info (meta)', async () => {
@@ -38,12 +38,12 @@ describe('didTools', () => {
       })
 
       expect(seed).to.be.exist
-      expect(seed.includes('++elem++;additionalData')).to.be.true
+      expect(seed.includes(`++elem${ADDITIONAL_DATA_SEPARATOR}`)).to.be.true
     })
 
     it('should generate keys section for a single key', async () => {
       const seedHexWithMethod = await generateFullSeed(cryptoTools, 'jolo', { keyTypes: ['rsa'] })
-      const additionalDataSeedSection = seedHexWithMethod.split('++;additionalData:')[1]
+      const additionalDataSeedSection = seedHexWithMethod.split(ADDITIONAL_DATA_SEPARATOR)[1]
 
       expect(JSON.parse(base64url.decode(additionalDataSeedSection))).to.deep.eq({
         keys: [
@@ -59,7 +59,7 @@ describe('didTools', () => {
     })
     it('should generate keys section for multiple keys', async () => {
       const seedHexWithMethod = await generateFullSeed(cryptoTools, 'jolo', { keyTypes: ['rsa', 'bbs'] })
-      const additionalDataSeedSection = seedHexWithMethod.split('++;additionalData:')[1]
+      const additionalDataSeedSection = seedHexWithMethod.split(ADDITIONAL_DATA_SEPARATOR)[1]
 
       expect(JSON.parse(base64url.decode(additionalDataSeedSection))).to.deep.eq({
         keys: [

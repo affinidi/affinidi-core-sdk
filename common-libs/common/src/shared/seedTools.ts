@@ -19,7 +19,7 @@ export type ParseDecryptedSeedResult = {
   metadata?: Record<string, any>
 }
 
-const ADDITIONAL_DATA_SEPARATOR = '++;additionalData:'
+export const ADDITIONAL_DATA_SEPARATOR = '++;additionalDataJson:'
 const EXTERNAL_KEYS_KEY = 'keys'
 const METADATA_KEY = 'meta'
 
