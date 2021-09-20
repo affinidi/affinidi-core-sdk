@@ -2,7 +2,7 @@
 
 import { expect } from 'chai'
 import { decode as jwtDecode } from 'jsonwebtoken'
-import {Affinity, KeysService} from '@affinidi/common'
+import { Affinity, KeysService } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import UserManagementService from '../../src/services/UserManagementService'
