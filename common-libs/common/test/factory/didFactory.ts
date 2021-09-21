@@ -9,7 +9,7 @@ interface TestDid {
   encryptedSeed: string
   seedHex: string
   did: string
-  didDocument: { id: string } | any
+  didDocument: { id: string } | any | any
   publicKey: string
   publicRSAKey?: string
   publicBBSKey?: string

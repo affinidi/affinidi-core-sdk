@@ -215,7 +215,7 @@ export abstract class BaseNetworkMember {
     const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
     const keysService = new KeysService(encryptedSeed, password)
 
-    const didDocumentService = new DidDocumentService(keysService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
     const didDocument = await didDocumentService.buildDidDocument()
     const did = didDocument.id
     const didDocumentKeyId = didDocumentService.getKeyId()

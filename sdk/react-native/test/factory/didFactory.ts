@@ -8,7 +8,7 @@ interface TestDid {
   encryptedSeed: string
   seedHex: string
   did: string
-  didDocument: { id: string }
+  didDocument: { id: string } | any
   publicKey: string
 }
 
@@ -36,7 +36,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const joloDidDocument = await didDocumentService.buildDidDocument()
   const joloDid = joloDidDocument.id
 
@@ -51,7 +51,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemDidDocument = await didDocumentService.buildDidDocument()
   const elemDid = await didDocumentService.getMyDid()
 
@@ -69,7 +69,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(elemAltEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemAltDidDocument = await didDocumentService.buildDidDocument()
   const elemAltDid = await didDocumentService.getMyDid()
 
