@@ -1,6 +1,7 @@
 import KeysService from '../KeysService'
 import JoloDidDocument from './JoloDidDocument'
 import ElemDidDocument from './ElemDidDocument'
+import ElemAnchoredDidDocument from './ElemAnchoredDidDocument'
 import { parse } from 'did-resolver'
 import { LocalKeyVault } from './LocalKeyVault'
 
@@ -9,40 +10,24 @@ export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
 
 export default class DidDocumentService {
+  /**
+   * @deprecated use DidDocumentService.createDidDocumentService instead
+   */
   constructor(keysService: KeysService) {
+    return DidDocumentService.createDidDocumentService(keysService)
+  }
+
+  static createDidDocumentService(
+    keysService: KeysService,
+  ): JoloDidDocument | ElemDidDocument | ElemAnchoredDidDocument {
     const { didMethod } = keysService.decryptSeed()
 
-    let didDocumentService
-    switch (didMethod) {
-      case 'jolo':
-        didDocumentService = new JoloDidDocument(keysService)
-        break
-      case 'elem':
-        didDocumentService = new ElemDidDocument(new LocalKeyVault(keysService))
-        break
-    }
-
-    return didDocumentService
+    return {
+      jolo: new JoloDidDocument(keysService),
+      elem: new ElemDidDocument(new LocalKeyVault(keysService)),
+      'elem-anchored': new ElemAnchoredDidDocument(new LocalKeyVault(keysService)),
+    }[didMethod]
   }
-
-  getMyDid() {
-    return 'did:...'
-  }
-
-  getKeyId(did: string = null) {
-    if (!did) {
-      did = this.getMyDid()
-    }
-
-    const signingKey = 'primary'
-
-    return `${did}#${signingKey}`
-  }
-
-  async buildDidDocument(): Promise<any> {
-    return { id: 'did:...' }
-  }
-
   static getPublicKey(fulleKeyId: string, didDocument: any, keyId?: string): Buffer {
     // Support finding the publicKey with the short form DID + fragment or full keyId
     if (!keyId) {

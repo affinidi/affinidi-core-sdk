@@ -18,6 +18,11 @@ export interface KeyVault {
   externalKeys: any[]
 
   /**
+   * Object with any additional info
+   */
+  metadata?: Record<string, any>
+
+  /**
    * Sign the given payload with the primary public key
    *
    * @param payload payload to be signed

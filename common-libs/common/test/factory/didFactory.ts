@@ -9,7 +9,7 @@ interface TestDid {
   encryptedSeed: string
   seedHex: string
   did: string
-  didDocument: { id: string }
+  didDocument: { id: string } | any
   publicKey: string
   publicRSAKey?: string
   publicBBSKey?: string
@@ -38,7 +38,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const joloDidDocument = await didDocumentService.buildDidDocument()
   const joloDid = joloDidDocument.id
 
@@ -53,7 +53,7 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemDidDocument = await didDocumentService.buildDidDocument()
   const elemDid = await didDocumentService.getMyDid()
 
@@ -114,7 +114,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemRSAEncryptedSeed, password)
   const elemRSAPublicKeyRSA = keysService.getExternalPublicKey('rsa').toString()
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemRSADidDocument = await didDocumentService.buildDidDocument()
   const elemRSADid = await didDocumentService.getMyDid()
 
@@ -140,7 +140,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemBBSEncryptedSeed, password)
   const elemBBSPublicKeyBBS = keysService.getExternalPublicKey('bbs').toString()
 
-  didDocumentService = new DidDocumentService(keysService)
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemBBSDidDocument = await didDocumentService.buildDidDocument()
   const elemBBSDid = await didDocumentService.getMyDid()
 

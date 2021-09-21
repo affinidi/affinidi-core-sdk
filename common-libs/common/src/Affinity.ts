@@ -410,7 +410,7 @@ export class Affinity {
     keySuiteType: KeySuiteType = 'ecdsa',
   ): Promise<VCV1<TSubject>> {
     const keyService = new KeysService(encryptedSeed, encryptionKey)
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
     const mainKeyId = didDocumentService.getKeyId()
     const issuer = this.getIssuerForSigning(keySuiteType, keyService, did, mainKeyId)
@@ -516,7 +516,7 @@ export class Affinity {
     const keyService = new KeysService(opts.encryption.seed, opts.encryption.key)
     const { seed, didMethod } = keyService.decryptSeed()
 
-    const didDocumentService = new DidDocumentService(keyService)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
 
     const signedVp = buildVPV1({
