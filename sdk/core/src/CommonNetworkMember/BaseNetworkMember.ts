@@ -79,7 +79,7 @@ export type ConstructorUserData = {
 
 @profile()
 export abstract class BaseNetworkMember {
-  protected readonly _did: string
+  private readonly _did: string
   private readonly _encryptedSeed: string
   private readonly _password: string
   protected readonly _walletStorageService: WalletStorageService
@@ -94,7 +94,7 @@ export abstract class BaseNetworkMember {
   protected readonly _keyManagementService
   protected readonly _affinity
   protected readonly _options
-  protected readonly _didDocumentKeyId: string
+  private readonly _didDocumentKeyId: string
   protected readonly _component: EventComponent
   protected readonly _platformCryptographyTools
 
@@ -298,7 +298,7 @@ export abstract class BaseNetworkMember {
       throw new SdkErrorFromCode('COR-20', { did })
     }
 
-    const instanceDid = this._did
+    const instanceDid = this.did
     if (instanceDid !== did) {
       throw new SdkErrorFromCode('COR-21', { did, instanceDid })
     }
@@ -390,7 +390,7 @@ export abstract class BaseNetworkMember {
       body: { credentialOffer },
     } = await this._issuerApiService.buildCredentialOffer(params)
 
-    const signedObject = this._keysService.signJWT(credentialOffer as any, this._didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialOffer as any, this.didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -439,7 +439,7 @@ export abstract class BaseNetworkMember {
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest as any, this._didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialShareRequest as any, this.didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -454,7 +454,7 @@ export abstract class BaseNetworkMember {
 
     const credentialOfferResponse = await this._holderService.buildCredentialOfferResponse(credentialOfferToken)
 
-    const signedObject = this._keysService.signJWT(credentialOfferResponse, this._didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialOfferResponse, this.didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
@@ -528,16 +528,25 @@ export abstract class BaseNetworkMember {
       suppliedCredentials,
     )
 
-    const signedObject = this._keysService.signJWT(credentialResponse, this._didDocumentKeyId)
+    const signedObject = this._keysService.signJWT(credentialResponse, this.didDocumentKeyId)
 
     return this._jwtService.encodeObjectToJWT(signedObject)
   }
+
   /**
    * @description Returns user's DID
    * @returns DID
    */
   get did() {
     return this._did
+  }
+
+  /**
+   * @description Returns user's DID document key ID
+   * @returns key ID
+   */
+  get didDocumentKeyId() {
+    return this._didDocumentKeyId
   }
 
   /**
@@ -794,7 +803,7 @@ export abstract class BaseNetworkMember {
 
   /* istanbul ignore next: private method */
   private _sendVCVerifiedPerPartyMetrics(credentials: any[]) {
-    const verifierDid = this._did
+    const verifierDid = this.did
 
     for (const credential of credentials) {
       const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_VERIFIED_PER_PARTY)
@@ -967,7 +976,7 @@ export abstract class BaseNetworkMember {
       buildVPV1Unsigned({
         id: `presentationId:${randomBytes(8).toString('hex')}`,
         vcs: vcs.filter((vc) => requestedTypes.includes(vc.type[1])),
-        holder: { id: this._did },
+        holder: { id: this.did },
       }),
       challenge,
       domain,
@@ -998,7 +1007,7 @@ export abstract class BaseNetworkMember {
       // After validating the VP we need to validate the VP's challenge token
       // to ensure that it was issued from the correct DID and that it hasn't expired.
       try {
-        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this._did)
+        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.did)
       } catch (error) {
         return {
           isValid: false,
