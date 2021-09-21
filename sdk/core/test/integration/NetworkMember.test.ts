@@ -2,7 +2,7 @@
 
 import { expect } from 'chai'
 import { decode as jwtDecode } from 'jsonwebtoken'
-import { Affinity } from '@affinidi/common'
+import { Affinity, KeysService } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { VCSPhonePersonV1, getVCPhonePersonV1Context } from '@affinidi/vc-data'
 import UserManagementService from '../../src/services/UserManagementService'
@@ -49,6 +49,7 @@ const didElem = `${didElemShort};${DID_ELEM_PARAMS}`
 const seedDid = DID_JOLO
 
 const elemDidMethod = 'elem'
+const elemAnchoredDidMethod = 'elem-anchored'
 const joloDidMethod = 'jolo'
 
 const phoneNumber = COGNITO_PHONE_NUMBER
@@ -237,6 +238,18 @@ describe('CommonNetworkMember', () => {
     expect(encryptedSeed).to.exist
     const [, didMethod] = did.split(':')
     expect(didMethod).to.be.equal(elemDidMethod)
+  })
+
+  it('.register (elem-anchored did method)', async () => {
+    const optionsWithElemAnchoredDid = Object.assign({}, options, { didMethod: elemAnchoredDidMethod } as const)
+
+    const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithElemAnchoredDid)
+    const [, didMethod] = did.split(':')
+    const decrypted = KeysService.decryptSeed(encryptedSeed, password)
+
+    console.log(decrypted)
+    expect(didMethod).to.be.equal(elemDidMethod)
+    expect(decrypted.didMethod).to.equal(elemAnchoredDidMethod)
   })
 
   it('.register (jolo did method)', async () => {
