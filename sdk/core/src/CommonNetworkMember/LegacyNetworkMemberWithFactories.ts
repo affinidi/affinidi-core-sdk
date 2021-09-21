@@ -1,59 +1,38 @@
 import { KeysService } from '@affinidi/common'
-import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { profile } from '@affinidi/tools-common'
 import WalletStorageService from '../services/WalletStorageService'
 import { SdkOptions, CognitoUserTokens, MessageParameters, KeyParams } from '../dto/shared.dto'
-import { validateUsername } from '../shared/validateUsername'
-import { IPlatformCryptographyTools } from '../shared/interfaces'
+import { withDidData } from '../shared/getDidData'
+import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
-import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
+import { validateUsername } from '../shared/validateUsername'
 import UserManagementService from '../services/UserManagementService'
-import { createKeyManagementService } from './BaseNetworkMember'
+import { StaticDependencies, ConstructorUserData, createKeyManagementService } from './BaseNetworkMember'
 import { LegacyNetworkMember } from './LegacyNetworkMember'
-
-type GenericConstructor<T> = new (
-  password: string,
-  encryptedSeed: string,
-  options: ParsedOptions,
-  cognitoUserTokens?: CognitoUserTokens,
-) => T
-type Constructor<T> = GenericConstructor<T> & GenericConstructor<LegacyNetworkMemberWithFactories>
-type AbstractStaticMethods = Record<never, never>
-type ConstructorKeys<T> = {
-  [P in keyof T]: T[P] extends new (...args: unknown[]) => unknown ? P : never
-}[keyof T]
-type OmitConstructor<T> = Omit<T, ConstructorKeys<T>>
-type DerivedTypeForOptions<TInstance> = Constructor<TInstance> &
-  AbstractStaticMethods &
-  OmitConstructor<typeof LegacyNetworkMemberWithFactories>
-type DerivedType<T extends DerivedType<T>> = DerivedTypeForOptions<InstanceType<T>>
-export type UniversalDerivedType = DerivedType<DerivedTypeForOptions<LegacyNetworkMemberWithFactories>>
 
 const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
   return new UserManagementService({ ...basicOptions, accessApiKey })
+}
+
+type UserDataWithCognito = ConstructorUserData & {
+  cognitoUserTokens: CognitoUserTokens | undefined
 }
 
 /**
  * @deprecated, will be removed in SDK v7
  */
 @profile()
-export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
+export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   private readonly _userManagementService
   protected cognitoUserTokens: CognitoUserTokens | undefined
 
-  constructor(
-    password: string,
-    encryptedSeed: string,
-    platformCryptographyTools: IPlatformCryptographyTools,
-    options: ParsedOptions,
-    component: EventComponent,
-    cognitoUserTokens?: CognitoUserTokens,
-  ) {
-    super(password, encryptedSeed, platformCryptographyTools, options, component)
-    const { accessApiKey, basicOptions } = options
+  constructor(userData: UserDataWithCognito, dependencies: StaticDependencies, options: ParsedOptions) {
+    super(userData, dependencies, options)
+    const { accessApiKey, basicOptions } = this._options
     const { clientId, userPoolId, keyStorageUrl } = basicOptions
     this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
+    const { cognitoUserTokens } = userData
     this.cognitoUserTokens = cognitoUserTokens
   }
 
@@ -89,12 +68,12 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */
-  static async fromSeed<T extends DerivedType<T>>(
-    this: T,
+  static async fromSeed(
+    dependencies: StaticDependencies,
     seedHexWithMethod: string,
     inputOptions: SdkOptions,
     password: string = null,
-  ): Promise<InstanceType<T>> {
+  ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: seedHexWithMethod },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -111,8 +90,11 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     }
 
     const options = getOptionsFromEnvironment(inputOptions)
-    const encryptedSeedWithInitializationVector = await KeysService.encryptSeed(seedHexWithMethod, passwordBuffer)
-    return new this(password, encryptedSeedWithInitializationVector, options)
+    const userData = withDidData({
+      encryptedSeed: await KeysService.encryptSeed(seedHexWithMethod, passwordBuffer),
+      password,
+    })
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens: undefined }, dependencies, options)
   }
 
   /**
@@ -192,12 +174,12 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async completeLoginChallenge<T extends DerivedType<T>>(
-    this: T,
+  static async completeLoginChallenge(
+    dependencies: StaticDependencies,
     token: string,
     confirmationCode: string,
     inputOptions: SdkOptions,
-  ): Promise<InstanceType<T>> {
+  ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
@@ -208,10 +190,9 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.completeLogInPasswordless(token, confirmationCode)
-    const { accessToken } = cognitoUserTokens
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
 
-    return new this(encryptionKey, encryptedSeed, options, cognitoUserTokens)
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -279,12 +260,12 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async fromLoginAndPassword<T extends DerivedType<T>>(
-    this: T,
+  static async fromLoginAndPassword(
+    dependencies: StaticDependencies,
     username: string,
     password: string,
     inputOptions: SdkOptions,
-  ): Promise<InstanceType<T>> {
+  ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
@@ -295,9 +276,8 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
-    const { accessToken } = cognitoUserTokens
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    return new this(encryptionKey, encryptedSeed, options, cognitoUserTokens)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -312,15 +292,14 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUpWithExistsEntity<T extends DerivedType<T>>(
-    this: T,
+  static async signUpWithExistsEntity(
+    dependencies: StaticDependencies,
     keyParams: KeyParams,
     login: string,
     password: string,
     inputOptions: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
     messageParameters?: MessageParameters,
-  ): Promise<string | InstanceType<T>> {
+  ): Promise<string | LegacyNetworkMemberWithFactories> {
     const { isUsername } = validateUsername(login)
 
     if (!isUsername) {
@@ -341,24 +320,16 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
-    return LegacyNetworkMemberWithFactories._confirmSignUp(
-      this,
-      options,
-      platformCryptographyTools,
-      cognitoTokens,
-      password,
-      keyParams,
-    )
+    return LegacyNetworkMemberWithFactories._confirmSignUp(dependencies, options, cognitoTokens, password, keyParams)
   }
 
-  private static async _signUpByUsernameAutoConfirm<T extends DerivedType<T>>(
-    self: T,
+  private static async _signUpByUsernameAutoConfirm(
+    dependencies: StaticDependencies,
     username: string,
     password: string,
     inputOptions: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
     messageParameters?: MessageParameters,
-  ): Promise<InstanceType<T>> {
+  ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
       { isArray: false, type: 'password', isRequired: true, value: password },
@@ -370,9 +341,8 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const userManagementService = createUserManagementService(options)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
-      self,
+      dependencies,
       options,
-      platformCryptographyTools,
       cognitoTokens,
       password,
       undefined,
@@ -381,7 +351,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     return result
   }
 
-  private static async _signUpByEmailOrPhone<T extends DerivedType<T>>(
+  private static async _signUpByEmailOrPhone(
     login: string,
     password: string,
     inputOptions: SdkOptions,
@@ -410,14 +380,13 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @returns token or, in case when arbitrary username was used, it returns
    * initialized instance of SDK
    */
-  static async signUp<T extends DerivedType<T>>(
-    this: T,
+  static async signUp(
+    dependencies: StaticDependencies,
     login: string,
     password: string,
     inputOptions: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
     messageParameters?: MessageParameters,
-  ): Promise<string | InstanceType<T>> {
+  ): Promise<string | LegacyNetworkMemberWithFactories> {
     const { isUsername } = validateUsername(login)
 
     if (!isUsername) {
@@ -425,11 +394,10 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     }
 
     return LegacyNetworkMemberWithFactories._signUpByUsernameAutoConfirm(
-      this,
+      dependencies,
       login,
       password,
       inputOptions,
-      platformCryptographyTools,
       messageParameters,
     )
   }
@@ -446,14 +414,13 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUpWithExistsEntity<T extends DerivedType<T>>(
-    this: T,
+  static async confirmSignUpWithExistsEntity(
+    dependencies: StaticDependencies,
     keyParams: KeyParams,
     signUpToken: string,
     confirmationCode: string,
     inputOptions: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
-  ): Promise<InstanceType<T>> {
+  ) {
     ParametersValidator.validate([
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
@@ -468,44 +435,41 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
       confirmationCode,
     )
     return LegacyNetworkMemberWithFactories._confirmSignUp(
-      this,
+      dependencies,
       options,
-      platformCryptographyTools,
       cognitoTokens,
       shortPassword,
       keyParams,
     )
   }
 
-  private static async _confirmSignUp<T extends DerivedType<T>>(
-    self: T,
+  private static async _confirmSignUp(
+    dependencies: StaticDependencies,
     options: ParsedOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
-    cognitoTokens: CognitoUserTokens,
+    cognitoUserTokens: CognitoUserTokens,
     shortPassword: string,
     keyParams: KeyParams,
-  ): Promise<InstanceType<T>> {
-    const { accessToken } = cognitoTokens
-
+  ) {
     if (!keyParams?.encryptedSeed) {
       const passwordHash = WalletStorageService.hashFromString(shortPassword)
-      const registerResult = await LegacyNetworkMemberWithFactories._register(
-        options,
-        platformCryptographyTools,
-        passwordHash,
-      )
+      const registerResult = await LegacyNetworkMemberWithFactories._register(dependencies, options, passwordHash)
       const encryptedSeed = registerResult.encryptedSeed
       keyParams = { password: passwordHash, encryptedSeed }
     }
 
     const keyManagementService = createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
-      accessToken,
+      cognitoUserTokens.accessToken,
       keyParams,
       !options.otherOptions.skipBackupEncryptedSeed,
     )
 
-    return new self(encryptionKey, updatedEncryptedSeed, options, cognitoTokens)
+    const userData = withDidData({
+      encryptedSeed: updatedEncryptedSeed,
+      password: encryptionKey,
+    })
+
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -517,13 +481,12 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
-  static async confirmSignUp<T extends DerivedType<T>>(
-    this: T,
+  static async confirmSignUp(
+    dependencies: StaticDependencies,
     signUpToken: string,
     confirmationCode: string,
     inputOptions: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
-  ): Promise<InstanceType<T>> {
+  ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -537,9 +500,8 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
       confirmationCode,
     )
     const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
-      this,
+      dependencies,
       options,
-      platformCryptographyTools,
       cognitoTokens,
       shortPassword,
       undefined,
@@ -588,12 +550,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param messageParameters - optional parameters with specified welcome message
    * @returns token
    */
-  static async signIn<T extends DerivedType<T>>(
-    this: T,
-    login: string,
-    inputOptions: SdkOptions,
-    messageParameters?: MessageParameters,
-  ): Promise<string> {
+  static async signIn(login: string, inputOptions: SdkOptions, messageParameters?: MessageParameters): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -619,13 +576,12 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param options - optional parameters for BaseNetworkMember initialization
    * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
    */
-  static async confirmSignIn<T extends DerivedType<T>>(
-    this: T,
+  static async confirmSignIn(
+    dependencies: StaticDependencies,
     token: string,
     confirmationCode: string,
     options: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
-  ): Promise<{ isNew: boolean; commonNetworkMember: InstanceType<T> }> {
+  ): Promise<{ isNew: boolean; commonNetworkMember: LegacyNetworkMemberWithFactories }> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: token },
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
@@ -637,12 +593,22 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
     const isSignUpToken = token.split('::')[1] !== undefined
 
     if (isSignUpToken) {
-      const commonNetworkMember = await this.confirmSignUp(token, confirmationCode, options, platformCryptographyTools)
+      const commonNetworkMember = await LegacyNetworkMemberWithFactories.confirmSignUp(
+        dependencies,
+        token,
+        confirmationCode,
+        options,
+      )
 
       return { isNew: true, commonNetworkMember }
     }
 
-    const commonNetworkMember = await this.completeLoginChallenge(token, confirmationCode, options)
+    const commonNetworkMember = await LegacyNetworkMemberWithFactories.completeLoginChallenge(
+      dependencies,
+      token,
+      confirmationCode,
+      options,
+    )
 
     return { isNew: false, commonNetworkMember }
   }
@@ -725,11 +691,7 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @param options - optional parameters for AffinityWallet initialization
    * @returns initialized instance of SDK
    */
-  static async fromAccessToken<T extends DerivedType<T>>(
-    this: T,
-    accessToken: string,
-    inputOptions: SdkOptions,
-  ): Promise<InstanceType<T>> {
+  static async fromAccessToken(dependencies: StaticDependencies, accessToken: string, inputOptions: SdkOptions) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: false, value: accessToken },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -737,8 +699,9 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
 
     const options = getOptionsFromEnvironment(inputOptions)
     const keyManagementService = await createKeyManagementService(options)
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(accessToken)
-    return new this(encryptionKey, encryptedSeed, options, { accessToken })
+    const userData = await keyManagementService.pullUserData(accessToken)
+    const cognitoUserTokens = { accessToken }
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
   }
 
   /**
@@ -747,15 +710,30 @@ export abstract class LegacyNetworkMemberWithFactories extends LegacyNetworkMemb
    * @returns initialized instance of SDK or throws `COR-9` UnprocessableEntityError,
    * if user is not logged in.
    */
-  static async init<T extends DerivedType<T>>(this: T, inputOptions: SdkOptions): Promise<InstanceType<T>> {
+  static async init(dependencies: StaticDependencies, inputOptions: SdkOptions) {
     await ParametersValidator.validate([{ isArray: false, type: SdkOptions, isRequired: true, value: inputOptions }])
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
-    const tokens = userManagementService.readUserTokensFromSessionStorage()
+    const cognitoUserTokens = userManagementService.readUserTokensFromSessionStorage()
     const keyManagementService = createKeyManagementService(options)
-    const { encryptedSeed, encryptionKey } = await keyManagementService.pullKeyAndSeed(tokens.accessToken)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
+  }
 
-    return new this(encryptionKey, encryptedSeed, options, tokens)
+  static legacyConstructor(
+    dependencies: StaticDependencies,
+    password: string,
+    encryptedSeed: string,
+    inputOptions: SdkOptions,
+  ) {
+    if (!encryptedSeed || !password) {
+      // TODO: implement appropriate error wrapper
+      throw new Error('`password` and `encryptedSeed` must be provided!')
+    }
+
+    const options = getOptionsFromEnvironment(inputOptions)
+    const userData = withDidData({ encryptedSeed, password })
+    return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens: undefined }, dependencies, options)
   }
 }

@@ -1,3 +1,5 @@
+# release 6.0.0-beta.13 (2021-09-21)
+* Internal refactoring
 # release 6.0.0-beta.12 (2021-09-15)
 * Updated internal dependencies
 # release 6.0.0-beta.11 (2021-09-09)

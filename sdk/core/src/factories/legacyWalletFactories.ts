@@ -1,34 +1,15 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
-import {
-  LegacyNetworkMemberWithFactories,
-  UniversalDerivedType,
-} from '../CommonNetworkMember/LegacyNetworkMemberWithFactories'
+import { LegacyNetworkMemberWithFactories as Wallet } from '../CommonNetworkMember/LegacyNetworkMemberWithFactories'
 import { Util } from '../CommonNetworkMember/Util'
-import { CognitoUserTokens, KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
-import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
+import { KeyParams, MessageParameters, SdkOptions } from '../dto/shared.dto'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
-
-const createWallet = (platformCryptographyTools: IPlatformCryptographyTools, component: EventComponent) => {
-  class Wallet extends LegacyNetworkMemberWithFactories {
-    constructor(
-      password: string,
-      encryptedSeed: string,
-      options: ParsedOptions,
-      cognitoUserTokens?: CognitoUserTokens,
-    ) {
-      super(password, encryptedSeed, platformCryptographyTools, options, component, cognitoUserTokens)
-    }
-  }
-
-  return Wallet as UniversalDerivedType
-}
 
 export const createLegacyWalletFactories = (
   platformCryptographyTools: IPlatformCryptographyTools,
-  component: EventComponent,
+  eventComponent: EventComponent,
 ) => {
-  const Wallet = createWallet(platformCryptographyTools, component)
+  const dependencies = { platformCryptographyTools, eventComponent }
 
   return {
     /**
@@ -51,7 +32,7 @@ export const createLegacyWalletFactories = (
      * @deprecated
      */
     fromSeed: (seedHexWithMethod: string, options: SdkOptions, password: string = null) => {
-      return Wallet.fromSeed(seedHexWithMethod, options, password)
+      return Wallet.fromSeed(dependencies, seedHexWithMethod, options, password)
     },
 
     /**
@@ -81,7 +62,7 @@ export const createLegacyWalletFactories = (
      * @deprecated Use `createWallet` instead
      */
     register: (password: string, options: SdkOptions) => {
-      return Wallet.register(options, platformCryptographyTools, password)
+      return Wallet.register(dependencies, options, password)
     },
 
     /**
@@ -112,7 +93,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `completeLogInPasswordless` instead
      */
     completeLoginChallenge: (token: string, confirmationCode: string, inputOptions: SdkOptions) => {
-      return Wallet.completeLoginChallenge(token, confirmationCode, inputOptions)
+      return Wallet.completeLoginChallenge(dependencies, token, confirmationCode, inputOptions)
     },
 
     /**
@@ -147,7 +128,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `logInWithPassword` instead
      */
     fromLoginAndPassword: (username: string, password: string, inputOptions: SdkOptions) => {
-      return Wallet.fromLoginAndPassword(username, password, inputOptions)
+      return Wallet.fromLoginAndPassword(dependencies, username, password, inputOptions)
     },
 
     /**
@@ -170,14 +151,7 @@ export const createLegacyWalletFactories = (
       options: SdkOptions,
       messageParameters?: MessageParameters,
     ) => {
-      return Wallet.signUpWithExistsEntity(
-        keyParams,
-        login,
-        password,
-        options,
-        platformCryptographyTools,
-        messageParameters,
-      )
+      return Wallet.signUpWithExistsEntity(dependencies, keyParams, login, password, options, messageParameters)
     },
 
     /**
@@ -193,7 +167,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `signUpWithUsername`, `initiateSignUpByEmail` or `initiateSignUpByPhone` instead
      */
     signUp: (login: string, password: string, options: SdkOptions, messageParameters?: MessageParameters) => {
-      return Wallet.signUp(login, password, options, platformCryptographyTools, messageParameters)
+      return Wallet.signUp(dependencies, login, password, options, messageParameters)
     },
 
     /**
@@ -215,13 +189,7 @@ export const createLegacyWalletFactories = (
       confirmationCode: string,
       options: SdkOptions,
     ) => {
-      return Wallet.confirmSignUpWithExistsEntity(
-        keyParams,
-        signUpToken,
-        confirmationCode,
-        options,
-        platformCryptographyTools,
-      )
+      return Wallet.confirmSignUpWithExistsEntity(dependencies, keyParams, signUpToken, confirmationCode, options)
     },
 
     /**
@@ -235,7 +203,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `completeSignUp` instead
      */
     confirmSignUp: (signUpToken: string, confirmationCode: string, options: SdkOptions) => {
-      return Wallet.confirmSignUp(signUpToken, confirmationCode, options, platformCryptographyTools)
+      return Wallet.confirmSignUp(dependencies, signUpToken, confirmationCode, options)
     },
 
     /**
@@ -271,7 +239,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `completeSignInPasswordless` instead
      */
     confirmSignIn: (token: string, confirmationCode: string, options: SdkOptions) => {
-      return Wallet.confirmSignIn(token, confirmationCode, options, platformCryptographyTools)
+      return Wallet.confirmSignIn(dependencies, token, confirmationCode, options)
     },
 
     /**
@@ -300,7 +268,7 @@ export const createLegacyWalletFactories = (
      * @deprecated use `deserialize` instead
      */
     fromAccessToken: (accessToken: string, options: SdkOptions) => {
-      return Wallet.fromAccessToken(accessToken, options)
+      return Wallet.fromAccessToken(dependencies, accessToken, options)
     },
 
     /**
@@ -311,15 +279,14 @@ export const createLegacyWalletFactories = (
      * @deprecated manage state storage and use `serialize`/`deserialize` instead
      */
     init: (options: SdkOptions) => {
-      return Wallet.init(options)
+      return Wallet.init(dependencies, options)
     },
 
     /**
      * @deprecated use `openWalletByEncryptedSeed` instead
      */
     legacyConstructor: (password: string, encryptedSeed: string, inputOptions: SdkOptions) => {
-      const options = getOptionsFromEnvironment(inputOptions)
-      return new Wallet(password, encryptedSeed, options)
+      return Wallet.legacyConstructor(dependencies, password, encryptedSeed, inputOptions)
     },
   }
 }
