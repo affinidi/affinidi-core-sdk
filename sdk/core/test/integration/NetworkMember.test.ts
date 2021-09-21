@@ -240,7 +240,7 @@ describe('CommonNetworkMember', () => {
     expect(didMethod).to.be.equal(elemDidMethod)
   })
 
-  it.skip('.register (elem-anchored did method)', async () => {
+  it('.register (elem-anchored did method)', async () => {
     const optionsWithElemAnchoredDid = Object.assign({}, options, { didMethod: elemAnchoredDidMethod } as const)
 
     const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithElemAnchoredDid)
