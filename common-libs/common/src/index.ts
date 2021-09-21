@@ -29,4 +29,11 @@ export { IPlatformCryptographyTools } from './shared/interfaces'
 
 export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
 
-export { generateFullSeed } from './shared/seedTools'
+export {
+  generateFullSeed,
+  generateSeedHexWithMethod,
+  buildBase64EncodedAdditionalData,
+  joinSeedWithMethodAndBase64EncodedData,
+} from './shared/seedTools'
+
+export { DidResolver } from './shared/DidResolver'

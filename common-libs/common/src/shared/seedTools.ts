@@ -99,6 +99,9 @@ export const buildBase64EncodedAdditionalData = async (
   return base64url.encode(JSON.stringify(additionalData))
 }
 
+export const joinSeedWithMethodAndBase64EncodedData = (seedWithMethod: string, base64EncodedAdditionalData: string) =>
+  `${seedWithMethod}${ADDITIONAL_DATA_SEPARATOR}${base64EncodedAdditionalData}`
+
 export const generateFullSeed = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   didMethod: string,
