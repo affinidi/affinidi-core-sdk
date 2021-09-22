@@ -1,8 +1,7 @@
 import { KeyVault } from './KeyVault'
 import { DidResolver } from '../../shared/DidResolver'
-import { ConcreteDidDocument } from './ConcreteDidDocument'
 
-export default class ElemAnchoredDidDocument implements ConcreteDidDocument<any> {
+export default class ElemAnchoredDidDocument {
   private readonly _keyVault: KeyVault
   private readonly _signingKey: string
 
@@ -24,6 +23,6 @@ export default class ElemAnchoredDidDocument implements ConcreteDidDocument<any>
       throw new Error('Provide DidResolver to use buildDidDocument for elem-anchored method')
     }
 
-    return didResolver.resolveDid(this.getMyDid())
+    return didResolver.resolveDid(this.getMyDid()) as Promise<Record<string, any> & { id: string }>
   }
 }

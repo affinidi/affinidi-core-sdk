@@ -4,9 +4,8 @@ import { parse } from 'did-resolver'
 import { func } from './elem-lib'
 import { KeyVault } from './KeyVault'
 import { computePayloadHash, encodeJson } from './elem-lib/func'
-import { ConcreteDidDocument } from './ConcreteDidDocument'
 
-export default class ElemDidDocument implements ConcreteDidDocument {
+export default class ElemDidDocument {
   private readonly _keyVault: KeyVault
   private readonly _signingKey: string
 

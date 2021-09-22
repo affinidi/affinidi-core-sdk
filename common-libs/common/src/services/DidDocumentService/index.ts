@@ -17,9 +17,7 @@ export default class DidDocumentService {
     return DidDocumentService.createDidDocumentService(keysService)
   }
 
-  static createDidDocumentService(
-    keysService: KeysService,
-  ): JoloDidDocument | ElemDidDocument | ElemAnchoredDidDocument {
+  static createDidDocumentService(keysService: KeysService) {
     const { didMethod } = keysService.decryptSeed()
 
     return {

@@ -2,11 +2,10 @@ import KeysService from '../KeysService'
 import { randomBytes } from '../../shared/randomBytes'
 
 import { defaultContext } from './defaultJoloContext'
-import { ConcreteDidDocument } from './ConcreteDidDocument'
 
 const keccak256 = require('keccak256')
 
-export default class JoloDidDocument implements ConcreteDidDocument {
+export default class JoloDidDocument {
   private readonly _keysService: KeysService
   private readonly _signingKey: string
 

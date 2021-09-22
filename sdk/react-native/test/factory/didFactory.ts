@@ -8,7 +8,7 @@ interface TestDid {
   encryptedSeed: string
   seedHex: string
   did: string
-  didDocument: { id: string } | any
+  didDocument: { id: string }
   publicKey: string
 }
 
