@@ -52,7 +52,7 @@ export const parseDecryptedSeed = (decryptedSeed: string): ParseDecryptedSeedRes
   const seed = Buffer.from(seedHex, 'hex')
   const additionalData = base64EncodedAdditionalData && JSON.parse(base64url.decode(base64EncodedAdditionalData))
   const parsedFromBase64ExternalKeys = base64EncodedKeys && JSON.parse(base64url.decode(base64EncodedKeys))
-  const externalKeys = additionalData?.[EXTERNAL_KEYS_KEY] || parsedFromBase64ExternalKeys
+  const externalKeys = additionalData?.[EXTERNAL_KEYS_KEY] ?? parsedFromBase64ExternalKeys
   const metadata = additionalData?.[METADATA_KEY]
 
   return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata }
