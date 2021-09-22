@@ -5,6 +5,7 @@ import {
   MetricsService,
   Affinity,
   generateFullSeed,
+  DidResolver,
 } from '@affinidi/common'
 import {
   IssuerApiService,
@@ -216,7 +217,13 @@ export abstract class BaseNetworkMember {
     const keysService = new KeysService(encryptedSeed, password)
 
     const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-    const didDocument = await didDocumentService.buildDidDocument()
+    const didDocument = await didDocumentService.buildDidDocument(
+      new DidResolver({
+        registryUrl: options.basicOptions.registryUrl,
+        accessApiKey: options.accessApiKey,
+        sdkVersion: extractSDKVersion(),
+      }),
+    )
     const did = didDocument.id
     const didDocumentKeyId = didDocumentService.getKeyId()
 
