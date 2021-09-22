@@ -1,4 +1,4 @@
-# 2.0.0-beta.1 (2021-09-22)
+# 2.0.0-beta.10 (2021-09-22)
 * Support for storing metadata in seed
 * Support for seed method elem-anchored
 # 2.0.0-beta.9 (2021-09-15)
