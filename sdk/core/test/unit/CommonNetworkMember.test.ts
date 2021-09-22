@@ -121,8 +121,6 @@ const options = getAllOptionsForEnvironment()
 const { registryUrl } = options
 
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {
-  const { id: did } = opts.didDocument
-
   sinon.stub(CognitoIdentityService.prototype, 'completeSignUp').resolves(CompleteSignUpResult.Success)
   sinon.stub(CognitoIdentityService.prototype, 'tryLogInWithPassword').resolves({
     result: LogInWithPasswordResult.Success,
