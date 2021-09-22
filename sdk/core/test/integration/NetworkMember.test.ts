@@ -247,7 +247,6 @@ describe('CommonNetworkMember', () => {
     const [, didMethod] = did.split(':')
     const decrypted = KeysService.decryptSeed(encryptedSeed, password)
 
-    console.log(decrypted)
     expect(didMethod).to.be.equal(elemDidMethod)
     expect(decrypted.didMethod).to.equal(elemAnchoredDidMethod)
   })

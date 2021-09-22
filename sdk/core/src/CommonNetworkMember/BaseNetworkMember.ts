@@ -53,8 +53,8 @@ import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import KeyManagementService from '../services/KeyManagementService'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { Util } from './Util'
-import { RegisteringService } from '../services/RegisteringService'
-import { AnchoringService } from '../services/AnchoringService'
+import { register } from '../services/registeringHander'
+import { anchorDid } from '../services/anchoringHandler'
 
 export const createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
   return new KeyManagementService({ ...basicOptions, accessApiKey })
@@ -212,15 +212,7 @@ export abstract class BaseNetworkMember {
     } = options
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
-    const registeringService = new RegisteringService(
-      api,
-      didMethod,
-      dependencies.platformCryptographyTools,
-      password,
-      keyOptions,
-    )
-
-    return registeringService.register()
+    return register(api, didMethod, dependencies.platformCryptographyTools, password, keyOptions)
   }
 
   protected static async _anchorDid(
@@ -229,10 +221,10 @@ export abstract class BaseNetworkMember {
     didDocument: any,
     nonce: number,
     { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
+    anchoredDid: boolean = false,
   ) {
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
-    const anchoringService = new AnchoringService(api, encryptedSeed, password, didDocument, nonce)
-    return anchoringService.anchorDid()
+    return anchorDid(api, encryptedSeed, password, didDocument, anchoredDid, nonce)
   }
 
   /**
