@@ -18,7 +18,7 @@ import {
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
 
 export type Env = 'dev' | 'staging' | 'prod'
-export type DidMethod = 'jolo' | 'elem' | 'elem-anchored'
+export type DidMethod = 'jolo' | 'elem'
 export const DID_METHOD = /^(jolo|elem)$/
 export const DID = /^did:[\w\d]{2,}:[\w\d:;\-=]{10,}/
 export const PASSWORD = /^.{6,}$/

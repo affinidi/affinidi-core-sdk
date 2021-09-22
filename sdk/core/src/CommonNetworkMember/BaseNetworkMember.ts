@@ -1,4 +1,11 @@
-import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
+import {
+  DidDocumentService,
+  JwtService,
+  KeysService,
+  MetricsService,
+  Affinity,
+  generateFullSeed,
+} from '@affinidi/common'
 import {
   IssuerApiService,
   RegistryApiService,
@@ -48,13 +55,11 @@ import {
 import { randomBytes } from '../shared/randomBytes'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
 
-import { DEFAULT_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
+import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
 import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import KeyManagementService from '../services/KeyManagementService'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { Util } from './Util'
-import { RegisteringService } from '../services/RegisteringService'
-import { AnchoringService } from '../services/AnchoringService'
 
 export const createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
   return new KeyManagementService({ ...basicOptions, accessApiKey })
@@ -190,10 +195,8 @@ export abstract class BaseNetworkMember {
    * 3. sign DID document
    * 4. store DID document in IPFS
    * 5. anchor DID with DID document ID from IPFS
-   * @param dependencies
    * @param password - encryption key which will be used to encrypt randomly created seed/keys pair
    * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
-   * @param keyOptions
    * @returns
    *
    * did - hash from public key (your decentralized ID)
@@ -206,21 +209,20 @@ export abstract class BaseNetworkMember {
     password: string,
     keyOptions?: KeyOptions,
   ) {
-    const {
-      basicOptions: { registryUrl },
-      accessApiKey,
-    } = options
-    const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
-    const registeringService = new RegisteringService(
-      api,
-      didMethod,
-      dependencies.platformCryptographyTools,
-      password,
-      keyOptions,
-    )
+    const passwordBuffer = KeysService.normalizePassword(password)
+    const seedWithMethod = await generateFullSeed(dependencies.platformCryptographyTools, didMethod, keyOptions)
+    const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
+    const keysService = new KeysService(encryptedSeed, password)
 
-    return registeringService.register()
+    const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+    const didDocument = await didDocumentService.buildDidDocument()
+    const did = didDocument.id
+    const didDocumentKeyId = didDocumentService.getKeyId()
+
+    await BaseNetworkMember._anchorDid(encryptedSeed, password, didDocument, 0, options)
+
+    return { did, didDocumentKeyId, encryptedSeed }
   }
 
   protected static async _anchorDid(
@@ -231,8 +233,43 @@ export abstract class BaseNetworkMember {
     { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
   ) {
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
-    const anchoringService = new AnchoringService(api, encryptedSeed, password, didDocument, nonce)
-    return anchoringService.anchorDid()
+
+    const did = didDocument.id
+
+    const keysService = new KeysService(encryptedSeed, password)
+    const { seed, didMethod } = keysService.decryptSeed()
+    const seedHex = seed.toString('hex')
+
+    /* istanbul ignore next: seems options is {} if not passed to the method */
+    if (didMethod !== ELEM_DID_METHOD) {
+      const signedDidDocument = await keysService.signDidDocument(didDocument)
+
+      const { body: bodyDidDocument } = await api.putDocumentInIpfs({ document: signedDidDocument })
+      const didDocumentAddress = bodyDidDocument.hash
+
+      const {
+        body: { digestHex },
+      } = await api.createAnchorTransaction({ nonce, did, didDocumentAddress })
+
+      let transactionSignatureJson = ''
+      if (digestHex && digestHex !== '') {
+        transactionSignatureJson = await keysService.createTransactionSignature(digestHex, seedHex)
+      }
+
+      const transactionPublicKey = KeysService.getAnchorTransactionPublicKey(seedHex, didMethod)
+      const ethereumPublicKeyHex = transactionPublicKey.toString('hex')
+
+      await api.anchorDid({ did, didDocumentAddress, ethereumPublicKeyHex, transactionSignatureJson, nonce })
+    }
+
+    // NOTE: for metrics purpose in case of ELEM method
+    if (didMethod === ELEM_DID_METHOD) {
+      try {
+        await api.anchorDid({ did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' })
+      } catch (error) {
+        console.log('to check logs at the backend', error)
+      }
+    }
   }
 
   /**

@@ -121,6 +121,8 @@ const options = getAllOptionsForEnvironment()
 const { registryUrl } = options
 
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {
+  const { id: did } = opts.didDocument
+
   sinon.stub(CognitoIdentityService.prototype, 'completeSignUp').resolves(CompleteSignUpResult.Success)
   sinon.stub(CognitoIdentityService.prototype, 'tryLogInWithPassword').resolves({
     result: LogInWithPasswordResult.Success,
@@ -838,7 +840,7 @@ describe('CommonNetworkMember', () => {
     expect(message).to.eql('Invalid operation parameters.')
     expect(contextMessage1).to.eql('Parameter "12345678" should be a string.')
     expect(contextMessage2).to.eql('Required parameter at index [1] is missing.')
-    expect(isIn).to.eql('didMethod must be one of the following values: jolo, elem, elem-anchored')
+    expect(isIn).to.eql('didMethod must be one of the following values: jolo, elem')
   })
 
   it('#getSignedCredentials', async () => {
