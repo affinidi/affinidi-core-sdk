@@ -1,6 +1,7 @@
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 
-type CachedPromises = Map<string, Promise<Record<string, any>>>
+type DidDocument = Record<string, any> & { id: string }
+type CachedPromises = Map<string, Promise<DidDocument>>
 type ServiceWithCache = {
   service: RegistryApiService
   cache: CachedPromises
@@ -38,7 +39,7 @@ const resolveDid = ({ service, cache }: ServiceWithCache, did: string) => {
           reject(reason)
         })
     })
-    cache.set(did, promise)
+    cache.set(did, promise as Promise<DidDocument>)
   }
 
   return cache.get(did)

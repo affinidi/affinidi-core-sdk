@@ -9,11 +9,14 @@ export class LocalKeyVault implements KeyVault {
   private readonly _publicKey: Buffer
   private readonly _recoveryPublicKey: Buffer
   private readonly _externalKeys: any[]
+  private readonly _metadata: Record<string, any>
   private readonly _privateKey: Buffer
 
   constructor(keyService: KeysService) {
-    const { seed, externalKeys } = keyService.decryptSeed()
+    const { seed, externalKeys, metadata } = keyService.decryptSeed()
+
     this._externalKeys = externalKeys
+    this._metadata = metadata
 
     const seedHex = seed.toString('hex')
 
@@ -35,6 +38,10 @@ export class LocalKeyVault implements KeyVault {
 
   get externalKeys(): any[] {
     return this._externalKeys
+  }
+
+  get metadata(): Record<string, any> | undefined {
+    return this._metadata
   }
 
   sign(payload: Buffer): Buffer {
