@@ -32,6 +32,8 @@ type JwtObject = {
   signature?: string
 }
 
+type DidMethod = 'elem' | 'elem-anchored' | 'jolo'
+
 const createCipher = (suite: string, key: unknown, iv: unknown, isDecipher = false) => {
   let cipherType = 'createCipheriv'
   if (isDecipher) {
@@ -92,7 +94,7 @@ export default class KeysService {
     return createHash('sha256').update(data).digest()
   }
 
-  private static getDerivationPath(didMethod: 'jolo' | 'elem' | 'elem-anchored', isAnchoring: boolean) {
+  private static getDerivationPath(didMethod: DidMethod, isAnchoring: boolean) {
     if (isAnchoring) {
       return etheriumIdentityKey
     }
