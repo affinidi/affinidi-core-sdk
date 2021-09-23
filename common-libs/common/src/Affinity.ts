@@ -423,7 +423,7 @@ export class Affinity {
       getSignSuite: this._platformCryptographyTools.signSuites[keySuiteType],
       documentLoader: this._createDocumentLoader(),
       getProofPurposeOptions: async () => ({
-        controller: await didDocumentService.buildDidDocument(),
+        controller: await didDocumentService.buildDidDocument(this._didResolver),
       }),
     })
 

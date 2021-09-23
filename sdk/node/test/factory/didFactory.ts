@@ -1,6 +1,6 @@
 const cryptoRandomString = require('crypto-random-string')
 
-import { KeysService, DidDocumentService } from '@affinidi/common'
+import { KeysService, DidDocumentService, DidResolver } from '@affinidi/common'
 import { createV5CompatibleWalletFactories, EventComponent, Util } from '@affinidi/wallet-core-sdk'
 import platformCryptographyTools from '../../src/PlatformCryptographyTools'
 
@@ -29,6 +29,9 @@ export const generateTestDIDs = async (): Promise<{
 }> => {
   let keysService
   let didDocumentService
+  const didResolverMock: DidResolver = {
+    resolveDid: () => Promise.resolve({ id: 'did:elem:ushJhdunHuhsecb_hscudTYj2h2e' }),
+  } as any
   const password = cryptoRandomString({ length: 32, type: 'ascii-printable' })
 
   const joloSeed = await Util.generateSeed('jolo')
@@ -40,7 +43,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(joloEncryptedSeed, password)
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-  const joloDidDocument = await didDocumentService.buildDidDocument()
+  const joloDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
   const joloDid = joloDidDocument.id
 
   const joloPublicKey = KeysService.getPublicKey(joloSeedHex, 'jolo').toString('hex')
@@ -55,7 +58,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemEncryptedSeed, password)
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-  const elemDidDocument = await didDocumentService.buildDidDocument()
+  const elemDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
   const elemDid = await didDocumentService.getMyDid()
 
   const elemPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
@@ -73,7 +76,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemAltEncryptedSeed, password)
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-  const elemAltDidDocument = await didDocumentService.buildDidDocument()
+  const elemAltDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
   const elemAltDid = await didDocumentService.getMyDid()
 
   const elemAltPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')

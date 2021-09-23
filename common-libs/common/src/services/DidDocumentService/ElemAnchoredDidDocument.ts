@@ -18,11 +18,7 @@ export default class ElemAnchoredDidDocument {
     return `${did ? did : this.getMyDid()}#${this._signingKey}`
   }
 
-  async buildDidDocument(didResolver?: DidResolver) {
-    if (!didResolver) {
-      throw new Error('Provide DidResolver to use buildDidDocument for elem-anchored method')
-    }
-
-    return didResolver.resolveDid(this.getMyDid()) as Promise<Record<string, any> & { id: string }>
+  buildDidDocument(didResolver: DidResolver) {
+    return didResolver.resolveDid(this.getMyDid())
   }
 }
