@@ -47,12 +47,12 @@ export const anchorDid = async (
   didDocument: any,
   anchoredDidElem: boolean = false,
   nonce: number = 0,
-): Promise<{ did: string } | undefined> => {
+): Promise<{ did: string }> => {
   const response = await api.anchorDid({
     ...(await getAnchoringParams(api, encryptedSeed, password, didDocument, nonce)),
     nonce,
     anchoredDidElem,
   })
 
-  return { did: response?.body?.did }
+  return { did: response.body.did }
 }
