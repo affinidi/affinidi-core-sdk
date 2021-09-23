@@ -1,3 +1,5 @@
+# release 6.0.0-beta.15 (2021-09-23)
+* Support of elem-anchored
 # release 6.0.0-beta.13 (2021-09-21)
 * Internal refactoring
 # release 6.0.0-beta.12 (2021-09-15)
