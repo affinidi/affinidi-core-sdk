@@ -124,11 +124,13 @@ const wallet = AffinidiWallet.openWalletByEncryptedSeed(options, encryptedSeed, 
 
 ### Create a new wallet
 
+'elem-anchored' did method returns did:elem, but it is anchored with [sidetree](https://identity.foundation/sidetree/spec/) in [ropsten testnet](https://ropsten.etherscan.io/)
+
 ```ts
 const options = {
   env: 'staging',
   apiKey: '....',
-  didMethod: '....' // 'elem' (default) or 'jolo'
+  didMethod: '....' // 'elem' (default),  'jolo' or 'elem-anchored'
 }
 
 const wallet = await AffinidiWallet.createWallet(options, password)
@@ -860,7 +862,7 @@ await wallet.deleteCredential(credentialId)
 
 ## Affinidi Infra dependencies
 This SDK using next Affinidi services:
-- affinidi registry (to ahcnor when applicable, resolve and update did/didDocument)
+- affinidi registry (to anchor when applicable, resolve and update did/didDocument)
 - affinidi verifier (to build credential request)
 - affinidi issuer (to build credential offer and verify credential offer response)
 - affinidi wallet backend (to store endrypted seed and encrypted VC optioanlly as backup)
