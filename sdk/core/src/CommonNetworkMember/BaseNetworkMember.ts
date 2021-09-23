@@ -1,4 +1,4 @@
-import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
+import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity, DidResolver } from '@affinidi/common'
 import {
   IssuerApiService,
   RegistryApiService,
@@ -53,7 +53,7 @@ import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import KeyManagementService from '../services/KeyManagementService'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { Util } from './Util'
-import { register } from '../services/registeringHander'
+import { register } from '../services/registeringHandler'
 import { anchorDid } from '../services/anchoringHandler'
 
 export const createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
@@ -211,8 +211,9 @@ export abstract class BaseNetworkMember {
       accessApiKey,
     } = options
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
+    const didResolver = new DidResolver({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
-    return register(api, didMethod, dependencies.platformCryptographyTools, password, keyOptions)
+    return register(api, didResolver, didMethod, dependencies.platformCryptographyTools, password, keyOptions)
   }
 
   protected static async _anchorDid(

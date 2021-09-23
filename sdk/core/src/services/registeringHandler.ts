@@ -7,6 +7,7 @@ import {
   KeysService,
   joinSeedWithMethodAndBase64EncodedData,
   generateSeedHexWithMethod,
+  DidResolver,
 } from '@affinidi/common'
 import { anchorDid } from './anchoringHandler'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
@@ -14,6 +15,7 @@ import { buildBase64EncodedAdditionalData } from '@affinidi/common/dist/shared/s
 
 const registerJoloOrElem = async (
   api: RegistryApiService,
+  didResolver: DidResolver,
   didMethod: string,
   password: string,
   platformCryptographyTools: IPlatformCryptographyTools,
@@ -25,7 +27,7 @@ const registerJoloOrElem = async (
   const keysService = new KeysService(encryptedSeed, password)
 
   const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-  const didDocument = await didDocumentService.buildDidDocument()
+  const didDocument = await didDocumentService.buildDidDocument(didResolver)
   const did = didDocument.id
   const didDocumentKeyId = didDocumentService.getKeyId()
 
@@ -36,6 +38,7 @@ const registerJoloOrElem = async (
 
 const registerElemAnchored = async (
   api: RegistryApiService,
+  didResolver: DidResolver,
   password: string,
   platformCryptographyTools: IPlatformCryptographyTools,
   keyOptions?: KeyOptions,
@@ -47,7 +50,7 @@ const registerElemAnchored = async (
   const didElemKeysService = new KeysService(encryptedSeed, password)
 
   const didElemDocumentService = DidDocumentService.createDidDocumentService(didElemKeysService)
-  const didDocument = await didElemDocumentService.buildDidDocument()
+  const didDocument = await didElemDocumentService.buildDidDocument(didResolver)
 
   const { did } = await anchorDid(api, encryptedSeed, password, didDocument, true)
 
@@ -76,17 +79,18 @@ const buildElemAnchoredSeed = async (
 
 export const register = (
   api: RegistryApiService,
+  didResolver: DidResolver,
   didMethod: DidMethod,
   platformCryptographyTools: IPlatformCryptographyTools,
   password: string,
   keyOptions?: KeyOptions,
 ) => {
   if ([ELEM_DID_METHOD, JOLO_DID_METHOD].includes(didMethod)) {
-    return registerJoloOrElem(api, didMethod, password, platformCryptographyTools, keyOptions)
+    return registerJoloOrElem(api, didResolver, didMethod, password, platformCryptographyTools, keyOptions)
   }
 
   if (ELEM_ANCHORED_DID_METHOD === didMethod) {
-    return registerElemAnchored(api, password, platformCryptographyTools, keyOptions)
+    return registerElemAnchored(api, didResolver, password, platformCryptographyTools, keyOptions)
   }
 
   throw new Error(`did method: "${didMethod}" is not supported`)
