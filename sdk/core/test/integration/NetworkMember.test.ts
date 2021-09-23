@@ -19,6 +19,7 @@ import { credentialShareRequestTokenToFilterCredentials } from '../factory/crede
 import { generateCredentials } from '../helpers/generateCredentials'
 import { SignedCredential } from '../../src/dto'
 import { testPlatformTools } from '../helpers/testPlatformTools'
+import { RegistryApiService } from '@affinidi/internal-api-clients'
 
 const {
   PASSWORD,
@@ -247,8 +248,15 @@ describe('CommonNetworkMember', () => {
     const [, didMethod] = did.split(':')
     const decrypted = KeysService.decryptSeed(encryptedSeed, password)
 
+    const resolvedDidResponse = await new RegistryApiService({
+      registryUrl: getAllOptionsForEnvironment().registryUrl,
+      accessApiKey: options.accessApiKey,
+    }).resolveDid({ did })
+
     expect(didMethod).to.be.equal(elemDidMethod)
     expect(decrypted.didMethod).to.equal(elemAnchoredDidMethod)
+    expect(decrypted.metadata.anchoredDid).to.equal(did)
+    expect(decrypted.metadata.anchoredDid).to.equal(resolvedDidResponse.body.didDocument.id)
   })
 
   it('.register (jolo did method)', async () => {
