@@ -21,10 +21,8 @@ const registerJoloOrElem = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   keyOptions?: KeyOptions,
 ) => {
-  const passwordBuffer = KeysService.normalizePassword(password)
   const seedWithMethod = await generateFullSeed(platformCryptographyTools, didMethod, keyOptions)
-  const encryptedSeed = await KeysService.encryptSeed(seedWithMethod, passwordBuffer)
-  const keysService = new KeysService(encryptedSeed, password)
+  const { keysService, encryptedSeed } = await KeysService.fromSeedAndPassword(seedWithMethod, password)
 
   const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const didDocument = await didDocumentService.buildDidDocument(didResolver)
@@ -43,22 +41,21 @@ const registerElemAnchored = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   keyOptions?: KeyOptions,
 ) => {
-  const passwordBuffer = KeysService.normalizePassword(password)
   const seedWithHexMethod = await generateSeedHexWithMethod(ELEM_DID_METHOD)
-  const encryptedSeed = await KeysService.encryptSeed(seedWithHexMethod, passwordBuffer)
+  const { encryptedSeed, keysService } = await KeysService.fromSeedAndPassword(seedWithHexMethod, password)
 
-  const didElemKeysService = new KeysService(encryptedSeed, password)
-
-  const didElemDocumentService = DidDocumentService.createDidDocumentService(didElemKeysService)
+  const didElemDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const didDocument = await didElemDocumentService.buildDidDocument(didResolver)
 
   const { did } = await anchorDid(api, encryptedSeed, password, didDocument, true)
 
   const elemAnchoredSeed = await buildElemAnchoredSeed(did, seedWithHexMethod, platformCryptographyTools, keyOptions)
 
-  const elemAnchoredEncryptedSeed = await KeysService.encryptSeed(elemAnchoredSeed, passwordBuffer)
-  const keysService = new KeysService(elemAnchoredEncryptedSeed, password)
-  const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const {
+    keysService: elemAnchoredKeysService,
+    encryptedSeed: elemAnchoredEncryptedSeed,
+  } = await KeysService.fromSeedAndPassword(elemAnchoredSeed, password)
+  const didDocumentService = DidDocumentService.createDidDocumentService(elemAnchoredKeysService)
   const didDocumentKeyId = didDocumentService.getKeyId()
 
   return { did, encryptedSeed: elemAnchoredEncryptedSeed, didDocumentKeyId }
