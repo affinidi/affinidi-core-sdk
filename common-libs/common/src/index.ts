@@ -32,8 +32,8 @@ export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
 export {
   generateFullSeed,
   generateSeedHexWithMethod,
+  processAnchoredElemDidSeed,
   buildBase64EncodedAdditionalData,
-  joinSeedWithMethodAndBase64EncodedData,
 } from './shared/seedTools'
 
 export { DidResolver } from './shared/DidResolver'

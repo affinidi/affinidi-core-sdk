@@ -3,6 +3,7 @@ import base64url from 'base64url'
 import { validateDidMethodSupported } from '../_helpers'
 import { randomBytes } from './randomBytes'
 import { IPlatformCryptographyTools } from './interfaces'
+import { ELEM_ANCHORED_DID_METHOD } from '../_defaultConfig'
 
 export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'
 
@@ -99,9 +100,6 @@ export const buildBase64EncodedAdditionalData = async (
   return base64url.encode(JSON.stringify(additionalData))
 }
 
-export const joinSeedWithMethodAndBase64EncodedData = (seedWithMethod: string, base64EncodedAdditionalData: string) =>
-  `${seedWithMethod}${ADDITIONAL_DATA_SEPARATOR}${base64EncodedAdditionalData}`
-
 export const generateFullSeed = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   didMethod: string,
@@ -128,6 +126,18 @@ export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer): strin
   // legacy case, backwards compatibility
   const seedHex = decryptedSeed.toString('hex')
   return `${seedHex}++jolo`
+}
+
+export const processAnchoredElemDidSeed = (parsedSeed: ParseDecryptedSeedResult, did: string) => {
+  const { seed, externalKeys } = parsedSeed
+  const seedWithMethod = `${seed.toString('hex')}++${ELEM_ANCHORED_DID_METHOD}`
+  const additionalData = {
+    ...(externalKeys && { [EXTERNAL_KEYS_KEY]: externalKeys }),
+    [METADATA_KEY]: { anchoredDid: did },
+  }
+  const additionalDataSection = base64url.encode(JSON.stringify(additionalData))
+
+  return `${seedWithMethod}${ADDITIONAL_DATA_SEPARATOR}${additionalDataSection}`
 }
 
 export const isLegacyDecryptedSeed = (decryptedSeed: Buffer): boolean => {

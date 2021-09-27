@@ -5,13 +5,11 @@ import {
   DidDocumentService,
   generateFullSeed,
   KeysService,
-  joinSeedWithMethodAndBase64EncodedData,
-  generateSeedHexWithMethod,
+  processAnchoredElemDidSeed,
   DidResolver,
 } from '@affinidi/common'
 import { anchorDid } from './anchoringHandler'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
-import { buildBase64EncodedAdditionalData } from '@affinidi/common/dist/shared/seedTools'
 
 const registerJoloOrElem = async (
   api: RegistryApiService,
@@ -41,15 +39,15 @@ const registerElemAnchored = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   keyOptions?: KeyOptions,
 ) => {
-  const seedWithHexMethod = await generateSeedHexWithMethod(ELEM_DID_METHOD)
-  const { encryptedSeed, keysService } = await KeysService.fromSeedAndPassword(seedWithHexMethod, password)
+  const fullElemSeed = await generateFullSeed(platformCryptographyTools, ELEM_DID_METHOD, keyOptions)
+  const { encryptedSeed, keysService } = await KeysService.fromSeedAndPassword(fullElemSeed, password)
 
   const didElemDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const didDocument = await didElemDocumentService.buildDidDocument(didResolver)
 
-  const { did } = await anchorDid(api, encryptedSeed, password, didDocument, true)
+  const { did: anchoredInBlockchainDid } = await anchorDid(api, encryptedSeed, password, didDocument, true)
 
-  const elemAnchoredSeed = await buildElemAnchoredSeed(did, seedWithHexMethod, platformCryptographyTools, keyOptions)
+  const elemAnchoredSeed = processAnchoredElemDidSeed(keysService.decryptSeed(), anchoredInBlockchainDid)
 
   const {
     keysService: elemAnchoredKeysService,
@@ -58,20 +56,7 @@ const registerElemAnchored = async (
   const didDocumentService = DidDocumentService.createDidDocumentService(elemAnchoredKeysService)
   const didDocumentKeyId = didDocumentService.getKeyId()
 
-  return { did, encryptedSeed: elemAnchoredEncryptedSeed, didDocumentKeyId }
-}
-
-const buildElemAnchoredSeed = async (
-  did: string,
-  originalSeedWithMethod: string,
-  platformCryptographyTools: IPlatformCryptographyTools,
-  keyOptions?: KeyOptions,
-) => {
-  const base64EncodedAdditionalData = await buildBase64EncodedAdditionalData(platformCryptographyTools, keyOptions, {
-    anchoredDid: did,
-  })
-  const seedWithMethod = originalSeedWithMethod.replace('++elem', '++elem-anchored')
-  return joinSeedWithMethodAndBase64EncodedData(seedWithMethod, base64EncodedAdditionalData)
+  return { did: anchoredInBlockchainDid, encryptedSeed: elemAnchoredEncryptedSeed, didDocumentKeyId }
 }
 
 export const register = (

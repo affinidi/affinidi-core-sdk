@@ -222,10 +222,9 @@ export abstract class BaseNetworkMember {
     didDocument: any,
     nonce: number,
     { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
-    anchoredDid: boolean = false,
   ) {
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
-    return anchorDid(api, encryptedSeed, password, didDocument, anchoredDid, nonce)
+    return anchorDid(api, encryptedSeed, password, didDocument, false, nonce)
   }
 
   /**

@@ -38,6 +38,8 @@ const getAnchoringParams = async (
 
     return { did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' }
   }
+
+  throw new Error(`did method: "${didMethod}" is not supported`)
 }
 
 export const anchorDid = async (

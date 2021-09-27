@@ -252,7 +252,7 @@ export default class KeysService {
   /**
    * Note that this function modifies the source object for backwards compatibility reasons
    */
-  async signDidDocument<T extends DocumentWithOptionalProof>(didDocument: T): Promise<T> {
+  async signDidDocument<T extends DocumentWithOptionalProof>(didDocument: T) {
     const { digest } = await this._digestService.getJsonLdDigest(didDocument)
 
     const signature = this.sign(digest)
