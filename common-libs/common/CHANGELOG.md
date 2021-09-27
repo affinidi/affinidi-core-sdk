@@ -1,3 +1,11 @@
+# 2.0.0-beta.10 (2021-09-22)
+* Support for storing metadata in seed
+* Support for seed method elem-anchored
+# 2.0.0-beta.9 (2021-09-15)
+* Support for ecdsa keys in seed generation
+# 2.0.0-beta.8 (2021-09-09)
+* DIDs are now resolved using `RegistryApiService` from `@affinidi/internal-api-clients`
+* Resolved DIDs are cached
 # 2.0.0-beta.7 (2021-08-30)
 * `Affinity` constructor now requires `IPlatformCryptographyTools` parameter
 * Implemented support for BBS and RSA (key generation, signing, validation), if relevant `IPlatformCryptographyTools` is provided

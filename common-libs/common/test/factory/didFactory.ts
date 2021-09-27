@@ -2,7 +2,7 @@ import base64url from 'base64url'
 const cryptoRandomString = require('crypto-random-string')
 
 import { randomBytes } from '../../src/shared/randomBytes'
-import { KeysService, DidDocumentService } from '../../'
+import { KeysService, DidDocumentService, DidResolver } from '../../'
 
 interface TestDid {
   seed: string
@@ -28,6 +28,9 @@ export const generateTestDIDs = async (): Promise<{
 }> => {
   let keysService
   let didDocumentService
+  const didResolverMock: DidResolver = {
+    resolveDid: () => Promise.resolve({ id: 'did:elem:ushJhdunHuhsecb_hscudTYj2h2e' }),
+  } as any
   const password = cryptoRandomString({ length: 32, type: 'ascii-printable' })
 
   const joloSeed = await randomBytes(32)
@@ -38,8 +41,8 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(joloEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
-  const joloDidDocument = await didDocumentService.buildDidDocument()
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const joloDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
   const joloDid = joloDidDocument.id
 
   const joloPublicKey = KeysService.getPublicKey(joloSeedHex, 'jolo').toString('hex')
@@ -53,8 +56,8 @@ export const generateTestDIDs = async (): Promise<{
 
   keysService = new KeysService(elemEncryptedSeed, password)
 
-  didDocumentService = new DidDocumentService(keysService)
-  const elemDidDocument = await didDocumentService.buildDidDocument()
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const elemDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
   const elemDid = await didDocumentService.getMyDid()
 
   const elemPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
@@ -114,8 +117,8 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemRSAEncryptedSeed, password)
   const elemRSAPublicKeyRSA = keysService.getExternalPublicKey('rsa').toString()
 
-  didDocumentService = new DidDocumentService(keysService)
-  const elemRSADidDocument = await didDocumentService.buildDidDocument()
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const elemRSADidDocument = await didDocumentService.buildDidDocument(didResolverMock)
   const elemRSADid = await didDocumentService.getMyDid()
 
   const elemRSAPublicKey = KeysService.getPublicKey(elemRSASeedHex, 'elem').toString('hex')
@@ -140,8 +143,8 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemBBSEncryptedSeed, password)
   const elemBBSPublicKeyBBS = keysService.getExternalPublicKey('bbs').toString()
 
-  didDocumentService = new DidDocumentService(keysService)
-  const elemBBSDidDocument = await didDocumentService.buildDidDocument()
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const elemBBSDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
   const elemBBSDid = await didDocumentService.getMyDid()
 
   const elemBBSPublicKey = KeysService.getPublicKey(elemBBSSeedHex, 'elem').toString('hex')

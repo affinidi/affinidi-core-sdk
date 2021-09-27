@@ -71,7 +71,7 @@ You need to to use an API Key when you initialize the SDK. Here are the steps re
 
 The following commands should be supported by all projects in monorepo
 
-* `prepare`: should build package
+* `build`: should build package
 * `lint`: should run lint
 * `checkLicenses`: should check licenses
 * `test:unit`: should run unit tests, if any
@@ -79,3 +79,11 @@ The following commands should be supported by all projects in monorepo
 * `test`: should run all tests
 * `test:coverage`: should run all tests with coverage
 * `test:coverage:codeclimate`: should run `test:coverage` and save codeclimate results
+
+Workflow to publish npm packages is:
+1. `npm run bootstrap` in order to link and install all dependencies;
+2. `npm run build` in order to build all projects in this monorepo;
+3. `npm run lint`, `npm run test`, `npm run checkLicenses` etc;
+4. `npm run publish`.
+
+Note that `prepare` command is not required as the projects are built on step 2 anyway, and `prepare` command is run for all projects during step 1, making it unnecessary long.

@@ -1,10 +1,12 @@
-import { JwtService, KeysService, profile } from '@affinidi/common'
+import { JwtService, KeysService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { profile } from '@affinidi/tools-common'
 import retry from 'async-retry'
 import { extractSDKVersion } from '../_helpers'
 const createHash = require('create-hash')
 
 import { KeyParams } from '../dto/shared.dto'
+import { withDidData } from '../shared/getDidData'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 
 type ConstructorOptions = {
@@ -63,6 +65,11 @@ export default class KeyManagementService {
     const encryptionKey = await this._pullEncryptionKey(accessToken)
     const encryptedSeed = await this._pullEncryptedSeed(accessToken)
     return { encryptionKey, encryptedSeed }
+  }
+
+  public async pullUserData(accessToken: string) {
+    const { encryptionKey, encryptedSeed } = await this.pullKeyAndSeed(accessToken)
+    return withDidData({ encryptedSeed, password: encryptionKey })
   }
 
   public async pullEncryptionKeyAndStoreEncryptedSeed(accessToken: string, seedHexWithMethod: string) {

@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/common",
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0-beta.10",
   "description": "Common utilities and types for Affinidi SDKs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -14,9 +14,8 @@
     "test:integration": "cross-env NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.build.json --timeout 115000",
     "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
     "test:coverage:codeclimate": "npm run test:coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.common_li.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev) || echo \"lcov file is empty. There is no tests\"",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "repository": {
     "type": "git",
@@ -40,6 +39,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "^0.0.25",
+    "@affinidi/internal-api-clients": "^1.0.0-beta.11",
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.1",
     "@affinidi/vc-common": "^1.4.2",
     "base64url": "^3.0.1",

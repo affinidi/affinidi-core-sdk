@@ -1,8 +1,9 @@
 import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
-import { Affinity, JwtService, KeysService, DidDocumentService, SdkError } from '@affinidi/common'
+import { Affinity, JwtService, KeysService, DidDocumentService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { SdkError } from '@affinidi/tools-common'
 import { buildVCV1Skeleton, buildVCV1Unsigned } from '@affinidi/vc-common'
 import {
   VCSPhonePersonV1,
@@ -120,8 +121,6 @@ const options = getAllOptionsForEnvironment()
 const { registryUrl } = options
 
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {
-  const { id: did } = opts.didDocument
-
   sinon.stub(CognitoIdentityService.prototype, 'completeSignUp').resolves(CompleteSignUpResult.Success)
   sinon.stub(CognitoIdentityService.prototype, 'tryLogInWithPassword').resolves({
     result: LogInWithPasswordResult.Success,
@@ -131,8 +130,6 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
   sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey').resolves(opts.password)
   sinon.stub(KeysService, 'normalizePassword').returns(Buffer.from(opts.password))
   sinon.stub(KeysService, 'encryptSeed').resolves(opts.seedHex)
-  sinon.stub(DidDocumentService.prototype, 'getMyDid').resolves(did)
-  sinon.stub(DidDocumentService.prototype, 'buildDidDocument').resolves(opts.didDocument)
   sinon.stub(KeysService.prototype, 'signDidDocument').resolves(opts.didDocument as any)
 
   nock(registryUrl).post('/api/v1/did/put-in-ipfs').reply(200, { hash: 'didDocumentAddress' })

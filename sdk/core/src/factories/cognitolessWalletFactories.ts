@@ -1,25 +1,14 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
-import { NetworkMemberWithoutCognito, UniversalDerivedType } from '../CommonNetworkMember/NetworkMemberWithoutCognito'
+import { NetworkMemberWithoutCognito as Wallet } from '../CommonNetworkMember/NetworkMemberWithoutCognito'
 import { SdkOptions } from '../dto/shared.dto'
-import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
-
-const createWallet = (platformCryptographyTools: IPlatformCryptographyTools, component: EventComponent) => {
-  class Wallet extends NetworkMemberWithoutCognito {
-    constructor(password: string, encryptedSeed: string, options: ParsedOptions) {
-      super(password, encryptedSeed, platformCryptographyTools, options, component)
-    }
-  }
-
-  return Wallet as UniversalDerivedType
-}
 
 export const createCognitolessWalletFactories = (
   platformCryptographyTools: IPlatformCryptographyTools,
-  component: EventComponent,
+  eventComponent: EventComponent,
 ) => {
-  const Wallet = createWallet(platformCryptographyTools, component)
+  const dependencies = { platformCryptographyTools, eventComponent }
 
   return {
     /**
@@ -29,7 +18,7 @@ export const createCognitolessWalletFactories = (
      * @returns initialized instance of SDK
      */
     createWallet: (inputOptions: SdkOptions, inputPassword: string) => {
-      return Wallet.createWallet(inputOptions, platformCryptographyTools, inputPassword)
+      return Wallet.createWallet(dependencies, inputOptions, inputPassword)
     },
 
     /**
@@ -40,7 +29,7 @@ export const createCognitolessWalletFactories = (
      * @returns initialized instance of SDK
      */
     openWalletByEncryptedSeed: (inputOptions: SdkOptions, encryptedSeed: string, password: string) => {
-      return Wallet.openWalletByEncryptedSeed(inputOptions, encryptedSeed, password)
+      return Wallet.openWalletByEncryptedSeed(dependencies, inputOptions, encryptedSeed, password)
     },
   }
 }

@@ -11,7 +11,7 @@
     "link": "lerna link",
     "version": "lerna version",
     "lint": "lerna run --parallel lint",
-    "build": "lerna run lint && lerna run tsc && lerna run build",
+    "build": "lerna run build",
     "bootstrap": "lerna bootstrap",
     "publish": "lerna publish",
     "test": "lerna run --parallel test",

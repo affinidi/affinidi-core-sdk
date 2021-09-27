@@ -1,0 +1,65 @@
+{
+  "name": "@affinidi/tools-common",
+  "version": "1.0.0-beta.1",
+  "description": "Common utilities and types for Affinidi SDKs",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run tsc",
+    "start": "npm run build && node dist/index.js",
+    "tsc": "tsc -p tsconfig-build.json",
+    "lint": "eslint src test",
+    "test": "npm run test:unit",
+    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
+    "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
+    "test:coverage:codeclimate": "npm run test:coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.common_li.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev) || echo \"lcov file is empty. There is no tests\"",
+    "prepublishOnly": "npm run test && npm run lint",
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/affinityproject/affinidi-core-sdk.git",
+    "directory": "common-libs/tools-common"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "lib",
+    "affinity",
+    "common",
+    "did"
+  ],
+  "author": "Denis Popov <denis@slatestudio.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/affinityproject/affinidi-core-sdk/issues"
+  },
+  "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
+  "dependencies": {
+    "tslib": "^2.2.0"
+  },
+  "devDependencies": {
+    "@affinidi/eslint-config": "1.0.1",
+    "@affinidi/prettier-config": "1.0.1",
+    "@types/chai": "4.2.12",
+    "@types/mocha": "5.2.7",
+    "@types/node": "13.13.15",
+    "@types/sinon": "^9.0.5",
+    "@typescript-eslint/eslint-plugin": "3.7.1",
+    "@typescript-eslint/parser": "3.7.1",
+    "chai": "4.2.0",
+    "cross-env": "^7.0.3",
+    "eslint": "7.5.0",
+    "eslint-config-prettier": "6.11.0",
+    "eslint-plugin-prettier": "3.1.4",
+    "license-checker": "25.0.1",
+    "mocha": "7.2.0",
+    "nyc": "15.1.0",
+    "prettier": "2.0.5",
+    "sinon": "^9.0.3",
+    "ts-node": "8.10.2",
+    "typescript": "^4.3.2"
+  },
+  "gitHead": "39b8ae64eb5e37ddae2f80438b320adaefae8ef6"
+}

@@ -1,5 +1,6 @@
-import { profile, KeysService } from '@affinidi/common'
+import { KeysService } from '@affinidi/common'
 import { BloomVaultApiService } from '@affinidi/internal-api-clients'
+import { profile } from '@affinidi/tools-common'
 
 import { toRpcSig, ecsign } from 'ethereumjs-util'
 

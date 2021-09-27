@@ -1,8 +1,6 @@
-import { profile } from '@affinidi/common'
-import { EventComponent } from '@affinidi/affinity-metrics-lib'
+import { profile } from '@affinidi/tools-common'
 
 import { SignedCredential, SdkOptions } from '../dto/shared.dto'
-import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import WalletStorageService from '../services/WalletStorageService'
@@ -16,7 +14,7 @@ import {
   InitiateResponse as EmailIssuerInitiateResponse,
   VerifyResponse as EmailIssuerVerifyResponse,
 } from '../services/EmailIssuerService'
-import { BaseNetworkMember } from './BaseNetworkMember'
+import { BaseNetworkMember, StaticDependencies, ConstructorUserData } from './BaseNetworkMember'
 import { Util } from './Util'
 
 /**
@@ -27,14 +25,8 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
   private readonly _phoneIssuer: PhoneIssuerService
   private readonly _emailIssuer: EmailIssuerService
 
-  constructor(
-    password: string,
-    encryptedSeed: string,
-    platformCryptographyTools: IPlatformCryptographyTools,
-    options: ParsedOptions,
-    component: EventComponent,
-  ) {
-    super(password, encryptedSeed, platformCryptographyTools, options, component)
+  constructor(userData: ConstructorUserData, dependencies: StaticDependencies, options: ParsedOptions) {
+    super(userData, dependencies, options)
 
     const {
       basicOptions: { phoneIssuerBasePath, emailIssuerBasePath },
@@ -191,8 +183,8 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
    * encryptedSeed - seed is encrypted by provided password. Seed - it's a source to derive your keys
    */
   static async register(
+    dependencies: StaticDependencies,
     inputOptions: SdkOptions,
-    platformCryptographyTools: IPlatformCryptographyTools,
     password: string,
   ): Promise<{ did: string; encryptedSeed: string }> {
     await ParametersValidator.validate([
@@ -201,7 +193,7 @@ export abstract class LegacyNetworkMember extends BaseNetworkMember {
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    return LegacyNetworkMember._register(options, platformCryptographyTools, password)
+    return LegacyNetworkMember._register(dependencies, options, password)
   }
 
   static async anchorDid(

@@ -1,26 +1,26 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
+import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import registrySpec from '../spec/_registry'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
-type ConstructorOptions = GenericConstructorOptions & { registryUrl: string }
+type ConstructorOptions = ClientOptions & { registryUrl: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof registrySpec>>
+const clientMethods = createClientMethods(registrySpec)
 
 @profile()
-export default class RegistryApiService extends GenericApiService<ApiType> {
+export default class RegistryApiService {
+  private readonly client
+
   constructor(options: ConstructorOptions) {
-    super(options.registryUrl, options, registrySpec)
+    this.client = createClient(clientMethods, options.registryUrl, options)
   }
 
-  async putDocumentInIpfs(params: ApiType['PutDocumentInIpfs']['requestBody']) {
-    return this.execute('PutDocumentInIpfs', { params })
+  async putDocumentInIpfs(params: GetParams<typeof clientMethods.PutDocumentInIpfs>) {
+    return this.client.PutDocumentInIpfs({ params })
   }
 
-  async createAnchorTransaction(params: ApiType['CreateAnchorTransaction']['requestBody']) {
-    return this.execute('CreateAnchorTransaction', { params })
+  async createAnchorTransaction(params: GetParams<typeof clientMethods.CreateAnchorTransaction>) {
+    return this.client.CreateAnchorTransaction({ params })
   }
 
   async anchorDid({
@@ -29,12 +29,14 @@ export default class RegistryApiService extends GenericApiService<ApiType> {
     ethereumPublicKeyHex,
     transactionSignatureJson,
     nonce,
+    anchoredDidElem,
   }: {
     did: string
     didDocumentAddress: string
     ethereumPublicKeyHex: string
     transactionSignatureJson: string
     nonce?: number
+    anchoredDidElem?: boolean
   }) {
     const params = {
       did,
@@ -42,15 +44,16 @@ export default class RegistryApiService extends GenericApiService<ApiType> {
       ethereumPublicKeyHex,
       transactionSignatureJson: transactionSignatureJson as any,
       nonce,
+      anchoredDidElem,
     }
-    return this.execute('AnchorDid', { params })
+    return this.client.AnchorDid({ params })
   }
 
-  async resolveDid(params: ApiType['ResolveDid']['requestBody']) {
-    return this.execute('ResolveDid', { params })
+  async resolveDid(params: GetParams<typeof clientMethods.ResolveDid>) {
+    return this.client.ResolveDid({ params })
   }
 
-  async transactionCount(params: ApiType['TransactionCount']['requestBody']) {
-    return this.execute('TransactionCount', { params })
+  async transactionCount(params: GetParams<typeof clientMethods.TransactionCount>) {
+    return this.client.TransactionCount({ params })
   }
 }

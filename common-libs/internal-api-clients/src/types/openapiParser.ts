@@ -66,12 +66,21 @@ type ParseSimpleObjectSpecWithParameters<
   isAdditionalProperties: TObject extends { additionalProperties?: false } ? false : true
 }
 
+type ParseFlatObjectSpecType<TObject extends ObjectSpecType> =
+  TObject extends FieldSpecPrimitiveType
+    ? ParseFieldSpecPrimitiveType<TObject>
+    : TObject extends FieldSpecArrayType<infer UInnerFieldSpec>
+      ? ParseFieldSpecArrayType<UInnerFieldSpec, TObject>
+      : TObject extends SimpleObjectSpec<infer UKeys, infer URequiredKeysArray, boolean>
+        ? ParseSimpleObjectSpecWithParameters<UKeys, URequiredKeysArray, boolean, TObject>
+        : DataErrorType<'Unable to find matching object spec type', TObject>
+
 type ParseAllOfObjectSpec<TObjectSpecType extends readonly ObjectSpecType[]> = {
   dataType: 'allOf'
   allOf: {
     [key in keyof TObjectSpecType]:
       TObjectSpecType[key] extends TObjectSpecType[number]
-        ? ParseObjectSpecType<TObjectSpecType[key]>
+        ? ParseFlatObjectSpecType<TObjectSpecType[key]>
         : never
   }
 }
@@ -81,27 +90,21 @@ type ParseAnyOfObjectSpec<TObjectSpecType extends readonly ObjectSpecType[]> = {
   anyOf: {
     [key in keyof TObjectSpecType]:
       TObjectSpecType[key] extends TObjectSpecType[number]
-        ? ParseObjectSpecType<TObjectSpecType[key]>
+        ? ParseFlatObjectSpecType<TObjectSpecType[key]>
         : never
   }
 }
 
-type ParseObjectSpecType<TObject extends ObjectSpecType> =
-  TObject extends FieldSpecPrimitiveType
-    ? ParseFieldSpecPrimitiveType<TObject>
-    : TObject extends FieldSpecArrayType<infer UInnerFieldSpec>
-      ? ParseFieldSpecArrayType<UInnerFieldSpec, TObject>
-      : TObject extends SimpleObjectSpec<infer UKeys, infer URequiredKeysArray, boolean>
-        ? ParseSimpleObjectSpecWithParameters<UKeys, URequiredKeysArray, boolean, TObject>
-        : TObject extends AllOfObjectSpec<infer UObjectSpecTypes>
-          ? ParseAllOfObjectSpec<UObjectSpecTypes>
-          : TObject extends AnyOfObjectSpec<infer UObjectSpecTypes>
-            ? ParseAnyOfObjectSpec<UObjectSpecTypes>
-            : TObject extends OneOfObjectSpec<infer UObjectSpecTypes>
-              ? ParseAnyOfObjectSpec<UObjectSpecTypes> // we do not make distinction between oneOf and anyOf
-              : DataErrorType<'Unable to find matching object spec type', TObject>
+type ParseComplexObjectSpecType<TObject extends ObjectSpecType> =
+  TObject extends AllOfObjectSpec<infer UObjectSpecTypes>
+    ? ParseAllOfObjectSpec<UObjectSpecTypes>
+    : TObject extends AnyOfObjectSpec<infer UObjectSpecTypes>
+      ? ParseAnyOfObjectSpec<UObjectSpecTypes>
+      : TObject extends OneOfObjectSpec<infer UObjectSpecTypes>
+        ? ParseAnyOfObjectSpec<UObjectSpecTypes> // we do not make distinction between oneOf and anyOf
+        : ParseFlatObjectSpecType<TObject>
 
-type ParseObjectSpec<TObject extends ObjectSpec> = ParseObjectSpecType<TObject> & {
+type ParseObjectSpec<TObject extends ObjectSpec> = ParseComplexObjectSpecType<TObject> & {
   isNullable: TObject extends ObjectSpecOptionNullable ? true : false
 }
 

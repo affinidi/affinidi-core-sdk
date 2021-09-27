@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-core-sdk",
-  "version": "6.0.0-beta.10",
+  "version": "6.0.0-beta.14",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -8,7 +8,6 @@
     "build": "npm run tsc",
     "buildDocs": "typedoc --out docs src",
     "start": "npm run build && node dist/index.js",
-    "prepare": "npm run build",
     "tsc": "tsc -p tsconfig-build.json",
     "lint": "eslint src/** test/**",
     "test": "npm run test:unit && npm run test:integration",
@@ -16,7 +15,7 @@
     "test:integration": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
     "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.core.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'"
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "publishConfig": {
     "access": "public"
@@ -43,10 +42,11 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "^0.0.25",
-    "@affinidi/common": "^2.0.0-beta.7",
-    "@affinidi/internal-api-clients": "^1.0.0-beta.10",
+    "@affinidi/common": "^2.0.0-beta.9",
+    "@affinidi/internal-api-clients": "^1.0.0-beta.11",
     "@affinidi/issuer-email-ses-client": "^0.1.1",
     "@affinidi/issuer-phone-twilio-client": "^0.1.1",
+    "@affinidi/tools-common": "^1.0.0-beta.1",
     "@affinidi/vc-common": "^1.4.2",
     "@affinidi/vc-data": "^1.3.3",
     "ajv": "^6.12.3",

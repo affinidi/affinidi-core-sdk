@@ -1,9 +1,7 @@
-import { profile } from '@affinidi/common'
+import { profile } from '@affinidi/tools-common'
 
+import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import keyStorageSpec from '../spec/_keyStorage'
-import { ParseSpec } from '../types/openapiParser'
-import { BuildApiType } from '../types/typeBuilder'
-import GenericApiService, { GenericConstructorOptions } from './GenericApiService'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
 // getSignedCredential there only uses options to create a new instance of its own CommonNetworkMember,
@@ -30,41 +28,43 @@ type GetSignedCredentialRequest = {
 
 type Env = 'dev' | 'staging' | 'prod'
 
-type ConstructorOptions = GenericConstructorOptions & { keyStorageUrl: string }
+type ConstructorOptions = ClientOptions & { keyStorageUrl: string }
 
-type ApiType = BuildApiType<ParseSpec<typeof keyStorageSpec>>
+const clientMethods = createClientMethods(keyStorageSpec)
 
 @profile()
-export default class KeyStorageApiService extends GenericApiService<ApiType> {
+export default class KeyStorageApiService {
+  private readonly client
+
   constructor(options: ConstructorOptions) {
-    super(options.keyStorageUrl, options, keyStorageSpec)
+    this.client = createClient(clientMethods, options.keyStorageUrl, options)
   }
 
-  async storeTemplate(params: ApiType['StoreTemplate']['requestBody']) {
-    return this.execute('StoreTemplate', { params })
+  async storeTemplate(params: GetParams<typeof clientMethods.StoreTemplate>) {
+    return this.client.StoreTemplate({ params })
   }
 
   async readMyKey({ accessToken }: { accessToken: string }) {
-    return this.execute('ReadMyKey', { authorization: accessToken })
+    return this.client.ReadMyKey({ authorization: accessToken })
   }
 
-  async storeMyKey(accessToken: string, params: ApiType['StoreMyKey']['requestBody']) {
-    return this.execute('StoreMyKey', { authorization: accessToken, params })
+  async storeMyKey(accessToken: string, params: GetParams<typeof clientMethods.StoreMyKey>) {
+    return this.client.StoreMyKey({ authorization: accessToken, params })
   }
 
-  async adminConfirmUser(params: ApiType['AdminConfirmUser']['requestBody']) {
-    return this.execute('AdminConfirmUser', { params })
+  async adminConfirmUser(params: GetParams<typeof clientMethods.AdminConfirmUser>) {
+    return this.client.AdminConfirmUser({ params })
   }
 
-  async adminDeleteUnconfirmedUser(params: ApiType['AdminDeleteUnconfirmedUser']['requestBody']) {
-    return this.execute('AdminDeleteUnconfirmedUser', { params })
+  async adminDeleteUnconfirmedUser(params: GetParams<typeof clientMethods.AdminDeleteUnconfirmedUser>) {
+    return this.client.AdminDeleteUnconfirmedUser({ params })
   }
 
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {
-    return this.execute('GetCredentialOffer', { authorization: accessToken, queryParams: { env } })
+    return this.client.GetCredentialOffer({ authorization: accessToken, queryParams: { env } })
   }
 
   async getSignedCredential(accessToken: string, params: GetSignedCredentialRequest) {
-    return this.execute('GetSignedCredential', { authorization: accessToken, params })
+    return this.client.GetSignedCredential({ authorization: accessToken, params })
   }
 }
