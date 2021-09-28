@@ -5,6 +5,7 @@ import sinon from 'sinon'
 
 import { KeysService } from '@affinidi/common'
 import { DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
 import { generateTestDIDs } from '../../factory/didFactory'
@@ -18,6 +19,7 @@ import { extractSDKVersion } from '../../../src/_helpers'
 let encryptionKey: string
 let encryptedSeed: string
 let audienceDid: string
+let requestToken: string
 const region = 'eu-west-2'
 const reqheaders: Record<string, string> = {}
 
@@ -36,7 +38,7 @@ const mockDidAuth = () => {
     .post('/api/v1/did-auth/create-did-auth-request')
     .reply(
       200,
-      '"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJpc3MiOiJkaWQ6ZWxlbTpFaUNILXh4Y25rZ1p2NlF2anZvX1VYbi04RFVkVU4zRXRCSnhvbEFRYlFyQ2NBIyJ9.PC4hlTYT5oc1rtcE3Ngq1LN35vAQXI0QgC2nzzQ9RKw"',
+      `"${requestToken}"`,
     )
 
   nock(STAGING_REGISTRY_URL, { reqheaders }).post('/api/v1/did-auth/create-did-auth-response').reply(200, {})
@@ -48,6 +50,8 @@ describe('AffinidiVaultStorageService', () => {
     encryptionKey = testDids.password
     encryptedSeed = testDids.jolo.encryptedSeed
     audienceDid = testDids.elem.did
+    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey })
+    requestToken = await didAuthService.createDidAuthRequestToken(audienceDid)
 
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
