@@ -1,20 +1,24 @@
 import { DidAuthAdapter } from '../helpers/DidAuthAdapter'
 
 export const createDidAuthSession = (didAuthAdapter: DidAuthAdapter) => {
-  let responseToken: string | undefined
-  let tokenRequestTime!: number
+  let responseTokenInfo: { tokenRequestTime: number; responseToken: string } | undefined
 
   return {
     async getResponseToken(createRequestToken: (did: string) => Promise<string>) {
-      if (!responseToken || didAuthAdapter.isTokenExpired(responseToken, tokenRequestTime)) {
-        tokenRequestTime = Date.now()
+      if (
+        !responseTokenInfo ||
+        didAuthAdapter.isTokenExpired(responseTokenInfo.responseToken, responseTokenInfo.tokenRequestTime)
+      ) {
+        const tokenRequestTime = Date.now()
 
         const didAuthRequestToken = await createRequestToken(didAuthAdapter.did)
 
-        responseToken = await didAuthAdapter.createDidAuthResponseToken(didAuthRequestToken)
+        const responseToken = await didAuthAdapter.createDidAuthResponseToken(didAuthRequestToken)
+
+        responseTokenInfo = { tokenRequestTime, responseToken }
       }
 
-      return responseToken
+      return responseTokenInfo.responseToken
     },
   }
 }
