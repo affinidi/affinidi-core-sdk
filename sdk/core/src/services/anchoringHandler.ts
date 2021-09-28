@@ -2,7 +2,7 @@ import { ELEM_DID_METHOD, JOLO_DID_METHOD } from '../_defaultConfig'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { DidDocumentService, KeysService } from '@affinidi/common'
 
-const getAnchoringParams = async (
+const preprocessAnchoringParams = async (
   api: RegistryApiService,
   encryptedSeed: string,
   password: string,
@@ -51,7 +51,7 @@ export const anchorDid = async (
   nonce: number = 0,
 ): Promise<{ did: string }> => {
   const response = await api.anchorDid({
-    ...(await getAnchoringParams(api, encryptedSeed, password, didDocument, nonce)),
+    ...(await preprocessAnchoringParams(api, encryptedSeed, password, didDocument, nonce)),
     nonce,
     anchoredDidElem,
   })

@@ -128,12 +128,12 @@ export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer): strin
   return `${seedHex}++jolo`
 }
 
-export const processAnchoredElemDidSeed = (parsedSeed: ParseDecryptedSeedResult, did: string) => {
-  const { seed, externalKeys } = parsedSeed
+export const extendSeedWithDid = (decryptedFullSeed: string, did: string) => {
+  const { seed, metadata, externalKeys } = parseDecryptedSeed(decryptedFullSeed)
   const seedWithMethod = `${seed.toString('hex')}++${ELEM_ANCHORED_DID_METHOD}`
   const additionalData = {
     ...(externalKeys && { [EXTERNAL_KEYS_KEY]: externalKeys }),
-    [METADATA_KEY]: { anchoredDid: did },
+    [METADATA_KEY]: { ...metadata, anchoredDid: did },
   }
   const additionalDataSection = base64url.encode(JSON.stringify(additionalData))
 

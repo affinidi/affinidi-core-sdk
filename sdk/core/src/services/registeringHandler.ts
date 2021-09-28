@@ -5,7 +5,7 @@ import {
   DidDocumentService,
   generateFullSeed,
   KeysService,
-  processAnchoredElemDidSeed,
+  extendSeedWithDid,
   DidResolver,
 } from '@affinidi/common'
 import { anchorDid } from './anchoringHandler'
@@ -47,7 +47,7 @@ const registerElemAnchored = async (
 
   const { did: anchoredInBlockchainDid } = await anchorDid(api, encryptedSeed, password, didDocument, true)
 
-  const elemAnchoredSeed = processAnchoredElemDidSeed(keysService.decryptSeed(), anchoredInBlockchainDid)
+  const elemAnchoredSeed = extendSeedWithDid(fullElemSeed, anchoredInBlockchainDid)
 
   const {
     keysService: elemAnchoredKeysService,

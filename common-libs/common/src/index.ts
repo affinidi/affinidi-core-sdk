@@ -32,7 +32,7 @@ export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
 export {
   generateFullSeed,
   generateSeedHexWithMethod,
-  processAnchoredElemDidSeed,
+  extendSeedWithDid,
   buildBase64EncodedAdditionalData,
 } from './shared/seedTools'
 
