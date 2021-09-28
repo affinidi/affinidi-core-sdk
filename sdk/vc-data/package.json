@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/vc-data",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "main": "dist/index.js",
   "module": "dist/vc-data.esm.js",
   "typings": "dist/index.d.ts",
