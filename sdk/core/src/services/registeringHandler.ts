@@ -1,13 +1,7 @@
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { DidMethod, KeyOptions } from '../dto/shared.dto'
 import { ELEM_ANCHORED_DID_METHOD, ELEM_DID_METHOD, JOLO_DID_METHOD } from '../_defaultConfig'
-import {
-  DidDocumentService,
-  generateFullSeed,
-  KeysService,
-  extendSeedWithDid,
-  DidResolver,
-} from '@affinidi/common'
+import { DidDocumentService, generateFullSeed, KeysService, extendSeedWithDid, DidResolver } from '@affinidi/common'
 import { anchorDid } from './anchoringHandler'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 
