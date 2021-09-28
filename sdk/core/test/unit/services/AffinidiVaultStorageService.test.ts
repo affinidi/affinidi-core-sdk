@@ -3,9 +3,8 @@
 import nock from 'nock'
 import sinon from 'sinon'
 
-import { KeysService } from '@affinidi/common'
+import { KeysService, JwtService } from '@affinidi/common'
 import { DidAuthAdapter } from '@affinidi/internal-api-clients'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
 import { generateTestDIDs } from '../../factory/didFactory'
@@ -47,8 +46,22 @@ describe('AffinidiVaultStorageService', () => {
     encryptionKey = testDids.password
     encryptedSeed = testDids.jolo.encryptedSeed
     audienceDid = testDids.elem.did
-    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey })
-    requestToken = await didAuthService.createDidAuthRequestToken(audienceDid)
+    const keysService = new KeysService(encryptedSeed, encryptionKey)
+    const jwtService = new JwtService()
+    const requestTokenObject = await keysService.signJWT({
+      header: {
+        alg: 'HS256',
+        typ: 'JWT',
+      },
+      payload: {
+        sub: '1234567890',
+        name: 'John Doe',
+        exp: Date.now() + 60 * 60 * 1000,
+        iat: Date.now(),
+        iss: 'did:elem:EiCH-xxcnkgZv6Qvjvo_UXn-8DUdUN3EtBJxolAQbQrCcA#',
+      },
+    })
+    requestToken = jwtService.encodeObjectToJWT(requestTokenObject)
 
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
