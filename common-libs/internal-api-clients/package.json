@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/internal-api-clients",
-  "version": "1.0.0-beta.11",
+  "version": "1.0.0-beta.12",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

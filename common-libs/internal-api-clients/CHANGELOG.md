@@ -1,3 +1,5 @@
+# release 1.0.0-beta.12 (2021-09-29)
+  * did-auth-lib version changed from 1.0.8 to 1.1.0
 # release 1.0.0-beta.11 (2021-09-09)
   * Inheritance replaced with composition
   * `@affinidi/common` dependency replaced with `@affinidi/tools-common`
