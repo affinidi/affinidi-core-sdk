@@ -239,7 +239,7 @@ describe('AffinidiVaultStorageService', () => {
       ] as VaultCredential[],
     }
 
-     nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
+    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
 
     for (const cred of getAllResponse.credentials) {
       nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
