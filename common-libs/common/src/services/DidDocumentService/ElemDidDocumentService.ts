@@ -1,7 +1,7 @@
 import { KeyVault } from './KeyVault'
 import ElemDidDocumentBuilder from './ElemDidDocumentBuilder'
 
-export default class ElemDidDocument {
+export default class ElemDidDocumentService {
   private readonly _signingKey
   private readonly _builder
 

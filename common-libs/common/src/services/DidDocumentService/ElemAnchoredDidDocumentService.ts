@@ -2,7 +2,7 @@ import { KeyVault } from './KeyVault'
 import { DidResolver } from '../../shared/DidResolver'
 import ElemDidDocumentBuilder from './ElemDidDocumentBuilder'
 
-export default class ElemAnchoredDidDocument {
+export default class ElemAnchoredDidDocumentService {
   private readonly _keyVault: KeyVault
   private readonly _signingKey: string
   private readonly _builder
