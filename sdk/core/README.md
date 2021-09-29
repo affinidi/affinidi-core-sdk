@@ -126,6 +126,11 @@ const wallet = AffinidiWallet.openWalletByEncryptedSeed(options, encryptedSeed, 
 
 'elem-anchored' did method returns did:elem, but it is anchored with [sidetree](https://identity.foundation/sidetree/spec/) in [ropsten testnet](https://ropsten.etherscan.io/)
 
+IMPORTANT NOTICE: Please be informed that this Ropsten is a Beta Testnet and a temporary environment deployed for testing purposes only and with an expressly limited and short lifespan.
+Please do not include sensitive or valuable information during your trials on the Beta Testnet.
+Ropsten does not guaranty the consistency, stability or uninterrupted access to the functionalities provided herein and before as well 
+as during the testing activities the user is informed and understands that any information and connections introduced, uploaded or generated during your interactions with the Beta Testnet can and will be removed at any time at the sole criteria of Ropsten.
+
 ```ts
 const options = {
   env: 'staging',
