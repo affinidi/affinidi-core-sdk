@@ -1,4 +1,4 @@
-import { ELEM_DID_METHOD, JOLO_DID_METHOD } from '../_defaultConfig'
+import { ELEM_ANCHORED_DID_METHOD, ELEM_DID_METHOD, JOLO_DID_METHOD } from '../_defaultConfig'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { DidDocumentService, KeysService } from '@affinidi/common'
 
@@ -10,7 +10,8 @@ const preprocessAnchoringParams = async (
   nonce: number,
 ) => {
   const keysService = new KeysService(encryptedSeed, password)
-  const { seed, didMethod } = keysService.decryptSeed()
+  const { seed, didMethod: originalDidMethod } = keysService.decryptSeed()
+  const didMethod = originalDidMethod === ELEM_ANCHORED_DID_METHOD ? ELEM_DID_METHOD : originalDidMethod
   if (didMethod === JOLO_DID_METHOD) {
     const did = didDocument.id
     const seedHex = seed.toString('hex')
