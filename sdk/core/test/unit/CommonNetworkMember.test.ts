@@ -2,6 +2,7 @@ import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
 import { Affinity, JwtService, KeysService, DidDocumentService } from '@affinidi/common'
+import { KeysService as DidAuthKeysService } from '@affinidi/internal-api-clients/node_modules/@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { SdkError } from '@affinidi/tools-common'
 import { buildVCV1Skeleton, buildVCV1Unsigned } from '@affinidi/vc-common'
@@ -141,20 +142,18 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
 
   nock(registryUrl).post('/api/v1/did/anchor-did').reply(200, {})
 
-  sinon.stub(KeysService, 'decryptSeed').returns({
+  const mockedDecryptedSeed: ReturnType<typeof KeysService.decryptSeed> = {
     seed: Buffer.from(opts.seedHex),
     didMethod,
     seedHexWithMethod: `${seedHex}++${didMethod}`,
     externalKeys: null,
     fullSeedHex: null,
-  })
-  sinon.stub(KeysService.prototype, 'decryptSeed').returns({
-    seed: Buffer.from(opts.seedHex),
-    didMethod,
-    seedHexWithMethod: `${seedHex}++${didMethod}`,
-    externalKeys: null,
-    fullSeedHex: null,
-  })
+  }
+
+  sinon.stub(KeysService, 'decryptSeed').returns(mockedDecryptedSeed)
+  sinon.stub(KeysService.prototype, 'decryptSeed').returns(mockedDecryptedSeed)
+  sinon.stub(DidAuthKeysService, 'decryptSeed').returns(mockedDecryptedSeed)
+  sinon.stub(DidAuthKeysService.prototype, 'decryptSeed').returns(mockedDecryptedSeed)
   saveSeedStub = sinon.stub(KeyStorageApiService.prototype, 'storeMyKey')
 }
 

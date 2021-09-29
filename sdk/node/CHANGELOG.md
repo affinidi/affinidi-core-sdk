@@ -1,3 +1,5 @@
+# release 6.0.0-beta.14 (2021-09-29)
+Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.15
 # release 6.0.0-beta.9 (2021-08-30)
 * Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.9
 * Implemented support for BBS and RSA (key generation, signature, verification)

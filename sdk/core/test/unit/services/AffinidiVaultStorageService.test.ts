@@ -3,7 +3,7 @@
 import nock from 'nock'
 import sinon from 'sinon'
 
-import { KeysService } from '@affinidi/common'
+import { KeysService, JwtService } from '@affinidi/common'
 import { DidAuthAdapter } from '@affinidi/internal-api-clients'
 
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
@@ -18,6 +18,7 @@ import { extractSDKVersion } from '../../../src/_helpers'
 let encryptionKey: string
 let encryptedSeed: string
 let audienceDid: string
+let requestToken: string
 const region = 'eu-west-2'
 const reqheaders: Record<string, string> = {}
 
@@ -34,10 +35,7 @@ const createAffinidiStorageService = () => {
 const mockDidAuth = () => {
   nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
     .post('/api/v1/did-auth/create-did-auth-request')
-    .reply(
-      200,
-      '"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJpc3MiOiJkaWQ6ZWxlbTpFaUNILXh4Y25rZ1p2NlF2anZvX1VYbi04RFVkVU4zRXRCSnhvbEFRYlFyQ2NBIyJ9.PC4hlTYT5oc1rtcE3Ngq1LN35vAQXI0QgC2nzzQ9RKw"',
-    )
+    .reply(200, `"${requestToken}"`)
 
   nock(STAGING_REGISTRY_URL, { reqheaders }).post('/api/v1/did-auth/create-did-auth-response').reply(200, {})
 }
@@ -48,6 +46,22 @@ describe('AffinidiVaultStorageService', () => {
     encryptionKey = testDids.password
     encryptedSeed = testDids.jolo.encryptedSeed
     audienceDid = testDids.elem.did
+    const keysService = new KeysService(encryptedSeed, encryptionKey)
+    const jwtService = new JwtService()
+    const requestTokenObject = await keysService.signJWT({
+      header: {
+        alg: 'HS256',
+        typ: 'JWT',
+      },
+      payload: {
+        sub: '1234567890',
+        name: 'John Doe',
+        exp: Date.now() + 60 * 60 * 1000,
+        createdAt: Date.now(),
+        iss: 'did:elem:EiCH-xxcnkgZv6Qvjvo_UXn-8DUdUN3EtBJxolAQbQrCcA#',
+      },
+    })
+    requestToken = jwtService.encodeObjectToJWT(requestTokenObject)
 
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
@@ -226,8 +240,6 @@ describe('AffinidiVaultStorageService', () => {
     }
 
     nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
-
-    sinon.stub(DidAuthAdapter.prototype, 'isTokenExpired').returns(false)
 
     for (const cred of getAllResponse.credentials) {
       nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
