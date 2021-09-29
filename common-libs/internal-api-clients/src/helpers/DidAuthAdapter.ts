@@ -20,5 +20,4 @@ export class DidAuthAdapter {
     const localExpiringDidAuthResponseTokenCheck = LocalExpiringDidAuthResponseToken.initialize(tokenRequestTime, token)
     return localExpiringDidAuthResponseTokenCheck.isExpiredAt(Date.now())
   }
-
 }
