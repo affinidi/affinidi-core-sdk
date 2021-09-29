@@ -223,7 +223,7 @@ describe('AffinidiVaultStorageService', () => {
     }
   })
 
-  it.only('#deleteAllCredentials', async () => {
+  it('#deleteAllCredentials', async () => {
     mockDidAuth()
 
     const getAllResponse = {
