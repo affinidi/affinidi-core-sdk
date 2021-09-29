@@ -5,7 +5,7 @@ import { func } from './elem-lib'
 import { KeyVault } from './KeyVault'
 import { computePayloadHash, encodeJson } from './elem-lib/func'
 
-export default class ElemDidDocument {
+export default class ElemDidDocumentBuilder {
   private readonly _keyVault: KeyVault
   private readonly _signingKey: string
 
@@ -115,27 +115,12 @@ export default class ElemDidDocument {
     }
   }
 
-  private _getMyDidConfig() {
+  public getMyDidConfig() {
     return this._getDid(this._keyVault.externalKeys)
   }
 
-  getMyDid(): string {
-    const { did } = this._getMyDidConfig()
-
-    return did
-  }
-
-  getKeyId(did: string = null) {
-    if (!did) {
-      const { shortFormDid } = this._getMyDidConfig()
-      did = shortFormDid
-    }
-
-    return `${did}#${this._signingKey}`
-  }
-
-  async buildDidDocument() {
-    const { did, didDocModel } = this._getDid(this._keyVault.externalKeys)
+  async buildDidDocumentInfo() {
+    const { did, didDocModel, shortFormDid } = this._getDid(this._keyVault.externalKeys)
     const { did: parsedDid } = parse(did)
 
     const prependBaseDID = (field: any) => {
@@ -156,12 +141,18 @@ export default class ElemDidDocument {
       }
     }
 
-    return {
+    const didDocument = {
       id: parsedDid,
       ...didDocModel,
       publicKey: (didDocModel.publicKey || []).map(prependBaseDID),
       assertionMethod: (didDocModel.assertionMethod || []).map(prependBaseDID),
       authentication: (didDocModel.authentication || []).map(prependBaseDID),
+    }
+
+    return {
+      did,
+      didDocument,
+      shortFormDid,
     }
   }
 

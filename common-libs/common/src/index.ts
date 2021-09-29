@@ -15,7 +15,6 @@ if (typeof process.version === 'undefined') {
 export { Affinity, Affinity as Affinidi } from './Affinity'
 
 export {
-  ElemDidDocument,
   KeyVault,
   LocalKeyVault,
   DidDocumentService,

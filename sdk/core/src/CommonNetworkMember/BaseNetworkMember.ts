@@ -1,4 +1,4 @@
-import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity, DidResolver } from '@affinidi/common'
+import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
 import {
   IssuerApiService,
   RegistryApiService,
@@ -211,9 +211,8 @@ export abstract class BaseNetworkMember {
       accessApiKey,
     } = options
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
-    const didResolver = new DidResolver({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
-    return register(api, didResolver, didMethod, dependencies.platformCryptographyTools, password, keyOptions)
+    return register(api, didMethod, dependencies.platformCryptographyTools, password, keyOptions)
   }
 
   protected static async _anchorDid(

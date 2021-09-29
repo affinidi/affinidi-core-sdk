@@ -1,11 +1,10 @@
 import KeysService from '../KeysService'
-import JoloDidDocument from './JoloDidDocument'
-import ElemDidDocument from './ElemDidDocument'
-import ElemAnchoredDidDocument from './ElemAnchoredDidDocument'
+import JoloDidDocumentService from './JoloDidDocumentService'
+import ElemDidDocumentService from './ElemDidDocumentService'
+import ElemAnchoredDidDocumentService from './ElemAnchoredDidDocumentService'
 import { parse } from 'did-resolver'
 import { LocalKeyVault } from './LocalKeyVault'
 
-export { default as ElemDidDocument } from './ElemDidDocument'
 export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
 
@@ -21,9 +20,9 @@ export default class DidDocumentService {
     const { didMethod } = keysService.decryptSeed()
 
     return {
-      jolo: new JoloDidDocument(keysService),
-      elem: new ElemDidDocument(new LocalKeyVault(keysService)),
-      'elem-anchored': new ElemAnchoredDidDocument(new LocalKeyVault(keysService)),
+      jolo: new JoloDidDocumentService(keysService),
+      elem: new ElemDidDocumentService(new LocalKeyVault(keysService)),
+      'elem-anchored': new ElemAnchoredDidDocumentService(new LocalKeyVault(keysService)),
     }[didMethod]
   }
   static getPublicKey(fulleKeyId: string, didDocument: any, keyId?: string): Buffer {
