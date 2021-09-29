@@ -57,7 +57,7 @@ describe('AffinidiVaultStorageService', () => {
         sub: '1234567890',
         name: 'John Doe',
         exp: Date.now() + 60 * 60 * 1000,
-        iat: Date.now(),
+        createdAt: Date.now(),
         iss: 'did:elem:EiCH-xxcnkgZv6Qvjvo_UXn-8DUdUN3EtBJxolAQbQrCcA#',
       },
     })
@@ -223,7 +223,7 @@ describe('AffinidiVaultStorageService', () => {
     }
   })
 
-  it('#deleteAllCredentials', async () => {
+  it.only('#deleteAllCredentials', async () => {
     mockDidAuth()
 
     const getAllResponse = {
@@ -239,9 +239,7 @@ describe('AffinidiVaultStorageService', () => {
       ] as VaultCredential[],
     }
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
-
-    sinon.stub(DidAuthAdapter.prototype, 'isTokenExpired').returns(false)
+     nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
 
     for (const cred of getAllResponse.credentials) {
       nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
