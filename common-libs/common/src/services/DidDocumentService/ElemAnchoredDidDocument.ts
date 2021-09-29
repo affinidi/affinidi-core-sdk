@@ -14,8 +14,8 @@ export default class ElemAnchoredDidDocument {
   }
 
   getMyDid(): string {
-    const { anchoredDid } = this._keyVault.metadata
-    return `${anchoredDid}`
+    const did = this._keyVault.metadata?.anchoredDid ?? this.buildMyDid()
+    return did
   }
 
   getKeyId(did: string = null) {
@@ -32,5 +32,14 @@ export default class ElemAnchoredDidDocument {
 
   getDidDocument(didResolver: DidResolver) {
     return didResolver.resolveDid(this.getMyDid())
+  }
+
+  /**
+   * This function is used once for the did before anchoring in the blockchain
+   * @private
+   */
+  private buildMyDid() {
+    const { did } = this._builder.getMyDidConfig()
+    return did
   }
 }
