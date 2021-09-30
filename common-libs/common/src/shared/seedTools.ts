@@ -18,6 +18,7 @@ export type ParseDecryptedSeedResult = {
   fullSeedHex: string
   externalKeys?: any[]
   metadata?: Record<string, any>
+  additionalData?: Record<string, any>
 }
 
 export const ADDITIONAL_DATA_SEPARATOR = '++;additionalDataJson:'
@@ -56,7 +57,7 @@ export const parseDecryptedSeed = (decryptedSeed: string): ParseDecryptedSeedRes
   const externalKeys = additionalData?.[EXTERNAL_KEYS_KEY] ?? parsedFromBase64ExternalKeys
   const metadata = additionalData?.[METADATA_KEY]
 
-  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata }
+  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata, additionalData }
 }
 
 const generateAdditionalKeys = async (cryptographyTools: IPlatformCryptographyTools, keyOptions: KeyOptions) => {
@@ -129,10 +130,10 @@ export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer): strin
 }
 
 export const extendSeedWithDid = (decryptedFullSeed: string, did: string) => {
-  const { seed, metadata, externalKeys } = parseDecryptedSeed(decryptedFullSeed)
+  const { seed, metadata, additionalData: prevAdditionalData } = parseDecryptedSeed(decryptedFullSeed)
   const seedWithMethod = `${seed.toString('hex')}++${ELEM_ANCHORED_DID_METHOD}`
   const additionalData = {
-    ...(externalKeys && { [EXTERNAL_KEYS_KEY]: externalKeys }),
+    ...prevAdditionalData,
     [METADATA_KEY]: { ...metadata, anchoredDid: did },
   }
   const additionalDataSection = base64url.encode(JSON.stringify(additionalData))
