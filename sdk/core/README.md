@@ -124,7 +124,8 @@ const wallet = AffinidiWallet.openWalletByEncryptedSeed(options, encryptedSeed, 
 
 ### Create a new wallet
 
-'elem-anchored' did method returns did:elem, and it is anchored with [sidetree](https://identity.foundation/sidetree/spec/) in [ropsten testnet](https://ropsten.etherscan.io/)
+'elem-anchored' did method returns did:elem, and it is anchored with [sidetree](https://identity.foundation/sidetree/spec/) in [ropsten testnet](https://ropsten.etherscan.io/)  
+note: elem-anchored doesn't support external keys due to Sidetree protocol limitations
 
 IMPORTANT NOTICE: Please be informed that this Ropsten is a Testnet and an environment deployed for testing purposes.
 Please do not include sensitive or valuable information during your trials on the Testnet.
