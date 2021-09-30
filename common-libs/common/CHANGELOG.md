@@ -1,3 +1,5 @@
+# release 6.0.0-beta.12 (2021-09-30)
+* add support of elem-anchored method
 # release 2.0.0-beta.11 (2021-09-29)
 Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.15
 # 2.0.0-beta.10 (2021-09-22)

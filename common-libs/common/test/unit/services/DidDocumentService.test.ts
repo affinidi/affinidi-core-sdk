@@ -156,7 +156,7 @@ describe('DidDocumentService', () => {
     const keyService = new KeyService(elemRSAEncryptedSeed, password)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
-    const didDocument = await didDocumentService.buildDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
     const rsaPublicKey = didDocument.publicKey.find((key: any) => key.type === 'RsaVerificationKey2018')
 
     const rsaKeyId = `${didDocument.id}#secondary`
@@ -174,7 +174,7 @@ describe('DidDocumentService', () => {
     const keyService = new KeyService(elemBBSEncryptedSeed, password)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
-    const didDocument = await didDocumentService.buildDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
     const bbsPublicKey = didDocument.publicKey.find((key: any) => key.type === 'Bls12381G2Key2020')
 
     const bbsKeyId = `${didDocument.id}#bbs`
@@ -218,7 +218,7 @@ describe('DidDocumentService', () => {
   it('#buildDidDocument (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const didDocument = await didDocumentService.buildDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
 
     expect(didDocument.id).to.exist
     expect(didDocument.id).to.be.equal(elemDidShortForm)
@@ -228,7 +228,7 @@ describe('DidDocumentService', () => {
     const fakeRegistryResolveDidService = { resolveDid: () => ({ id: elemAnchoredDid }) }
     const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const didDocument = await didDocumentService.buildDidDocument(fakeRegistryResolveDidService as any)
+    const didDocument = await didDocumentService.getDidDocument(fakeRegistryResolveDidService as any)
 
     expect(didDocument.id).to.exist
     expect(didDocument.id).to.be.equal(elemAnchoredDid)
@@ -237,7 +237,7 @@ describe('DidDocumentService', () => {
   it('#buildDidDocument (jolo)', async () => {
     const keyService = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const didDocument = await didDocumentService.buildDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
 
     expect(didDocument.id).to.exist
     expect(didDocument.id).to.be.equal(joloDid)
@@ -248,8 +248,8 @@ describe('DidDocumentService', () => {
     const keyService2 = new KeyService(encryptedSeedElem, demoEncryptionPassword)
     const didDocumentServiceJolo = DidDocumentService.createDidDocumentService(keyService1)
     const didDocumentServiceElem = DidDocumentService.createDidDocumentService(keyService2)
-    const didDocumentJolo = await didDocumentServiceJolo.buildDidDocument(didResolverMock)
-    const didDocumentElem = await didDocumentServiceElem.buildDidDocument(didResolverMock)
+    const didDocumentJolo = await didDocumentServiceJolo.getDidDocument(didResolverMock)
+    const didDocumentElem = await didDocumentServiceElem.getDidDocument(didResolverMock)
 
     const publicKeyJolo = DidDocumentService.getPublicKey(joloDidKey, didDocumentJolo)
     const publicKeyHexJolo = publicKeyJolo.toString('hex')

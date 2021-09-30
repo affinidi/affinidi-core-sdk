@@ -77,6 +77,16 @@ export default class KeysService {
     return signingKey.sign(digest)
   }
 
+  static async fromSeedAndPassword(
+    fullSeed: string,
+    password: string,
+  ): Promise<{ keysService: KeysService; encryptedSeed: string }> {
+    const passwordBuffer = KeysService.normalizePassword(password)
+    const encryptedSeed = await KeysService.encryptSeed(fullSeed, passwordBuffer)
+    const keysService = new KeysService(encryptedSeed, password)
+    return { encryptedSeed, keysService }
+  }
+
   static verify(digest: Buffer, publicKey: Buffer, signature: Buffer): boolean {
     try {
       return tinySecp256k1.verify(digest, publicKey, signature)

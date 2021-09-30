@@ -1,3 +1,5 @@
+# release 6.0.0-beta.16 (2021-09-30)
+* add support of elem-anchored method
 # release 6.0.0-beta.15 (2021-09-29)
 * `internal-api-clients` version change from 1.0.0-beta.11 to 1.0.0-beta.12
 # release 6.0.0-beta.13 (2021-09-21)

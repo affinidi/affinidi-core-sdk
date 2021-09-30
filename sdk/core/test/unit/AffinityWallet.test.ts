@@ -9,6 +9,7 @@ import { SdkOptions } from '../../src/dto'
 import KeyManagementService from '../../src/services/KeyManagementService'
 import UserManagementService from '../../src/services/UserManagementService'
 import WalletStorageService from '../../src/services/WalletStorageService'
+import * as AnchoringHandler from '../../src/services/anchoringHandler'
 
 import { AffinidiWalletWithEncryption as AffinityWallet, checkIsWallet } from '../helpers/AffinidiWallet'
 import { generateTestDIDs } from '../factory/didFactory'
@@ -30,6 +31,9 @@ const idToken = 'dummy_token'
 const sdkOptions = { env: 'dev', apiKey: 'fakeApiKey' } as const
 
 const stubConfirmAuthRequests = async (opts: { walletPassword: string; encryptedSeed: string }) => {
+  sinon.stub(AnchoringHandler, 'anchorDid').resolves({
+    did: 'did:method:sajncsyjJHgsdj_jcs',
+  })
   return {
     confirmSignUp: sinon.stub(UserManagementService.prototype, 'completeSignUpForEmailOrPhone').resolves({
       cognitoTokens: { accessToken, idToken },

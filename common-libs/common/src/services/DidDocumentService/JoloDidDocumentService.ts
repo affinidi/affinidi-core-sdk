@@ -37,7 +37,7 @@ export default class JoloDidDocument {
     return `${did}#${this._signingKey}`
   }
 
-  async buildDidDocument() {
+  async buildDidDocumentForRegister() {
     const { seed } = this._keysService.decryptSeed()
     const seedHex = seed.toString('hex')
 
@@ -48,7 +48,7 @@ export default class JoloDidDocument {
 
     const nonce = await randomBytes(8)
 
-    return {
+    const didDocument = {
       '@context': defaultContext,
       id: did,
       created: new Date().toISOString(),
@@ -70,5 +70,15 @@ export default class JoloDidDocument {
         signatureValue: '',
       },
     }
+
+    return {
+      didDocument,
+      keyId: `${did}#${this._signingKey}`,
+    }
+  }
+
+  async getDidDocument() {
+    const { didDocument } = await this.buildDidDocumentForRegister()
+    return didDocument
   }
 }

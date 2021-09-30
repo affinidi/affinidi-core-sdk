@@ -15,7 +15,6 @@ if (typeof process.version === 'undefined') {
 export { Affinity, Affinity as Affinidi } from './Affinity'
 
 export {
-  ElemDidDocument,
   KeyVault,
   LocalKeyVault,
   DidDocumentService,
@@ -32,8 +31,8 @@ export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
 export {
   generateFullSeed,
   generateSeedHexWithMethod,
+  extendSeedWithDid,
   buildBase64EncodedAdditionalData,
-  joinSeedWithMethodAndBase64EncodedData,
 } from './shared/seedTools'
 
 export { DidResolver } from './shared/DidResolver'

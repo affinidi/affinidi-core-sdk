@@ -43,7 +43,8 @@ export const DEFAULT_JWT_EXPIRY_MS = 10 * 60 * 1000
 export const MINIMUM_RECOMMENDED_PASSWORD_LENGTH = 8
 
 export const ELEM_DID_METHOD = 'elem'
+export const ELEM_ANCHORED_DID_METHOD = 'elem-anchored'
 export const JOLO_DID_METHOD = 'jolo'
 export const DEFAULT_DID_METHOD = ELEM_DID_METHOD
-export const SUPPORTED_DID_METHODS = [JOLO_DID_METHOD, ELEM_DID_METHOD]
+export const SUPPORTED_DID_METHODS = [JOLO_DID_METHOD, ELEM_DID_METHOD, ELEM_ANCHORED_DID_METHOD]
 export const SUPPORTED_ENVIRONMENTS = ['dev', 'staging', 'prod']

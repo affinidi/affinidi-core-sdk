@@ -41,7 +41,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(joloEncryptedSeed, password)
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-  const joloDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
+  const joloDidDocument = await didDocumentService.getDidDocument(didResolverMock)
   const joloDid = joloDidDocument.id
 
   const joloPublicKey = KeysService.getPublicKey(joloSeedHex, 'jolo').toString('hex')
@@ -56,7 +56,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemEncryptedSeed, password)
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-  const elemDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
+  const elemDidDocument = await didDocumentService.getDidDocument(didResolverMock)
   const elemDid = await didDocumentService.getMyDid()
 
   const elemPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
@@ -74,7 +74,7 @@ export const generateTestDIDs = async (): Promise<{
   keysService = new KeysService(elemAltEncryptedSeed, password)
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
-  const elemAltDidDocument = await didDocumentService.buildDidDocument(didResolverMock)
+  const elemAltDidDocument = await didDocumentService.getDidDocument(didResolverMock)
   const elemAltDid = await didDocumentService.getMyDid()
 
   const elemAltPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')

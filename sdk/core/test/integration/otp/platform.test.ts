@@ -11,6 +11,7 @@ import { getBasicOptionsForEnvironment } from '../../helpers'
 import { AffinidiWalletV6WithEncryption as AffinityWallet } from '../../helpers/AffinidiWallet'
 import { openAttestationDocument } from '../../factory/openAttestationDocument'
 import { generateCredentials } from '../../factory/signedCredentials'
+import { ELEM_ANCHORED_DID_METHOD } from '../../../src/_defaultConfig'
 
 const parallel = require('mocha.parallel')
 
@@ -90,6 +91,45 @@ parallel('AffinityWallet [OTP]', () => {
     const signUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinityWallet.completeSignUp(options, signUpToken, signUpCode)
+
+    const signedCredentials = generateCredentials(4)
+
+    await commonNetworkMember.saveCredentials(signedCredentials)
+
+    let credentials = await commonNetworkMember.getCredentials()
+    expect(credentials).to.have.length(4)
+
+    const credentialIdToDelete = credentials[1].id
+
+    await commonNetworkMember.deleteCredentialById(credentialIdToDelete)
+
+    credentials = await commonNetworkMember.getCredentials()
+    const credentialIds = credentials.map((credential: any) => credential.id)
+
+    expect(credentialIds).to.not.include(credentialIdToDelete)
+    expect(credentials).to.have.length(3)
+
+    await commonNetworkMember.deleteAllCredentials()
+
+    credentials = await commonNetworkMember.getCredentials()
+    expect(credentials).to.have.length(0)
+  })
+
+  it('#deleteCredentials scenario with elem-anchored', async () => {
+    const inbox = createInbox()
+    const password = COGNITO_PASSWORD
+    const optionsWithElemAnchored: SdkOptions = { ...options, didMethod: ELEM_ANCHORED_DID_METHOD }
+
+    const signUpToken = await AffinityWallet.initiateSignUpByEmail(
+      optionsWithElemAnchored,
+      inbox.email,
+      password,
+      messageParameters,
+    )
+    checkIsString(signUpToken)
+    const signUpCode = await waitForOtpCode(inbox)
+
+    const commonNetworkMember = await AffinityWallet.completeSignUp(optionsWithElemAnchored, signUpToken, signUpCode)
 
     const signedCredentials = generateCredentials(4)
 

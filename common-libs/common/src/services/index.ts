@@ -1,5 +1,4 @@
 export { default as DidDocumentService } from './DidDocumentService'
-export { ElemDidDocument } from './DidDocumentService'
 export { KeyVault } from './DidDocumentService'
 export { LocalKeyVault } from './DidDocumentService'
 export { default as DigestService } from './DigestService'

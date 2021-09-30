@@ -3,6 +3,7 @@ import base64url from 'base64url'
 import { validateDidMethodSupported } from '../_helpers'
 import { randomBytes } from './randomBytes'
 import { IPlatformCryptographyTools } from './interfaces'
+import { ELEM_ANCHORED_DID_METHOD } from '../_defaultConfig'
 
 export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'
 
@@ -17,6 +18,7 @@ export type ParseDecryptedSeedResult = {
   fullSeedHex: string
   externalKeys?: any[]
   metadata?: Record<string, any>
+  additionalData?: Record<string, any>
 }
 
 export const ADDITIONAL_DATA_SEPARATOR = '++;additionalDataJson:'
@@ -55,7 +57,7 @@ export const parseDecryptedSeed = (decryptedSeed: string): ParseDecryptedSeedRes
   const externalKeys = additionalData?.[EXTERNAL_KEYS_KEY] ?? parsedFromBase64ExternalKeys
   const metadata = additionalData?.[METADATA_KEY]
 
-  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata }
+  return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata, additionalData }
 }
 
 const generateAdditionalKeys = async (cryptographyTools: IPlatformCryptographyTools, keyOptions: KeyOptions) => {
@@ -99,9 +101,6 @@ export const buildBase64EncodedAdditionalData = async (
   return base64url.encode(JSON.stringify(additionalData))
 }
 
-export const joinSeedWithMethodAndBase64EncodedData = (seedWithMethod: string, base64EncodedAdditionalData: string) =>
-  `${seedWithMethod}${ADDITIONAL_DATA_SEPARATOR}${base64EncodedAdditionalData}`
-
 export const generateFullSeed = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   didMethod: string,
@@ -128,6 +127,18 @@ export const convertDecryptedSeedBufferToString = (decryptedSeed: Buffer): strin
   // legacy case, backwards compatibility
   const seedHex = decryptedSeed.toString('hex')
   return `${seedHex}++jolo`
+}
+
+export const extendSeedWithDid = (decryptedFullSeed: string, did: string) => {
+  const { seed, metadata, additionalData: prevAdditionalData } = parseDecryptedSeed(decryptedFullSeed)
+  const seedWithMethod = `${seed.toString('hex')}++${ELEM_ANCHORED_DID_METHOD}`
+  const additionalData = {
+    ...prevAdditionalData,
+    [METADATA_KEY]: { ...metadata, anchoredDid: did },
+  }
+  const additionalDataSection = base64url.encode(JSON.stringify(additionalData))
+
+  return `${seedWithMethod}${ADDITIONAL_DATA_SEPARATOR}${additionalDataSection}`
 }
 
 export const isLegacyDecryptedSeed = (decryptedSeed: Buffer): boolean => {
