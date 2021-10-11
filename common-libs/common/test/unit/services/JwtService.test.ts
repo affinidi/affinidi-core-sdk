@@ -30,4 +30,40 @@ describe('JwtService', () => {
     expect(object).to.exist
     expect(object.payload).to.exist
   })
+
+  describe('#buildJWTInteractionToken', () => {
+    const interactionToken = {}
+    const typ = 'randomTyp'
+
+    it('should work without receivedToken', async () => {
+      const jwtObject = await JwtService.buildJWTInteractionToken(interactionToken, typ, null)
+
+      expect(jwtObject).to.exist
+      expect(jwtObject.payload).to.exist
+      expect(jwtObject.payload.interactionToken).to.eq(interactionToken)
+      expect(jwtObject.payload.typ).to.eq(typ)
+      expect(jwtObject.payload.jti).to.exist
+    })
+
+    it('should propagate the jti and issuer of received token', async () => {
+      const differentIssuers = [
+        { iss: 'did:test:received-token-issuer#primary', expectedAud: 'did:test:received-token-issuer' },
+        { iss: 'did:test:received-token-issuer', expectedAud: 'did:test:received-token-issuer' },
+      ]
+
+      for (const { iss, expectedAud } of differentIssuers) {
+        const jti = 'jti'
+        const receivedToken = { payload: { jti, iss } }
+
+        const jwtObject = await JwtService.buildJWTInteractionToken(interactionToken, typ, receivedToken)
+
+        expect(jwtObject).to.exist
+        expect(jwtObject.payload).to.exist
+        expect(jwtObject.payload.interactionToken).to.eq(interactionToken)
+        expect(jwtObject.payload.typ).to.eq(typ)
+        expect(jwtObject.payload.jti).to.eq(jti)
+        expect(jwtObject.payload.aud).to.eq(expectedAud)
+      }
+    })
+  })
 })
