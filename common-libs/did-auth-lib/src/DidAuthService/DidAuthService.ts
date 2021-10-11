@@ -84,7 +84,7 @@ export default class AffinidiDidAuthService {
 
     const { encryptedSeed, encryptionKey } = options
     const keyService = new KeysService(encryptedSeed, encryptionKey)
-    const documentService = new DidDocumentService(keyService)
+    const documentService = DidDocumentService.createDidDocumentService(keyService)
 
     return {
       did: documentService.getMyDid(),
@@ -178,7 +178,7 @@ export default class AffinidiDidAuthService {
       registryUrl: `https://affinity-registry.${options.environment}.affinity-project.org`,
       apiKey: options.accessApiKey,
     }
-    const affinidi = new Affinidi(affinidiOptions)
+    const affinidi = new Affinidi(affinidiOptions, null as any)
 
     const didAuthResponseToken = DidAuthResponseToken.fromString(didAuthResponseTokenStr)
     const didAuthRequestToken = didAuthResponseToken.requestToken

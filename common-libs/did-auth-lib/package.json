@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/affinidi-did-auth-lib",
-  "version": "1.1.0",
+  "version": "2.0.0-beta.0",
   "description": "Affinidi Did Auth Helpers",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -9,19 +9,16 @@
   ],
   "scripts": {
     "build": "npm run tsc",
-    "semantic-release": "semantic-release",
     "start": "npm run build && node dist/index.js",
     "tsc": "tsc -p tsconfig-build.json",
     "lint": "eslint src",
     "lint:fix": "eslint src/*.ts src/**/*.ts --fix",
-    "test": "NODE_ENV=test mocha -r ts-node/register test/unit/index.ts -p ./tsconfig.json --timeout 55000 --exit",
-    "test-and-lint": "npm run build && npm run lint && NODE_ENV=test mocha -r ts-node/register test/unit/index.ts -p ./tsconfig.json --timeout 10000 --exit",
-    "test:integration": "NODE_ENV=test mocha -r ts-node/register test/integration/index.ts -p ./tsconfig.json --timeout 55000 --exit",
-    "test:coverage": "NODE_ENV=test nyc --reporter=lcov mocha -r ts-node/register test/unit/index.ts -p ./tsconfig.json --timeout 55000 --exit",
-    "test:coverage:codeclimate": "NODE_ENV=test nyc --reporter=lcov mocha -r ts-node/register test/unit/index.ts -p ./tsconfig.json --timeout 55000 --exit && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.core.json coverage/lcov.info",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1'",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run lint"
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
+    "test:integration": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
+    "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
+    "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.core.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -43,43 +40,31 @@
   "homepage": "https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib#readme",
   "dependencies": {
     "@affinidi/common": "^2.0.0-beta.6",
-    "bluebird": "^3.5.5",
+    "@affinidi/tools-common": "^1.0.0-beta.1",
     "did-resolver": "^2.0.1",
-    "jsontokens": "^3.0.0",
-    "lodash.get": "^4.4.2",
-    "lodash.pick": "^4.4.0",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@semantic-release/git": "^9.0.0",
-    "@semantic-release/gitlab": "^6.0.9",
-    "@semantic-release/npm": "^7.0.10",
     "@types/chai": "4.2.12",
-    "@types/lodash.get": "^4.4.6",
     "@types/mocha": "8.0.3",
-    "@types/node": "13.13.16",
     "@types/node-fetch": "^2.5.8",
-    "@typescript-eslint/eslint-plugin": "3.10.1",
-    "@typescript-eslint/parser": "3.10.1",
+    "base64url": "^3.0.1",
     "chai": "4.2.0",
     "config": "^3.0.1",
+    "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "eslint": "7.8.1",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.4",
+    "jsontokens": "^3.0.0",
     "license-checker": "25.0.1",
     "mocha": "8.1.3",
     "nock": "^12.0.3",
     "nyc": "15.1.0",
     "prettier": "2.1.1",
-    "semantic-release": "^17.4.2",
-    "ts-node": "9.0.0",
-    "ts-toolbelt": "^6.9.4",
-    "typescript": "3.9.7"
-  },
-  "resolutions": {
-    "ajv": "6.12.4"
+    "ts-node": "8.10.2",
+    "typescript": "^4.4.3"
   }
 }
