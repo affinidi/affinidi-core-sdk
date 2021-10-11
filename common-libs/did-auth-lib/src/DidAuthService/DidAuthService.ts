@@ -1,4 +1,5 @@
-import { Affinidi, JwtService, KeysService, KeyVault, DidDocumentService, LocalKeyVault } from '@affinidi/common'
+import { Affinidi, KeysService, KeyVault, DidDocumentService, LocalKeyVault } from '@affinidi/common'
+import { JwtService } from '@affinidi/tools-common'
 import { parse } from 'did-resolver'
 import base64url from 'base64url'
 import { DidAuthResponseToken } from './DidAuthResponseToken'

@@ -1,12 +1,13 @@
+import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/affinity-metrics-lib'
+import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
+import { JwtService } from '@affinidi/tools-common'
 import { buildVCV1, buildVPV1, removeIfExists, SimpleThing, VCV1Subject, VCV1SubjectBaseMA } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
-import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
-import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/affinity-metrics-lib'
 
 import { AffinityOptions, EventOptions } from './dto/shared.dto'
 import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
-import { DidDocumentService, KeysService, DigestService, JwtService, MetricsService } from './services'
+import { DidDocumentService, KeysService, DigestService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
 import { DidResolver } from './shared/DidResolver'
@@ -588,9 +589,7 @@ export class Affinity {
   }
 
   static encodeObjectToJWT(jwtObject: any) {
-    const jwtService = new JwtService()
-
-    return jwtService.encodeObjectToJWT(jwtObject)
+    return JwtService.encodeObjectToJWT(jwtObject)
   }
 
   static encryptSeed(seedHexWithMethod: string, encryptionKey: string) {

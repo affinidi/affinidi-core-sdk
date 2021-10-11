@@ -1,3 +1,4 @@
+import { JwtService } from '@affinidi/tools-common'
 import KeysService from '../KeysService'
 import JoloDidDocumentService from './JoloDidDocumentService'
 import ElemDidDocumentService from './ElemDidDocumentService'
@@ -63,10 +64,6 @@ export default class DidDocumentService {
   }
 
   static keyIdToDid(keyId: string): string {
-    if (keyId.indexOf('#') === -1) {
-      return keyId
-    }
-
-    return keyId.substring(0, keyId.indexOf('#'))
+    return JwtService.keyIdToDid(keyId)
   }
 }

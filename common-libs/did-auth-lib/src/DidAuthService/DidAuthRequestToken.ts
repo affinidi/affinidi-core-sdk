@@ -1,4 +1,4 @@
-import { JwtService } from '@affinidi/common'
+import { JwtService } from '@affinidi/tools-common'
 import { parse } from 'did-resolver'
 
 // partially parsed did auth request token

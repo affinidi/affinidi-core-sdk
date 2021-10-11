@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 
-import { JwtService } from '@affinidi/common'
+import { JwtService } from '@affinidi/tools-common'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
 import { verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid, verifierDid } from './../../factory/verifier'
 import { holderEncryptedSeed, holderEncryptionKey, holderDid } from './../../factory/holder'

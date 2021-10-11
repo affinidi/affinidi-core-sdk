@@ -1,7 +1,7 @@
 import nock from 'nock'
 import { expect } from 'chai'
 
-import { JwtService } from '@affinidi/common'
+import { JwtService } from '@affinidi/tools-common'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
 import { mockVerifierElemDidDocument } from './../../factory/mockVerifierElemDidDocument'
 import { mockHolderElemDidDocument } from './../../factory/mockHolderElemDidDocument'

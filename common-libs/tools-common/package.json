@@ -37,6 +37,9 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
+    "base64url": "^3.0.1",
+    "jsontokens": "^3.0.0",
+    "randombytes": "^2.1.0",
     "tslib": "^2.2.0"
   },
   "devDependencies": {

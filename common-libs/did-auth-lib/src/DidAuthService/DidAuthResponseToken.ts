@@ -1,5 +1,5 @@
 import { DidAuthRequestToken } from './DidAuthRequestToken'
-import { JwtService } from '@affinidi/common'
+import { JwtService } from '@affinidi/tools-common'
 
 // partially parsed did auth response token
 export class DidAuthResponseToken {
