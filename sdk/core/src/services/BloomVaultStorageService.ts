@@ -1,5 +1,5 @@
 import { KeysService } from '@affinidi/common'
-import { BloomVaultApiService } from '@affinidi/internal-api-clients'
+import { BloomVaultApiService, DidAuthAdapter } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
 import { toRpcSig, ecsign } from 'ethereumjs-util'
@@ -8,6 +8,7 @@ import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
+import { MigrationHelper } from '../migration'
 
 const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
@@ -16,6 +17,7 @@ const bip32 = require('bip32')
 const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
 
 type BloomVaultStorageOptions = {
+  didAuthAdapter: DidAuthAdapter
   accessApiKey: string
   vaultUrl: string
 }
@@ -48,6 +50,7 @@ export default class BloomVaultStorageService {
   private _keysService
   private _platformCryptographyTools
   private _vaultApiService
+  private _migrationHelper
 
   constructor(
     keysService: KeysService,
@@ -61,6 +64,12 @@ export default class BloomVaultStorageService {
       accessApiKey: options.accessApiKey,
       sdkVersion: extractSDKVersion(),
     })
+    this._migrationHelper = new MigrationHelper(
+      options.didAuthAdapter,
+      options.accessApiKey,
+      this._keysService,
+      this._platformCryptographyTools,
+    )
   }
 
   /* istanbul ignore next: private function */
@@ -233,15 +242,32 @@ export default class BloomVaultStorageService {
   }
 
   public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
-    const accessToken = await this._authorizeVcVault(storageRegion)
-
-    const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
-
-    if (!types) {
-      return credentials
+    let migration: any = { status: undefined }
+    try {
+      migration = await this._migrationHelper.getMigrationStatus()
+    } catch (err) {
+      console.log('@@@Vault-migration-service migration status call ends with error: ', err)
     }
 
-    return this._filterCredentialsByTypes(types, credentials)
+    if (migration.status === 'done') {
+      return []
+    } else {
+      const accessToken = await this._authorizeVcVault(storageRegion)
+
+      const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
+
+      try {
+        await this._migrationHelper.runMigration(credentials)
+      } catch (err) {
+        console.log('@@@Vault-migration-service run migration call ends with error: ', err)
+      }
+
+      if (!types) {
+        return credentials
+      }
+
+      return this._filterCredentialsByTypes(types, credentials)
+    }
   }
 
   public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
