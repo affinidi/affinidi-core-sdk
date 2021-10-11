@@ -1,0 +1,4 @@
+[allowlist]
+    description = "Whitelist files"
+    files = ['''^\.?gitleaks.toml$''', '''test''', '''(.*?)(md|png|jpg|gif|doc|docx|pdf|bin|xls|pyc|zip)$''', '''(go.mod|go.sum)$''']
+    paths = [ '''test*''', '''ansi-colors*''']

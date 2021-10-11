@@ -1,0 +1,50 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+.nyc_output
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional eslint cache
+.eslintcache
+
+# Editors
+*.swp
+.idea/
+.vs/
+.vscode/
+.vscode-test
+.DS_Store
+.history
+Thumbs.db
+
+# build / generate output
+dist
+out
+
+# Output of 'npm pack'
+*.tgz
+
+# dotenv environment variables file
+.env
