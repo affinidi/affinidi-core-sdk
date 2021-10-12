@@ -17,7 +17,7 @@ const bip32 = require('bip32')
 const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
 
 type BloomVaultStorageOptions = {
-  didAuthAdapter: DidAuthAdapter
+  didAuthAdapter?: DidAuthAdapter
   accessApiKey: string
   vaultUrl: string
 }
