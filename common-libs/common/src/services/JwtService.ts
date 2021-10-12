@@ -56,8 +56,7 @@ export default class JwtService {
     }
 
     if (receivedToken) {
-      const keyId = receivedToken.payload.iss
-      const did = keyId.substring(0, keyId.indexOf('#'))
+      const did = DidDocumentService.keyIdToDid(receivedToken.payload.iss)
       jwt.payload.aud = did
       jwt.payload.jti = receivedToken.payload.jti
     } else {
