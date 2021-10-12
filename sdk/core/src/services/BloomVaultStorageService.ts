@@ -8,7 +8,7 @@ import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
-import { MigrationHelper } from '../migration'
+import { MigrationHelper } from '../migration/credentials'
 
 const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
@@ -51,6 +51,7 @@ export default class BloomVaultStorageService {
   private _platformCryptographyTools
   private _vaultApiService
   private _migrationHelper
+  private didEth: string
 
   constructor(
     keysService: KeysService,
@@ -69,6 +70,7 @@ export default class BloomVaultStorageService {
       options.accessApiKey,
       this._keysService,
       this._platformCryptographyTools,
+      this.didEth,
     )
   }
 
@@ -95,13 +97,15 @@ export default class BloomVaultStorageService {
   /* istanbul ignore next: private function */
   private async _authorizeVcVault(storageRegion: string) {
     const { addressHex, privateKeyHex } = this._getVaultKeys()
-    const didEth = `did:ethr:0x${addressHex}`
+    if (!this.didEth) {
+      this.didEth = `did:ethr:0x${addressHex}`
+    }
 
     const {
       body: { token },
     } = await this._vaultApiService.requestAuthToken({
       storageRegion,
-      did: didEth,
+      did: this.didEth,
     })
 
     const signature = this._signByVaultKeys(token, privateKeyHex)
@@ -110,7 +114,7 @@ export default class BloomVaultStorageService {
       storageRegion,
       accessToken: token,
       signature,
-      did: didEth,
+      did: this.didEth,
     })
 
     return token
@@ -223,7 +227,7 @@ export default class BloomVaultStorageService {
     const allCredentials: any[] = []
     for (const blob of allBlobs) {
       const credential = await this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
-      allCredentials.push(credential)
+      allCredentials.push({ ...credential, bloomId: blob.id })
     }
 
     return allCredentials
@@ -251,23 +255,23 @@ export default class BloomVaultStorageService {
 
     if (migration.status === 'done') {
       return []
-    } else {
-      const accessToken = await this._authorizeVcVault(storageRegion)
-
-      const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
-
-      try {
-        await this._migrationHelper.runMigration(credentials)
-      } catch (err) {
-        console.log('@@@Vault-migration-service run migration call ends with error: ', err)
-      }
-
-      if (!types) {
-        return credentials
-      }
-
-      return this._filterCredentialsByTypes(types, credentials)
     }
+
+    const accessToken = await this._authorizeVcVault(storageRegion)
+
+    const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
+
+    try {
+      await this._migrationHelper.runMigration(credentials)
+    } catch (err) {
+      console.log('@@@Vault-migration-service run migration call ends with error: ', err)
+    }
+
+    if (!types) {
+      return credentials
+    }
+
+    return this._filterCredentialsByTypes(types, credentials)
   }
 
   public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {

@@ -24,6 +24,8 @@ export default class ApiService {
     const request: FETCH_OPTIONS = {
       method,
       headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
         ...headers,
         ...this.headers,
       },

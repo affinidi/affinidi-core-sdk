@@ -1,12 +1,14 @@
 import { DidAuthAdapter } from '@affinidi/internal-api-clients'
 import { DidAuthService } from './DidAuthService'
 import ApiService from './ApiService'
-import { VaultCredential } from '../dto/vault.dto'
-import { isW3cCredential } from '../_helpers'
+import { isW3cCredential } from '../../_helpers'
 import { KeysService } from '@affinidi/common'
-import { IPlatformCryptographyTools } from '../shared/interfaces'
+import { IPlatformCryptographyTools } from '../../shared/interfaces'
+const packageInfo = require('../package.json')
 
-const VAULT_MIGRATION_SERVICE_URL = 'https://affinity-vault-migration.dev.affinity-project.org'
+const environment = process.env.ENVIRONMENT || 'dev'
+const version = packageInfo.version
+const VAULT_MIGRATION_SERVICE_URL = `https://vault-migration-service.${environment}.affinity-project.org`
 
 interface vcMigrationList {
   bloomVaultIndex: number
@@ -24,29 +26,29 @@ export class MigrationHelper {
   private didAuthService: DidAuthService
   private readonly baseUrl: string
   private auth: string
-  private didAuthAdapter: DidAuthAdapter
   private keysService: KeysService
   private platformCryptographyTools: IPlatformCryptographyTools
   private readonly apiKey: string
   private readonly api: ApiService
+  private readonly bloomDid: string
 
   constructor(
     didAuthAdapter: DidAuthAdapter,
     apiKey: string,
     keysService: KeysService,
     platformCryptographyTools: IPlatformCryptographyTools,
+    bloomDid: string,
   ) {
     this.baseUrl = VAULT_MIGRATION_SERVICE_URL
     this.didAuthService = new DidAuthService(didAuthAdapter, this.apiKey, this.baseUrl)
-    this.didAuthAdapter = didAuthAdapter
     this.keysService = keysService
     this.platformCryptographyTools = platformCryptographyTools
     this.apiKey = apiKey
     this.api = new ApiService(this.baseUrl, {
-      Accept: 'application/json',
       'Api-Key': apiKey,
-      'Content-Type': 'application/json',
+      'X-SDK-Version': version,
     })
+    this.bloomDid = bloomDid
   }
 
   /**
@@ -68,10 +70,10 @@ export class MigrationHelper {
    * @param credentials
    * @private
    */
-  private async encryptCredentials(credentials: any[]): Promise<VaultCredential[]> {
+  private async encryptCredentials(credentials: any[]): Promise<vcMigrationList[]> {
     const publicKeyBuffer = this.keysService.getOwnPublicKey()
     const privateKeyBuffer = this.keysService.getOwnPrivateKey()
-    const encryptedCredentials: VaultCredential[] = []
+    const encryptedCredentials: vcMigrationList[] = []
 
     for (const credential of credentials) {
       let credentialId = credential?.id
@@ -92,9 +94,10 @@ export class MigrationHelper {
       const cyphertext = await this.platformCryptographyTools.encryptByPublicKey(publicKeyBuffer, credential)
 
       encryptedCredentials.push({
-        credentialId: credentialIdHash,
-        credentialTypes: typeHashes,
+        id: credentialIdHash,
+        types: typeHashes,
         payload: cyphertext,
+        bloomVaultIndex: credential.bloomId,
       })
     }
 
@@ -123,13 +126,11 @@ export class MigrationHelper {
   }
 
   /**
-   * Gets migration status for user with given did
-   * @param didInput
+   * Gets migration status for user with given token
    */
-  async getMigrationStatus(didInput?: string): Promise<{ status: string }> {
-    const did = didInput || this.didAuthAdapter.did
+  async getMigrationStatus(): Promise<{ status: string }> {
     const token = await this.getAuth()
-    const url = `${this.baseUrl}/api/v1/migrationStatus?did=${did}`
+    const url = `${this.baseUrl}/api/v1/migrationStatus`
     return this.api.execute(
       'GET',
       url,
@@ -144,14 +145,14 @@ export class MigrationHelper {
    * Send list of users encrypted VCs stored on `bloom-vault` to the `vault-migration-service` to start migration process to the `affinidi-vault`
    * @param {Array<vcMigrationList>} vcList
    */
-  private async migrateCredentials(vcList: VaultCredential[]): Promise<void> {
+  private async migrateCredentials(vcList: vcMigrationList[]): Promise<void> {
     const token = await this.getAuth()
     const url = `${this.baseUrl}/api/v1/migrateCredentials`
     return this.api.execute(
       'POST',
       url,
       {
-        did: this.didAuthAdapter.did,
+        bloomDid: this.bloomDid,
         verifiableCredentials: vcList,
       },
       {
