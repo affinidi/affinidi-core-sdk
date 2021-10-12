@@ -8,7 +8,7 @@ const packageInfo = require('../../../package.json')
 
 const environment = process.env.ENVIRONMENT || 'dev'
 const version = packageInfo.version
-const VAULT_MIGRATION_SERVICE_URL = `https://vault-migration-service.${environment}.affinity-project.org`
+export const VAULT_MIGRATION_SERVICE_URL = `https://vault-migration-service.${environment}.affinity-project.org`
 
 interface vcMigrationList {
   bloomVaultIndex: number
@@ -130,7 +130,7 @@ export class MigrationHelper {
    */
   async getMigrationStatus(): Promise<{ status: string }> {
     const token = await this.getAuth()
-    const url = `${this.baseUrl}/api/v1/migrationStatus`
+    const url = 'api/v1/migrationStatus'
     return this.api.execute(
       'GET',
       url,
@@ -147,7 +147,7 @@ export class MigrationHelper {
    */
   private async migrateCredentials(vcList: vcMigrationList[]): Promise<void> {
     const token = await this.getAuth()
-    const url = `${this.baseUrl}/api/v1/migrateCredentials`
+    const url = 'api/v1/migrateCredentials'
     return this.api.execute(
       'POST',
       url,
