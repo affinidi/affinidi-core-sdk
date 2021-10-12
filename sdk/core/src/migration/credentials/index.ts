@@ -4,7 +4,7 @@ import ApiService from './ApiService'
 import { isW3cCredential } from '../../_helpers'
 import { KeysService } from '@affinidi/common'
 import { IPlatformCryptographyTools } from '../../shared/interfaces'
-const packageInfo = require('../package.json')
+const packageInfo = require('../../../package.json')
 
 const environment = process.env.ENVIRONMENT || 'dev'
 const version = packageInfo.version
