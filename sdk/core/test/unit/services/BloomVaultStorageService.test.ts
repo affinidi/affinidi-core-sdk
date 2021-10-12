@@ -13,6 +13,8 @@ import { expect } from 'chai'
 import { authorizeVault } from './../../helpers'
 import signedCredential from '../../factory/signedCredential'
 import { extractSDKVersion } from '../../../src/_helpers'
+import { DidAuthService } from '../../../src/migration/credentials/DidAuthService'
+import { MigrationHelper, VAULT_MIGRATION_SERVICE_URL } from '../../../src/migration/credentials'
 
 let encryptionKey: string
 let encryptedSeed: string
@@ -24,6 +26,7 @@ const createBloomStorageService = () => {
   return new BloomVaultStorageService(keysService, testPlatformTools, {
     vaultUrl: STAGING_BLOOM_VAULT_URL,
     accessApiKey: undefined,
+    didAuthAdapter: undefined,
   })
 }
 
@@ -42,6 +45,44 @@ describe('BloomVaultStorageService', () => {
 
   afterEach(() => {
     sinon.restore()
+  })
+
+  it('should return empty array if migration status "done"', async () => {
+    sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').returns(Promise.resolve('requestToken'))
+    sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').returns(Promise.resolve('responseToken'))
+
+    await authorizeVault()
+
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/api/v1/migrationStatus').reply(200, { status: 'done' })
+    const service = createBloomStorageService()
+    const credentials = await service.searchCredentials(region)
+
+    expect(credentials).to.length(0)
+  })
+
+  it('should call `MigrationHelper.runMigration` method only once if migration status not "done"', async () => {
+    sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').returns(Promise.resolve('requestToken'))
+    sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').returns(Promise.resolve('responseToken'))
+
+    await authorizeVault()
+
+    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+      .get('/data/0/99')
+      .reply(200, [
+        { id: 0, cyphertext: JSON.stringify(signedCredential) },
+        { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
+      ])
+    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+      .get('/api/v1/migrationStatus')
+      .reply(200, { status: 'needMigration' })
+    const stub = sinon.stub(MigrationHelper.prototype, 'runMigration').returns(Promise.resolve())
+    const service = createBloomStorageService()
+    const credentials = await service.searchCredentials(region)
+
+    expect(stub.calledOnce).to.be.true
+    expect(credentials).to.length(2)
+    expect(credentials[0].id).to.eql(signedCredential.id)
   })
 
   it('#getAllCredentials', async () => {
