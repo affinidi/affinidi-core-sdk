@@ -1,18 +1,15 @@
 import { JwtService, KeysService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
-import { DidAuthAdapter } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
-import { Env } from '../dto/shared.dto'
-
-import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
-
-import { SignedCredential } from '../dto/shared.dto'
+import { extractSDKVersion } from '../_helpers'
+import { Env, SignedCredential } from '../dto/shared.dto'
+import { DidAuthAdapter } from '../shared/DidAuthAdapter'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import AffinidiVaultStorageService from './AffinidiVaultStorageService'
 import BloomVaultStorageService from './BloomVaultStorageService'
-import { extractSDKVersion } from '../_helpers'
 
 const createHash = require('create-hash')
 
