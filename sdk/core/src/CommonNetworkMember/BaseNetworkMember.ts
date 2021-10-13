@@ -79,7 +79,6 @@ export abstract class BaseNetworkMember {
   private readonly _password: string
   protected readonly _walletStorageService: WalletStorageService
   protected readonly _keysService: KeysService
-  private readonly _jwtService: JwtService
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
   private readonly _issuerApiService
@@ -141,7 +140,6 @@ export abstract class BaseNetworkMember {
       storageRegion,
       didAuthAdapter,
     })
-    this._jwtService = new JwtService()
     this._holderService = new HolderService(
       { registryUrl, metricsUrl, accessApiKey },
       platformCryptographyTools,
@@ -346,7 +344,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialOffer as any, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   async generateDidAuthRequest(options?: JwtOptions): Promise<string> {
@@ -395,7 +393,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialShareRequest as any, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   /**
@@ -410,7 +408,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialOfferResponse, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   async createDidAuthResponse(didAuthRequestToken: string): Promise<string> {
@@ -484,7 +482,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialResponse, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   /**
@@ -895,7 +893,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialShareRequest as any)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   async signUnsignedPresentation(vp: VPV1Unsigned, challenge: string, domain: string) {

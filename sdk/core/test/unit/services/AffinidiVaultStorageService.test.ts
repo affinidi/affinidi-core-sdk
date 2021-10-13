@@ -47,7 +47,6 @@ describe('AffinidiVaultStorageService', () => {
     encryptedSeed = testDids.jolo.encryptedSeed
     audienceDid = testDids.elem.did
     const keysService = new KeysService(encryptedSeed, encryptionKey)
-    const jwtService = new JwtService()
     const requestTokenObject = await keysService.signJWT({
       header: {
         alg: 'HS256',
@@ -61,7 +60,7 @@ describe('AffinidiVaultStorageService', () => {
         iss: 'did:elem:EiCH-xxcnkgZv6Qvjvo_UXn-8DUdUN3EtBJxolAQbQrCcA#',
       },
     })
-    requestToken = jwtService.encodeObjectToJWT(requestTokenObject)
+    requestToken = JwtService.encodeObjectToJWT(requestTokenObject)
 
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
