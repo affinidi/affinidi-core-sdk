@@ -31,6 +31,7 @@ export class MigrationHelper {
   private readonly apiKey: string
   private readonly api: ApiService
   private readonly bloomDid: string
+  private tokenRequestTime: number
 
   constructor(
     didAuthAdapter: DidAuthAdapter,
@@ -40,25 +41,27 @@ export class MigrationHelper {
     bloomDid: string,
   ) {
     this.baseUrl = VAULT_MIGRATION_SERVICE_URL
+    this.apiKey = apiKey
     this.didAuthService = new DidAuthService(didAuthAdapter, this.apiKey, this.baseUrl)
     this.keysService = keysService
     this.platformCryptographyTools = platformCryptographyTools
-    this.apiKey = apiKey
     this.api = new ApiService(this.baseUrl, {
       'Api-Key': apiKey,
       'X-SDK-Version': version,
     })
     this.bloomDid = bloomDid
+    this.tokenRequestTime = Date.now()
   }
 
   /**
    * Fetches authorization token to `vault-migration-service`
    */
   private async getAuth(): Promise<string> {
-    if (this.auth && !this.didAuthService.isTokenExpired(this.auth, Date.now())) {
+    if (this.auth && !this.didAuthService.isTokenExpired(this.auth, this.tokenRequestTime)) {
       return this.auth
     }
 
+    this.tokenRequestTime = Date.now()
     const requestToken = await this.didAuthService.pullDidAuthRequestToken()
     this.auth = await this.didAuthService.createDidAuthResponseToken(requestToken)
 
@@ -70,7 +73,7 @@ export class MigrationHelper {
    * @param credentials
    * @private
    */
-  private async encryptCredentials(credentials: any[]): Promise<vcMigrationList[]> {
+  async encryptCredentials(credentials: any[]): Promise<vcMigrationList[]> {
     const publicKeyBuffer = this.keysService.getOwnPublicKey()
     const privateKeyBuffer = this.keysService.getOwnPrivateKey()
     const encryptedCredentials: vcMigrationList[] = []
@@ -145,7 +148,7 @@ export class MigrationHelper {
    * Send list of users encrypted VCs stored on `bloom-vault` to the `vault-migration-service` to start migration process to the `affinidi-vault`
    * @param {Array<vcMigrationList>} vcList
    */
-  private async migrateCredentials(vcList: vcMigrationList[]): Promise<void> {
+  async migrateCredentials(vcList: vcMigrationList[]): Promise<void> {
     const token = await this.getAuth()
     const url = 'api/v1/migrateCredentials'
     return this.api.execute(

@@ -85,6 +85,33 @@ describe('BloomVaultStorageService', () => {
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
 
+  it('should call `MigrationHelper.runMigration` method only once if migration status undefined', async () => {
+    sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').resolves('requestToken')
+    sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').resolves('responseToken')
+
+    await authorizeVault()
+
+    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+      .get('/data/0/99')
+      .reply(200, [
+        { id: 0, cyphertext: JSON.stringify(signedCredential) },
+        { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
+      ])
+    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+      .get('/api/v1/migrationStatus')
+      .reply(200, { status: 'needMigration' })
+    const stubGetMigrationStatus = sinon
+      .stub(MigrationHelper.prototype, 'getMigrationStatus')
+      .resolves({ status: undefined })
+    const stubRunMigration = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
+    const service = createBloomStorageService()
+    await service.searchCredentials(region)
+
+    expect(stubGetMigrationStatus.calledOnce).to.be.true
+    expect(stubRunMigration.notCalled).to.be.true
+  })
+
   it('#getAllCredentials', async () => {
     await authorizeVault()
 

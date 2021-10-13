@@ -261,10 +261,12 @@ export default class BloomVaultStorageService {
 
     const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
 
-    try {
-      await this._migrationHelper.runMigration(credentials)
-    } catch (err) {
-      console.log('@@@Vault-migration-service run migration call ends with error: ', err)
+    if (migration.status) {
+      try {
+        this._migrationHelper.runMigration(credentials)
+      } catch (err) {
+        console.log('@@@Vault-migration-service run migration call ends with error: ', err)
+      }
     }
 
     if (!types) {
