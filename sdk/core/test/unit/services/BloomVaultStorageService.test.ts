@@ -85,7 +85,7 @@ describe('BloomVaultStorageService', () => {
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
 
-  it('should call `MigrationHelper.runMigration` method only once if migration status undefined', async () => {
+  it('should not call `MigrationHelper.runMigration` method if migration status undefined', async () => {
     sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').resolves('requestToken')
     sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').resolves('responseToken')
 
