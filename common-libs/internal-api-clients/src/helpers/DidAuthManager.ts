@@ -1,22 +1,35 @@
-import { DidAuthAdapter } from '../helpers/DidAuthAdapter'
-import { LocalExpiringDidAuthResponseToken } from '@affinidi/affinidi-did-auth-lib'
+import { DidAuthAdapterType } from './didAuthClientWrapper'
 
-export const createDidAuthSession = (didAuthAdapter: DidAuthAdapter) => {
-  let responseTokenInfo: LocalExpiringDidAuthResponseToken | undefined
+type ResponseTokenInfo = {
+  requestTime: number
+  responseToken: string
+}
+
+const isValidResponseToken = (didAuthAdapter: DidAuthAdapterType, responseTokenInfo?: ResponseTokenInfo) => {
+  if (!responseTokenInfo) {
+    return false
+  }
+
+  const { requestTime, responseToken } = responseTokenInfo
+  return !didAuthAdapter.isResponseTokenExpired(responseToken, requestTime)
+}
+
+export const createDidAuthSession = (didAuthAdapter: DidAuthAdapterType) => {
+  let responseTokenInfo: ResponseTokenInfo | undefined
 
   return {
     async getResponseToken(createRequestToken: (did: string) => Promise<string>) {
-      if (!responseTokenInfo || responseTokenInfo.isExpiredAt(Date.now())) {
-        const tokenRequestTime = Date.now()
+      if (!isValidResponseToken(didAuthAdapter, responseTokenInfo)) {
+        const requestTime = Date.now()
 
         const didAuthRequestToken = await createRequestToken(didAuthAdapter.did)
 
         const responseToken = await didAuthAdapter.createDidAuthResponseToken(didAuthRequestToken)
 
-        responseTokenInfo = LocalExpiringDidAuthResponseToken.initialize(tokenRequestTime, responseToken)
+        responseTokenInfo = { requestTime, responseToken }
       }
 
-      return responseTokenInfo.toString()
+      return responseTokenInfo?.responseToken
     },
   }
 }

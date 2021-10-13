@@ -1,10 +1,11 @@
 import { KeysService } from '@affinidi/common'
-import { AffinidiVaultApiService, DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { AffinidiVaultApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
-import { IPlatformCryptographyTools } from '../shared/interfaces'
-import { VaultCredential } from '../dto/vault.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
+import { VaultCredential } from '../dto/vault.dto'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
+import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 
 type AffinidiVaultStorageOptions = {
   didAuthAdapter: DidAuthAdapter

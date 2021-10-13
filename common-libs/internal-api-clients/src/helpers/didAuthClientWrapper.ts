@@ -1,10 +1,15 @@
 import { ThisData as BasicThisData, ClientOptions, createThisData } from './client'
-import { DidAuthAdapter } from './DidAuthAdapter'
 import { DidAuthSession } from './DidAuthManager'
 import { mapFunctions } from './mapFunctions'
 
+export type DidAuthAdapterType = {
+  readonly did: string
+  createDidAuthResponseToken(didAuthRequestToken: string): Promise<string>
+  isResponseTokenExpired(responseToken: string, requestTime: number): boolean
+}
+
 export type DidAuthConstructorOptions = ClientOptions & {
-  didAuthAdapter: DidAuthAdapter
+  didAuthAdapter: DidAuthAdapterType
 }
 
 type ThisData = BasicThisData & {

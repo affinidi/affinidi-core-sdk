@@ -1,11 +1,12 @@
 import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
+import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import {
   IssuerApiService,
   RegistryApiService,
   RevocationApiService,
   VerifierApiService,
-  DidAuthAdapter,
 } from '@affinidi/internal-api-clients'
+import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 import { profile } from '@affinidi/tools-common'
 import {
   buildVCV1Skeleton,
@@ -19,10 +20,8 @@ import {
 } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
-import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
-
-import WalletStorageService from '../services/WalletStorageService'
-import HolderService from '../services/HolderService'
+import { extractSDKVersion, isW3cCredential } from '../_helpers'
+import { DEFAULT_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
 
 import {
   ClaimMetadata,
@@ -36,25 +35,26 @@ import {
   KeyOptions,
 } from '../dto/shared.dto'
 
-import { IPlatformCryptographyTools } from '../shared/interfaces'
-import { ParametersValidator } from '../shared/ParametersValidator'
-
 import {
   CredentialShareResponseOutput,
   CredentialOfferResponseOutput,
   PresentationValidationOutput,
 } from '../dto/verifier.dto'
 
-import { randomBytes } from '../shared/randomBytes'
-import { extractSDKVersion, isW3cCredential } from '../_helpers'
-
-import { DEFAULT_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
+import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import KeyManagementService from '../services/KeyManagementService'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
+import { ParametersValidator } from '../shared/ParametersValidator'
+import { randomBytes } from '../shared/randomBytes'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
-import { Util } from './Util'
-import { register } from '../services/registeringHandler'
+
 import { anchorDid } from '../services/anchoringHandler'
+import HolderService from '../services/HolderService'
+import KeyManagementService from '../services/KeyManagementService'
+import { register } from '../services/registeringHandler'
+import WalletStorageService from '../services/WalletStorageService'
+
+import { Util } from './Util'
 
 export const createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
   return new KeyManagementService({ ...basicOptions, accessApiKey })
@@ -126,7 +126,8 @@ export abstract class BaseNetworkMember {
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    const didAuthAdapter = new DidAuthAdapter(did, { encryptedSeed, encryptionKey: password })
+    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
+    const didAuthAdapter = new DidAuthAdapter(did, didAuthService)
     this._revocationApiService = new RevocationApiService({
       revocationUrl,
       accessApiKey,
