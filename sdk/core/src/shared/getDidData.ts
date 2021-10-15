@@ -3,7 +3,7 @@ import { DidDocumentService, KeysService } from '@affinidi/common'
 export const getDidDataFromKeysService = (keysService: KeysService) => {
   const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const did = didDocumentService.getMyDid()
-  const didDocumentKeyId = didDocumentService.getKeyId(did)
+  const didDocumentKeyId = didDocumentService.getKeyId()
 
   return { did, didDocumentKeyId }
 }

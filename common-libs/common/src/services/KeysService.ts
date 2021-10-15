@@ -282,14 +282,11 @@ export default class KeysService {
   }
 
   private getJWTAdditionalPayload(keyId?: string) {
-    if (!keyId) {
-      const didDocumentService = DidDocumentService.createDidDocumentService(this)
-      const did = didDocumentService.getMyDid()
-      keyId = didDocumentService.getKeyId()
+    const didDocumentService = DidDocumentService.createDidDocumentService(this)
 
-      return { kid: keyId, iss: did }
-    } else {
-      return { iss: keyId }
+    return {
+      iss: didDocumentService.getMyDid(),
+      kid: keyId ?? didDocumentService.getKeyId(),
     }
   }
 
