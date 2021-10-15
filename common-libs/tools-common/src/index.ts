@@ -1,5 +1,3 @@
-import SdkError from './SdkError'
-
 if (typeof Buffer === 'undefined') {
   global.Buffer = require('buffer').Buffer
 }
@@ -15,4 +13,5 @@ if (typeof process.version === 'undefined') {
 }
 
 export { profile, ProfileAction } from './profiler/ProfilerDecorator'
-export { SdkError }
+export { default as SdkError } from './SdkError'
+export { default as JwtService } from './services/JwtService'

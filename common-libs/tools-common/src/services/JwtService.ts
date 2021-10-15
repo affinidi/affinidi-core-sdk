@@ -1,32 +1,35 @@
-import DidDocumentService from './DidDocumentService'
 import { decodeToken } from 'jsontokens'
 import encode from 'base64url'
 import { randomBytes } from '../shared/randomBytes'
 
-import { DEFAULT_JWT_EXPIRY_MS } from '../_defaultConfig'
+const JwtService = {
+  DEFAULT_JWT_EXPIRY_MS: 10 * 60 * 1000,
 
-export default class JwtService {
-  static getDidFromToken(jwt: string) {
+  keyIdToDid: (keyId: string) => {
+    if (keyId.indexOf('#') === -1) {
+      return keyId
+    }
+
+    return keyId.substring(0, keyId.indexOf('#'))
+  },
+
+  getDidFromToken: (jwt: string) => {
     const jwtObject: any = JwtService.fromJWT(jwt)
     const issuerKey = jwtObject.payload.iss
 
-    return DidDocumentService.keyIdToDid(issuerKey)
-  }
+    return JwtService.keyIdToDid(issuerKey)
+  },
 
-  static fromJWT(token: string): any {
-    let data
-
+  fromJWT: (token: string): any => {
     try {
-      data = decodeToken(token)
+      return decodeToken(token)
     } catch (error) {
       // NOTE: to add approrpaite error handler (see NEP-336)
       throw new Error('Invalid Token')
     }
+  },
 
-    return data
-  }
-
-  encodeObjectToJWT(jwtObject: { header: unknown; payload: unknown; signature: string }) {
+  encodeObjectToJWT: (jwtObject: { header: unknown; payload: unknown; signature: string }) => {
     if (!jwtObject.payload || !jwtObject.header || !jwtObject.signature) {
       throw new Error('The JWT is not complete, header / payload / signature are missing')
     }
@@ -36,10 +39,10 @@ export default class JwtService {
       encode(JSON.stringify(jwtObject.payload)),
       jwtObject.signature,
     ].join('.')
-  }
+  },
 
-  static async buildJWTInteractionToken(interactionToken: any, type: string, receivedToken: any) {
-    const expiration = Date.now() + DEFAULT_JWT_EXPIRY_MS
+  buildJWTInteractionToken: async (interactionToken: any, type: string, receivedToken: any) => {
+    const expiration = Date.now() + JwtService.DEFAULT_JWT_EXPIRY_MS
 
     const jwt = {
       header: {
@@ -56,7 +59,7 @@ export default class JwtService {
     }
 
     if (receivedToken) {
-      const did = DidDocumentService.keyIdToDid(receivedToken.payload.iss)
+      const did = JwtService.keyIdToDid(receivedToken.payload.iss)
       jwt.payload.aud = did
       jwt.payload.jti = receivedToken.payload.jti
     } else {
@@ -64,5 +67,7 @@ export default class JwtService {
     }
 
     return jwt
-  }
+  },
 }
+
+export default JwtService
