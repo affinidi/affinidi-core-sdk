@@ -72,6 +72,7 @@ export default class JoloDidDocument {
     }
 
     return {
+      did,
       didDocument,
       keyId: `${did}#${this._signingKey}`,
     }

@@ -33,6 +33,7 @@ import {
   KeyParams,
   KeyAlgorithmType,
   KeyOptions,
+  DidMethod,
 } from '../dto/shared.dto'
 
 import {
@@ -221,8 +222,22 @@ export abstract class BaseNetworkMember {
     nonce: number,
     { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
   ) {
-    const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
-    return anchorDid(api, encryptedSeed, password, didDocument, false, nonce)
+    const registry = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
+    const keysService = new KeysService(encryptedSeed, password)
+    const { seed, didMethod } = keysService.decryptSeed()
+    const didService = DidDocumentService.createDidDocumentService(keysService)
+    return anchorDid({
+      registry,
+      anchoredDidElem: false,
+      did: didService.getMyDid(),
+      didMethod: didMethod as DidMethod,
+      keysService,
+      nonce,
+      additionalJoloParams: {
+        didDocument,
+        seedHex: seed.toString('hex'),
+      },
+    })
   }
 
   /**
