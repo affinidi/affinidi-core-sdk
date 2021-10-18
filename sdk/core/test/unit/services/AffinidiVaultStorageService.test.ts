@@ -3,8 +3,8 @@
 import nock from 'nock'
 import sinon from 'sinon'
 
-import { KeysService, JwtService } from '@affinidi/common'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
+import { KeysService, JwtService, DidDocumentService, LocalKeyVault } from '@affinidi/common'
+import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
@@ -25,7 +25,14 @@ const reqheaders: Record<string, string> = {}
 
 const createAffinidiStorageService = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
-  const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey })
+  const documentService = DidDocumentService.createDidDocumentService(keysService)
+  const keyVault = new LocalKeyVault(keysService)
+  const signer = new Signer({
+    did: documentService.getMyDid(),
+    keyId: documentService.getKeyId(),
+    keyVault,
+  })
+  const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter(audienceDid, didAuthService)
   return new AffinidiVaultStorageService(keysService, testPlatformTools, {
     vaultUrl: STAGING_AFFINIDI_VAULT_URL,

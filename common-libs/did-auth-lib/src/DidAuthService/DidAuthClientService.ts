@@ -5,7 +5,7 @@ import Signer from '../shared/Signer'
 import { CreateResponseTokenOptions } from '../shared/types'
 import { DidAuthRequestToken } from './DidAuthRequestToken'
 
-export default class AffinidiDidAuthClientService {
+export default class DidAuthClientService {
   private readonly _signer: Signer
 
   /**

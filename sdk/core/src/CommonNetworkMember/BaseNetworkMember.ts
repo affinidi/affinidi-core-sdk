@@ -1,5 +1,5 @@
-import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
+import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity, LocalKeyVault } from '@affinidi/common'
+import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import {
   IssuerApiService,
   RegistryApiService,
@@ -115,6 +115,11 @@ export abstract class BaseNetworkMember {
     } = basicOptions
 
     const keysService = new KeysService(encryptedSeed, password)
+    const keyVault = new LocalKeyVault(keysService)
+    const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault })
+    const didAuthService = new DidAuthClientService(signer)
+    const didAuthAdapter = new DidAuthAdapter(did, didAuthService)
+
     this._metricsService = new MetricsService({
       metricsUrl,
       accessApiKey: accessApiKey,
@@ -127,8 +132,6 @@ export abstract class BaseNetworkMember {
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
-    const didAuthAdapter = new DidAuthAdapter(did, didAuthService)
     this._revocationApiService = new RevocationApiService({
       revocationUrl,
       accessApiKey,

@@ -1,7 +1,7 @@
-import { DidAuthService, LocalExpiringDidAuthResponseToken } from '@affinidi/affinidi-did-auth-lib'
+import { DidAuthClientService, LocalExpiringDidAuthResponseToken } from '@affinidi/affinidi-did-auth-lib'
 
 export class DidAuthAdapter {
-  constructor(private readonly _did: string, private readonly _didAuthService: DidAuthService) {}
+  constructor(private readonly _did: string, private readonly _didAuthService: DidAuthClientService) {}
 
   get did(): string {
     return this._did

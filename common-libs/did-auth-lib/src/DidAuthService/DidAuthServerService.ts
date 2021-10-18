@@ -6,7 +6,7 @@ import { DidAuthResponseToken } from './DidAuthResponseToken'
 import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from '../shared/constants'
 import Signer from '../shared/Signer'
 
-export default class AffinidiDidAuthServerService {
+export default class DidAuthServerService {
   private readonly _did: string
   private readonly _signer: Signer
 

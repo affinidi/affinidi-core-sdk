@@ -7,7 +7,7 @@ if (!fetch) {
   fetch = require('node-fetch')
 }
 
-export default class AffinidiDidAuthCloudService {
+export default class DidAuthCloudService {
   async createDidAuthResponseTokenThroughCloudWallet(
     didAuthRequestToken: string,
     apiKey: string,

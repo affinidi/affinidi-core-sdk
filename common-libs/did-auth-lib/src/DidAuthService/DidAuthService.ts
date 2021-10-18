@@ -3,9 +3,9 @@ import { JwtService } from '@affinidi/tools-common'
 import { parse } from 'did-resolver'
 import { CreateResponseTokenOptions, VerifierOptions } from '../shared/types'
 import Signer from '../shared/Signer'
-import AffinidiDidAuthClientService from './DidAuthClientService'
-import AffinidiDidAuthServerService from './DidAuthServerService'
-import AffinidiDidAuthCloudService from './DidAuthCloudService'
+import DidAuthClientService from './DidAuthClientService'
+import DidAuthServerService from './DidAuthServerService'
+import DidAuthCloudService from './DidAuthCloudService'
 
 export type AffinidiDidAuthServiceOptions = OptionsWithSeed | OptionsWithKeyVault
 
@@ -95,7 +95,7 @@ export default class AffinidiDidAuthService {
   }
 
   async createDidAuthRequestToken(audienceDid: string, expiresAt?: number): Promise<string> {
-    const serverService = new AffinidiDidAuthServerService(this._did, this.createSigner())
+    const serverService = new DidAuthServerService(this._did, this.createSigner())
     return serverService.createDidAuthRequestToken(audienceDid, expiresAt)
   }
 
@@ -103,7 +103,7 @@ export default class AffinidiDidAuthService {
     didAuthRequestTokenStr: string,
     options?: CreateResponseTokenOptions,
   ): Promise<string> {
-    const clientService = new AffinidiDidAuthClientService(this.createSigner())
+    const clientService = new DidAuthClientService(this.createSigner())
     return clientService.createDidAuthResponseToken(didAuthRequestTokenStr, options)
   }
 
@@ -113,7 +113,7 @@ export default class AffinidiDidAuthService {
     cloudWalletAccessToken: string,
     environment: string,
   ): Promise<string> {
-    const cloudService = new AffinidiDidAuthCloudService()
+    const cloudService = new DidAuthCloudService()
     return cloudService.createDidAuthResponseTokenThroughCloudWallet(
       didAuthRequestToken,
       apiKey,
@@ -123,7 +123,7 @@ export default class AffinidiDidAuthService {
   }
 
   async verifyDidAuthResponseToken(didAuthResponseTokenStr: string, options: VerifierOptions): Promise<boolean> {
-    const serverService = new AffinidiDidAuthServerService(this._did, this.createSigner())
+    const serverService = new DidAuthServerService(this._did, this.createSigner())
     return serverService.verifyDidAuthResponseToken(didAuthResponseTokenStr, options)
   }
 
