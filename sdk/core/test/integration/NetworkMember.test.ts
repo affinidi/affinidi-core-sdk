@@ -408,34 +408,34 @@ describe('CommonNetworkMember', () => {
   it('#register and #signUpWithExistsEntity (userName is arbitrary) and #fromLoginAndPassword', async () => {
     const { did, encryptedSeed } = await AffinidiWallet.register(password, options)
     const keyParams = { encryptedSeed, password }
-    const username = did
+    const username = did.split(';elem:')[0]
 
     const affinityWallet = await AffinidiWallet.signUpWithExistsEntity(keyParams, username, cognitoPassword, options)
     checkIsWallet(affinityWallet)
 
-    const walletShortDid = affinityWallet.did.split(';elem:')[0]
-    expect(walletShortDid).to.equal(did)
+    const walletDid = affinityWallet.did
+    expect(walletDid).to.equal(did)
 
     const affinityWalletAfterLogin = await AffinidiWallet.fromLoginAndPassword(username, cognitoPassword, options)
-    const walletAfterLoginShortDid = affinityWalletAfterLogin.did.split(';elem:')[0]
-    expect(walletAfterLoginShortDid).to.equal(did)
+    const walletAfterLoginDid = affinityWalletAfterLogin.did
+    expect(walletAfterLoginDid).to.equal(did)
   })
 
   it('#register and #signUpWithExistsEntity (userName is arbitrary with week password) and #fromLoginAndPassword', async () => {
     const userPassword = '092376'
     const { did, encryptedSeed } = await AffinidiWallet.register(password, options)
     const keyParams = { encryptedSeed, password }
-    const username = did
+    const username = did.split(';elem:')[0]
 
     const affinityWallet = await AffinidiWallet.signUpWithExistsEntity(keyParams, username, userPassword, options)
     checkIsWallet(affinityWallet)
 
-    const walletShortDid = affinityWallet.did.split(';elem:')[0]
-    expect(walletShortDid).to.equal(did)
+    const walletDid = affinityWallet.did
+    expect(walletDid).to.equal(did)
 
     const affinityWalletAfterLogin = await AffinidiWallet.fromLoginAndPassword(username, userPassword, options)
-    const walletAfterLoginShortDid = affinityWalletAfterLogin.did.split(';elem:')[0]
-    expect(walletAfterLoginShortDid).to.equal(did)
+    const walletAfterLoginDid = affinityWalletAfterLogin.did
+    expect(walletAfterLoginDid).to.equal(did)
   })
 
   it('#generateCredentialOfferRequestToken', async () => {
@@ -1093,5 +1093,50 @@ describe('CommonNetworkMember', () => {
   it('#deleteAllCredentials', async () => {
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeedElem, options)
     await commonNetworkMember.deleteAllCredentials()
+  })
+
+  it('#createWallet should return wallet with resolvable did (elem)', async () => {
+    const commonNetworkMember = await AffinidiWallet.createWallet(
+      {
+        ...options,
+        didMethod: 'elem',
+      },
+      password,
+    )
+
+    const resolvedDidDocument = await commonNetworkMember.resolveDid(commonNetworkMember.did)
+
+    expect(resolvedDidDocument.id).equal(commonNetworkMember.didDocumentKeyId.split('#')[0])
+    expect(resolvedDidDocument.publicKey.length).to.be.gte(1)
+  })
+
+  it('#createWallet should return wallet with resolvable did (elem-anchored)', async () => {
+    const commonNetworkMember = await AffinidiWallet.createWallet(
+      {
+        ...options,
+        didMethod: 'elem-anchored',
+      },
+      password,
+    )
+
+    const resolvedDidDocument = await commonNetworkMember.resolveDid(commonNetworkMember.did)
+
+    expect(resolvedDidDocument.id).equal(commonNetworkMember.didDocumentKeyId.split('#')[0])
+    expect(resolvedDidDocument.publicKey.length).to.be.gte(1)
+  })
+
+  it('#createWallet should return wallet with resolvable did (jolo)', async () => {
+    const commonNetworkMember = await AffinidiWallet.createWallet(
+      {
+        ...options,
+        didMethod: 'jolo',
+      },
+      password,
+    )
+
+    const resolvedDidDocument = await commonNetworkMember.resolveDid(commonNetworkMember.did)
+
+    expect(resolvedDidDocument.id).equal(commonNetworkMember.didDocumentKeyId.split('#')[0])
+    expect(resolvedDidDocument.publicKey.length).to.be.gte(1)
   })
 })
