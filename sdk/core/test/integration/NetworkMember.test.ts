@@ -17,10 +17,9 @@ import {
 } from '../helpers'
 import { credentialShareRequestTokenToFilterCredentials } from '../factory/credentialShareRequestToken'
 import { generateCredentials } from '../helpers/generateCredentials'
-import { SignedCredential } from '../../src/dto'
+import { SignedCredential, SdkOptions } from '../../src/dto'
 import { testPlatformTools } from '../helpers/testPlatformTools'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
-import { DidMethod, SdkOptions } from '../../dist'
 
 const {
   PASSWORD,
