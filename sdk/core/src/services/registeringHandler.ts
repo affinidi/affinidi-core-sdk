@@ -37,8 +37,12 @@ export const register = async (
   if (isAnchoredSeed) {
     const anchoredSeed = extendSeedWithDid(seedWithMethod, anchoredInBlockchainDid)
 
-    const { encryptedSeed: anchoredEncryptedSeed } = await KeysService.fromSeedAndPassword(anchoredSeed, password)
-    const didDocumentKeyId = didDocumentService.getKeyId(anchoredInBlockchainDid)
+    const { encryptedSeed: anchoredEncryptedSeed, keysService } = await KeysService.fromSeedAndPassword(
+      anchoredSeed,
+      password,
+    )
+    const anchoredDocumentService = DidDocumentService.createDidDocumentService(keysService)
+    const didDocumentKeyId = anchoredDocumentService.getKeyId()
 
     return { did: anchoredInBlockchainDid, encryptedSeed: anchoredEncryptedSeed, didDocumentKeyId }
   }

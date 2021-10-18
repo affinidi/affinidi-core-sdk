@@ -23,8 +23,8 @@ export default class ElemAnchoredDidDocumentService {
     return metadata.anchoredDid
   }
 
-  getKeyId(did: string = null) {
-    return `${did ? did : this.getMyDid()}#${this._signingKey}`
+  getKeyId() {
+    return `${this.getMyDid()}#${this._signingKey}`
   }
 
   async buildDidDocumentForRegister() {
