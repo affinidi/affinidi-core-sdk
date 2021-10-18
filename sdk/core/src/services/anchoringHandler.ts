@@ -16,7 +16,7 @@ type AnchoringParams = {
   }
 }
 
-const getPreparedJoloParams = async ({ registry, keysService, nonce, additionalJoloParams }: AnchoringParams) => {
+const computePreparedJoloParams = async ({ registry, keysService, nonce, additionalJoloParams }: AnchoringParams) => {
   if (!additionalJoloParams) {
     throw new Error('missing jolo params')
   }
@@ -41,18 +41,18 @@ const getPreparedJoloParams = async ({ registry, keysService, nonce, additionalJ
   return { did, didDocumentAddress, ethereumPublicKeyHex, transactionSignatureJson, nonce }
 }
 
-const getPreparedElemParams = async ({ did }: AnchoringParams) => {
+const computePreparedElemParams = async ({ did }: AnchoringParams) => {
   return { did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' }
 }
 
-const getPreparedAnchoringParams = async (params: AnchoringParams) => {
+const computePreparedAnchoringParams = async (params: AnchoringParams) => {
   const { didMethod } = params
   switch (didMethod) {
     case JOLO_DID_METHOD:
-      return getPreparedJoloParams(params)
+      return computePreparedJoloParams(params)
     case ELEM_DID_METHOD:
     case ELEM_ANCHORED_DID_METHOD:
-      return getPreparedElemParams(params)
+      return computePreparedElemParams(params)
     default:
       throw new Error(`did method: "${didMethod}" is not supported`)
   }
@@ -60,7 +60,7 @@ const getPreparedAnchoringParams = async (params: AnchoringParams) => {
 
 export const anchorDid = async (params: AnchoringParams): Promise<{ did: string }> => {
   const { registry, anchoredDidElem, nonce } = params
-  const preparedParams = await getPreparedAnchoringParams(params)
+  const preparedParams = await computePreparedAnchoringParams(params)
   const response = await registry.anchorDid({
     ...preparedParams,
     nonce,
