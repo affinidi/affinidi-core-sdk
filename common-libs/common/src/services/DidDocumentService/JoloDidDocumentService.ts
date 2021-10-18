@@ -29,12 +29,8 @@ export default class JoloDidDocument {
     return this._getDid(seedHex)
   }
 
-  getKeyId(did: string = null) {
-    if (!did) {
-      did = this.getMyDid()
-    }
-
-    return `${did}#${this._signingKey}`
+  getKeyId() {
+    return `${this.getMyDid()}#${this._signingKey}`
   }
 
   async buildDidDocumentForRegister() {
@@ -72,6 +68,7 @@ export default class JoloDidDocument {
     }
 
     return {
+      did,
       didDocument,
       keyId: `${did}#${this._signingKey}`,
     }
