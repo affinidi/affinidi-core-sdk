@@ -40,9 +40,9 @@
   "homepage": "https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib#readme",
   "dependencies": {
     "@affinidi/common": "^2.0.0-beta.6",
+    "@affinidi/internal-api-clients": "^1.0.0-beta.13",
     "@affinidi/tools-common": "^1.0.0-beta.1",
-    "did-resolver": "^2.0.1",
-    "node-fetch": "^2.6.1"
+    "did-resolver": "^2.0.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
