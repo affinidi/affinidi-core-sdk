@@ -1,4 +1,4 @@
-import { Affinidi } from '@affinidi/common'
+import { JwtService } from '@affinidi/tools-common'
 import { buildResponseJwtObject } from '../shared/builder'
 import { DEFAULT_MAX_TOKEN_VALID_IN_MS } from '../shared/constants'
 import Signer from '../shared/Signer'
@@ -6,16 +6,7 @@ import { CreateResponseTokenOptions } from '../shared/types'
 import { DidAuthRequestToken } from './DidAuthRequestToken'
 
 export default class DidAuthClientService {
-  private readonly _signer: Signer
-
-  /**
-   * Construct a DidAuthService based on the given options
-   *
-   * @param options auth service options
-   */
-  constructor(signer: Signer) {
-    this._signer = signer
-  }
+  constructor(private readonly _signer: Signer) {}
 
   async createDidAuthResponseToken(
     didAuthRequestTokenStr: string,
@@ -38,6 +29,6 @@ export default class DidAuthClientService {
 
     await this._signer.fillSignature(jwtObject)
 
-    return Affinidi.encodeObjectToJWT(jwtObject)
+    return JwtService.encodeObjectToJWT(jwtObject)
   }
 }

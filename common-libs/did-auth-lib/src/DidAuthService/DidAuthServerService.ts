@@ -1,24 +1,12 @@
 import { Affinidi } from '@affinidi/common'
 import { JwtService } from '@affinidi/tools-common'
 import { parse } from 'did-resolver'
-import { VerifierOptions } from '../shared/types'
 import { DidAuthResponseToken } from './DidAuthResponseToken'
 import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from '../shared/constants'
 import Signer from '../shared/Signer'
 
 export default class DidAuthServerService {
-  private readonly _did: string
-  private readonly _signer: Signer
-
-  /**
-   * Construct a DidAuthService based on the given options
-   *
-   * @param options auth service options
-   */
-  constructor(did: string, signer: Signer) {
-    this._did = did
-    this._signer = signer
-  }
+  constructor(private readonly _did: string, private readonly _signer: Signer, private readonly _affinidi: Affinidi) {}
 
   async createDidAuthRequestToken(audienceDid: string, expiresAt?: number): Promise<string> {
     const jwtType = 'DidAuthRequest'
@@ -31,21 +19,15 @@ export default class DidAuthServerService {
 
     await this._signer.fillSignature(jwtObject)
 
-    return Affinidi.encodeObjectToJWT(jwtObject)
+    return JwtService.encodeObjectToJWT(jwtObject)
   }
 
-  async verifyDidAuthResponseToken(didAuthResponseTokenStr: string, options: VerifierOptions): Promise<boolean> {
-    const affinidiOptions = {
-      registryUrl: `https://affinity-registry.${options.environment}.affinity-project.org`,
-      apiKey: options.accessApiKey,
-    }
-    const affinidi = new Affinidi(affinidiOptions, null as any)
-
+  async verifyDidAuthResponseToken(didAuthResponseTokenStr: string): Promise<boolean> {
     const didAuthResponseToken = DidAuthResponseToken.fromString(didAuthResponseTokenStr)
     const didAuthRequestToken = didAuthResponseToken.requestToken
 
-    await affinidi.validateJWT(didAuthRequestToken.toString())
-    await affinidi.validateJWT(didAuthResponseToken.toString(), didAuthRequestToken.toString())
+    await this._affinidi.validateJWT(didAuthRequestToken.toString())
+    await this._affinidi.validateJWT(didAuthResponseToken.toString(), didAuthRequestToken.toString())
 
     const verifierDid = parse(this._did).did
 

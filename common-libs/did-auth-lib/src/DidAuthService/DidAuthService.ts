@@ -1,4 +1,4 @@
-import { KeysService, KeyVault, DidDocumentService, LocalKeyVault } from '@affinidi/common'
+import { KeysService, KeyVault, DidDocumentService, LocalKeyVault, Affinidi } from '@affinidi/common'
 import { JwtService } from '@affinidi/tools-common'
 import { parse } from 'did-resolver'
 import { CreateResponseTokenOptions, VerifierOptions } from '../shared/types'
@@ -95,7 +95,7 @@ export default class AffinidiDidAuthService {
   }
 
   async createDidAuthRequestToken(audienceDid: string, expiresAt?: number): Promise<string> {
-    const serverService = new DidAuthServerService(this._did, this.createSigner())
+    const serverService = new DidAuthServerService(this._did, this.createSigner(), null as any)
     return serverService.createDidAuthRequestToken(audienceDid, expiresAt)
   }
 
@@ -123,8 +123,14 @@ export default class AffinidiDidAuthService {
   }
 
   async verifyDidAuthResponseToken(didAuthResponseTokenStr: string, options: VerifierOptions): Promise<boolean> {
-    const serverService = new DidAuthServerService(this._did, this.createSigner())
-    return serverService.verifyDidAuthResponseToken(didAuthResponseTokenStr, options)
+    const affinidiOptions = {
+      registryUrl: `https://affinity-registry.${options.environment}.affinity-project.org`,
+      apiKey: options.accessApiKey,
+    }
+    const affinidi = new Affinidi(affinidiOptions, null as any)
+
+    const serverService = new DidAuthServerService(this._did, this.createSigner(), affinidi)
+    return serverService.verifyDidAuthResponseToken(didAuthResponseTokenStr)
   }
 
   /**
