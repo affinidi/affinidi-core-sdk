@@ -1,3 +1,8 @@
+# release 1.0.0-beta.14 (2021-10-20)
+  * Added `CloudWalletApiService.prototype.signJwt`
+# release 1.0.0-beta.13 (2021-10-13)
+  * removed dependency on did-auth-lib
+  * removed `DidAuthAdapter`, users should implement their own instead (compatible with `DidAuthAdapterType`)
 # release 1.0.0-beta.12 (2021-09-29)
   * did-auth-lib version changed from 1.0.8 to 1.1.0
 # release 1.0.0-beta.11 (2021-09-09)

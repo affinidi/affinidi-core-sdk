@@ -1,3 +1,9 @@
+# release 6.0.0-beta.20 (2021-10-20)
+* Updated internal dependencies
+* Internal refactoring
+* `did` property of wallet objects now returns resolvable did.
+# release 6.0.0-beta.19 (2021-10-13)
+* Updated internal dependencies
 # release 6.0.0-beta.16 (2021-09-30)
 * add support of elem-anchored method
 # release 6.0.0-beta.15 (2021-09-29)
