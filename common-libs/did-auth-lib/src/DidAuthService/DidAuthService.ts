@@ -95,8 +95,10 @@ export default class AffinidiDidAuthService {
     return new Signer(signerOptions)
   }
 
-  async createDidAuthRequestToken(audienceDid: string, expiresAt?: number): Promise<string> {
-    const serverService = new DidAuthServerService(this._did, this.createSigner(), null as any)
+  async createDidAuthRequestToken(audienceLongDid: string, expiresAt?: number): Promise<string> {
+    const audienceDid = parse(audienceLongDid).did
+    const verifierDid = parse(this._did).did
+    const serverService = new DidAuthServerService(verifierDid, this.createSigner(), null as any)
     return serverService.createDidAuthRequestToken(audienceDid, expiresAt)
   }
 
@@ -128,8 +130,8 @@ export default class AffinidiDidAuthService {
       apiKey: options.accessApiKey,
     }
     const affinidi = new Affinidi(affinidiOptions, null as any)
-
-    const serverService = new DidAuthServerService(this._did, this.createSigner(), affinidi)
+    const verifierDid = parse(this._did).did
+    const serverService = new DidAuthServerService(verifierDid, this.createSigner(), affinidi)
     return serverService.verifyDidAuthResponseToken(didAuthResponseTokenStr)
   }
 
