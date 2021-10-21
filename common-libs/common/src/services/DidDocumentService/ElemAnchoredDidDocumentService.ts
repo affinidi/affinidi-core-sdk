@@ -14,17 +14,23 @@ export default class ElemAnchoredDidDocumentService {
   }
 
   getMyDid(): string {
-    const did = this._keyVault.metadata?.anchoredDid ?? this.buildMyDid()
-    return did
+    const metadata = this._keyVault.metadata
+    if (!metadata) {
+      // should not happen, elem-anchored seeds are always created with metadata
+      throw new Error('Metadata is empty')
+    }
+
+    return metadata.anchoredDid
   }
 
-  getKeyId(did: string = null) {
-    return `${did ? did : this.getMyDid()}#${this._signingKey}`
+  getKeyId() {
+    return `${this.getMyDid()}#${this._signingKey}`
   }
 
   async buildDidDocumentForRegister() {
-    const { didDocument, shortFormDid } = await this._builder.buildDidDocumentInfo()
+    const { did, didDocument, shortFormDid } = await this._builder.buildDidDocumentInfo()
     return {
+      did,
       didDocument,
       keyId: `${shortFormDid}#${this._signingKey}`,
     }
@@ -32,14 +38,5 @@ export default class ElemAnchoredDidDocumentService {
 
   getDidDocument(didResolver: DidResolver) {
     return didResolver.resolveDid(this.getMyDid())
-  }
-
-  /**
-   * This function is used once for the did before anchoring in the blockchain
-   * @private
-   */
-  private buildMyDid() {
-    const { did } = this._builder.getMyDidConfig()
-    return did
   }
 }

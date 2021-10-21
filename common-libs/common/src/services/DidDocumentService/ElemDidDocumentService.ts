@@ -16,18 +16,16 @@ export default class ElemDidDocumentService {
     return did
   }
 
-  getKeyId(did: string = null) {
-    if (!did) {
-      const { shortFormDid } = this._builder.getMyDidConfig()
-      did = shortFormDid
-    }
+  getKeyId() {
+    const { shortFormDid } = this._builder.getMyDidConfig()
 
-    return `${did}#${this._signingKey}`
+    return `${shortFormDid}#${this._signingKey}`
   }
 
   async buildDidDocumentForRegister() {
-    const { didDocument, shortFormDid } = await this._builder.buildDidDocumentInfo()
+    const { did, didDocument, shortFormDid } = await this._builder.buildDidDocumentInfo()
     return {
+      did,
       didDocument,
       keyId: `${shortFormDid}#${this._signingKey}`,
     }

@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-node-sdk",
-  "version": "6.0.0-beta.14",
+  "version": "6.0.0-beta.19",
   "description": "SDK monorepo for affinity DID solution for node",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -37,7 +37,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@affinidi/wallet-core-sdk": "^6.0.0-beta.15",
+    "@affinidi/wallet-core-sdk": "^6.0.0-beta.19",
     "@mattrglobal/bbs-signatures": "^0.6.0",
     "@mattrglobal/jsonld-signatures-bbs": "^0.10.0",
     "@mattrglobal/node-bbs-signatures": "^0.11.0",
@@ -48,7 +48,7 @@
     "randombytes": "^2.1.0"
   },
   "devDependencies": {
-    "@affinidi/common": "^2.0.0-beta.7",
+    "@affinidi/common": "^2.0.0-beta.19",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@affinidi/vc-common": "^1.4.2",

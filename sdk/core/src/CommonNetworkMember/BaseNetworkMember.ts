@@ -1,11 +1,12 @@
 import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
+import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
 import {
   IssuerApiService,
   RegistryApiService,
   RevocationApiService,
   VerifierApiService,
-  DidAuthAdapter,
 } from '@affinidi/internal-api-clients'
+import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 import { profile } from '@affinidi/tools-common'
 import {
   buildVCV1Skeleton,
@@ -19,10 +20,8 @@ import {
 } from '@affinidi/vc-common'
 import { parse } from 'did-resolver'
 
-import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
-
-import WalletStorageService from '../services/WalletStorageService'
-import HolderService from '../services/HolderService'
+import { extractSDKVersion, isW3cCredential } from '../_helpers'
+import { DEFAULT_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
 
 import {
   ClaimMetadata,
@@ -34,10 +33,8 @@ import {
   KeyParams,
   KeyAlgorithmType,
   KeyOptions,
+  DidMethod,
 } from '../dto/shared.dto'
-
-import { IPlatformCryptographyTools } from '../shared/interfaces'
-import { ParametersValidator } from '../shared/ParametersValidator'
 
 import {
   CredentialShareResponseOutput,
@@ -45,16 +42,20 @@ import {
   PresentationValidationOutput,
 } from '../dto/verifier.dto'
 
-import { randomBytes } from '../shared/randomBytes'
-import { extractSDKVersion, isW3cCredential } from '../_helpers'
-
-import { DEFAULT_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
+import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import { ParsedOptions } from '../shared/getOptionsFromEnvironment'
-import KeyManagementService from '../services/KeyManagementService'
+import { IPlatformCryptographyTools } from '../shared/interfaces'
+import { ParametersValidator } from '../shared/ParametersValidator'
+import { randomBytes } from '../shared/randomBytes'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
-import { Util } from './Util'
-import { register } from '../services/registeringHandler'
+
 import { anchorDid } from '../services/anchoringHandler'
+import HolderService from '../services/HolderService'
+import KeyManagementService from '../services/KeyManagementService'
+import { register } from '../services/registeringHandler'
+import WalletStorageService from '../services/WalletStorageService'
+
+import { Util } from './Util'
 
 export const createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
   return new KeyManagementService({ ...basicOptions, accessApiKey })
@@ -79,7 +80,6 @@ export abstract class BaseNetworkMember {
   private readonly _password: string
   protected readonly _walletStorageService: WalletStorageService
   protected readonly _keysService: KeysService
-  private readonly _jwtService: JwtService
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
   private readonly _issuerApiService
@@ -127,7 +127,8 @@ export abstract class BaseNetworkMember {
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
     this._keyManagementService = createKeyManagementService(options)
-    const didAuthAdapter = new DidAuthAdapter(did, { encryptedSeed, encryptionKey: password })
+    const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: password })
+    const didAuthAdapter = new DidAuthAdapter(did, didAuthService)
     this._revocationApiService = new RevocationApiService({
       revocationUrl,
       accessApiKey,
@@ -141,7 +142,6 @@ export abstract class BaseNetworkMember {
       storageRegion,
       didAuthAdapter,
     })
-    this._jwtService = new JwtService()
     this._holderService = new HolderService(
       { registryUrl, metricsUrl, accessApiKey },
       platformCryptographyTools,
@@ -222,8 +222,22 @@ export abstract class BaseNetworkMember {
     nonce: number,
     { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
   ) {
-    const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
-    return anchorDid(api, encryptedSeed, password, didDocument, false, nonce)
+    const registry = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
+    const keysService = new KeysService(encryptedSeed, password)
+    const { seed, didMethod } = keysService.decryptSeed()
+    const didService = DidDocumentService.createDidDocumentService(keysService)
+    return anchorDid({
+      registry,
+      anchoredDidElem: false,
+      did: didService.getMyDid(),
+      didMethod: didMethod as DidMethod,
+      keysService,
+      nonce,
+      additionalJoloParams: {
+        didDocument,
+        seedHex: seed.toString('hex'),
+      },
+    })
   }
 
   /**
@@ -346,7 +360,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialOffer as any, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   async generateDidAuthRequest(options?: JwtOptions): Promise<string> {
@@ -395,7 +409,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialShareRequest as any, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   /**
@@ -410,7 +424,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialOfferResponse, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   async createDidAuthResponse(didAuthRequestToken: string): Promise<string> {
@@ -484,7 +498,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialResponse, this.didDocumentKeyId)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   /**
@@ -895,7 +909,7 @@ export abstract class BaseNetworkMember {
 
     const signedObject = this._keysService.signJWT(credentialShareRequest as any)
 
-    return this._jwtService.encodeObjectToJWT(signedObject)
+    return JwtService.encodeObjectToJWT(signedObject)
   }
 
   async signUnsignedPresentation(vp: VPV1Unsigned, challenge: string, domain: string) {

@@ -12,17 +12,11 @@ if (typeof process.version === 'undefined') {
   global.process.version = ''
 }
 
+export { JwtService } from '@affinidi/tools-common'
+
 export { Affinity, Affinity as Affinidi } from './Affinity'
 
-export {
-  KeyVault,
-  LocalKeyVault,
-  DidDocumentService,
-  DigestService,
-  JwtService,
-  KeysService,
-  MetricsService,
-} from './services'
+export { KeyVault, LocalKeyVault, DidDocumentService, DigestService, KeysService, MetricsService } from './services'
 
 export { IPlatformCryptographyTools } from './shared/interfaces'
 
