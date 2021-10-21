@@ -259,6 +259,7 @@ const createVC = async (
   issuer: Signer,
   holder: Holder,
   options?: {
+    withLegacyTypeAttribute?: boolean
     exirationDate?: boolean
     revocation?: boolean
   },
@@ -273,7 +274,7 @@ const createVC = async (
         credentialSubject: {
           id: holder.did,
           data: {
-            '@type': 'Person',
+            ...(options?.withLegacyTypeAttribute && { '@type': 'Person' }),
           },
         },
         type: ['CustomCredential'],
@@ -455,6 +456,31 @@ describe('validateVCV1 [RSA]', () => {
         privateKey: issuer.primaryKey.privateKey,
       },
       { did: bob.did },
+    )
+
+    // Verify the VC
+    const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)
+
+    if (res.kind === 'invalid') {
+      res.errors.map(({ kind, message }) => console.log(`${kind}: ${message}`))
+    }
+
+    expect(res.kind).toEqual('valid')
+  })
+
+  it('validates a valid VC (with legacy @type attribute)', async () => {
+    expect.assertions(1)
+
+    const { issuer, bob } = didConfigs
+    // Issue a VC to bob
+    const vc = await createVC(
+      {
+        did: issuer.did,
+        keyId: `${issuer.did}#primary`,
+        privateKey: issuer.primaryKey.privateKey,
+      },
+      { did: bob.did },
+      { withLegacyTypeAttribute: true },
     )
 
     // Verify the VC
@@ -878,10 +904,10 @@ describe('validateVCV1 [RSA]', () => {
 
       if (Array.isArray(vc.credentialSubject)) {
         vc.credentialSubject.forEach((sub) => {
-          sub.data['@type'] = ''
+          sub.data = 'hello world' as any
         })
       } else {
-        vc.credentialSubject.data['@type'] = ''
+        vc.credentialSubject.data = 'hello world' as any
       }
 
       // Verify the VC
@@ -890,7 +916,7 @@ describe('validateVCV1 [RSA]', () => {
       expectToBeInvalidWith(res, {
         kind: 'invalid_param',
         message:
-          'Invalid value for field "credentialSubject": The following errors have occurred:\ninvalid_param: Invalid value for field "data": The following errors have occurred:\ninvalid_param: Invalid value for field "@type": Item failed all validators:\nExpected non empty string\nOR\nExpected to be an array',
+          'Invalid value for field "credentialSubject": The following errors have occurred:\ninvalid_param: Invalid value for field "data": Expected an object',
       })
     })
   })

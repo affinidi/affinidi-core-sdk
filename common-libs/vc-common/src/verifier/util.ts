@@ -147,3 +147,7 @@ export const isArrayOfNonEmptyStrings = isArrayOf(isNonEmptyString)
 export const isArrayIncluding = <T>(item: T): Validator<any[]> => (value) => {
   return createValidatorResponse(value.includes(item), `Expected to contain: "${item}"`)
 }
+
+export const isObject: Validator = (value) => {
+  return createValidatorResponse(value !== null && typeof value === 'object', 'Expected an object')
+}
