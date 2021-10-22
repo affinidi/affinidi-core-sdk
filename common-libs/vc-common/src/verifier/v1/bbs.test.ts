@@ -99,7 +99,7 @@ const getVerifySuite: GetVerifySuiteFn = async ({ controller, verificationMethod
   })
 }
 
-const createVC = async (): Promise<VCV1> => {
+const createVC = async (options?: { withLegacyTypeAttribute?: boolean }): Promise<VCV1> => {
   return buildVCV1({
     compactProof: true,
     unsigned: buildVCV1Unsigned({
@@ -107,7 +107,7 @@ const createVC = async (): Promise<VCV1> => {
         id: 'claimId:63b5d11c0d1b5566',
         credentialSubject: {
           data: {
-            '@type': ['Person', 'PersonE', 'NamePerson'],
+            ...(options?.withLegacyTypeAttribute && { '@type': ['Person', 'PersonE', 'NamePerson'] }),
             givenName: 'Jon Smith',
             fullName: 'Jon Family-Man Smith',
           },
@@ -223,6 +223,23 @@ const expectToBeInvalidWith = <T>(res: Validatied<T>, ...errors: ErrorConfig[]) 
 describe('validateVCV1 [BBS+]', () => {
   it('validates a valid VC', async () => {
     const vc = await createVC()
+
+    const res = await validateVCV1({
+      documentLoader,
+      getVerifySuite,
+      getProofPurposeOptions,
+      compactProof: true,
+    })(vc)
+
+    if (res.kind === 'invalid') {
+      res.errors.map(({ kind, message }) => console.log(`${kind}: ${message}`))
+    }
+
+    expect(res.kind).toEqual('valid')
+  })
+
+  it('validates a valid VC (with legacy @type attribute)', async () => {
+    const vc = await createVC({ withLegacyTypeAttribute: true })
 
     const res = await validateVCV1({
       documentLoader,

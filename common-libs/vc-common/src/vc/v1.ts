@@ -1,7 +1,8 @@
 import { TContext } from '../shared'
 
+// TODO: remove SimpleThing since it doesn't serve any purpose
 // Do not import {Thing} from 'schema-dts' because it chokes TS
-export type SimpleThing = { '@type': string | string[] }
+export type SimpleThing = { '@type'?: string | string[] }
 
 export type VCV1Type = ['VerifiableCredential', ...string[]]
 
