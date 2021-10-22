@@ -1,3 +1,7 @@
+# release 6.0.0-beta.20 (2021-10-20)
+Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.20
+# release 6.0.0-beta.19 (2021-10-13)
+Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.19
 # release 6.0.0-beta.14 (2021-09-29)
 Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.15
 # release 6.0.0-beta.9 (2021-08-30)

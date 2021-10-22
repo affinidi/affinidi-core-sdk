@@ -1,19 +1,12 @@
-import { Affinidi, KeysService, KeyVault, DidDocumentService, LocalKeyVault } from '@affinidi/common'
+import { KeysService, KeyVault, DidDocumentService, LocalKeyVault, Affinidi } from '@affinidi/common'
 import { JwtService } from '@affinidi/tools-common'
 import { parse } from 'did-resolver'
-import base64url from 'base64url'
-import { DidAuthResponseToken } from './DidAuthResponseToken'
-import { DidAuthRequestToken } from './DidAuthRequestToken'
-
-let fetch: any
-
-if (!fetch) {
-  fetch = require('node-fetch')
-}
-
-const ONE_MINUTE_IN_MS = 60 * 1000
-const ONE_HOUR_IN_MS = ONE_MINUTE_IN_MS * 60
-const DEFAULT_MAX_TOKEN_VALID_IN_MS = ONE_HOUR_IN_MS * 12
+import { CreateResponseTokenOptions, VerifierOptions } from '../shared/types'
+import Signer from '../shared/Signer'
+import DidAuthClientService from './DidAuthClientService'
+import DidAuthServerService from './DidAuthServerService'
+import DidAuthCloudService from './DidAuthCloudService'
+import { CloudWalletApiService } from '@affinidi/internal-api-clients'
 
 export type AffinidiDidAuthServiceOptions = OptionsWithSeed | OptionsWithKeyVault
 
@@ -35,7 +28,7 @@ export interface OptionsWithKeyVault {
   did: string
 
   /**
-   * Optional key id used for signing, defaults to `<did>#primary`
+   * key id used for signing, defaults to `<did>#primary`
    */
   keyId?: string
 
@@ -45,15 +38,9 @@ export interface OptionsWithKeyVault {
   keyVault: KeyVault
 }
 
-export interface VerifierOptions {
-  environment: string
-  accessApiKey: string
-}
-
-type CreateResponseTokenOptions = {
-  maxTokenValidInMs?: number
-}
-
+/**
+ * @deprecated use AffinidiDidAuthClientService, CloudService or ServerService
+ */
 export default class AffinidiDidAuthService {
   private readonly _did: string
   private readonly _keyId: string
@@ -64,7 +51,7 @@ export default class AffinidiDidAuthService {
    *
    * @param options auth service options
    */
-  constructor(options: OptionsWithSeed | OptionsWithKeyVault) {
+  constructor(options: AffinidiDidAuthServiceOptions) {
     const optionsWithKeyVault = AffinidiDidAuthService.convertToKeyVaultOptions(options)
 
     this._did = optionsWithKeyVault.did
@@ -78,7 +65,7 @@ export default class AffinidiDidAuthService {
    * @param options OptionsWithSeed | OptionsWithKeyVault
    * @return options OptionsWithKeyVault
    */
-  private static convertToKeyVaultOptions(options: OptionsWithSeed | OptionsWithKeyVault): OptionsWithKeyVault {
+  private static convertToKeyVaultOptions(options: AffinidiDidAuthServiceOptions): OptionsWithKeyVault {
     if (this.isOptionsWithKeyVault(options)) {
       return options
     }
@@ -94,59 +81,33 @@ export default class AffinidiDidAuthService {
     }
   }
 
-  private static isOptionsWithKeyVault(options: OptionsWithSeed | OptionsWithKeyVault): options is OptionsWithKeyVault {
+  private static isOptionsWithKeyVault(options: AffinidiDidAuthServiceOptions): options is OptionsWithKeyVault {
     return 'did' in options && 'keyVault' in options
   }
 
-  async createDidAuthRequestToken(audienceDid: string, expiresAt?: number): Promise<string> {
-    const jwtType = 'DidAuthRequest'
-    const NOW = Date.now()
+  private createSigner() {
+    const signerOptions = {
+      did: this._did,
+      keyId: this._keyId,
+      keyVault: this._keyVault,
+    }
 
-    const jwtObject: any = await JwtService.buildJWTInteractionToken(null, jwtType, null)
-    jwtObject.payload.aud = parse(audienceDid).did
-    jwtObject.payload.exp = expiresAt > NOW ? expiresAt : NOW + ONE_MINUTE_IN_MS
-    jwtObject.payload.createdAt = NOW
+    return new Signer(signerOptions)
+  }
 
-    await this.fillSignature(jwtObject)
-
-    return Affinidi.encodeObjectToJWT(jwtObject)
+  async createDidAuthRequestToken(audienceLongDid: string, expiresAt?: number): Promise<string> {
+    const audienceDid = parse(audienceLongDid).did
+    const verifierDid = parse(this._did).did
+    const serverService = new DidAuthServerService(verifierDid, this.createSigner(), null as any)
+    return serverService.createDidAuthRequestToken(audienceDid, expiresAt)
   }
 
   async createDidAuthResponseToken(
     didAuthRequestTokenStr: string,
     options?: CreateResponseTokenOptions,
   ): Promise<string> {
-    const didAuthRequestToken = DidAuthRequestToken.fromString(didAuthRequestTokenStr)
-    const maxTokenValidityPeriod = options?.maxTokenValidInMs ?? DEFAULT_MAX_TOKEN_VALID_IN_MS
-
-    // the token expiration date here is checked with the client clock
-    // this means if client clock diverges from the server clock;
-    //   - if the client clock is ahead of the server; client may allow tokens that are valid for more than 'maxTokenValidityPeriod'
-    //   - if the client clock is behind the server; client may not sign tokens that are valid for less then 'maxTokenValidityPeriod'
-    if (!didAuthRequestToken.exp || didAuthRequestToken.exp > Date.now() + maxTokenValidityPeriod) {
-      throw new Error(
-        `request token can not be valid more than max token validity period of ${maxTokenValidityPeriod}ms`,
-      )
-    }
-
-    const jwtObject = await AffinidiDidAuthService.buildResponseJwtObject(didAuthRequestTokenStr)
-
-    await this.fillSignature(jwtObject)
-
-    return Affinidi.encodeObjectToJWT(jwtObject)
-  }
-
-  private static async buildResponseJwtObject(didAuthRequestToken: string) {
-    const didAuthRequestTokenDecoded = JwtService.fromJWT(didAuthRequestToken)
-    const jwtType = 'DidAuthResponse'
-    const NOW = Date.now()
-
-    const jwtObject: any = await JwtService.buildJWTInteractionToken(null, jwtType, didAuthRequestTokenDecoded)
-    jwtObject.payload.requestToken = didAuthRequestToken
-    jwtObject.payload.aud = parse(didAuthRequestTokenDecoded.payload.iss).did
-    jwtObject.payload.exp = undefined
-    jwtObject.payload.createdAt = NOW
-    return jwtObject
+    const clientService = new DidAuthClientService(this.createSigner())
+    return clientService.createDidAuthResponseToken(didAuthRequestTokenStr, options)
   }
 
   async createDidAuthResponseTokenThroughCloudWallet(
@@ -155,23 +116,12 @@ export default class AffinidiDidAuthService {
     cloudWalletAccessToken: string,
     environment: string,
   ): Promise<string> {
-    const jwtObject = await AffinidiDidAuthService.buildResponseJwtObject(didAuthRequestToken)
-    const cloudWalletSignJwt = `https://cloud-wallet-api.${environment}.affinity-project.org/api/v1/utilities/sign-jwt`
-    const headers = {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'Api-Key': apiKey,
-      Authorization: cloudWalletAccessToken,
-    }
-    const options = {
-      headers,
-      method: 'POST',
-      body: JSON.stringify({ jwtObject }),
-    }
-    const response = await fetch(cloudWalletSignJwt, options)
-    const jwtSigned = await response.json()
-
-    return Affinidi.encodeObjectToJWT(jwtSigned.jwtObject)
+    const cloudWallet = new CloudWalletApiService({
+      accessApiKey: apiKey,
+      cloudWalletUrl: `https://cloud-wallet-api.${environment}.affinity-project.org/api/v1/utilities/sign-jwt`,
+    })
+    const cloudService = new DidAuthCloudService(cloudWallet, cloudWalletAccessToken)
+    return cloudService.createDidAuthResponseToken(didAuthRequestToken)
   }
 
   async verifyDidAuthResponseToken(didAuthResponseTokenStr: string, options: VerifierOptions): Promise<boolean> {
@@ -180,20 +130,9 @@ export default class AffinidiDidAuthService {
       apiKey: options.accessApiKey,
     }
     const affinidi = new Affinidi(affinidiOptions, null as any)
-
-    const didAuthResponseToken = DidAuthResponseToken.fromString(didAuthResponseTokenStr)
-    const didAuthRequestToken = didAuthResponseToken.requestToken
-
-    await affinidi.validateJWT(didAuthRequestToken.toString())
-    await affinidi.validateJWT(didAuthResponseToken.toString(), didAuthRequestToken.toString())
-
     const verifierDid = parse(this._did).did
-
-    if (didAuthRequestToken.iss !== verifierDid) {
-      throw new Error('Issuer of request is not valid')
-    }
-
-    return true
+    const serverService = new DidAuthServerService(verifierDid, this.createSigner(), affinidi)
+    return serverService.verifyDidAuthResponseToken(didAuthResponseTokenStr)
   }
 
   /**
@@ -222,23 +161,6 @@ export default class AffinidiDidAuthService {
     }
 
     return isExpired
-  }
-
-  private async fillSignature(jwtObject: any) {
-    jwtObject.payload.kid = this._keyId
-    jwtObject.payload.iss = this._did
-    jwtObject.signature = (await this.sign(jwtObject)).toString('hex')
-  }
-
-  private async sign(jwtObject: any): Promise<Buffer> {
-    const toSign = [
-      base64url.encode(JSON.stringify(jwtObject.header)),
-      base64url.encode(JSON.stringify(jwtObject.payload)),
-    ].join('.')
-
-    const digest = KeysService.sha256(Buffer.from(toSign))
-
-    return this._keyVault.signAsync(digest)
   }
 
   private static computeKeyId(options: OptionsWithKeyVault): string {
