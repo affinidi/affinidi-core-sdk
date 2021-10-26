@@ -4,8 +4,8 @@ import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
 
-import { DidAuthService } from '@affinidi/affinidi-did-auth-lib'
-import { JwtService, KeysService } from '@affinidi/common'
+import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
+import { DidDocumentService, JwtService, KeysService, LocalKeyVault } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import KeyManagementService from '../../../src/services/KeyManagementService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
@@ -35,7 +35,14 @@ const region = 'eu-west-2'
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
-  const didAuthService = new DidAuthService({ encryptedSeed, encryptionKey: walletPassword })
+  const documentService = DidDocumentService.createDidDocumentService(keysService)
+  const keyVault = new LocalKeyVault(keysService)
+  const signer = new Signer({
+    did: documentService.getMyDid(),
+    keyId: documentService.getKeyId(),
+    keyVault,
+  })
+  const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter('', didAuthService)
   return new WalletStorageService(keysService, testPlatformTools, {
     bloomVaultUrl: STAGING_BLOOM_VAULT_URL,

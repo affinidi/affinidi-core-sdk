@@ -47,7 +47,6 @@ export const register = async (
     return { did: anchoredInBlockchainDid, encryptedSeed: anchoredEncryptedSeed, didDocumentKeyId }
   }
 
-  const did = didDocument.id
   const didDocumentKeyId = keyId
-  return { did, didDocumentKeyId, encryptedSeed }
+  return { did: didDocumentService.getMyDid(), didDocumentKeyId, encryptedSeed }
 }

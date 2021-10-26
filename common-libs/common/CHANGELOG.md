@@ -1,4 +1,8 @@
-# release 6.0.0-beta.12 (2021-09-30)
+# release 2.0.0-beta.20 (2021-10-20)
+* `getKeyId` method in `...DidDocumentService` no longer accepts `did` parameter.
+* `getKeyId` now always builds key ID using short-form DID.
+* `KeysService.signJwt` now always writes DID to `iss` field and key id to `kid` field.
+# release 2.0.0-beta.12 (2021-09-30)
 * add support of elem-anchored method
 # release 2.0.0-beta.11 (2021-09-29)
 Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.15

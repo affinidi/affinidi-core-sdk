@@ -26,4 +26,8 @@ export default class CloudWalletApiService {
   async storeCredentials(params: GetParams<typeof clientMethods.StoreCredentials>, accessToken: string) {
     return this.client.StoreCredentials({ params, authorization: accessToken })
   }
+
+  async signJwt(jwtObject: GetParams<typeof clientMethods.SignJwt>['jwtObject'], accessToken: string) {
+    return this.client.SignJwt({ params: { jwtObject }, authorization: accessToken })
+  }
 }

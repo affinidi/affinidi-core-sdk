@@ -14,9 +14,9 @@ import {
   isArrayIncluding,
   isUndefinedOr,
   isArrayOf,
-  isOneOf,
   isEnum,
   ErrorConfig,
+  isObject,
 } from '../util'
 
 const jsigs = require('jsonld-signatures')
@@ -193,13 +193,9 @@ const isValidVCProof: IsValidVCProof = ({
   }
 }
 
-const validateCredentialSubjectData = genValidateFn<VCV1Subject<any>['data']>({
-  '@type': isOneOf(isNonEmptyString, isArrayOfNonEmptyStrings),
-})
-
 const validateCredentialSubject = genValidateFn<VCV1Subject<any>>({
   id: [isUndefinedOr(isNonEmptyString), isUndefinedOr(isValidDID)],
-  data: isValid(validateCredentialSubjectData),
+  data: isObject,
 })
 
 const isValidVPProof = (
