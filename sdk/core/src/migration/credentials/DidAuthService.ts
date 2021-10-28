@@ -1,5 +1,5 @@
 import ApiService from './ApiService'
-import { DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { DidAuthAdapter } from '../../shared/DidAuthAdapter'
 
 export class DidAuthService {
   private readonly baseUrl: string
@@ -28,6 +28,6 @@ export class DidAuthService {
   }
 
   isTokenExpired(token: string, tokenRequestTime: number): boolean {
-    return this.didAuthAdapter.isTokenExpired(token, tokenRequestTime)
+    return this.didAuthAdapter.isResponseTokenExpired(token, tokenRequestTime)
   }
 }

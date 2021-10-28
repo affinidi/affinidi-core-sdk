@@ -1,4 +1,4 @@
-import { DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { DidAuthAdapter } from '../../shared/DidAuthAdapter'
 import { DidAuthService } from './DidAuthService'
 import ApiService from './ApiService'
 import { isW3cCredential } from '../../_helpers'

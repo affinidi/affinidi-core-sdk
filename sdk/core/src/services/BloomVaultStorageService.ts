@@ -1,5 +1,6 @@
 import { KeysService } from '@affinidi/common'
-import { BloomVaultApiService, DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { BloomVaultApiService } from '@affinidi/internal-api-clients'
+import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import { profile } from '@affinidi/tools-common'
 
 import { toRpcSig, ecsign } from 'ethereumjs-util'

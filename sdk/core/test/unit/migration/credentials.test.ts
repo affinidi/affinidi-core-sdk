@@ -3,8 +3,9 @@
 import nock from 'nock'
 import sinon from 'sinon'
 
-import { KeysService } from '@affinidi/common'
-import { DidAuthAdapter } from '@affinidi/internal-api-clients'
+import { KeysService, LocalKeyVault } from '@affinidi/common'
+import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
+import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 
 import { generateTestDIDs } from '../../factory/didFactory'
 import platformCryptographyTools from '../../../../node/src/PlatformCryptographyTools'
@@ -19,6 +20,7 @@ let encryptionKey: string
 let encryptedSeed: string
 let didEth: string
 let audienceDid: string
+let didDocumentKeyId: string
 const reqheaders: Record<string, string> = {}
 
 const migrationTestCredentials = [
@@ -56,7 +58,10 @@ const mockAndStubMigrationHelperCalls = () => {
 
 const createMigrationHelper = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
-  const didAuthAdapter = new DidAuthAdapter(audienceDid, { encryptedSeed, encryptionKey })
+  const keyVault = new LocalKeyVault(keysService)
+  const signer = new Signer({ did: audienceDid, keyId: didDocumentKeyId, keyVault })
+  const didAuthService = new DidAuthClientService(signer)
+  const didAuthAdapter = new DidAuthAdapter(audienceDid, didAuthService)
   return new MigrationHelper(didAuthAdapter, undefined, keysService, platformCryptographyTools, didEth)
 }
 
@@ -68,6 +73,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     // fake did:eth seedHex
     didEth = `did:eth:${testDids.jolo.seedHex}`
     audienceDid = testDids.elem.did
+    didDocumentKeyId = testDids.elem.didDocumentKeyId
 
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
