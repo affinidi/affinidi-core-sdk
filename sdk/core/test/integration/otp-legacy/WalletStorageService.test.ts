@@ -3,8 +3,8 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
+import { TestmailInbox } from '@affinidi/test-helpers'
 import { MessageParameters, SdkOptions } from '../../../src/dto'
-import { TestmailInbox } from '../../../src/test-helpers'
 
 import { generateCredentials } from '../../factory/signedCredentials'
 import { getBasicOptionsForEnvironment } from '../../helpers'

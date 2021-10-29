@@ -2,9 +2,9 @@ import 'mocha'
 
 import '../env'
 
+import { TestmailInbox } from '@affinidi/test-helpers'
 import { expect } from 'chai'
 import { MessageParameters, SdkOptions } from '../../../src/dto'
-import { TestmailInbox } from '../../../src/test-helpers'
 
 import { generateCredentials } from '../../factory/signedCredentials'
 import { getBasicOptionsForEnvironment } from '../../helpers'

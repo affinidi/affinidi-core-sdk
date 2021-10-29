@@ -3,9 +3,9 @@ import '../env'
 import 'mocha'
 import { expect } from 'chai'
 
+import { TestmailInbox } from '@affinidi/test-helpers'
 import { isW3cCredential } from '../../../src/_helpers'
 import { MessageParameters, SdkOptions } from '../../../src/dto'
-import { TestmailInbox } from '../../../src/test-helpers'
 
 import { getBasicOptionsForEnvironment } from '../../helpers'
 import { AffinidiWalletWithEncryption as AffinityWallet } from '../../helpers/AffinidiWallet'

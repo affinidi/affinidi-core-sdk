@@ -3,6 +3,7 @@ import '../env'
 
 import { expect } from 'chai'
 import { SdkError } from '@affinidi/tools-common'
+import { TestmailInbox } from '@affinidi/test-helpers'
 import {
   AffinidiWalletV6 as AffinidiWallet,
   AffinidiWallet as LegacyAffinidiWallet,
@@ -12,7 +13,6 @@ import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
-import { TestmailInbox } from '../../../src/test-helpers'
 
 const parallel = require('mocha.parallel')
 
