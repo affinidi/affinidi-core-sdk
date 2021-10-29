@@ -1,14 +1,14 @@
 import { expect } from 'chai'
-import { SessionStorageService } from '../../../src/shared/sessionStorageHandler'
+import { SessionStorageService } from '../../src/SessionStorageService'
 
-import { getAllOptionsForEnvironment } from '../../helpers'
+import { getAllOptionsForEnvironment } from '../helpers'
 
-import cognitoUserTokens from '../factory/cognitoUserTokens'
+import { cognitoUserTokens } from '../factory/cognitoUserTokens'
 
 const { userPoolId } = getAllOptionsForEnvironment()
 const service = new SessionStorageService(userPoolId)
 
-describe('SessionStorageHandler', () => {
+describe('SessionStorageService', () => {
   it('Saves cognito user tokens to sessionStorage', () => {
     service.saveUserTokens(cognitoUserTokens)
 

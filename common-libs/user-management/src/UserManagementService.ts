@@ -6,7 +6,7 @@ import { validateUsername } from './validateUsername'
 import SdkErrorFromCode from './SdkErrorFromCode'
 import { normalizeShortPassword } from './normalizeShortPassword'
 import { normalizeUsername } from './normalizeUsername'
-import { SessionStorageService } from './sessionStorageHandler'
+import { SessionStorageService } from './SessionStorageService'
 import { randomBytes } from './randomBytes'
 import {
   CognitoIdentityService,
