@@ -1,7 +1,7 @@
-import { Services } from './services'
+import { Service } from './services'
 
 export const predefinedUrls: Record<string, Record<string, string>> = {
-  [Services.SCHEMA_MANAGER]: {
+  [Service.SCHEMA_MANAGER]: {
     staging: 'https://schema.stg.affinidi.com',
     prod: 'https://schema.affinidi.com',
   },

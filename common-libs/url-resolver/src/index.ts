@@ -1,13 +1,19 @@
 import { defaultTemplate, predefinedTemplates } from './templates'
 import { predefinedUrls } from './urls'
+import { Service } from './services'
 
-export { Services } from './services'
-
-export default function resolveUrl(service: string, env: string, template?: string): string {
-  const tmpl =
-    template ?? predefinedUrls[service]?.[env] ?? predefinedTemplates[service] ?? defaultTemplate
-  if (!tmpl) {
-    throw new Error('Url template can not be empty')
+function resolveUrl(service: Service, env: string, userTemplate?: string): string {
+  if (!Object.values(Service).includes(service)) {
+    throw new Error(`Service ${service} is not supported by url-resolver`)
   }
-  return tmpl.replace(/{{service}}/, service).replace(/{{env}}/, env)
+
+  const template =
+    userTemplate ??
+    predefinedUrls[service]?.[env] ??
+    predefinedTemplates[service] ??
+    defaultTemplate
+
+  return template.replace(/{{service}}/, service).replace(/{{env}}/, env)
 }
+
+export { resolveUrl, Service }

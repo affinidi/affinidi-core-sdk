@@ -1,4 +1,4 @@
-export enum Services {
+export enum Service {
   METRICS = 'affinity-metrics',
   REGISTRY = 'affinity-registry',
   SFF_ISSUER = 'sff-issuer',
