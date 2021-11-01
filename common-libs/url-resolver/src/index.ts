@@ -21,4 +21,4 @@ class UrlResolver implements IUrlResolver {
 
 const urlResolver = new UrlResolver()
 
-export { Service, IUrlResolver, UrlResolver, urlResolver }
+export { Service, IUrlResolver, urlResolver }
