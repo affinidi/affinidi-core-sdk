@@ -133,7 +133,7 @@ export class MigrationHelper {
    */
   async getMigrationStatus(): Promise<{ status: string }> {
     const token = await this.getAuth()
-    const url = 'api/v1/migrationStatus'
+    const url = `api/v1/migration/done/${this.bloomDid}`
     return this.api.execute(
       'GET',
       url,
@@ -145,12 +145,20 @@ export class MigrationHelper {
   }
 
   /**
+   * Checks if migration process has been started. Should work without authentication.
+   */
+  async doesMigrationStarted(): Promise<string> {
+    const url = 'api/v1/migration/started'
+    return this.api.execute('GET', url, {})
+  }
+
+  /**
    * Send list of users encrypted VCs stored on `bloom-vault` to the `vault-migration-service` to start migration process to the `affinidi-vault`
    * @param {Array<vcMigrationList>} vcList
    */
   async migrateCredentials(vcList: vcMigrationList[]): Promise<void> {
     const token = await this.getAuth()
-    const url = 'api/v1/migrateCredentials'
+    const url = 'api/v1/migrate/credentials'
     return this.api.execute(
       'POST',
       url,

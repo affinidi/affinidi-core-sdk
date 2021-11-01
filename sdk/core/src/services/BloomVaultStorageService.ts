@@ -247,23 +247,29 @@ export default class BloomVaultStorageService {
   }
 
   public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
-    let migration: any = { status: undefined }
-    try {
-      migration = await this._migrationHelper.getMigrationStatus()
-    } catch (err) {
-      console.log('@@@Vault-migration-service migration status call ends with error: ', err)
-    }
+    const doesMigrationStarted = await this._migrationHelper.doesMigrationStarted()
+    process.env.DOES_MIGRATION_STARTED = String(doesMigrationStarted)
+    if (process.env.DOES_MIGRATION_STARTED === 'true') {
+      let migration: any = { status: undefined }
+      try {
+        migration = await this._migrationHelper.getMigrationStatus()
+      } catch (err) {
+        console.log('@@@Vault-migration-service migration status call ends with error: ', err)
+      }
 
-    if (migration.status === 'done') {
-      return []
+      if (migration.status === 'done') {
+        return []
+      }
     }
 
     const accessToken = await this._authorizeVcVault(storageRegion)
 
     const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
 
-    if (migration.status) {
+    if (process.env.DOES_MIGRATION_STARTED === 'true') {
       try {
+        // just send the async call, but no need to wait for response
+        // all logic should be done in a background
         this._migrationHelper.runMigration(credentials)
       } catch (err) {
         console.log('@@@Vault-migration-service run migration call ends with error: ', err)

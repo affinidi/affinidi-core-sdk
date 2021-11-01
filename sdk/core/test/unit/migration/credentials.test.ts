@@ -43,9 +43,9 @@ const createEncryptedCreds = (count: number) => {
 
 const mockAndStubMigrationHelperCalls = () => {
   nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
-    .get('/api/v1/migrationStatus')
+    .get(`/api/v1/migration/done/${didEth}`)
     .reply(200, { status: 'needMigration' })
-  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).post('/api/v1/migrateCredentials').reply(200, {})
+  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).post('/api/v1/migrate/credentials').reply(200, {})
   const stubPullDidAuthRequestToken = sinon
     .stub(DidAuthService.prototype, 'pullDidAuthRequestToken')
     .resolves('requestToken')
@@ -86,9 +86,28 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     sinon.restore()
   })
 
-  it('Authentication token is not expired: `pullDidAuthRequestToken` and `createDidAuthResponseToken` should called once', async () => {
+  it('should assign false to DOES_MIGRATION_STARTED variable if migration NOT started', async () => {
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/api/v1/migration/started').reply(200, 'false')
+
+    const helper = createMigrationHelper()
+    const doesMigrationStarted = await helper.doesMigrationStarted()
+    process.env.DOES_MIGRATION_STARTED = String(doesMigrationStarted)
+    expect(process.env.DOES_MIGRATION_STARTED).to.be.eq('false')
+  })
+
+  it('should assign true to DOES_MIGRATION_STARTED variable if migration NOT started', async () => {
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/api/v1/migration/started').reply(200, 'true')
+
+    const helper = createMigrationHelper()
+    const doesMigrationStarted = await helper.doesMigrationStarted()
+    process.env.DOES_MIGRATION_STARTED = String(doesMigrationStarted)
+    expect(process.env.DOES_MIGRATION_STARTED).to.be.eq('true')
+  })
+
+  it('Authentication token is NOT expired: `pullDidAuthRequestToken` and `createDidAuthResponseToken` should called once', async () => {
+    const isTokenExpired = false
     const [stubPullDidAuthRequestToken, stubCreateDidAuthResponseToken] = mockAndStubMigrationHelperCalls()
-    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(false)
+    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(isTokenExpired)
 
     const helper = createMigrationHelper()
     await helper.getMigrationStatus()
@@ -99,8 +118,9 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   })
 
   it('Authentication token is expired: `pullDidAuthRequestToken` and `createDidAuthResponseToken` should called twice', async () => {
+    const isTokenExpired = true
     const [stubPullDidAuthRequestToken, stubCreateDidAuthResponseToken] = mockAndStubMigrationHelperCalls()
-    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(true)
+    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(isTokenExpired)
 
     const helper = createMigrationHelper()
     await helper.getMigrationStatus()
