@@ -145,109 +145,108 @@ type IsValidVCProof = (options: {
   compactProof?: boolean
 }) => Validator
 
-const isValidVCProof: IsValidVCProof = ({
-  documentLoader,
-  getVerifySuite,
-  getProofPurposeOptions,
-  compactProof,
-}): Validator => async (value, data) => {
-  try {
-    let suite
+const isValidVCProof: IsValidVCProof =
+  ({ documentLoader, getVerifySuite, getProofPurposeOptions, compactProof }): Validator =>
+  async (value, data) => {
     try {
-      suite = await getVerifySuite({
-        verificationMethod: value.verificationMethod,
-        controller: data.issuer,
-        proofType: value.type,
-      })
-    } catch (err) {
-      throw new Error(`Error while getting verify suite ${err}`)
-    }
-
-    let purposeOptions
-    if (typeof getProofPurposeOptions !== 'undefined') {
+      let suite
       try {
-        purposeOptions = await getProofPurposeOptions({
+        suite = await getVerifySuite({
           verificationMethod: value.verificationMethod,
           controller: data.issuer,
-          proofPurpose: value.proofPurpose,
+          proofType: value.type,
         })
       } catch (err) {
-        throw new Error(`Error while getting verify proof purpose options ${err}`)
+        throw new Error(`Error while getting verify suite ${err}`)
       }
-    }
 
-    const res = await jsigs.verify(data, {
-      suite: suite,
-      documentLoader,
-      purpose: new AssertionProofPurpose(purposeOptions || {}),
-      compactProof,
-    })
+      let purposeOptions
+      if (typeof getProofPurposeOptions !== 'undefined') {
+        try {
+          purposeOptions = await getProofPurposeOptions({
+            verificationMethod: value.verificationMethod,
+            controller: data.issuer,
+            proofPurpose: value.proofPurpose,
+          })
+        } catch (err) {
+          throw new Error(`Error while getting verify proof purpose options ${err}`)
+        }
+      }
 
-    if (res.verified) {
-      return true
-    } else {
-      return { message: `Invalid credential proof:\n${res.error.errors.join('\n')}` }
+      const res = await jsigs.verify(data, {
+        suite: suite,
+        documentLoader,
+        purpose: new AssertionProofPurpose(purposeOptions || {}),
+        compactProof,
+      })
+
+      if (res.verified) {
+        return true
+      } else {
+        return { message: `Invalid credential proof:\n${res.error.errors.join('\n')}` }
+      }
+    } catch (err) {
+      return { message: `Error while validating proof: ${err}` }
     }
-  } catch (err) {
-    return { message: `Error while validating proof: ${err}` }
   }
-}
 
 const validateCredentialSubject = genValidateFn<VCV1Subject<any>>({
   id: [isUndefinedOr(isNonEmptyString), isUndefinedOr(isValidDID)],
   data: isObject,
 })
 
-const isValidVPProof = (
-  documentLoader: DocumentLoader,
-  getVerifySuite: GetVerifySuiteFn,
-  getProofPurposeOptions?: GetVerifierProofPurposeOptionsFn,
-): Validator => async (value, data) => {
-  try {
-    let suite
+const isValidVPProof =
+  (
+    documentLoader: DocumentLoader,
+    getVerifySuite: GetVerifySuiteFn,
+    getProofPurposeOptions?: GetVerifierProofPurposeOptionsFn,
+  ): Validator =>
+  async (value, data) => {
     try {
-      suite = await getVerifySuite({
-        verificationMethod: value.verificationMethod,
-        controller: data.holder.id,
-        proofType: value.type,
-      })
-    } catch (err) {
-      throw new Error(`Error while getting verify suite ${err}`)
-    }
-
-    let purposeOptions
-    if (typeof getProofPurposeOptions !== 'undefined') {
+      let suite
       try {
-        purposeOptions = await getProofPurposeOptions({
+        suite = await getVerifySuite({
           verificationMethod: value.verificationMethod,
           controller: data.holder.id,
-          proofPurpose: value.proofPurpose,
+          proofType: value.type,
         })
       } catch (err) {
-        throw new Error(`Error while getting verify proof purpose options ${err}`)
+        throw new Error(`Error while getting verify suite ${err}`)
       }
-    }
 
-    const res = await jsigs.verify(data, {
-      suite,
-      documentLoader,
-      purpose: new AuthenticationProofPurpose({
-        challenge: data.proof.challenge,
-        domain: data.proof.domain,
-        ...(purposeOptions || {}),
-      }),
-      compactProof: false,
-    })
+      let purposeOptions
+      if (typeof getProofPurposeOptions !== 'undefined') {
+        try {
+          purposeOptions = await getProofPurposeOptions({
+            verificationMethod: value.verificationMethod,
+            controller: data.holder.id,
+            proofPurpose: value.proofPurpose,
+          })
+        } catch (err) {
+          throw new Error(`Error while getting verify proof purpose options ${err}`)
+        }
+      }
 
-    if (res.verified) {
-      return true
-    } else {
-      return { message: `Invalid presentation proof:\n${res.error.errors.join('\n')}` }
+      const res = await jsigs.verify(data, {
+        suite,
+        documentLoader,
+        purpose: new AuthenticationProofPurpose({
+          challenge: data.proof.challenge,
+          domain: data.proof.domain,
+          ...(purposeOptions || {}),
+        }),
+        compactProof: false,
+      })
+
+      if (res.verified) {
+        return true
+      } else {
+        return { message: `Invalid presentation proof:\n${res.error.errors.join('\n')}` }
+      }
+    } catch (err) {
+      return { message: `Error while validating proof: ${err}` }
     }
-  } catch (err) {
-    return { message: `Error while validating proof: ${err}` }
   }
-}
 
 export type GetVerifySuiteOptions = {
   verificationMethod: string
