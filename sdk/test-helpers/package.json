@@ -14,7 +14,7 @@
     "test:unit": "",
     "test:integration": "",
     "test:coverage": "npm run test --coverage",
-    "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.core.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
+    "test:coverage:codeclimate": "",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "publishConfig": {
