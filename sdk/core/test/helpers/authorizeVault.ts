@@ -3,12 +3,14 @@ import sinon from 'sinon'
 
 import * as ethereumjsUtils from 'ethereumjs-util'
 import { KeysService } from '@affinidi/common'
-import { STAGING_BLOOM_VAULT_URL, DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
+import { resolveUrl, Service } from '@affinidi/url-resolver'
+import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
 import bip32fromSeedResponse from '../factory/bip32fromSeedResponse'
 
 const bip32 = require('bip32')
 const secp256k1 = require('secp256k1')
 
+const bloomVaultUrl = resolveUrl(Service.BLOOM_VAUlT, 'staging')
 const didMethod = DEFAULT_DID_METHOD
 const seed = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -32,7 +34,7 @@ export const authorizeVault = async () => {
 
   const requestTokenPath = '/auth/request-token'
 
-  nock(STAGING_BLOOM_VAULT_URL)
+  nock(bloomVaultUrl)
     .filteringPath(() => requestTokenPath)
     .post(requestTokenPath)
     .reply(200, { token })
@@ -42,7 +44,7 @@ export const authorizeVault = async () => {
 
   const validateTokenPath = '/auth/validate-token'
 
-  nock(STAGING_BLOOM_VAULT_URL)
+  nock(bloomVaultUrl)
     .filteringPath(() => validateTokenPath)
     .post(validateTokenPath)
     .reply(200, {})
@@ -55,12 +57,12 @@ export const authorizeVaultEndpoints = async () => {
   const requestTokenPath = '/auth/request-token'
   const validateTokenPath = '/auth/validate-token'
 
-  nock(STAGING_BLOOM_VAULT_URL)
+  nock(bloomVaultUrl)
     .filteringPath(() => requestTokenPath)
     .post(requestTokenPath)
     .reply(200, { token })
 
-  nock(STAGING_BLOOM_VAULT_URL)
+  nock(bloomVaultUrl)
     .filteringPath(() => validateTokenPath)
     .post(validateTokenPath)
     .reply(200, {})

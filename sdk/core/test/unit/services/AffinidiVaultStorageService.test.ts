@@ -5,16 +5,19 @@ import sinon from 'sinon'
 
 import { KeysService, JwtService, DidDocumentService, LocalKeyVault } from '@affinidi/common'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
+import { resolveUrl, Service } from '@affinidi/url-resolver'
 
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 import { generateTestDIDs } from '../../factory/didFactory'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
-import { STAGING_AFFINIDI_VAULT_URL, STAGING_REGISTRY_URL } from '../../../src/_defaultConfig'
 import credential from '../../factory/signedCredential'
 import { VaultCredential } from '../../../src/dto/vault.dto'
 import { expect } from 'chai'
 import { extractSDKVersion } from '../../../src/_helpers'
+
+const affinidiVaultUrl = resolveUrl(Service.VAULT, 'staging')
+const registryUrl = resolveUrl(Service.REGISTRY, 'staging')
 
 let encryptionKey: string
 let encryptedSeed: string
@@ -35,18 +38,18 @@ const createAffinidiStorageService = () => {
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter(audienceDid, didAuthService)
   return new AffinidiVaultStorageService(keysService, testPlatformTools, {
-    vaultUrl: STAGING_AFFINIDI_VAULT_URL,
+    vaultUrl: affinidiVaultUrl,
     accessApiKey: undefined,
     didAuthAdapter,
   })
 }
 
 const mockDidAuth = () => {
-  nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+  nock(affinidiVaultUrl, { reqheaders })
     .post('/api/v1/did-auth/create-did-auth-request')
     .reply(200, `"${requestToken}"`)
 
-  nock(STAGING_REGISTRY_URL, { reqheaders }).post('/api/v1/did-auth/create-did-auth-response').reply(200, {})
+  nock(registryUrl, { reqheaders }).post('/api/v1/did-auth/create-did-auth-response').reply(200, {})
 }
 
 describe('AffinidiVaultStorageService', () => {
@@ -85,7 +88,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#saveCredentials', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .put('/api/v1/credentials/' + credential.id)
       .reply(200, {
         credentialId: credential.id,
@@ -100,7 +103,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#saveCredentialsWithError', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .put('/api/v1/credentials/' + credential.id)
       .reply(500, { code: 'COM-1', message: 'internal server error' })
 
@@ -115,7 +118,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#getAllCredentials', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .get('/api/v1/credentials')
       .reply(200, {
         credentials: [
@@ -139,7 +142,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#getAllCredentialsByTypes', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .get('/api/v1/credentials?types=' + JSON.stringify([credential.type]))
       .reply(200, {
         credentials: [
@@ -163,7 +166,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#getAllCredentialsWithError', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .get('/api/v1/credentials')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
 
@@ -178,7 +181,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#getCredentialById', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .get('/api/v1/credentials/' + credential.id)
       .reply(200, {
         credentialId: credential.id,
@@ -193,7 +196,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#getCredentialByIdWithError', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .get('/api/v1/credentials/' + credential.id)
       .reply(500, { code: 'COM-1', message: 'internal server error' })
 
@@ -208,7 +211,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#deleteCredentialById', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .delete('/api/v1/credentials/' + credential.id)
       .reply(200, {})
 
@@ -219,7 +222,7 @@ describe('AffinidiVaultStorageService', () => {
   it('#deleteCredentialByIdWithError', async () => {
     mockDidAuth()
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+    nock(affinidiVaultUrl, { reqheaders })
       .delete('/api/v1/credentials/' + credential.id)
       .reply(500, { code: 'COM-1', message: 'internal server error' })
 
@@ -247,10 +250,10 @@ describe('AffinidiVaultStorageService', () => {
       ] as VaultCredential[],
     }
 
-    nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
+    nock(affinidiVaultUrl, { reqheaders }).get('/api/v1/credentials').reply(200, getAllResponse)
 
     for (const cred of getAllResponse.credentials) {
-      nock(STAGING_AFFINIDI_VAULT_URL, { reqheaders })
+      nock(affinidiVaultUrl, { reqheaders })
         .delete('/api/v1/credentials/' + cred.credentialId)
         .reply(200, {})
     }
