@@ -42,10 +42,8 @@ const createEncryptedCreds = (count: number) => {
 }
 
 const mockAndStubMigrationHelperCalls = () => {
-  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
-    .get(`/api/v1/migration/done/${didEth}`)
-    .reply(200, { status: 'needMigration' })
-  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).post('/api/v1/migrate/credentials').reply(200, {})
+  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get(`/migration/done/${didEth}`).reply(200, 'false')
+  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).post('/migrate/credentials').reply(200, {})
   const stubPullDidAuthRequestToken = sinon
     .stub(DidAuthService.prototype, 'pullDidAuthRequestToken')
     .resolves('requestToken')
@@ -86,22 +84,32 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     sinon.restore()
   })
 
-  it('should assign false to DOES_MIGRATION_STARTED variable if migration NOT started', async () => {
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/api/v1/migration/started').reply(200, 'false')
+  it('should return false if migration NOT started', async () => {
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
 
     const helper = createMigrationHelper()
     const doesMigrationStarted = await helper.doesMigrationStarted()
-    process.env.DOES_MIGRATION_STARTED = String(doesMigrationStarted)
-    expect(process.env.DOES_MIGRATION_STARTED).to.be.eq('false')
+    expect(doesMigrationStarted).to.be.false
   })
 
-  it('should assign true to DOES_MIGRATION_STARTED variable if migration NOT started', async () => {
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/api/v1/migration/started').reply(200, 'true')
+  it('should return true if migration started', async () => {
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'true')
 
     const helper = createMigrationHelper()
     const doesMigrationStarted = await helper.doesMigrationStarted()
-    process.env.DOES_MIGRATION_STARTED = String(doesMigrationStarted)
-    expect(process.env.DOES_MIGRATION_STARTED).to.be.eq('true')
+    expect(doesMigrationStarted).to.be.true
+  })
+
+  it('should catch and log error if `doesMigrationStarted` ends with error', async () => {
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+      .get('/migration/started')
+      .reply(500, { code: 'COM-1', message: 'internal server error' })
+    const stubConsole = sinon.stub(console, 'log')
+    const helper = createMigrationHelper()
+    const doesMigrationStarted = await helper.doesMigrationStarted()
+    expect(stubConsole.calledOnce).to.be.true
+    expect(stubConsole.calledWith('Vault-migration-service migration started check call ends with error: ')).to.be.true
+    expect(doesMigrationStarted).to.be.false
   })
 
   it('Authentication token is NOT expired: `pullDidAuthRequestToken` and `createDidAuthResponseToken` should called once', async () => {
@@ -128,6 +136,24 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
 
     expect(stubPullDidAuthRequestToken.calledTwice).to.be.true
     expect(stubCreateDidAuthResponseToken.calledTwice).to.be.true
+  })
+
+  it('should catch and log error if `getMigrationStatus` ends with error', async () => {
+    const isTokenExpired = false
+    sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').resolves('requestToken')
+    sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').resolves('responseToken')
+    sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(1))
+    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(isTokenExpired)
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+      .get(`/migration/done/${didEth}`)
+      .reply(500, { code: 'COM-1', message: 'internal server error' })
+    const stubConsole = sinon.stub(console, 'log')
+
+    const helper = createMigrationHelper()
+    await helper.getMigrationStatus()
+
+    expect(stubConsole.calledOnce).to.be.true
+    expect(stubConsole.calledWith('Vault-migration-service migration status check call ends with error: ')).to.be.true
   })
 
   it('`migrateCredentials` should called twice if amount of VCs 150(two chunks)', async () => {
@@ -173,6 +199,22 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
 
     expect(stubRunMigrationByChunk.calledOnce).to.be.true
     expect(stubEncryptCredentials.calledOnce).to.be.true
+  })
+
+  it('should catch and log error if `runMigration` ends with error', async () => {
+    const stubEncryptCredentials = sinon
+      .stub(MigrationHelper.prototype, 'encryptCredentials')
+      .resolves(createEncryptedCreds(1))
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+      .post('/migrate/credentials')
+      .reply(500, { code: 'COM-1', message: 'internal server error' })
+    const stubConsole = sinon.stub(console, 'log')
+    const helper = createMigrationHelper()
+    await helper.runMigration([])
+
+    expect(stubEncryptCredentials.calledOnce).to.be.true
+    expect(stubConsole.calledWith('Vault-migration-service initiate migration for given user call ends with error: '))
+      .to.be.true
   })
 
   it('`encryptCredentials` should return array with length equal to incoming array length', async () => {

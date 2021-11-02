@@ -52,7 +52,7 @@ export default class BloomVaultStorageService {
   private _platformCryptographyTools
   private _vaultApiService
   private _migrationHelper
-  private didEth: string
+  private _didEth: string
 
   constructor(
     keysService: KeysService,
@@ -71,8 +71,17 @@ export default class BloomVaultStorageService {
       options.accessApiKey,
       this._keysService,
       this._platformCryptographyTools,
-      this.didEth,
+      this.didEthr,
     )
+  }
+
+  get didEthr(): string {
+    if (!this._didEth) {
+      const { addressHex } = this._getVaultKeys()
+      this._didEth = `did:ethr:0x${addressHex}`
+    }
+
+    return this._didEth
   }
 
   /* istanbul ignore next: private function */
@@ -97,16 +106,13 @@ export default class BloomVaultStorageService {
 
   /* istanbul ignore next: private function */
   private async _authorizeVcVault(storageRegion: string) {
-    const { addressHex, privateKeyHex } = this._getVaultKeys()
-    if (!this.didEth) {
-      this.didEth = `did:ethr:0x${addressHex}`
-    }
+    const { privateKeyHex } = this._getVaultKeys()
 
     const {
       body: { token },
     } = await this._vaultApiService.requestAuthToken({
       storageRegion,
-      did: this.didEth,
+      did: this.didEthr,
     })
 
     const signature = this._signByVaultKeys(token, privateKeyHex)
@@ -115,7 +121,7 @@ export default class BloomVaultStorageService {
       storageRegion,
       accessToken: token,
       signature,
-      did: this.didEth,
+      did: this.didEthr,
     })
 
     return token
@@ -248,32 +254,20 @@ export default class BloomVaultStorageService {
 
   public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
     const doesMigrationStarted = await this._migrationHelper.doesMigrationStarted()
-    process.env.DOES_MIGRATION_STARTED = String(doesMigrationStarted)
-    if (process.env.DOES_MIGRATION_STARTED === 'true') {
-      let migration: any = { status: undefined }
-      try {
-        migration = await this._migrationHelper.getMigrationStatus()
-      } catch (err) {
-        console.log('@@@Vault-migration-service migration status call ends with error: ', err)
-      }
-
-      if (migration.status === 'done') {
+    const accessToken = await this._authorizeVcVault(storageRegion)
+    if (doesMigrationStarted) {
+      const migrationDone = await this._migrationHelper.getMigrationStatus()
+      if (migrationDone) {
         return []
       }
     }
 
-    const accessToken = await this._authorizeVcVault(storageRegion)
-
     const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
 
-    if (process.env.DOES_MIGRATION_STARTED === 'true') {
-      try {
-        // just send the async call, but no need to wait for response
-        // all logic should be done in a background
-        this._migrationHelper.runMigration(credentials)
-      } catch (err) {
-        console.log('@@@Vault-migration-service run migration call ends with error: ', err)
-      }
+    if (doesMigrationStarted) {
+      // just send the async call, but no need to wait for response
+      // all logic should be done in a background
+      this._migrationHelper.runMigration(credentials)
     }
 
     if (!types) {

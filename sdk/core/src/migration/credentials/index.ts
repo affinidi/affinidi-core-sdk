@@ -30,7 +30,6 @@ export class MigrationHelper {
   private platformCryptographyTools: IPlatformCryptographyTools
   private readonly apiKey: string
   private readonly api: ApiService
-  private readonly bloomDid: string
   private tokenRequestTime: number
 
   constructor(
@@ -38,7 +37,7 @@ export class MigrationHelper {
     apiKey: string,
     keysService: KeysService,
     platformCryptographyTools: IPlatformCryptographyTools,
-    bloomDid: string,
+    private readonly bloomDid: string,
   ) {
     this.baseUrl = VAULT_MIGRATION_SERVICE_URL
     this.apiKey = apiKey
@@ -49,8 +48,6 @@ export class MigrationHelper {
       'Api-Key': apiKey,
       'X-SDK-Version': version,
     })
-    this.bloomDid = bloomDid
-    this.tokenRequestTime = Date.now()
   }
 
   /**
@@ -112,8 +109,12 @@ export class MigrationHelper {
    * @param credentials
    */
   async runMigration(credentials: any[]): Promise<void> {
-    const encryptedVCs = await this.encryptCredentials(credentials)
-    await this.runMigrationByChunk(encryptedVCs, 100)
+    try {
+      const encryptedVCs = await this.encryptCredentials(credentials)
+      await this.runMigrationByChunk(encryptedVCs, 100)
+    } catch (err) {
+      console.log('Vault-migration-service initiate migration for given user call ends with error: ', err)
+    }
   }
 
   /**
@@ -129,27 +130,41 @@ export class MigrationHelper {
   }
 
   /**
-   * Gets migration status for user with given token
+   * Gets migration status for user with given token for specified ethereum DID
    */
-  async getMigrationStatus(): Promise<{ status: string }> {
-    const token = await this.getAuth()
-    const url = `api/v1/migration/done/${this.bloomDid}`
-    return this.api.execute(
-      'GET',
-      url,
-      {},
-      {
-        Authorization: `Bearer ${token}`,
-      },
-    )
+  async getMigrationStatus(): Promise<boolean> {
+    const url = `migration/done/${this.bloomDid}`
+    let migrationDone = false
+    try {
+      const token = await this.getAuth()
+      migrationDone = await this.api.execute(
+        'GET',
+        url,
+        {},
+        {
+          Authorization: `Bearer ${token}`,
+        },
+      )
+    } catch (err) {
+      console.log('Vault-migration-service migration status check call ends with error: ', err)
+    }
+
+    return migrationDone
   }
 
   /**
    * Checks if migration process has been started. Should work without authentication.
    */
-  async doesMigrationStarted(): Promise<string> {
-    const url = 'api/v1/migration/started'
-    return this.api.execute('GET', url, {})
+  async doesMigrationStarted(): Promise<boolean> {
+    const url = 'migration/started'
+    let migrationStarted = false
+    try {
+      migrationStarted = await this.api.execute('GET', url, {})
+    } catch (err) {
+      console.log('Vault-migration-service migration started check call ends with error: ', err)
+    }
+
+    return migrationStarted
   }
 
   /**
@@ -158,7 +173,7 @@ export class MigrationHelper {
    */
   async migrateCredentials(vcList: vcMigrationList[]): Promise<void> {
     const token = await this.getAuth()
-    const url = 'api/v1/migrate/credentials'
+    const url = 'migrate/credentials'
     return this.api.execute(
       'POST',
       url,

@@ -47,20 +47,46 @@ describe('BloomVaultStorageService', () => {
     sinon.restore()
   })
 
-  it('should return empty array if migration status "done"', async () => {
+  it(' should not run `MigrationHelper.getMigrationStatus` and  `runMigration.MigrationHelper` if migration not started', async () => {
+    await authorizeVault()
+    const stubStatus = sinon.stub(MigrationHelper.prototype, 'getMigrationStatus').resolves(true)
+    const stubMigrationProcess = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
+
+    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+      .get('/data/0/99')
+      .reply(200, [
+        { id: 0, cyphertext: JSON.stringify(signedCredential) },
+        { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
+      ])
+    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
+    const service = createBloomStorageService()
+    const credentials = await service.searchCredentials(region)
+
+    expect(stubStatus.notCalled).to.be.true
+    expect(stubMigrationProcess.notCalled).to.be.true
+    expect(credentials).to.length(2)
+    expect(credentials[0].id).to.eql(signedCredential.id)
+  })
+
+  it('should return empty array if migration done', async () => {
     sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').returns(Promise.resolve('requestToken'))
     sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').returns(Promise.resolve('responseToken'))
+    sinon
+      .stub(BloomVaultStorageService.prototype, 'didEthr')
+      .returns('did:ethr:0x042f98f56ad0ca5d5fecc26e3930df37cd5a5d8a')
 
     await authorizeVault()
 
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/api/v1/migrationStatus').reply(200, { status: 'done' })
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'true')
     const service = createBloomStorageService()
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get(`/migration/done/${service.didEthr}`).reply(200, 'true')
     const credentials = await service.searchCredentials(region)
 
     expect(credentials).to.length(0)
   })
 
-  it('should call `MigrationHelper.runMigration` method only once if migration status not "done"', async () => {
+  it('should call `MigrationHelper.runMigration` method only once if migration done endpoint return false', async () => {
     sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').returns(Promise.resolve('requestToken'))
     sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').returns(Promise.resolve('responseToken'))
 
@@ -73,11 +99,10 @@ describe('BloomVaultStorageService', () => {
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
       ])
     nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
-      .get('/api/v1/migrationStatus')
-      .reply(200, { status: 'needMigration' })
-    const stub = sinon.stub(MigrationHelper.prototype, 'runMigration').returns(Promise.resolve())
+    const stub = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'true')
     const service = createBloomStorageService()
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get(`/migration/done/${service.didEthr}`).reply(200, 'false')
     const credentials = await service.searchCredentials(region)
 
     expect(stub.calledOnce).to.be.true
@@ -85,36 +110,9 @@ describe('BloomVaultStorageService', () => {
     expect(credentials[0].id).to.eql(signedCredential.id)
   })
 
-  it('should not call `MigrationHelper.runMigration` method if migration status undefined', async () => {
-    sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').resolves('requestToken')
-    sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').resolves('responseToken')
-
-    await authorizeVault()
-
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
-      .get('/data/0/99')
-      .reply(200, [
-        { id: 0, cyphertext: JSON.stringify(signedCredential) },
-        { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
-      ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
-      .get('/api/v1/migrationStatus')
-      .reply(200, { status: 'needMigration' })
-    const stubGetMigrationStatus = sinon
-      .stub(MigrationHelper.prototype, 'getMigrationStatus')
-      .resolves({ status: undefined })
-    const stubRunMigration = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
-    const service = createBloomStorageService()
-    await service.searchCredentials(region)
-
-    expect(stubGetMigrationStatus.calledOnce).to.be.true
-    expect(stubRunMigration.notCalled).to.be.true
-  })
-
   it('#getAllCredentials', async () => {
     await authorizeVault()
-
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
     nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
@@ -131,7 +129,7 @@ describe('BloomVaultStorageService', () => {
 
   it('#getAllCredentials for multpiple pages with empty values', async () => {
     await authorizeVault()
-
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
     const page = Array(100).fill({ id: 0, cyphertext: JSON.stringify(signedCredential) })
     page[5] = { id: 0, cyphertext: null }
 
@@ -150,7 +148,7 @@ describe('BloomVaultStorageService', () => {
 
   it('#getAllCredentialsByTypes', async () => {
     await authorizeVault()
-
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
     nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
@@ -167,7 +165,7 @@ describe('BloomVaultStorageService', () => {
 
   it('#getCredentials with types=[[]] except which do not have type property', async () => {
     await authorizeVault()
-
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
     nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
@@ -186,10 +184,10 @@ describe('BloomVaultStorageService', () => {
 
   it('#getAllCredentials when multiple credential requirements and multiple credential intersect', async () => {
     await authorizeVault()
-
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
     const expectedFilteredCredentialsToReturn = [
-      { type: ['Denis', 'Igor', 'Max', 'Artem'] },
-      { type: ['Sasha', 'Alex', 'Stas'] },
+      { bloomId: 2, type: ['Denis', 'Igor', 'Max', 'Artem'] },
+      { bloomId: 3, type: ['Sasha', 'Alex', 'Stas'] },
     ]
 
     const credentials = [
@@ -222,7 +220,7 @@ describe('BloomVaultStorageService', () => {
 
   it('#getAllCredentialsWithError', async () => {
     await authorizeVault()
-
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
     nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
       .get('/data/0/99')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
