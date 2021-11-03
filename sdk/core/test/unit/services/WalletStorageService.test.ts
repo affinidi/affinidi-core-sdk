@@ -425,7 +425,9 @@ describe('WalletStorageService', () => {
       .post(getSignedCredentialsPath)
       .reply(200, { signedCredentials: ['signedCredential'] })
 
-    const returnedOffer = await WalletStorageService.getSignedCredentials(idToken, credentialOfferResponse)
+    const returnedOffer = await WalletStorageService.getSignedCredentials(idToken, credentialOfferResponse, {
+      keyStorageUrl,
+    })
 
     expect(returnedOffer[0]).to.eq('signedCredential')
   })
