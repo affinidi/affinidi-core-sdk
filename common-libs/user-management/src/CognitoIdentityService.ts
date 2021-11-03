@@ -8,7 +8,6 @@ if (!fetch) {
   ;(global as any).fetch = require('node-fetch')
 }
 
-import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
 import { CognitoUserTokens, MessageParameters } from './dto'
 
 type Response<TResult, TSuccessResult extends TResult, TAdditionalSuccessFields> =
@@ -123,10 +122,10 @@ export class CognitoIdentityService {
   private readonly clientId
   private readonly cognitoidentityserviceprovider
 
-  constructor({ clientId }: { clientId: string }) {
+  constructor({ region, clientId }: { region: string, clientId: string }) {
     this.clientId = clientId
     this.cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
-      region: DEFAULT_COGNITO_REGION,
+      region,
       apiVersion: '2016-04-18',
     })
   }

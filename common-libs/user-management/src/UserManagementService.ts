@@ -4,10 +4,8 @@ import { profile } from '@affinidi/tools-common'
 import { CognitoUserTokens, MessageParameters } from './dto'
 import { validateUsername } from './validateUsername'
 import SdkErrorFromCode from './SdkErrorFromCode'
-import { normalizeShortPassword } from './normalizeShortPassword'
 import { normalizeUsername } from './normalizeUsername'
 import { SessionStorageService } from './SessionStorageService'
-import { randomBytes } from './randomBytes'
 import {
   CognitoIdentityService,
   CompleteChangeLoginResult,
@@ -23,12 +21,6 @@ import {
   UsernameWithAttributes,
 } from './CognitoIdentityService'
 
-const generatePassword = async () => {
-  const randomPassword = (await randomBytes(32)).toString('hex')
-  // Make first found letter uppercase because hex string doesn't meet password requirements
-  return randomPassword.replace(/[a-f]/, 'A')
-}
-
 class DefaultResultError extends Error {
   constructor(result: never) {
     super(`Result '${result}' cannot be handled`)
@@ -36,11 +28,15 @@ class DefaultResultError extends Error {
 }
 
 type ConstructorOptions = {
+  region: string
   clientId: string
   userPoolId: string
   keyStorageUrl: string
   accessApiKey: string
-  sdkVersion: string
+}
+
+type ConstructorDependencies = {
+  keyStorageApiService: KeyStorageApiService
 }
 
 /**
@@ -60,12 +56,8 @@ export class UserManagementService {
   private _keyStorageApiService
   private _sessionStorageService
 
-  constructor(options: ConstructorOptions) {
-    this._keyStorageApiService = new KeyStorageApiService({
-      keyStorageUrl: options.keyStorageUrl,
-      accessApiKey: options.accessApiKey,
-      sdkVersion: options.sdkVersion,
-    })
+  constructor(options: ConstructorOptions, dependencies: ConstructorDependencies) {
+    this._keyStorageApiService = dependencies.keyStorageApiService
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
   }
@@ -93,27 +85,24 @@ export class UserManagementService {
     }
   }
 
-  async signUpWithUsernameAndConfirm(username: string, inputPassword: string) {
+  async signUpWithUsernameAndConfirm(username: string, password: string) {
     this._loginShouldBeUsername(username)
     const usernameWithAttributes = this._buildUserAttributes(username)
 
-    if (!inputPassword) {
+    if (!password) {
       throw new Error(`Expected non-empty password for '${username}'`)
     }
 
-    const password = normalizeShortPassword(inputPassword, username)
     await this._signUp(usernameWithAttributes, password)
     await this._keyStorageApiService.adminConfirmUser({ username })
-    const cognitoTokens = await this.logInWithPassword(username, inputPassword)
+    const cognitoTokens = await this.logInWithPassword(username, password)
     return cognitoTokens
   }
 
-  async initiateSignUpWithEmailOrPhone(login: string, inputPassword: string, messageParameters: MessageParameters) {
+  async initiateSignUpWithEmailOrPhone(login: string, password: string, messageParameters: MessageParameters) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
 
-    const shortPassword = inputPassword || (await generatePassword())
-    const password = normalizeShortPassword(shortPassword, login)
     await this._signUp(usernameWithAttributes, password, messageParameters)
     const signUpToken = `${login}::${password}`
 
@@ -138,8 +127,7 @@ export class UserManagementService {
     }
   }
 
-  async logInWithPassword(login: string, shortPassword: string) {
-    const password = normalizeShortPassword(shortPassword, login)
+  async logInWithPassword(login: string, password: string) {
     const response = await this._cognitoIdentityService.tryLogInWithPassword(login, password)
 
     switch (response.result) {
