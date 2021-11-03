@@ -2,7 +2,9 @@ import { defaultTemplate, predefinedTemplates } from './templates'
 import { predefinedUrls } from './urls'
 import { Service } from './services'
 
-function resolveUrl(service: Service, env: string, userTemplate?: string): string {
+export type Env = 'dev' | 'staging' | 'prod'
+
+function resolveUrl(service: Service, env: Env, userTemplate?: string): string {
   if (!Object.values(Service).includes(service)) {
     throw new Error(`Service ${service} is not supported by url-resolver`)
   }
