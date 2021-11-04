@@ -22,7 +22,7 @@ The Affinidi open source monorepo has the following structure
 ### common-libs/common
 The `common` folder contains the `@affinidi/common` [npm package](https://www.npmjs.com/package/@affinidi/common). This package implements DID, VC, and VP utilities that are used throughout Affinidi libraries and services. This package is considered more *opinionated* because it supports DID methods and VC proofs that Affinidi actively supports.
 
-The main entry point to this package is a class called `Affinity`. In this class you will find utilities for handling JSON-LD, DIDs, VCs, VPs, JWTs, and legacy credential types from early MVPs.
+The main entry point of this package is a class called `Affinity`. In this class you will find utilities for handling JSON-LD, DIDs, VCs, VPs, JWTs, and legacy credential types from early MVPs.
 
 ### common-libs/tiny-lds-ecdsa-secp256k1-2019
 This packages is the same as https://github.com/decentralized-identity/lds-ecdsa-secp256k1-2019.js, but uses `tiny-secp256k1` for signing.
@@ -33,7 +33,7 @@ The `vc-common` folder contains the `@affinidi/vc-common` [npm package](https://
 Find more docs [here](https://docs.affinity-project.org/common/getting-started).
 
 ### sdk/core
-The `core` folder contins the `@affinidi/wallet-core-sdk` [npm package](https://www.npmjs.com/package/@affinidi/wallet-core-sdk). This package implements the common logic for account registration & management, credential issuance & verification and more.
+The `core` folder contains the `@affinidi/wallet-core-sdk` [npm package](https://www.npmjs.com/package/@affinidi/wallet-core-sdk). This package implements the common logic for account registration & management, credential issuance & verification and more.
 
 The main entry point is a class called `CommonNetworkMember`. This class can be initialized with specific service endpoints, or if left to it's defaults will use Affinidi's staging environment.
 
@@ -86,4 +86,4 @@ Workflow to publish npm packages is:
 3. `npm run lint`, `npm run test`, `npm run checkLicenses` etc;
 4. `npm run publish`.
 
-Note that `prepare` command is not required as the projects are built on step 2 anyway, and `prepare` command is run for all projects during step 1, making it unnecessary long.
+Note that `prepare` command is not required as the projects are built in step 2 anyway, and `prepare` command is run for all projects during step 1, making it unnecessary long.
