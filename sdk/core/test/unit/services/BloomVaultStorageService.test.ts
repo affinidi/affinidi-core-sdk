@@ -49,7 +49,7 @@ describe('BloomVaultStorageService', () => {
 
   it(' should not run `MigrationHelper.getMigrationStatus` and  `runMigration.MigrationHelper` if migration not started', async () => {
     await authorizeVault()
-    const stubStatus = sinon.stub(MigrationHelper.prototype, 'getMigrationStatus').resolves(true)
+    const stubStatus = sinon.stub(MigrationHelper.prototype, 'getMigrationStatus').resolves('error')
     const stubMigrationProcess = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
 
     nock(STAGING_BLOOM_VAULT_URL, { reqheaders })

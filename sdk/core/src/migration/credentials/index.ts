@@ -107,11 +107,13 @@ export class MigrationHelper {
   /**
    * Initiate VCs migration on bloom-vault VC READ event.
    * @param credentials
+   * @param {string} accessToken - bloom-vault access token
+   * @param {string} signature - signature of bloom-vault access token
    */
-  async runMigration(credentials: any[]): Promise<void> {
+  async runMigration(credentials: any[], accessToken: string, signature: string): Promise<void> {
     try {
       const encryptedVCs = await this.encryptCredentials(credentials)
-      await this.runMigrationByChunk(encryptedVCs, 100)
+      await this.runMigrationByChunk(encryptedVCs, 100, accessToken, signature)
     } catch (err) {
       console.log('Vault-migration-service initiate migration for given user call ends with error: ', err)
     }
@@ -121,23 +123,25 @@ export class MigrationHelper {
    * Divides given encrypted VCs list into chunks and run migration
    * @param encryptedVCs
    * @param chunk
+   * @param {string} accessToken - bloom-vault access token
+   * @param {string} signature - signature of bloom-vault access token
    */
-  async runMigrationByChunk(encryptedVCs: any[], chunk: number): Promise<void> {
+  async runMigrationByChunk(encryptedVCs: any[], chunk: number, accessToken: string, signature: string): Promise<void> {
     for (let i = 0, L = encryptedVCs.length; i < L; i += chunk) {
       const chunkedVCList = encryptedVCs.slice(i, i + chunk)
-      await this.migrateCredentials(chunkedVCList)
+      await this.migrateCredentials(chunkedVCList, accessToken, signature)
     }
   }
 
   /**
    * Gets migration status for user with given token for specified ethereum DID
    */
-  async getMigrationStatus(): Promise<boolean> {
+  async getMigrationStatus(): Promise<string> {
     const url = `migration/done/${this.bloomDid}`
-    let migrationDone = false
+    let migrationDone: 'no' | 'yes' | 'error' = 'error'
     try {
       const token = await this.getAuth()
-      migrationDone = await this.api.execute(
+      const response = await this.api.execute(
         'GET',
         url,
         {},
@@ -145,6 +149,8 @@ export class MigrationHelper {
           Authorization: `Bearer ${token}`,
         },
       )
+      if (response) migrationDone = 'yes'
+      else migrationDone = 'no'
     } catch (err) {
       console.log('Vault-migration-service migration status check call ends with error: ', err)
     }
@@ -169,9 +175,11 @@ export class MigrationHelper {
 
   /**
    * Send list of users encrypted VCs stored on `bloom-vault` to the `vault-migration-service` to start migration process to the `affinidi-vault`
-   * @param {Array<vcMigrationList>} vcList
+   * @param {Array<vcMigrationList>} vcList - list of VCs
+   * @param {string} accessToken - bloom-vault access token
+   * @param {string} signature - signature of bloom-vault access token
    */
-  async migrateCredentials(vcList: vcMigrationList[]): Promise<void> {
+  async migrateCredentials(vcList: vcMigrationList[], accessToken: string, signature: string): Promise<void> {
     const token = await this.getAuth()
     const url = 'migrate/credentials'
     return this.api.execute(
@@ -179,6 +187,8 @@ export class MigrationHelper {
       url,
       {
         bloomDid: this.bloomDid,
+        bloomAuthToken: accessToken,
+        bloomTokenSignature: signature,
         verifiableCredentials: vcList,
       },
       {

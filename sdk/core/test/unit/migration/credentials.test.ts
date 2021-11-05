@@ -68,7 +68,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     const testDids = await generateTestDIDs()
     encryptionKey = testDids.password
     encryptedSeed = testDids.elem.encryptedSeed
-    // fake did:eth seedHex
+    // fake did:eth seedHex (with wrong format to avoid unexpected write into bloom-vault)
     didEth = `did:eth:${testDids.jolo.seedHex}`
     audienceDid = testDids.elem.did
     didDocumentKeyId = testDids.elem.didDocumentKeyId
@@ -119,7 +119,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
 
     const helper = createMigrationHelper()
     await helper.getMigrationStatus()
-    await helper.runMigration([])
+    await helper.runMigration([], '', '')
 
     expect(stubPullDidAuthRequestToken.calledOnce).to.be.true
     expect(stubCreateDidAuthResponseToken.calledOnce).to.be.true
@@ -132,7 +132,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
 
     const helper = createMigrationHelper()
     await helper.getMigrationStatus()
-    await helper.runMigration([])
+    await helper.runMigration([], '', '')
 
     expect(stubPullDidAuthRequestToken.calledTwice).to.be.true
     expect(stubCreateDidAuthResponseToken.calledTwice).to.be.true
@@ -150,17 +150,18 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     const stubConsole = sinon.stub(console, 'log')
 
     const helper = createMigrationHelper()
-    await helper.getMigrationStatus()
+    const migrationDone = await helper.getMigrationStatus()
 
     expect(stubConsole.calledOnce).to.be.true
     expect(stubConsole.calledWith('Vault-migration-service migration status check call ends with error: ')).to.be.true
+    expect(migrationDone).to.be.eq('error')
   })
 
   it('`migrateCredentials` should called twice if amount of VCs 150(two chunks)', async () => {
     sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(150))
     const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
     const helper = createMigrationHelper()
-    await helper.runMigration([])
+    await helper.runMigration([], '', '')
 
     expect(stubMigrateCredentials.calledTwice).to.be.true
     expect(stubMigrateCredentials.firstCall.args[0].length).to.be.eq(100)
@@ -171,7 +172,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(10))
     const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
     const helper = createMigrationHelper()
-    await helper.runMigration([])
+    await helper.runMigration([], '', '')
 
     expect(stubMigrateCredentials.calledOnce).to.be.true
     expect(stubMigrateCredentials.firstCall.args[0].length).to.be.eq(10)
@@ -181,7 +182,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(6347))
     const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
     const helper = createMigrationHelper()
-    await helper.runMigration([])
+    await helper.runMigration([], '', '')
 
     expect(stubMigrateCredentials.callCount).to.be.eq(64)
 
@@ -195,7 +196,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
       .stub(MigrationHelper.prototype, 'encryptCredentials')
       .resolves(createEncryptedCreds(1))
     const helper = createMigrationHelper()
-    await helper.runMigration([])
+    await helper.runMigration([], '', '')
 
     expect(stubRunMigrationByChunk.calledOnce).to.be.true
     expect(stubEncryptCredentials.calledOnce).to.be.true
@@ -210,7 +211,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
       .reply(500, { code: 'COM-1', message: 'internal server error' })
     const stubConsole = sinon.stub(console, 'log')
     const helper = createMigrationHelper()
-    await helper.runMigration([])
+    await helper.runMigration([], '', '')
 
     expect(stubEncryptCredentials.calledOnce).to.be.true
     expect(stubConsole.calledWith('Vault-migration-service initiate migration for given user call ends with error: '))
@@ -220,7 +221,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   it('`encryptCredentials` should return array with length equal to incoming array length', async () => {
     const stub = sinon.stub(MigrationHelper.prototype, 'runMigrationByChunk')
     const helper = createMigrationHelper()
-    await helper.runMigration(migrationTestCredentials)
+    await helper.runMigration(migrationTestCredentials, '', '')
 
     const encryptionResult = stub.getCalls()[0].args[0]
     expect(encryptionResult.length).to.be.eq(migrationTestCredentials.length)
@@ -229,7 +230,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   it('`encryptCredentials` should return array of VCs with expected structure', async () => {
     const stub = sinon.stub(MigrationHelper.prototype, 'runMigrationByChunk')
     const helper = createMigrationHelper()
-    await helper.runMigration(migrationTestCredentials)
+    await helper.runMigration(migrationTestCredentials, '', '')
 
     const encryptionResult = stub.getCalls()[0].args[0]
     for (const credential of encryptionResult) {
@@ -249,7 +250,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   it('`encryptCredentials` should return decryptable payload(decryption result should be equal to initial data)', async () => {
     const stub = sinon.stub(MigrationHelper.prototype, 'runMigrationByChunk')
     const helper = createMigrationHelper()
-    await helper.runMigration(migrationTestCredentials)
+    await helper.runMigration(migrationTestCredentials, '', '')
 
     const keysService = new KeysService(encryptedSeed, encryptionKey)
     const privateKeyBuffer = keysService.getOwnPrivateKey()

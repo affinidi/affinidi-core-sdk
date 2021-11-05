@@ -124,7 +124,7 @@ export default class BloomVaultStorageService {
       did: this.didEthr,
     })
 
-    return token
+    return { token, signature }
   }
 
   /* istanbul ignore next: private function */
@@ -254,20 +254,21 @@ export default class BloomVaultStorageService {
 
   public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
     const doesMigrationStarted = await this._migrationHelper.doesMigrationStarted()
-    const accessToken = await this._authorizeVcVault(storageRegion)
+    const { token: accessToken, signature } = await this._authorizeVcVault(storageRegion)
+    let migrationDone: string
     if (doesMigrationStarted) {
-      const migrationDone = await this._migrationHelper.getMigrationStatus()
-      if (migrationDone) {
+      migrationDone = await this._migrationHelper.getMigrationStatus()
+      if (migrationDone === 'yes') {
         return []
       }
     }
 
     const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
 
-    if (doesMigrationStarted) {
+    if (doesMigrationStarted && migrationDone === 'no' && credentials?.length) {
       // just send the async call, but no need to wait for response
       // all logic should be done in a background
-      this._migrationHelper.runMigration(credentials)
+      this._migrationHelper.runMigration(credentials, accessToken, signature)
     }
 
     if (!types) {
@@ -278,7 +279,7 @@ export default class BloomVaultStorageService {
   }
 
   public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
-    const accessToken = await this._authorizeVcVault(storageRegion)
+    const { token: accessToken } = await this._authorizeVcVault(storageRegion)
 
     const credentialBlob = await this._findCredentialById(accessToken, credentialId, storageRegion)
 
@@ -292,13 +293,13 @@ export default class BloomVaultStorageService {
   }
 
   public async deleteCredentialById(id: string, storageRegion: string): Promise<void> {
-    const accessToken = await this._authorizeVcVault(storageRegion)
+    const { token: accessToken } = await this._authorizeVcVault(storageRegion)
     const credentialBlob = await this._findCredentialById(accessToken, id, storageRegion)
     return this._deleteCredentialByIndex(accessToken, credentialBlob.id, storageRegion)
   }
 
   public async deleteAllCredentials(storageRegion: string): Promise<void> {
-    const accessToken = await this._authorizeVcVault(storageRegion)
+    const { token: accessToken } = await this._authorizeVcVault(storageRegion)
 
     try {
       await this._vaultApiService.deleteCredentials({ accessToken, storageRegion, start: 0, end: 99 })
