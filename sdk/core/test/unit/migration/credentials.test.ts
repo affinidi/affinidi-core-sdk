@@ -84,6 +84,14 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     sinon.restore()
   })
 
+  it('should return false if migration service response with delay more than 2 sec started', async () => {
+    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').delayConnection(3000).reply(200, 'true')
+
+    const helper = createMigrationHelper()
+    const doesMigrationStarted = await helper.doesMigrationStarted()
+    expect(doesMigrationStarted).to.be.false
+  })
+
   it('should return false if migration NOT started', async () => {
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
 
