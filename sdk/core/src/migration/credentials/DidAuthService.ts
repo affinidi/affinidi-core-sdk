@@ -18,7 +18,7 @@ export class DidAuthService {
 
   async pullDidAuthRequestToken(): Promise<string> {
     const audienceDid = this.didAuthAdapter.did
-    const url = 'api/v1/did-auth/create-did-auth-request'
+    const url = 'did-auth/create-did-auth-request'
 
     return this.api.execute('POST', url, { audienceDid })
   }

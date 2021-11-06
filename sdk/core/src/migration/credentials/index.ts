@@ -8,7 +8,8 @@ const packageInfo = require('../../../package.json')
 
 const environment = process.env.ENVIRONMENT || 'dev'
 const version = packageInfo.version
-export const VAULT_MIGRATION_SERVICE_URL = `https://vault-migration-service.${environment}.affinity-project.org`
+export const VAULT_MIGRATION_SERVICE_URL =
+  process.env.VAULT_MIGRATION_SERVICE_URL || `https://vault-migration-service.${environment}.affinity-project.org`
 
 interface vcMigrationList {
   bloomVaultIndex: number
@@ -163,9 +164,15 @@ export class MigrationHelper {
    */
   async doesMigrationStarted(): Promise<boolean> {
     const url = 'migration/started'
-    let migrationStarted = false
+    let migrationStarted: boolean = false
     try {
-      migrationStarted = await this.api.execute('GET', url, {})
+      migrationStarted = (await Promise.race([
+        this.api.execute('GET', url, {}),
+        // will skip request to the migration service if it is pending > 2 sec(suppose that migration server is down)
+        new Promise((resolve) => {
+          setTimeout(resolve, 2000, false)
+        }),
+      ])) as boolean
     } catch (err) {
       console.log('Vault-migration-service migration started check call ends with error: ', err)
     }
