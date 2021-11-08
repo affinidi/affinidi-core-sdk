@@ -21,7 +21,7 @@
     "test:watch": "cross-env NODE_ENV=test jest --watch",
     "lint": "eslint src",
     "prepublishOnly": "npm run test && npm run lint",
-    "test:coverage": "nyc --reporter=lcov npm run test",
+    "test:coverage": "npm run test -- --coverage",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.vc_dats.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
     "test:integration": "",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
@@ -51,7 +51,6 @@
     "jsonld": "^4.0.1",
     "license-checker": "25.0.1",
     "lodash.uniq": "^4.5.0",
-    "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "ts-jest": "^27.0.7",
     "typescript": "^4.3.2"

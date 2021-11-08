@@ -19,7 +19,7 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "cross-env NODE_ENV=test jest",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
-    "test:coverage": "nyc --reporter=lcov npm run test",
+    "test:coverage": "npm run test -- --coverage",
     "test:coverage:codeclimate": "npm run test:coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.vc_common.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)  || echo \"lcov file is empty. There is no tests\"",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
@@ -48,7 +48,6 @@
     "jest": "^27.3.1",
     "jsonld": "^4.0.1",
     "license-checker": "25.0.1",
-    "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "ts-jest": "^27.0.7",
     "typescript": "^4.3.2"
