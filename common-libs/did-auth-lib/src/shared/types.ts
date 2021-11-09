@@ -1,5 +1,7 @@
+import { Env } from '@affinidi/url-resolver'
+
 export interface VerifierOptions {
-  environment: string
+  environment: Env
   accessApiKey: string
 }
 
