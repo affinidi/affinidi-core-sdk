@@ -27,9 +27,8 @@ type Validations<T> = { [k in keyof T]: Validator | Validator[] }
 
 export type ValidateFn<T> = (data: Unvalidated<T>) => Promise<Validatied<T>>
 
-export const genValidateFn =
-  <T>(validations: Validations<T>): ValidateFn<T> =>
-  async (data) => {
+export const genValidateFn = <T>(validations: Validations<T>): ValidateFn<T> => {
+  return async (data) => {
     const keys = Object.keys(validations)
     const errors: ErrorConfig[] = []
 
@@ -69,10 +68,10 @@ export const genValidateFn =
       data: data as T,
     }
   }
+}
 
-export const isValid =
-  <T>(validatorFn: ValidateFn<T>) =>
-  async (data: T): Promise<ValidatorResponse> => {
+export const isValid = <T>(validatorFn: ValidateFn<T>) => {
+  return async (data: T): Promise<ValidatorResponse> => {
     const resp = await validatorFn(data)
 
     if (resp.kind === 'valid') {
@@ -85,6 +84,7 @@ export const isValid =
       }
     }
   }
+}
 
 export const createValidatorResponse = (condition: boolean, message: string): ValidatorResponse => {
   if (condition) return true
