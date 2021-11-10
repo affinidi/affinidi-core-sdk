@@ -1,4 +1,4 @@
-import { CognitoUserTokens } from '../dto/shared.dto'
+import { CognitoUserTokens } from './dto'
 import SdkErrorFromCode from './SdkErrorFromCode'
 
 let tempSessionStorage: any = {}

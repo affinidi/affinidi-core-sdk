@@ -1,12 +1,9 @@
 import { expect } from 'chai'
 import { SessionStorageService } from '../../src/SessionStorageService'
 
-import { getAllOptionsForEnvironment } from '../helpers'
-
 import { cognitoUserTokens } from '../factory/cognitoUserTokens'
 
-const { userPoolId } = getAllOptionsForEnvironment()
-const service = new SessionStorageService(userPoolId)
+const service = new SessionStorageService('fake-user-pool-id')
 
 describe('SessionStorageService', () => {
   it('Saves cognito user tokens to sessionStorage', () => {
@@ -18,7 +15,7 @@ describe('SessionStorageService', () => {
   })
 
   it('Throws `COR-9 / 422` when user is not logged in (tokens not found in the sessionStorage)', () => {
-    let responseError
+    let responseError: any
 
     service.clearUserTokens()
 

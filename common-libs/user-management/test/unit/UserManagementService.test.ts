@@ -4,14 +4,15 @@ import * as AWSMock from 'aws-sdk-mock'
 import AWS from 'aws-sdk'
 import { expect } from 'chai'
 
-import UserManagementService from '../../../src/services/UserManagementService'
-import { normalizeUsername } from '../../../src/shared/normalizeUsername'
-import { MessageParameters } from '../../../src/dto'
+import { UserManagementService } from '../../src/UserManagementService'
+import { normalizeUsername } from '../../src/normalizeUsername'
+import { MessageParameters } from '../../src/dto'
 
 import { cognitoAccessToken } from '../factory/cognitoAccessToken'
 import { cognitoAuthSuccessResponse } from '../factory/cognitoAuthSuccessResponse'
 import { cognitoInitiateCustomAuthResponse } from '../factory/cognitoInitiateCustomAuthResponse'
 import { cognitoSignInWithUsernameResponseToken } from '../factory/cognitoSignInWithUsernameResponseToken'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 
 const email = 'user@email.com'
 const username = 'test_username'
@@ -43,10 +44,16 @@ const INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException'
 const USER_NOT_CONFIRMED_EXCEPTION = 'UserNotConfirmedException'
 
 const options = {
+  region: 'fakeRegion',
   clientId: 'fakeClientId',
   userPoolId: 'fakePoolId' as string,
-  keyStorageUrl: undefined as string,
-  accessApiKey: undefined as string,
+}
+
+const dependencies = {
+  keyStorageApiService: new KeyStorageApiService({
+    accessApiKey: undefined as any,
+    keyStorageUrl: undefined as any,
+  })
 }
 
 const cognitoTokens = { accessToken: cognitoAccessToken }
@@ -78,7 +85,7 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.initiateLogInPasswordless(email)
 
       expect(response).to.exist
@@ -89,9 +96,9 @@ describe('UserManagementService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateLogInPasswordless(email)
@@ -110,9 +117,9 @@ describe('UserManagementService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateLogInPasswordless(email)
@@ -133,7 +140,7 @@ describe('UserManagementService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeLogInPasswordless(token, otp)
 
       expect(response.accessToken).to.exist
@@ -146,9 +153,9 @@ describe('UserManagementService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeLogInPasswordless(token, otp)
@@ -171,9 +178,9 @@ describe('UserManagementService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeLogInPasswordless(token, otp)
@@ -196,9 +203,9 @@ describe('UserManagementService', () => {
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeLogInPasswordless(token, otp)
@@ -216,7 +223,7 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(FORGOT_PASSWORD, {})
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.initiateForgotPassword(email)
       expect(response).to.not.exist
     })
@@ -226,9 +233,9 @@ describe('UserManagementService', () => {
 
       stubMethod(FORGOT_PASSWORD, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateForgotPassword(email)
@@ -247,9 +254,9 @@ describe('UserManagementService', () => {
 
       stubMethod(FORGOT_PASSWORD, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateForgotPassword(email)
@@ -267,15 +274,15 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(CONFIRM_FORGOT_PASSWORD, {})
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
       expect(response).to.not.exist
     })
 
     it('throws `COR-3 / 400` when username is not email/phoneNumber', async () => {
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeForgotPassword(username, confirmationCode, 'newPassword')
@@ -294,9 +301,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
@@ -318,9 +325,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
@@ -341,9 +348,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
@@ -365,9 +372,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
@@ -386,9 +393,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeForgotPassword(email, confirmationCode, 'newPassword')
@@ -408,7 +415,7 @@ describe('UserManagementService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.true
@@ -419,7 +426,7 @@ describe('UserManagementService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.false
@@ -430,7 +437,7 @@ describe('UserManagementService', () => {
 
       stubMethod(INITIATE_AUTH, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.doesUnconfirmedUserExist(email)
 
       expect(response).to.be.false
@@ -441,7 +448,7 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(RESEND_CONFIRMATION_CODE, {})
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.resendSignUpByLogin(email)
       expect(response).to.not.exist
     })
@@ -451,9 +458,9 @@ describe('UserManagementService', () => {
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.resendSignUpByLogin(email)
@@ -476,9 +483,9 @@ describe('UserManagementService', () => {
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.resendSignUpByLogin(email)
@@ -501,9 +508,9 @@ describe('UserManagementService', () => {
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.resendSignUpByLogin(email)
@@ -521,8 +528,8 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(SIGN_UP, {})
 
-      const userManagementService = new UserManagementService(options)
-      const response = await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
+      const userManagementService = new UserManagementService(options, dependencies)
+      const response = await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password')
 
       expect(response).to.exist
     })
@@ -533,9 +540,9 @@ describe('UserManagementService', () => {
       stubMethod(SIGN_UP, null, error)
       stubMethod(INITIATE_AUTH, null, {})
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
@@ -558,9 +565,9 @@ describe('UserManagementService', () => {
 
       stubMethod(SIGN_UP, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
@@ -579,9 +586,9 @@ describe('UserManagementService', () => {
 
       stubMethod(SIGN_UP, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
@@ -600,7 +607,7 @@ describe('UserManagementService', () => {
       stubMethod(CONFIRM_SIGN_UP, {})
       stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeSignUpForEmailOrPhone(`${email}::`, confirmationCode)
 
       expect(response).to.exist
@@ -611,9 +618,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
@@ -636,9 +643,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
@@ -661,9 +668,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
@@ -686,9 +693,9 @@ describe('UserManagementService', () => {
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
@@ -711,7 +718,7 @@ describe('UserManagementService', () => {
       it(successPathTestName, async () => {
         stubMethod(UPDATE_USER_ATTRIBUTES, {})
 
-        const userManagementService = new UserManagementService(options)
+        const userManagementService = new UserManagementService(options, dependencies)
         const response = await userManagementService.initiateChangeLogin(cognitoTokens, email)
 
         expect(response).to.exist
@@ -729,7 +736,7 @@ describe('UserManagementService', () => {
           callback(null, {})
         })
 
-        const userManagementService = new UserManagementService(options)
+        const userManagementService = new UserManagementService(options, dependencies)
         const response = await userManagementService.initiateChangeLogin(cognitoTokens, email, messageParameters)
         expect(response).to.exist
       })
@@ -739,9 +746,9 @@ describe('UserManagementService', () => {
       stubMethod(INITIATE_AUTH, null, {})
       stubMethod(UPDATE_USER_ATTRIBUTES, {})
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.initiateChangeLogin(cognitoTokens, email)
@@ -760,7 +767,7 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(VERIFY_USER_ATTRIBUTE, {})
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)
 
       expect(response).to.exist
@@ -771,9 +778,9 @@ describe('UserManagementService', () => {
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)
@@ -792,9 +799,9 @@ describe('UserManagementService', () => {
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)
@@ -813,9 +820,9 @@ describe('UserManagementService', () => {
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
-      const userManagementService = new UserManagementService(options)
+      const userManagementService = new UserManagementService(options, dependencies)
 
-      let responseError
+      let responseError: any
 
       try {
         await userManagementService.completeChangeLogin(cognitoTokens, email, confirmationCode)

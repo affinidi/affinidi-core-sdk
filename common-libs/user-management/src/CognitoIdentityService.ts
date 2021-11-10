@@ -282,7 +282,7 @@ export class CognitoIdentityService {
   async trySignUp(
     usernameWithAttributes: UsernameWithAttributes,
     password: string,
-    messageParameters: MessageParameters,
+    messageParameters?: MessageParameters,
   ): Promise<SignUpResult> {
     const params = {
       ClientId: this.clientId,

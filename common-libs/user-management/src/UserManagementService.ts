@@ -31,8 +31,6 @@ type ConstructorOptions = {
   region: string
   clientId: string
   userPoolId: string
-  keyStorageUrl: string
-  accessApiKey: string
 }
 
 type ConstructorDependencies = {
@@ -99,7 +97,7 @@ export class UserManagementService {
     return cognitoTokens
   }
 
-  async initiateSignUpWithEmailOrPhone(login: string, password: string, messageParameters: MessageParameters) {
+  async initiateSignUpWithEmailOrPhone(login: string, password: string, messageParameters?: MessageParameters) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
 
