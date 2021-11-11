@@ -592,15 +592,22 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     inputOptions: SdkOptions,
     serializedSession: string,
   ) {
+    const startTs = Date.now()
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: true, value: serializedSession },
     ])
-
+    const validateTimer = Date.now() - startTs
     const cognitoUserTokens = JSON.parse(serializedSession)
     const options = getOptionsFromEnvironment(inputOptions)
     const keyManagementService = await createKeyManagementService(options)
+    const createKmsTimer = Date.now() - startTs
     const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
-    return new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
+    const pullUserDataTimer = Date.now() - startTs
+    const nm: any = new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options);
+    (nm as any).timers = {
+      validateTimer, createKmsTimer, pullUserDataTimer, createNmTimer: Date.now() - startTs, ...(userData as any).timers
+    }
+    return nm
   }
 }

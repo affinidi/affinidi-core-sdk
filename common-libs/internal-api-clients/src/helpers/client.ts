@@ -14,7 +14,11 @@ let fetch: typeof FetchType
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 if (!fetch) {
-  fetch = require('node-fetch')
+  if (process.version.startsWith('v16')) {
+    fetch = require('undici').fetch
+  } else {
+    fetch = require('node-fetch')
+  }
 }
 
 export type ThisData = {

@@ -62,14 +62,22 @@ export default class KeyManagementService {
   }
 
   public async pullKeyAndSeed(accessToken: string) {
+    const start = Date.now()
     const encryptionKey = await this._pullEncryptionKey(accessToken)
+    const keyTimer = Date.now() - start
     const encryptedSeed = await this._pullEncryptedSeed(accessToken)
-    return { encryptionKey, encryptedSeed }
+    const seedTimer = Date.now() - start
+    return { encryptionKey, encryptedSeed, timers: { keyTimer, seedTimer } }
   }
 
   public async pullUserData(accessToken: string) {
-    const { encryptionKey, encryptedSeed } = await this.pullKeyAndSeed(accessToken)
-    return withDidData({ encryptedSeed, password: encryptionKey })
+    const start = Date.now()
+    const { encryptionKey, encryptedSeed, timers } = await this.pullKeyAndSeed(accessToken)
+    const pullKeyAndSeedTimer = Date.now() - start
+    const data = withDidData({ encryptedSeed, password: encryptionKey })
+    const withDidDataTimer = Date.now() - start
+    ;(data as any).timers = { pullKeyAndSeedTimer, withDidDataTimer, ...timers }
+    return data
   }
 
   public async pullEncryptionKeyAndStoreEncryptedSeed(accessToken: string, seedHexWithMethod: string) {

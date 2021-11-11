@@ -3,8 +3,8 @@ import pLimit from 'p-limit'
 import { AffinidiWalletV6 } from '../helpers/AffinidiWallet'
 import { getBasicOptionsForEnvironment, testSecrets } from '../helpers'
 
-const OPERATIONS_COUNT = Number(process.env.DESERIALIZE_SESSION_OPERATIONS_COUNT ?? 1000)
-const CONCURRENCY = Number(process.env.DESERIALIZE_SESSION_CONCURRENCY ?? 10)
+const OPERATIONS_COUNT = Number(process.env.DESERIALIZE_SESSION_OPERATIONS_COUNT ?? 10000)
+const CONCURRENCY = Number(process.env.DESERIALIZE_SESSION_CONCURRENCY ?? 100)
 const LOG_TO_FILE = process.env.LOG_TO_FILE
 
 const { COGNITO_PASSWORD, COGNITO_USERNAME } = testSecrets
@@ -48,10 +48,11 @@ describe('#NetworkMember.deserializeSession', () => {
 
     const test = (i: number) => async () => {
       const start = Date.now()
-      await AffinidiWalletV6.deserializeSession(optionsWithElemDid, session).catch((err) => {
+      const { timers } = await AffinidiWalletV6.deserializeSession(optionsWithElemDid, session).catch((err) => {
         buckets.errors += 1
         log(err.toString())
       })
+      // console.log(timers)
       const time = Date.now() - start
       bucketsPoints.forEach((e) => {
         if (e > time / 1000) {
