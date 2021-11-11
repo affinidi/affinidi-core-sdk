@@ -2,6 +2,7 @@ import nock from 'nock'
 import { expect } from 'chai'
 
 import { JwtService } from '@affinidi/tools-common'
+import { Env } from '@affinidi/url-resolver'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
 import { mockVerifierElemDidDocument } from './../../factory/mockVerifierElemDidDocument'
 import { mockHolderElemDidDocument } from './../../factory/mockHolderElemDidDocument'
@@ -9,7 +10,7 @@ import { verifierDid, verifierEncryptedSeed, verifierEncryptionKey, verifierFull
 import { holderDid, holderEncryptedSeed, holderEncryptionKey } from './../../factory/holder'
 
 const env = {
-  environment: 'dev',
+  environment: <Env>'dev',
   accessApiKey: 'mockAccessApiKeyToAffinidiRegistry1',
 }
 

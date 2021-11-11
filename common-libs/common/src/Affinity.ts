@@ -3,10 +3,10 @@ import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp2
 import { JwtService } from '@affinidi/tools-common'
 import { buildVCV1, buildVPV1, removeIfExists, SimpleThing, VCV1Subject, VCV1SubjectBaseMA } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
+import { resolveUrl, Service } from '@affinidi/url-resolver'
 import { parse } from 'did-resolver'
 
 import { AffinityOptions, EventOptions } from './dto/shared.dto'
-import { DEFAULT_REGISTRY_URL, DEFAULT_METRICS_URL } from './_defaultConfig'
 import { DidDocumentService, KeysService, DigestService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
@@ -25,12 +25,12 @@ export class Affinity {
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
     this._didResolver = new DidResolver({
-      registryUrl: options.registryUrl ?? DEFAULT_REGISTRY_URL,
+      registryUrl: options.registryUrl ?? resolveUrl(Service.REGISTRY, 'staging'),
       accessApiKey: options.apiKey,
     })
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
-      metricsUrl: options.metricsUrl ?? DEFAULT_METRICS_URL,
+      metricsUrl: options.metricsUrl ?? resolveUrl(Service.METRICS, 'staging'),
       accessApiKey: options.apiKey,
       component: options.component || EventComponent.AffinidiCommon,
     })
