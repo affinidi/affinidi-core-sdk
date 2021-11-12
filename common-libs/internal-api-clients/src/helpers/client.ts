@@ -14,7 +14,7 @@ let fetch: typeof FetchType
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 if (!fetch) {
-  const isNodeVersionGEv16 = (version: string): boolean => parseInt(version.match(/v(\d{2}).+/)?.[1] ?? '') >= 16
+  const isNodeVersionGEv16 = (version: string): boolean => parseInt(version.replace('v', '')) >= 16
   if (isNodeVersionGEv16(process.version)) {
     fetch = require('undici').fetch
   } else {
