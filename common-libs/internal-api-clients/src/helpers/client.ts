@@ -9,25 +9,33 @@ import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } fr
 import { createAdditionalHeaders, createHeaders } from './headers'
 import { mapFunctions } from './mapFunctions'
 
-let fetch: (url: RequestInfo, init?: RequestInit) => Promise<Response>
+type FetchType = (url: RequestInfo, init?: RequestInit) => Promise<Response>
 
+function useUndiciFetch(): FetchType {
+  const MIN_NODE_VERSION_SUPPORTS_UNDICI_FETCH = 16
+  const isNodeSupportsUndiciFetch = (version: string): boolean =>
+    parseInt(version.replace('v', '')) >= MIN_NODE_VERSION_SUPPORTS_UNDICI_FETCH
+
+  if (isNodeSupportsUndiciFetch(process.version)) {
+    return require('undici').fetch
+  } else {
+    const request = require('undici').request
+    return async function (url, options) {
+      const response = await request((url as URL).href ?? url, options)
+      return {
+        status: response.statusCode,
+        json: () => response.body.json(),
+      } as Response
+    }
+  }
+}
+
+let fetch: FetchType
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 if (!fetch) {
   if (process.env.HTTP_CLIENT === 'undici') {
-    const isNodeVersionGEv16 = (version: string): boolean => parseInt(version.replace('v', '')) >= 16
-    if (isNodeVersionGEv16(process.version)) {
-      fetch = require('undici').fetch
-    } else {
-      const request = require('undici').request
-      fetch = async function (url, options) {
-        const response = await request((url as URL).href ?? url, options)
-        return {
-          status: response.statusCode,
-          json: () => response.body.json(),
-        } as Response
-      }
-    }
+    fetch = useUndiciFetch()
   } else {
     fetch = require('node-fetch')
   }
