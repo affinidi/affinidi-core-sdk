@@ -334,12 +334,17 @@ export default class UserManagementService {
     })
   }
 
-  async initiateChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, messageParameters?: MessageParameters) {
+  async initiateChangeLogin(
+    cognitoTokens: CognitoUserTokens,
+    newLogin: string,
+    messageParameters?: MessageParameters,
+    shouldDisableNameNormalisation?: boolean,
+  ): Promise<CognitoUserTokens> {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
       this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const result = await this._cognitoIdentityService.initiateChangeAttributes(
         accessToken,
-        this._buildUserAttributes(newLogin),
+        this._buildUserAttributes(newLogin, shouldDisableNameNormalisation),
         messageParameters,
       )
       switch (result) {
