@@ -1,3 +1,6 @@
+# release 2.0.0-beta.2 (2021-11-03)
+* Added `@affinidi/url-resolver` dependency
+* Replaced predefined Affinity services urls from config with resolveUrl function from `@affinidi/url-resolver`
 # release 2.0.0-beta.1 (2021-10-20)
 * Implemented `DidAuthClientService`, `DidAuthServerService`, `DidAuthCloudService`.
 * `DidAuthService` is now deprecated.

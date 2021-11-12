@@ -1,11 +1,12 @@
 import { expect } from 'chai'
 
 import { JwtService } from '@affinidi/tools-common'
+import { Env } from '@affinidi/url-resolver'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
 import { verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid, verifierDid } from './../../factory/verifier'
 import { holderEncryptedSeed, holderEncryptionKey, holderDid } from './../../factory/holder'
 const env = {
-  environment: 'dev',
+  environment: <Env>'dev',
   accessApiKey: '66ca5670a5578937c25eab723374bfe41f153829e69fb87b39849b5118bcfece',
 }
 
