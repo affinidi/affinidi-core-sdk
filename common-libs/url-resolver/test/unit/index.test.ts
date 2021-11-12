@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { resolveUrl, Service } from '../../src'
+import { envSetupUrls } from '../../src/urls'
 
 describe('resolveUrl', () => {
   it('should throw error if provided service is not supported', () => {
@@ -27,8 +28,18 @@ describe('resolveUrl', () => {
     expect(url).to.be.equal(`https://${service}.example.com`)
   })
 
+  it('should override predefined urls or templates with env setup url', () => {
+    const service = Service.METRICS
+    envSetupUrls[service] = 'https://usage-stats.affinidi.xyz'
+    const url = resolveUrl(service, 'dev')
+
+    expect(url).to.be.equal('https://usage-stats.affinidi.xyz')
+
+    envSetupUrls[service] = undefined
+  })
+
   it('should return internal link', () => {
-    process.env.IS_AFFINIDI_INTERNAL_SERVICE = 'true'
+    process.env.AFFINIDI_INTERNAL_SERVICE = 'true'
 
     const service = Service.METRICS
     const url = resolveUrl(service, 'dev')
