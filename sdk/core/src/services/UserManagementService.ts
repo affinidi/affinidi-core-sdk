@@ -97,7 +97,7 @@ export default class UserManagementService {
 
   async signUpWithUsernameAndConfirm(username: string, inputPassword: string): Promise<CognitoUserTokens> {
     this._loginShouldBeUsername(username)
-    const usernameWithAttributes = this._buildUserAttributes(username, this._shouldDisableNameNormalisation)
+    const usernameWithAttributes = this._buildUserAttributes(username)
 
     if (!inputPassword) {
       throw new Error(`Expected non-empty password for '${username}'`)
@@ -116,7 +116,7 @@ export default class UserManagementService {
     messageParameters: MessageParameters,
   ): Promise<string> {
     this._loginShouldBeEmailOrPhoneNumber(login)
-    const usernameWithAttributes = this._buildUserAttributes(login, this._shouldDisableNameNormalisation)
+    const usernameWithAttributes = this._buildUserAttributes(login)
 
     const shortPassword = inputPassword || (await generatePassword())
     const password = normalizeShortPassword(shortPassword, login)
@@ -127,7 +127,7 @@ export default class UserManagementService {
   }
 
   private async _completeSignUp(login: string, confirmationCode: string) {
-    const usernameWithAttributes = this._buildUserAttributes(login, this._shouldDisableNameNormalisation)
+    const usernameWithAttributes = this._buildUserAttributes(login)
     const { normalizedUsername } = usernameWithAttributes
     const result = await this._cognitoIdentityService.completeSignUp(usernameWithAttributes, confirmationCode)
     switch (result) {
@@ -292,7 +292,7 @@ export default class UserManagementService {
   }
 
   async resendSignUpByLogin(login: string, messageParameters?: MessageParameters): Promise<void> {
-    const usernameWithAttributes = this._buildUserAttributes(login, this._shouldDisableNameNormalisation)
+    const usernameWithAttributes = this._buildUserAttributes(login)
     const { normalizedUsername } = usernameWithAttributes
     const result = await this._cognitoIdentityService.resendSignUp(usernameWithAttributes, messageParameters)
     switch (result) {
@@ -336,7 +336,7 @@ export default class UserManagementService {
       this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const result = await this._cognitoIdentityService.initiateChangeAttributes(
         accessToken,
-        this._buildUserAttributes(newLogin, this._shouldDisableNameNormalisation),
+        this._buildUserAttributes(newLogin),
         messageParameters,
       )
       switch (result) {
@@ -395,9 +395,9 @@ export default class UserManagementService {
     }
   }
 
-  private _buildUserAttributes(login: string, shouldDisableNameNormalisation: boolean) {
+  private _buildUserAttributes(login: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
-    const normalizedUsername = shouldDisableNameNormalisation ? login : normalizeUsername(login)
+    const normalizedUsername = this._shouldDisableNameNormalisation ? login : normalizeUsername(login)
 
     return {
       normalizedUsername,
