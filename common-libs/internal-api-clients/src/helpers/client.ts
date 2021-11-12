@@ -1,5 +1,5 @@
 import keyBy from 'lodash.keyby'
-import type FetchType from 'node-fetch'
+import { RequestInfo, RequestInit, Response } from 'node-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
 import { GenericApiSpec } from '../types/openapi'
@@ -9,14 +9,25 @@ import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } fr
 import { createAdditionalHeaders, createHeaders } from './headers'
 import { mapFunctions } from './mapFunctions'
 
-let fetch: typeof FetchType
+let fetch: (url: RequestInfo, init?: RequestInit) => Promise<Response>
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 if (!fetch) {
-  const isNodeVersionGEv16 = (version: string): boolean => parseInt(version.replace('v', '')) >= 16
-  if (isNodeVersionGEv16(process.version)) {
-    fetch = require('undici').fetch
+  if (process.env.HTTP_CLIENT === 'undici') {
+    const isNodeVersionGEv16 = (version: string): boolean => parseInt(version.replace('v', '')) >= 16
+    if (isNodeVersionGEv16(process.version)) {
+      fetch = require('undici').fetch
+    } else {
+      const request = require('undici').request
+      fetch = async function (url, options) {
+        const response = await request((url as URL).href ?? url, options)
+        return {
+          status: response.statusCode,
+          json: () => response.body.json(),
+        } as Response
+      }
+    }
   } else {
     fetch = require('node-fetch')
   }
@@ -93,7 +104,7 @@ const executeByOptions = async (
   }
   const fetchOptions = {
     headers,
-    method,
+    method: method.toUpperCase(),
     ...(!!params && { body: JSON.stringify(params, null, 2) }),
   }
 
