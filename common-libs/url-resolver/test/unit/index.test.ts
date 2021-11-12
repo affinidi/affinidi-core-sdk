@@ -26,4 +26,14 @@ describe('resolveUrl', () => {
     const url = resolveUrl(service, 'dev', 'https://{{service}}.example.com')
     expect(url).to.be.equal(`https://${service}.example.com`)
   })
+
+  it('should return internal link', () => {
+    process.env.IS_AFFINIDI_INTERNAL_SERVICE = 'true'
+
+    const service = Service.METRICS
+    const url = resolveUrl(service, 'dev')
+    expect(url).to.be.equal(`http://${service}.default.svc.cluster.local`)
+
+    process.env.IS_AFFINIDI_INTERNAL_SERVICE = undefined
+  })
 })
