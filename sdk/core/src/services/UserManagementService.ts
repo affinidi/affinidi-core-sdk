@@ -379,7 +379,7 @@ export default class UserManagementService {
     })
   }
 
-  readUserTokensFromSessionStorage() {
+  readUserTokensFromSessionStorage(): CognitoUserTokens {
     return this._sessionStorageService.readUserTokens()
   }
 
