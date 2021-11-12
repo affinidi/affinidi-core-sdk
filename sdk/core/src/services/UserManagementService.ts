@@ -59,7 +59,7 @@ export default class UserManagementService {
   private _cognitoIdentityService
   private _keyStorageApiService
   private _sessionStorageService
-  private _shouldDisableNameNormalisation = false
+  private _shouldDisableNameNormalisation
 
   constructor(options: ConstructorOptions) {
     this._keyStorageApiService = new KeyStorageApiService({
@@ -69,7 +69,7 @@ export default class UserManagementService {
     })
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
-    this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation
+    this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
   }
 
   private async _signUp(
