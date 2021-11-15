@@ -26,7 +26,8 @@ import { extractSDKVersion } from '../_helpers'
 const generatePassword = async () => {
   const randomPassword = (await randomBytes(32)).toString('hex')
   // Make first found letter uppercase because hex string doesn't meet password requirements
-  return randomPassword.replace(/[a-f]/, 'A')
+  // Also add some special characters to the end of password
+  return randomPassword.replace(/[a-f]/, 'A') + '!'
 }
 
 class DefaultResultError extends Error {
