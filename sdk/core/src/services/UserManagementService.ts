@@ -26,7 +26,8 @@ import { extractSDKVersion } from '../_helpers'
 const generatePassword = async () => {
   const randomPassword = (await randomBytes(32)).toString('hex')
   // Make first found letter uppercase because hex string doesn't meet password requirements
-  return randomPassword.replace(/[a-f]/, 'A')
+  // Special characters at the end of password to make comply with cognito requirements
+  return randomPassword.replace(/[a-f]/, 'A') + '!'
 }
 
 class DefaultResultError extends Error {
