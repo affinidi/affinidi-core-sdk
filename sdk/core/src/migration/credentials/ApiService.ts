@@ -1,3 +1,13 @@
+import type FetchType from 'node-fetch'
+
+let fetch: typeof FetchType
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+if (!fetch) {
+  fetch = require('node-fetch')
+}
+
 interface FETCH_OPTIONS {
   method: string
   headers: any
