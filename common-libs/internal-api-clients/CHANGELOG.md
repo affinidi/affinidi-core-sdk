@@ -1,5 +1,5 @@
 # release 1.0.0-beta.15 (2021-11-12)
-  * Added `undici` as http client for nodejs version >= 16
+  * Added `undici` as alternative http client
 # release 1.0.0-beta.14 (2021-10-20)
   * Added `CloudWalletApiService.prototype.signJwt`
 # release 1.0.0-beta.13 (2021-10-13)
