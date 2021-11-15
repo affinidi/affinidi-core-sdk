@@ -12,7 +12,7 @@ export const envSetupUrls: Record<Service, string> = {
   [Service.REGISTRY]: process.env.REGISTRY_SERVICE_URL,
   [Service.SFF_ISSUER]: process.env.SFF_ISSUER_SERVICE_URL,
   [Service.VAULT]: process.env.VAULT_SERVICE_URL,
-  [Service.BLOOM_VAUlT]: process.env.BLOOM_VAUlT_SERVICE_URL,
+  [Service.BLOOM_VAUlT]: process.env.BLOOM_VAULT_SERVICE_URL,
   [Service.CLOUD_WALLET_API]: process.env.CLOUD_WALLET_API_SERVICE_URL,
   [Service.ISSUER]: process.env.ISSUER_SERVICE_URL,
   [Service.KEY_STORAGE]: process.env.KEY_STORAGE_SERVICE_URL,
