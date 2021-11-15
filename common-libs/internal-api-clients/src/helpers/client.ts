@@ -12,21 +12,13 @@ import { mapFunctions } from './mapFunctions'
 type FetchType = (url: RequestInfo, init?: RequestInit) => Promise<Response>
 
 function useUndiciFetch(): FetchType {
-  const MIN_NODE_VERSION_SUPPORTS_UNDICI_FETCH = 16
-  const isNodeSupportsUndiciFetch = (version: string): boolean =>
-    parseInt(version.replace('v', '')) >= MIN_NODE_VERSION_SUPPORTS_UNDICI_FETCH
-
-  if (isNodeSupportsUndiciFetch(process.version)) {
-    return require('undici').fetch
-  } else {
-    const request = require('undici').request
-    return async function (url, options) {
-      const response = await request((url as URL).href ?? url, options)
-      return {
-        status: response.statusCode,
-        json: () => response.body.json(),
-      } as Response
-    }
+  const request = require('undici').request
+  return async function (url, options) {
+    const response = await request((url as URL).href ?? url, options)
+    return {
+      status: response.statusCode,
+      json: () => response.body.json(),
+    } as Response
   }
 }
 
