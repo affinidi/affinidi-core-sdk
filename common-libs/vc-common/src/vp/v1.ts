@@ -31,7 +31,7 @@ export type PresentationSubmissionV1 = {
 export type VPV1Unsigned<
   VC extends VCV1 = VCV1,
   Type extends VPV1Type = VPV1Type,
-  Holder extends VPV1Holder = VPV1Holder
+  Holder extends VPV1Holder = VPV1Holder,
 > = {
   '@context': TContext
   id?: string
@@ -46,7 +46,7 @@ export type VPV1<
   VC extends VCV1 = VCV1,
   Type extends VPV1Type = VPV1Type,
   Holder extends VPV1Holder = VPV1Holder,
-  Proof extends VPV1Proof = VPV1Proof
+  Proof extends VPV1Proof = VPV1Proof,
 > = VPV1Unsigned<VC, Type, Holder> & {
   proof: Proof
 }

@@ -85,7 +85,7 @@ export const createVCContextEntry = <VC extends VCV1>({
 
 export const createContextEntry = <
   Extension extends SimpleThingString,
-  Base extends { [key: string]: any } = SimpleThing
+  Base extends { [key: string]: any } = SimpleThing,
 >({
   type,
   typeIdBase,

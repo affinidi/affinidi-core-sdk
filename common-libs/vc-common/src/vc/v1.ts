@@ -37,7 +37,7 @@ export type VCV1Revocation = {
 export type VCV1Skeleton<
   Subject extends MaybeArray<VCV1Subject<SimpleThing>> = VCV1SubjectMA,
   Type extends VCV1Type = VCV1Type,
-  Holder extends VCV1Holder = VCV1Holder
+  Holder extends VCV1Holder = VCV1Holder,
 > = {
   '@context': TContext
   id: string
@@ -50,7 +50,7 @@ export type VCV1Unsigned<
   Subject extends MaybeArray<VCV1Subject<SimpleThing>> = VCV1SubjectMA,
   Type extends VCV1Type = VCV1Type,
   Holder extends VCV1Holder = VCV1Holder,
-  Revocation extends VCV1Revocation = VCV1Revocation
+  Revocation extends VCV1Revocation = VCV1Revocation,
 > = VCV1Skeleton<Subject, Type, Holder> & {
   issuanceDate: string
   expirationDate?: string
@@ -62,7 +62,7 @@ export type VCV1<
   Type extends VCV1Type = VCV1Type,
   Holder extends VCV1Holder = VCV1Holder,
   Revocation extends VCV1Revocation = VCV1Revocation,
-  Proof extends VCV1Proof = VCV1Proof
+  Proof extends VCV1Proof = VCV1Proof,
 > = VCV1Unsigned<Subject, Type, Revocation, Holder> & {
   issuer: string
   proof: Proof
