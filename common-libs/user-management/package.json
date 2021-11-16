@@ -34,7 +34,8 @@
   ],
   "author": "Inga Lev <inga.l@affinidi.com>",
   "contributors": [
-    "Vitaly Rudenko <vitaly.r@affinidi.com>"
+    "Vitaly Rudenko <vitaly.r@affinidi.com>",
+    "Dmytro Filipenko <dmytro.f@affinidi.com>"
   ],
   "license": "ISC",
   "bugs": {
@@ -61,7 +62,7 @@
     "prettier": "^2.4.1",
     "ts-node": "^10.4.0",
     "typedoc": "^0.22.7",
-    "typescript": "^4.4.4"
+    "typescript": "^4.3.2"
   },
   "gitHead": "5420b34bac444d42d16b336a7ae95f47741d150c"
 }

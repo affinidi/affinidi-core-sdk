@@ -4,8 +4,7 @@ import * as AWSMock from 'aws-sdk-mock'
 import AWS from 'aws-sdk'
 import { expect } from 'chai'
 
-import UserManagementService from '../../../src/services/UserManagementService'
-import { normalizeUsername } from '../../../src/shared/normalizeUsername'
+import { UserManagementService, normalizeUsername } from '@affinidi/user-management'
 import { MessageParameters } from '../../../src/dto'
 
 import cognitoAccessToken from '../../factory/cognitoAccessToken'

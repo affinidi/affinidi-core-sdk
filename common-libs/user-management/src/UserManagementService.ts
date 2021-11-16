@@ -31,6 +31,7 @@ type ConstructorOptions = {
   region: string
   clientId: string
   userPoolId: string
+  shouldDisableNameNormalisation?: boolean
 }
 
 type ConstructorDependencies = {
@@ -53,11 +54,13 @@ export class UserManagementService {
   private _cognitoIdentityService
   private _keyStorageApiService
   private _sessionStorageService
+  private _shouldDisableNameNormalisation
 
   constructor(options: ConstructorOptions, dependencies: ConstructorDependencies) {
     this._keyStorageApiService = dependencies.keyStorageApiService
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
+    this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
   }
 
   private async _signUp(
@@ -366,7 +369,7 @@ export class UserManagementService {
 
   private _buildUserAttributes(login: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
-    const normalizedUsername = normalizeUsername(login)
+    const normalizedUsername = this._shouldDisableNameNormalisation ? login : normalizeUsername(login)
 
     return {
       normalizedUsername,

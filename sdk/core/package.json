@@ -72,6 +72,7 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
+    "@affinidi/user-management": "^1.0.0-beta.1",
     "@types/async-retry": "^1.4.2",
     "@types/chai": "4.2.12",
     "@types/create-hash": "^1.2.2",
