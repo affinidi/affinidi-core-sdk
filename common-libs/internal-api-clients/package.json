@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/internal-api-clients",
-  "version": "1.0.0-beta.14",
+  "version": "1.0.0-beta.15",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -44,7 +44,8 @@
     "@affinidi/tools-common": "^1.0.0-beta.2",
     "lodash.keyby": "^4.6.0",
     "lodash.mapvalues": "^4.6.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "undici": "^4.9.5"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
