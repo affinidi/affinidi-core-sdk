@@ -7,6 +7,7 @@ import DidAuthClientService from './DidAuthClientService'
 import DidAuthServerService from './DidAuthServerService'
 import DidAuthCloudService from './DidAuthCloudService'
 import { CloudWalletApiService } from '@affinidi/internal-api-clients'
+import { Env, resolveUrl, Service } from '@affinidi/url-resolver'
 
 export type AffinidiDidAuthServiceOptions = OptionsWithSeed | OptionsWithKeyVault
 
@@ -114,11 +115,11 @@ export default class AffinidiDidAuthService {
     didAuthRequestToken: string,
     apiKey: string,
     cloudWalletAccessToken: string,
-    environment: string,
+    environment: Env,
   ): Promise<string> {
     const cloudWallet = new CloudWalletApiService({
       accessApiKey: apiKey,
-      cloudWalletUrl: `https://cloud-wallet-api.${environment}.affinity-project.org/api/v1/utilities/sign-jwt`,
+      cloudWalletUrl: resolveUrl(Service.CLOUD_WALLET_API, environment) + '/api/v1/utilities/sign-jwt',
     })
     const cloudService = new DidAuthCloudService(cloudWallet, cloudWalletAccessToken)
     return cloudService.createDidAuthResponseToken(didAuthRequestToken)
@@ -126,7 +127,7 @@ export default class AffinidiDidAuthService {
 
   async verifyDidAuthResponseToken(didAuthResponseTokenStr: string, options: VerifierOptions): Promise<boolean> {
     const affinidiOptions = {
-      registryUrl: `https://affinity-registry.${options.environment}.affinity-project.org`,
+      registryUrl: resolveUrl(Service.REGISTRY, options.environment),
       apiKey: options.accessApiKey,
     }
     const affinidi = new Affinidi(affinidiOptions, null as any)

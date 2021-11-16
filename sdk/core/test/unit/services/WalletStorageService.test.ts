@@ -7,13 +7,9 @@ import { expect } from 'chai'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import { DidDocumentService, JwtService, KeysService, LocalKeyVault } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { resolveUrl, Service } from '@affinidi/url-resolver'
 import KeyManagementService from '../../../src/services/KeyManagementService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
-import {
-  STAGING_AFFINIDI_VAULT_URL,
-  STAGING_KEY_STORAGE_URL,
-  STAGING_BLOOM_VAULT_URL,
-} from '../../../src/_defaultConfig'
 
 import { generateTestDIDs } from '../../factory/didFactory'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
@@ -26,6 +22,10 @@ import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStor
 import BloomVaultStorageService from '../../../src/services/BloomVaultStorageService'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 import { extractSDKVersion } from '../../../src/_helpers'
+
+const affinidiVaultUrl = resolveUrl(Service.VAULT, 'staging')
+const bloomVaultUrl = resolveUrl(Service.BLOOM_VAUlT, 'staging')
+const keyStorageUrl = resolveUrl(Service.KEY_STORAGE, 'staging')
 
 let walletPassword: string
 
@@ -45,8 +45,8 @@ const createWalletStorageService = () => {
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter('', didAuthService)
   return new WalletStorageService(keysService, testPlatformTools, {
-    bloomVaultUrl: STAGING_BLOOM_VAULT_URL,
-    affinidiVaultUrl: STAGING_AFFINIDI_VAULT_URL,
+    bloomVaultUrl,
+    affinidiVaultUrl,
     accessApiKey: undefined,
     storageRegion: region,
     didAuthAdapter,
@@ -55,7 +55,7 @@ const createWalletStorageService = () => {
 
 const createKeyManagementService = () => {
   return new KeyManagementService({
-    keyStorageUrl: STAGING_KEY_STORAGE_URL,
+    keyStorageUrl,
     accessApiKey: undefined,
   })
 }
@@ -96,7 +96,7 @@ describe('WalletStorageService', () => {
     const readMyKeyPath = '/api/v1/keys/readMyKey'
 
     sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey')
-    nock(STAGING_KEY_STORAGE_URL)
+    nock(keyStorageUrl)
       .filteringPath(() => readMyKeyPath)
       .get(readMyKeyPath)
       .reply(200, { encryptedSeed })
@@ -386,13 +386,13 @@ describe('WalletStorageService', () => {
     const username = 'username'
     const adminConfirmUserPath = '/api/v1/userManagement/adminConfirmUser'
 
-    nock(STAGING_KEY_STORAGE_URL)
+    nock(keyStorageUrl)
       .filteringPath(() => adminConfirmUserPath)
       .post(adminConfirmUserPath)
       .reply(200, {})
 
     const keyStorageApiService = new KeyStorageApiService({
-      keyStorageUrl: STAGING_KEY_STORAGE_URL,
+      keyStorageUrl,
       accessApiKey: undefined,
       sdkVersion: extractSDKVersion(),
     })
@@ -405,12 +405,12 @@ describe('WalletStorageService', () => {
     const idToken = 'idToken'
     const getCredentialOfferPath = '/api/v1/issuer/getCredentialOffer'
 
-    nock(STAGING_KEY_STORAGE_URL)
+    nock(keyStorageUrl)
       .filteringPath(() => getCredentialOfferPath)
       .get(getCredentialOfferPath)
       .reply(200, { offerToken: 'offerToken' })
 
-    const returnedOffer = await WalletStorageService.getCredentialOffer(idToken, STAGING_KEY_STORAGE_URL, {} as any)
+    const returnedOffer = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, {} as any)
 
     expect(returnedOffer).to.eq('offerToken')
   })
@@ -420,12 +420,14 @@ describe('WalletStorageService', () => {
     const credentialOfferResponse = 'responseToken'
     const getSignedCredentialsPath = '/api/v1/issuer/getSignedCredentials'
 
-    nock(STAGING_KEY_STORAGE_URL)
+    nock(keyStorageUrl)
       .filteringPath(() => getSignedCredentialsPath)
       .post(getSignedCredentialsPath)
       .reply(200, { signedCredentials: ['signedCredential'] })
 
-    const returnedOffer = await WalletStorageService.getSignedCredentials(idToken, credentialOfferResponse)
+    const returnedOffer = await WalletStorageService.getSignedCredentials(idToken, credentialOfferResponse, {
+      keyStorageUrl,
+    })
 
     expect(returnedOffer[0]).to.eq('signedCredential')
   })

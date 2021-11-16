@@ -26,7 +26,8 @@ import { extractSDKVersion } from '../_helpers'
 const generatePassword = async () => {
   const randomPassword = (await randomBytes(32)).toString('hex')
   // Make first found letter uppercase because hex string doesn't meet password requirements
-  return randomPassword.replace(/[a-f]/, 'A')
+  // Special characters at the end of password to make comply with cognito requirements
+  return randomPassword.replace(/[a-f]/, 'A') + '!'
 }
 
 class DefaultResultError extends Error {
@@ -40,6 +41,7 @@ type ConstructorOptions = {
   userPoolId: string
   keyStorageUrl: string
   accessApiKey: string
+  shouldDisableNameNormalisation?: boolean
 }
 
 /**
@@ -58,6 +60,7 @@ export default class UserManagementService {
   private _cognitoIdentityService
   private _keyStorageApiService
   private _sessionStorageService
+  private _shouldDisableNameNormalisation
 
   constructor(options: ConstructorOptions) {
     this._keyStorageApiService = new KeyStorageApiService({
@@ -67,6 +70,7 @@ export default class UserManagementService {
     })
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
+    this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
   }
 
   private async _signUp(
@@ -92,7 +96,7 @@ export default class UserManagementService {
     }
   }
 
-  async signUpWithUsernameAndConfirm(username: string, inputPassword: string) {
+  async signUpWithUsernameAndConfirm(username: string, inputPassword: string): Promise<CognitoUserTokens> {
     this._loginShouldBeUsername(username)
     const usernameWithAttributes = this._buildUserAttributes(username)
 
@@ -107,7 +111,11 @@ export default class UserManagementService {
     return cognitoTokens
   }
 
-  async initiateSignUpWithEmailOrPhone(login: string, inputPassword: string, messageParameters: MessageParameters) {
+  async initiateSignUpWithEmailOrPhone(
+    login: string,
+    inputPassword: string,
+    messageParameters: MessageParameters,
+  ): Promise<string> {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
 
@@ -159,7 +167,10 @@ export default class UserManagementService {
     return { login, shortPassword }
   }
 
-  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
+  async completeSignUpForEmailOrPhone(
+    token: string,
+    confirmationCode: string,
+  ): Promise<{ cognitoTokens: CognitoUserTokens; shortPassword: string }> {
     const { login, shortPassword } = this.parseSignUpToken(token)
     this._loginShouldBeEmailOrPhoneNumber(login)
     await this._completeSignUp(login, confirmationCode)
@@ -317,7 +328,11 @@ export default class UserManagementService {
     })
   }
 
-  async initiateChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, messageParameters?: MessageParameters) {
+  async initiateChangeLogin(
+    cognitoTokens: CognitoUserTokens,
+    newLogin: string,
+    messageParameters?: MessageParameters,
+  ): Promise<CognitoUserTokens> {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
       this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const result = await this._cognitoIdentityService.initiateChangeAttributes(
@@ -336,7 +351,11 @@ export default class UserManagementService {
     })
   }
 
-  async completeChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, confirmationCode: string) {
+  async completeChangeLogin(
+    cognitoTokens: CognitoUserTokens,
+    newLogin: string,
+    confirmationCode: string,
+  ): Promise<CognitoUserTokens> {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
       this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const { isEmailValid } = validateUsername(newLogin)
@@ -357,7 +376,7 @@ export default class UserManagementService {
     })
   }
 
-  readUserTokensFromSessionStorage() {
+  readUserTokensFromSessionStorage(): CognitoUserTokens {
     return this._sessionStorageService.readUserTokens()
   }
 
@@ -379,7 +398,7 @@ export default class UserManagementService {
 
   private _buildUserAttributes(login: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
-    const normalizedUsername = normalizeUsername(login)
+    const normalizedUsername = this._shouldDisableNameNormalisation ? login : normalizeUsername(login)
 
     return {
       normalizedUsername,
