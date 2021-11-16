@@ -7,12 +7,11 @@
     "dist"
   ],
   "scripts": {
-    "start": "tsdx watch --target node",
-    "build": "tsdx build --target node",
-    "test": "tsdx test",
-    "lint": "tsdx lint",
+    "build": "tsc -p tsconfig.json",
+    "test": "cross-env NODE_ENV=test jest",
+    "lint": "eslint",
     "prepublishOnly": "npm run test && npm run lint",
-    "test:coverage": "tsdx test --coverage",
+    "test:coverage": "npm run test -- --coverage",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.issuer_kit.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
@@ -21,7 +20,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "tsdx lint"
+      "pre-commit": "npm run lint"
     }
   },
   "name": "@affinidi/issuer-kit",
@@ -36,11 +35,19 @@
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@affinidi/vc-data": "^1.3.3",
+    "@types/jest": "^27.0.2",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
+    "cross-env": "^7.0.3",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^6.15.0",
     "eslint-config-react-app": "6.0.0-next.77",
+    "eslint-plugin-prettier": "^3.4.1",
     "husky": "4.2.5",
+    "jest": "^27.3.1",
     "license-checker": "25.0.1",
-    "prettier": "2.0.5",
-    "tsdx": "^0.14.1",
+    "prettier": "^2.4.1",
+    "ts-jest": "^27.0.7",
     "typescript": "^4.3.2"
   },
   "dependencies": {
@@ -52,6 +59,9 @@
     "fluent-schema": "^1.0.3",
     "moment": "^2.24.0",
     "tslib": "^2.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest"
   },
   "gitHead": "39b8ae64eb5e37ddae2f80438b320adaefae8ef6"
 }
