@@ -52,6 +52,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
+    "@types/node": "^13.13.52",
     "aws-sdk-mock": "^5.4.0",
     "chai": "^4.3.4",
     "cross-env": "^7.0.3",
