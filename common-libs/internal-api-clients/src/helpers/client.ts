@@ -1,5 +1,5 @@
 import keyBy from 'lodash.keyby'
-import type FetchType from 'node-fetch'
+import { RequestInfo, RequestInit, Response } from 'node-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
 import { GenericApiSpec } from '../types/openapi'
@@ -9,12 +9,28 @@ import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } fr
 import { createAdditionalHeaders, createHeaders } from './headers'
 import { mapFunctions } from './mapFunctions'
 
-let fetch: typeof FetchType
+type FetchType = (url: RequestInfo, init?: RequestInit) => Promise<Response>
 
+function useUndiciFetch(): FetchType {
+  const request = require('undici').request
+  return async function (url, options) {
+    const response = await request((url as URL).href ?? url, options)
+    return {
+      status: response.statusCode,
+      json: () => response.body.json(),
+    } as Response
+  }
+}
+
+let fetch: FetchType
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 if (!fetch) {
-  fetch = require('node-fetch')
+  if (process.env.HTTP_CLIENT === 'undici') {
+    fetch = useUndiciFetch()
+  } else {
+    fetch = require('node-fetch')
+  }
 }
 
 export type ThisData = {
@@ -88,7 +104,7 @@ const executeByOptions = async (
   }
   const fetchOptions = {
     headers,
-    method,
+    method: method.toUpperCase(),
     ...(!!params && { body: JSON.stringify(params, null, 2) }),
   }
 
