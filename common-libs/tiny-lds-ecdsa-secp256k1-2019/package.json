@@ -10,6 +10,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "audit": "npm audit",
+    "audit:fix": "npm audit --fix",
     "test": "cross-env NODE_ENV=test jest",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
     "lint": "eslint src",
