@@ -9,9 +9,17 @@ import { randomBytes } from '../shared/randomBytes'
 import { validateUsername, UserManagementService } from '@affinidi/user-management'
 import { StaticDependencies, ConstructorUserData, createKeyManagementService } from './BaseNetworkMember'
 import { LegacyNetworkMember } from './LegacyNetworkMember'
+import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { extractSDKVersion } from '../_helpers'
 
 const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-  return new UserManagementService({ ...basicOptions, accessApiKey })
+  const keyStorageApiService = new KeyStorageApiService({
+    keyStorageUrl: basicOptions.keyStorageUrl,
+    accessApiKey,
+    sdkVersion: extractSDKVersion(),
+  })
+  return new UserManagementService({ ...basicOptions, region: DEFAULT_COGNITO_REGION }, { keyStorageApiService })
 }
 
 type UserDataWithCognito = ConstructorUserData & {
@@ -29,8 +37,22 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   constructor(userData: UserDataWithCognito, dependencies: StaticDependencies, options: ParsedOptions) {
     super(userData, dependencies, options)
     const { accessApiKey, basicOptions } = this._options
-    const { clientId, userPoolId, keyStorageUrl } = basicOptions
-    this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
+    const { clientId, userPoolId } = basicOptions
+    const keyStorageApiService = new KeyStorageApiService({
+      keyStorageUrl: basicOptions.keyStorageUrl,
+      accessApiKey,
+      sdkVersion: extractSDKVersion(),
+    })
+    this._userManagementService = new UserManagementService(
+      {
+        region: DEFAULT_COGNITO_REGION,
+        clientId,
+        userPoolId,
+      },
+      {
+        keyStorageApiService,
+      },
+    )
     const { cognitoUserTokens } = userData
     this.cognitoUserTokens = cognitoUserTokens
   }

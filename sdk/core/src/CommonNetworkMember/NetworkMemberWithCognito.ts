@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
 
-import UserManagementService from '../services/UserManagementService'
+import { UserManagementService } from '@affinidi/user-management'
 import WalletStorageService from '../services/WalletStorageService'
 import { withDidData } from '../shared/getDidData'
 import {
@@ -21,7 +21,7 @@ import {
 } from './BaseNetworkMember'
 
 const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-  return new UserManagementService({ ...basicOptions, accessApiKey })
+  return new UserManagementService({ ...basicOptions, accessApiKey }, {})
 }
 
 type UserDataWithCognito = ConstructorUserData & {
