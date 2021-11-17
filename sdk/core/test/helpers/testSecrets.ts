@@ -24,4 +24,6 @@ export const testSecrets: {
   DEV_API_KEY_HASH: string
   PROD_API_KEY_HASH: string
   STAGING_API_KEY_HASH: string
+  REVOCATION_ENCRYPTED_SEED: string
+  REVOCATION_PASSWORD: string
 } = JSON.parse(TEST_SECRETS)
