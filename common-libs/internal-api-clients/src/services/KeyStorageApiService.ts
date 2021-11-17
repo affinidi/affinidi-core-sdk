@@ -8,7 +8,7 @@ import keyStorageSpec from '../spec/_keyStorage'
 // and then it only calls networkMember.verifyCredentialOfferResponseToken and networkMember.signCredentials
 type GetSignedCredentialOptions = {
   // For remote IssuerApiService (used by networkMember.verifyCredentialOfferResponseToken)
-  env?: Env,
+  env?: Env
   issuerUrl?: string
   accessApiKey?: string
   apiKey?: string
