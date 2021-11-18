@@ -39,7 +39,8 @@ const {
   HOLDER_ENCRYPTED_SEED,
   UPDATING_ENCRYPTED_SEED,
   UPDATING_DID,
-  ISSUER_ELEM_SEED,
+  REVOCATION_ENCRYPTED_SEED,
+  REVOCATION_PASSWORD,
 } = testSecrets
 
 const password = PASSWORD
@@ -368,7 +369,7 @@ describe('CommonNetworkMember', () => {
 
   it('#buildRevocationListStatus, #revokeCredential', async () => {
     const fullOptions = getAllOptionsForEnvironment()
-    const commonNetworkMember = new AffinidiWallet(password, ISSUER_ELEM_SEED, fullOptions)
+    const commonNetworkMember = new AffinidiWallet(REVOCATION_PASSWORD, REVOCATION_ENCRYPTED_SEED, fullOptions)
     const holderDid = commonNetworkMember.did
 
     const credId = new Date().toISOString()
@@ -394,7 +395,11 @@ describe('CommonNetworkMember', () => {
     const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
     const affinity = new Affinity(affinityOptions, testPlatformTools)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
-    const createdCredential = await affinity.signCredential(revokableUnsignedCredential, ISSUER_ELEM_SEED, password)
+    const createdCredential = await affinity.signCredential(
+      revokableUnsignedCredential,
+      REVOCATION_ENCRYPTED_SEED,
+      REVOCATION_PASSWORD,
+    )
 
     const sucessResult = await affinity.validateCredential(createdCredential)
     expect(sucessResult.result).to.equal(true)
