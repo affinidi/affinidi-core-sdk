@@ -188,14 +188,16 @@ export class MigrationHelper {
    */
   async migrateCredentials(vcList: vcMigrationList[], accessToken: string, signature: string): Promise<void> {
     const token = await this.getAuth()
-    const url = 'migrate/credentials'
+    const url = 'migration/credentials'
     return this.api.execute(
       'POST',
       url,
       {
-        bloomDid: this.bloomDid,
-        bloomAuthToken: accessToken,
-        bloomTokenSignature: signature,
+        bloomOptions: {
+          did: this.bloomDid,
+          accessToken: accessToken,
+          tokenSignature: signature,
+        },
         verifiableCredentials: vcList,
       },
       {

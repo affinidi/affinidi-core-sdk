@@ -2,13 +2,36 @@ import { AffinidiWallet, AffinidiWalletV6 } from '../../helpers/AffinidiWallet'
 import { expect } from 'chai'
 import { getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { SignedCredential } from '../../../src/dto'
+import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
+import { MigrationHelper } from '../../../src/migration/credentials'
+import platformCryptographyTools from '../../../../node/src/PlatformCryptographyTools'
+import { generateTestDIDs } from '../../factory/didFactory'
+import { extractSDKVersion } from '../../../src/_helpers'
+import { KeysService, LocalKeyVault } from '@affinidi/common'
+import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 
-const { PASSWORD, ENCRYPTED_SEED_ELEM } = testSecrets
+const { PASSWORD, ENCRYPTED_SEED_ELEM, DEV_API_KEY_HASH } = testSecrets
 
 const password = PASSWORD
 const encryptedSeedElem = ENCRYPTED_SEED_ELEM
 
 const options = getBasicOptionsForEnvironment()
+
+let encryptionKey: string
+let encryptedSeed: string
+let didEth: string
+let audienceDid: string
+let didDocumentKeyId: string
+const reqheaders: Record<string, string> = {}
+
+const createMigrationHelper = () => {
+  const keysService = new KeysService(encryptedSeed, encryptionKey)
+  const keyVault = new LocalKeyVault(keysService)
+  const signer = new Signer({ did: audienceDid, keyId: didDocumentKeyId, keyVault })
+  const didAuthService = new DidAuthClientService(signer)
+  const didAuthAdapter = new DidAuthAdapter(audienceDid, didAuthService)
+  return new MigrationHelper(didAuthAdapter, DEV_API_KEY_HASH, keysService, platformCryptographyTools, didEth)
+}
 
 describe('Bloom vault when migration server is UP', () => {
   let randomCredentials: SignedCredential[]
@@ -160,5 +183,60 @@ describe('Bloom vault when migration server is UP', () => {
     const result = await commonNetworkMember.getAllCredentials()
 
     expect(result).to.eql(randomCredentials)
+  })
+})
+
+describe('Migration helper works properly', () => {
+  before(async () => {
+    const testDids = await generateTestDIDs()
+    encryptionKey = testDids.password
+    encryptedSeed = testDids.elem.encryptedSeed
+    // fake did:eth seedHex (with wrong format to avoid unexpected write into bloom-vault)
+    didEth = `did:eth:${testDids.jolo.seedHex}`
+    audienceDid = testDids.elem.did
+    didDocumentKeyId = testDids.elem.didDocumentKeyId
+    reqheaders['X-SDK-Version'] = extractSDKVersion()
+  })
+
+  it.only('should return getMigrationStatus', async () => {
+    const migrationHelper = createMigrationHelper()
+    const result = await migrationHelper.getMigrationStatus()
+
+    console.log('result getMigrationStatus', result)
+
+    expect(result).exist
+    expect(typeof result).to.be.eql('string')
+    expect(result).to.be.oneOf(['no', 'yes', 'error'])
+  })
+
+  it.only('should check doesMigrationStarted', async () => {
+    const migrationHelper = createMigrationHelper()
+    const result = await migrationHelper.doesMigrationStarted()
+
+    console.log('result doesMigrationStarted', result)
+
+    expect(result).exist
+    expect(typeof result).to.be.eql('boolean')
+    expect(result).to.be.oneOf([true, false])
+  })
+
+  it.only('should check migrateCredentials fails with dummy bloomDid', async () => {
+    const migrationHelper = createMigrationHelper()
+    try {
+      await migrationHelper.migrateCredentials(
+        [
+          {
+            bloomVaultIndex: 5,
+            id: 'credential-id',
+            types: ['type-1', 'type-2'],
+            payload: 'cyphertext',
+          },
+        ],
+        '',
+        '',
+      )
+    } catch (err) {
+      expect(err.message).to.contain('VMS-4')
+    }
   })
 })
