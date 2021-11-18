@@ -49,7 +49,7 @@ export default class ApiService {
       request.body = JSON.stringify(bodyParams, null, 2)
     }
 
-    const fullUrl = url ? `${this.baseUrl}/${url}` : this.baseUrl // TODO add new URL
+    const fullUrl = url ? new URL(url, this.baseUrl) : this.baseUrl
     const response = await fetch(fullUrl, request)
     const { status } = response
     let jsonResponse

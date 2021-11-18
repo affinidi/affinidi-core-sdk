@@ -116,7 +116,7 @@ export class MigrationHelper {
       const encryptedVCs = await this.encryptCredentials(credentials)
       await this.runMigrationByChunk(encryptedVCs, 100, accessToken, signature)
     } catch (err) {
-      console.log('Vault-migration-service initiate migration for given user call ends with error: ', err)
+      console.error('Vault-migration-service initiate migration for given user call ends with error: ', err)
     }
   }
 
@@ -153,7 +153,7 @@ export class MigrationHelper {
       if (response) migrationDone = 'yes'
       else migrationDone = 'no'
     } catch (err) {
-      console.log('Vault-migration-service migration status check call ends with error: ', err)
+      console.error('Vault-migration-service migration status check call ends with error: ', err)
     }
 
     return migrationDone
@@ -174,7 +174,7 @@ export class MigrationHelper {
         }),
       ])) as boolean
     } catch (err) {
-      console.log('Vault-migration-service migration started check call ends with error: ', err)
+      console.error('Vault-migration-service migration started check call ends with error: ', err)
     }
 
     return migrationStarted
