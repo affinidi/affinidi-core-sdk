@@ -1,8 +1,13 @@
 import { profile } from '@affinidi/tools-common'
+import {
+  createClientMethods,
+  createDidAuthClient,
+  createDidAuthSession,
+  DidAuthConstructorOptions,
+  GetDidAuthParams,
+  wrapWithDidAuth,
+} from '@affinidi/tools-openapi'
 
-import { createClientMethods } from '../helpers/client'
-import { createDidAuthSession } from '../helpers/DidAuthManager'
-import { createClient, DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import affinidiVaultSpec from '../spec/_affinidiVault'
 
 type ConstructorOptions = DidAuthConstructorOptions & { vaultUrl: string }
@@ -21,7 +26,7 @@ export default class AffinidiVaultApiService {
 
   constructor(options: ConstructorOptions) {
     const didAuthSession = createDidAuthSession(options.didAuthAdapter)
-    this.client = createClient(clientMethods, didAuthSession, options.vaultUrl, options)
+    this.client = createDidAuthClient(clientMethods, didAuthSession, options.vaultUrl, options)
   }
 
   async searchCredentials(storageRegion: string, types?: string[][]) {
@@ -38,7 +43,11 @@ export default class AffinidiVaultApiService {
     })
   }
 
-  async storeCredential(storageRegion: string, id: string, params: GetParams<typeof clientMethods.StoreCredential>) {
+  async storeCredential(
+    storageRegion: string,
+    id: string,
+    params: GetDidAuthParams<typeof clientMethods.StoreCredential>,
+  ) {
     return this.client.StoreCredential({
       storageRegion,
       params,

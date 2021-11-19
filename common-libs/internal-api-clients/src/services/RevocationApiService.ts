@@ -1,8 +1,13 @@
 import { profile } from '@affinidi/tools-common'
+import {
+  createClientMethods,
+  createDidAuthClient,
+  createDidAuthSession,
+  DidAuthConstructorOptions,
+  GetDidAuthParams,
+  wrapWithDidAuth,
+} from '@affinidi/tools-openapi'
 
-import { createClientMethods } from '../helpers/client'
-import { createDidAuthSession } from '../helpers/DidAuthManager'
-import { createClient, DidAuthConstructorOptions, GetParams, wrapWithDidAuth } from '../helpers/didAuthClientWrapper'
 import revocationSpec from '../spec/_revocation'
 
 type ConstructorOptions = DidAuthConstructorOptions & { revocationUrl: string }
@@ -20,20 +25,20 @@ export default class RevocationApiService {
 
   constructor(options: ConstructorOptions) {
     const didAuthSession = createDidAuthSession(options.didAuthAdapter)
-    this.client = createClient(clientMethods, didAuthSession, options.revocationUrl, options)
+    this.client = createDidAuthClient(clientMethods, didAuthSession, options.revocationUrl, options)
   }
 
-  async buildRevocationListStatus(params: GetParams<typeof clientMethods.BuildRevocationListStatus>) {
+  async buildRevocationListStatus(params: GetDidAuthParams<typeof clientMethods.BuildRevocationListStatus>) {
     return this.client.BuildRevocationListStatus({ params })
   }
 
   async publishRevocationListCredential(
-    params: ReplaceFieldsWithAny<GetParams<typeof clientMethods.PublishRevocationListCredential>>,
+    params: ReplaceFieldsWithAny<GetDidAuthParams<typeof clientMethods.PublishRevocationListCredential>>,
   ) {
     return this.client.PublishRevocationListCredential({ params })
   }
 
-  async revokeCredential(params: GetParams<typeof clientMethods.RevokeCredential>) {
+  async revokeCredential(params: GetDidAuthParams<typeof clientMethods.RevokeCredential>) {
     const response = await this.client.RevokeCredential({ params })
 
     return response as { body: { revocationListCredential: any } }

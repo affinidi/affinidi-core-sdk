@@ -1,7 +1,7 @@
 import { profile } from '@affinidi/tools-common'
+import { createClient, createClientMethods, GetParams } from '@affinidi/tools-openapi'
 
 import cloudWalletSpec from '../spec/_cloudWallet'
-import { createClient, createClientMethods, GetParams } from '../helpers/client'
 
 type ConstructorOptions = { cloudWalletUrl: string; accessApiKey: string }
 

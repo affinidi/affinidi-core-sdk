@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '@affinidi/tools-openapi'
 
-import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import keyStorageSpec from '../spec/_keyStorage'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.

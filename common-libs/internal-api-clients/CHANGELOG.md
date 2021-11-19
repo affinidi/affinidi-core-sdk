@@ -1,3 +1,7 @@
+# release 1.1.0 (2021-11-19)
+  * Common reusable code extracted into a `tools-openapi` package
+# release 1.0.0 (2021-11-19)
+  * Removed 'beta' suffix
 # release 1.0.0-beta.15 (2021-11-12)
   * Added `undici` as alternative http client
 # release 1.0.0-beta.14 (2021-10-20)

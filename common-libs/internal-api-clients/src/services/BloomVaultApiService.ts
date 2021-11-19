@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
+import { ClientOptions, createClient, createClientMethods } from '@affinidi/tools-openapi'
 
-import { ClientOptions, createClient, createClientMethods } from '../helpers/client'
 import bloomVaultSpec from '../spec/_bloomVault'
 
 type ConstructorOptions = ClientOptions & { vaultUrl: string }
