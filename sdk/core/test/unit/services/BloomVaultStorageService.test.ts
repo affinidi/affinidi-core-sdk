@@ -54,13 +54,13 @@ describe('BloomVaultStorageService', () => {
     const stubStatus = sinon.stub(MigrationHelper.prototype, 'getMigrationStatus').resolves('error')
     const stubMigrationProcess = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
     const service = createBloomStorageService()
     const credentials = await service.searchCredentials(region)
@@ -94,13 +94,13 @@ describe('BloomVaultStorageService', () => {
 
     await authorizeVault()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
     const stub = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'true')
     const service = createBloomStorageService()

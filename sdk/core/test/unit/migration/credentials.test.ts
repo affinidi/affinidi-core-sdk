@@ -112,9 +112,10 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
       .get('/migration/started')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
-    const stubConsole = sinon.stub(console, 'log')
+    const stubConsole = sinon.stub(console, 'error')
     const helper = createMigrationHelper()
     const doesMigrationStarted = await helper.doesMigrationStarted()
+    expect(stubConsole.callCount).to.be.eq(1)
     expect(stubConsole.calledOnce).to.be.true
     expect(stubConsole.calledWith('Vault-migration-service migration started check call ends with error: ')).to.be.true
     expect(doesMigrationStarted).to.be.false
@@ -155,7 +156,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
       .get(`/migration/done/${didEth}`)
       .reply(500, { code: 'COM-1', message: 'internal server error' })
-    const stubConsole = sinon.stub(console, 'log')
+    const stubConsole = sinon.stub(console, 'error')
 
     const helper = createMigrationHelper()
     const migrationDone = await helper.getMigrationStatus()
@@ -217,7 +218,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
       .post('/migrate/credentials')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
-    const stubConsole = sinon.stub(console, 'log')
+    const stubConsole = sinon.stub(console, 'error')
     const helper = createMigrationHelper()
     await helper.runMigration([], '', '')
 
