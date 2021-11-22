@@ -198,7 +198,7 @@ describe('Migration helper works properly', () => {
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
 
-  it.only('should return getMigrationStatus', async () => {
+  it('should return getMigrationStatus', async () => {
     const migrationHelper = createMigrationHelper()
     const result = await migrationHelper.getMigrationStatus()
 
@@ -209,7 +209,7 @@ describe('Migration helper works properly', () => {
     expect(result).to.be.oneOf(['no', 'yes', 'error'])
   })
 
-  it.only('should check doesMigrationStarted', async () => {
+  it('should check doesMigrationStarted', async () => {
     const migrationHelper = createMigrationHelper()
     const result = await migrationHelper.doesMigrationStarted()
 
@@ -220,7 +220,7 @@ describe('Migration helper works properly', () => {
     expect(result).to.be.oneOf([true, false])
   })
 
-  it.only('should check migrateCredentials fails with dummy bloomDid', async () => {
+  it('should check migrateCredentials fails with dummy bloomDid', async () => {
     const migrationHelper = createMigrationHelper()
     try {
       await migrationHelper.migrateCredentials(
