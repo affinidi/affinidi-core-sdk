@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/affinidi-did-auth-lib",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0",
   "description": "Affinidi Did Auth Helpers",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -39,9 +39,10 @@
   },
   "homepage": "https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib#readme",
   "dependencies": {
-    "@affinidi/common": "^2.0.0-beta.20",
-    "@affinidi/internal-api-clients": "^1.0.0-beta.14",
-    "@affinidi/tools-common": "^1.0.0-beta.1",
+    "@affinidi/common": "^2.0.0",
+    "@affinidi/internal-api-clients": "^1.0.0",
+    "@affinidi/tools-common": "^1.0.0",
+    "@affinidi/url-resolver": "^1.0.0",
     "did-resolver": "^2.0.1"
   },
   "devDependencies": {

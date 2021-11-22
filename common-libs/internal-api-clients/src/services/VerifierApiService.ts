@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '@affinidi/tools-openapi'
 
-import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import verifierSpec from '../spec/_verifier'
 
 type ConstructorOptions = ClientOptions & { verifierUrl: string }

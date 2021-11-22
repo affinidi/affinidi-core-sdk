@@ -4,17 +4,19 @@ import nock from 'nock'
 import sinon from 'sinon'
 
 import { KeysService } from '@affinidi/common'
+import { resolveUrl, Service } from '@affinidi/url-resolver'
 
 import BloomVaultStorageService from '../../../src/services/BloomVaultStorageService'
 import { generateTestDIDs } from '../../factory/didFactory'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
-import { STAGING_BLOOM_VAULT_URL } from '../../../src/_defaultConfig'
 import { expect } from 'chai'
 import { authorizeVault } from './../../helpers'
 import signedCredential from '../../factory/signedCredential'
 import { extractSDKVersion } from '../../../src/_helpers'
 import { DidAuthService } from '../../../src/migration/credentials/DidAuthService'
 import { MigrationHelper, VAULT_MIGRATION_SERVICE_URL } from '../../../src/migration/credentials'
+
+const bloomVaultUrl = resolveUrl(Service.BLOOM_VAUlT, 'staging')
 
 let encryptionKey: string
 let encryptedSeed: string
@@ -24,7 +26,7 @@ const reqheaders: Record<string, string> = {}
 const createBloomStorageService = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
   return new BloomVaultStorageService(keysService, testPlatformTools, {
-    vaultUrl: STAGING_BLOOM_VAULT_URL,
+    vaultUrl: bloomVaultUrl,
     accessApiKey: undefined,
     didAuthAdapter: undefined,
   })
@@ -113,13 +115,13 @@ describe('BloomVaultStorageService', () => {
   it('#getAllCredentials', async () => {
     await authorizeVault()
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
     const credentials = await service.searchCredentials(region)
@@ -133,12 +135,12 @@ describe('BloomVaultStorageService', () => {
     const page = Array(100).fill({ id: 0, cyphertext: JSON.stringify(signedCredential) })
     page[5] = { id: 0, cyphertext: null }
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/0/99').reply(200, page)
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, page)
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders }).get('/data/0/99').reply(200, page)
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, page)
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/200/299')
       .reply(200, Array(50).fill({ id: 0, cyphertext: JSON.stringify(signedCredential) }))
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/300/399').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/300/399').reply(200, [])
 
     const service = createBloomStorageService()
     const credentials = await service.searchCredentials(region)
@@ -148,14 +150,15 @@ describe('BloomVaultStorageService', () => {
 
   it('#getAllCredentialsByTypes', async () => {
     await authorizeVault()
+
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, type: ['type1'] }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
     const credentials = await service.searchCredentials(region, [signedCredential.type])
@@ -166,7 +169,7 @@ describe('BloomVaultStorageService', () => {
   it('#getCredentials with types=[[]] except which do not have type property', async () => {
     await authorizeVault()
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
@@ -174,7 +177,7 @@ describe('BloomVaultStorageService', () => {
         { id: 2, cyphertext: JSON.stringify({ ...signedCredential, type: [] }) },
         { id: 3, cyphertext: JSON.stringify({ ...signedCredential, type: undefined }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
     const credentials = await service.searchCredentials(region, [[]])
@@ -198,7 +201,7 @@ describe('BloomVaultStorageService', () => {
       { type: ['Max', 'Sergiy'] },
     ]
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(credentials[0]) },
@@ -209,7 +212,7 @@ describe('BloomVaultStorageService', () => {
         { id: 5, cyphertext: JSON.stringify(credentials[5]) },
       ])
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
     const filteredCredentials = await service.searchCredentials(region, [['Denis'], ['Stas', 'Alex']])
@@ -220,8 +223,9 @@ describe('BloomVaultStorageService', () => {
 
   it('#getAllCredentialsWithError', async () => {
     await authorizeVault()
+
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
 
@@ -236,13 +240,13 @@ describe('BloomVaultStorageService', () => {
   it('#getCredentialById', async () => {
     await authorizeVault()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, id: 'identifier' }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
 
     const service = createBloomStorageService()
     const credential = await service.getCredentialById(signedCredential.id, region)
@@ -252,7 +256,7 @@ describe('BloomVaultStorageService', () => {
   it('#getCredentialByIdWithError', async () => {
     await authorizeVault()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
 
@@ -267,15 +271,15 @@ describe('BloomVaultStorageService', () => {
   it('#deleteCredentialById', async () => {
     await authorizeVault()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, id: 'identifier' }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).delete('/data/0/0').reply(200, {})
+    nock(bloomVaultUrl, { reqheaders }).delete('/data/0/0').reply(200, {})
 
     const service = createBloomStorageService()
     await service.deleteCredentialById(signedCredential.id, region)
@@ -284,15 +288,15 @@ describe('BloomVaultStorageService', () => {
   it('#deleteCredentialByIdWithError', async () => {
     await authorizeVault()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .get('/data/0/99')
       .reply(200, [
         { id: 0, cyphertext: JSON.stringify(signedCredential) },
         { id: 1, cyphertext: JSON.stringify({ ...signedCredential, id: 'identifier' }) },
       ])
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).get('/data/100/199').reply(200, [])
+    nock(bloomVaultUrl, { reqheaders }).get('/data/100/199').reply(200, [])
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .delete('/data/0/0')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
 
@@ -307,7 +311,7 @@ describe('BloomVaultStorageService', () => {
   it('#deleteAllCredentials', async () => {
     await authorizeVault()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders }).delete('/data/0/99').reply(200, {})
+    nock(bloomVaultUrl, { reqheaders }).delete('/data/0/99').reply(200, {})
 
     const service = createBloomStorageService()
     await service.deleteAllCredentials(region)
@@ -316,7 +320,7 @@ describe('BloomVaultStorageService', () => {
   it('#deleteAllCredentialsWithError', async () => {
     await authorizeVault()
 
-    nock(STAGING_BLOOM_VAULT_URL, { reqheaders })
+    nock(bloomVaultUrl, { reqheaders })
       .delete('/data/0/99')
       .reply(500, { code: 'COR-0', message: 'internal server error' })
 

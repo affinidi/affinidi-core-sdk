@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '@affinidi/tools-openapi'
 
-import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import keyStorageSpec from '../spec/_keyStorage'
 
 // It calls getSignedCredential of issuer.controller.ts in affinidi-common-backend.
@@ -8,6 +8,7 @@ import keyStorageSpec from '../spec/_keyStorage'
 // and then it only calls networkMember.verifyCredentialOfferResponseToken and networkMember.signCredentials
 type GetSignedCredentialOptions = {
   // For remote IssuerApiService (used by networkMember.verifyCredentialOfferResponseToken)
+  env?: Env
   issuerUrl?: string
   accessApiKey?: string
   apiKey?: string

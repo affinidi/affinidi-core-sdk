@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '@affinidi/tools-openapi'
 
-import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import registrySpec from '../spec/_registry'
 
 type ConstructorOptions = ClientOptions & { registryUrl: string }

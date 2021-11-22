@@ -1,5 +1,5 @@
 import { ThisData as BasicThisData, ClientOptions, createThisData } from './client'
-import { DidAuthSession } from './DidAuthManager'
+import { DidAuthSession } from './didAuthSession'
 import { mapFunctions } from './mapFunctions'
 
 export type DidAuthAdapterType = {
@@ -39,7 +39,9 @@ type MappedMethods<TMethods extends Record<keyof TMethods, BasicApiMethodType>> 
   [key in keyof TMethods]: MappedMethod<TMethods[key]>
 }
 
-export type GetParams<TOperation extends MappedMethod<any>> = TOperation extends MappedMethod<infer UOriginalMethod>
+export type GetDidAuthParams<TOperation extends MappedMethod<any>> = TOperation extends MappedMethod<
+  infer UOriginalMethod
+>
   ? ExtractOriginalRequestOptions<UOriginalMethod>['params']
   : never
 
@@ -60,7 +62,7 @@ export const wrapWithDidAuth = <TMethods extends Record<keyof TMethods, BasicApi
   }) as any
 }
 
-export const createClient = <TMethods>(
+export const createDidAuthClient = <TMethods>(
   methods: TMethods,
   didAuthSession: DidAuthSession,
   serviceUrl: string,

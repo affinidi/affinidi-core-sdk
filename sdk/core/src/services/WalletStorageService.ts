@@ -1,8 +1,6 @@
 import { JwtService, KeysService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
-
-import { STAGING_KEY_STORAGE_URL } from '../_defaultConfig'
 import { extractSDKVersion } from '../_helpers'
 import { Env, SignedCredential } from '../dto/shared.dto'
 import { DidAuthAdapter } from '../shared/DidAuthAdapter'
@@ -62,7 +60,6 @@ export default class WalletStorageService {
     keyStorageUrl: string,
     options: { env: Env; accessApiKey: string },
   ): Promise<string> {
-    keyStorageUrl = keyStorageUrl || STAGING_KEY_STORAGE_URL
     const { accessApiKey, env } = options
     const service = new KeyStorageApiService({
       keyStorageUrl,
@@ -77,14 +74,14 @@ export default class WalletStorageService {
   static async getSignedCredentials(
     accessToken: string,
     credentialOfferResponseToken: string,
-    options: { keyStorageUrl?: string; issuerUrl?: string; accessApiKey?: string; apiKey?: string } = {},
+    options: { env?: Env; keyStorageUrl?: string; issuerUrl?: string; accessApiKey?: string; apiKey?: string },
   ): Promise<SignedCredential[]> {
-    const keyStorageUrl = options.keyStorageUrl || STAGING_KEY_STORAGE_URL
-    const { issuerUrl, accessApiKey, apiKey } = options
+    const keyStorageUrl = options.keyStorageUrl
+    const { env, issuerUrl, accessApiKey, apiKey } = options
     const service = new KeyStorageApiService({ keyStorageUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const { body } = await service.getSignedCredential(accessToken, {
       credentialOfferResponseToken,
-      options: { issuerUrl, accessApiKey, apiKey },
+      options: { env, issuerUrl, accessApiKey, apiKey },
     })
 
     const { signedCredentials } = body
