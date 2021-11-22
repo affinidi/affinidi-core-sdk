@@ -47,7 +47,7 @@ const createAffinidiStorageService = () => {
 const mockDidAuth = () => {
   nock(affinidiVaultUrl, { reqheaders })
     .post('/api/v1/did-auth/create-did-auth-request')
-    .reply(200, `"${requestToken}"`)
+    .reply(200, JSON.stringify(requestToken), { 'content-type': 'application/json' })
 
   nock(registryUrl, { reqheaders }).post('/api/v1/did-auth/create-did-auth-response').reply(200, {})
 }

@@ -125,7 +125,12 @@ const executeByOptions = async (
     throw new SdkError({ code, message }, context, Object.assign({}, error, { httpStatusCode: status }))
   }
 
-  const jsonResponse = status.toString() === '204' ? {} : await response.json()
+  const contentType = response.headers.get('content-type')
+  if (!contentType || !contentType.includes('application/json')) {
+    return { body: {}, status }
+  }
+
+  const jsonResponse = await response.json()
   return { body: jsonResponse, status }
 }
 

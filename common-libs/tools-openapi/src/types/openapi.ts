@@ -104,9 +104,11 @@ export type RequestSpecWithoutData = undefined
 
 export type RequestSpec = RequestSpecWithData | RequestSpecWithoutData
 
-export type ResponseSpecWithData = Partial<Record<'200' | '204', ContentSpec>>
+type ResponseSuccessCode = '200' | '201' | '204'
 
-type ResponseSpecWithoutData = Partial<Record<'200' | '204', {
+export type ResponseSpecWithData = Partial<Record<ResponseSuccessCode, ContentSpec>>
+
+type ResponseSpecWithoutData = Partial<Record<ResponseSuccessCode, {
   content?: {
     'application/json': {
       schema?: Record<string, never>
