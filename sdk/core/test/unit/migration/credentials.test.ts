@@ -43,7 +43,7 @@ const createEncryptedCreds = (count: number) => {
 
 const mockAndStubMigrationHelperCalls = () => {
   nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get(`/migration/done/${didEth}`).reply(200, 'false')
-  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).post('/migrate/credentials').reply(200, {})
+  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).post('/migration/credentials').reply(200, {})
   const stubPullDidAuthRequestToken = sinon
     .stub(DidAuthService.prototype, 'pullDidAuthRequestToken')
     .resolves('requestToken')
@@ -216,7 +216,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
       .stub(MigrationHelper.prototype, 'encryptCredentials')
       .resolves(createEncryptedCreds(1))
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
-      .post('/migrate/credentials')
+      .post('/migration/credentials')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
     const stubConsole = sinon.stub(console, 'error')
     const helper = createMigrationHelper()
