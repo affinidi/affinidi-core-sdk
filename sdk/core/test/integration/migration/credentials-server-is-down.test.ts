@@ -13,7 +13,7 @@ const encryptedSeedElem = ENCRYPTED_SEED_ELEM
 const options = getBasicOptionsForEnvironment()
 
 describe('BloomVault migration when server migration server is down', () => {
-  it.only('should getAllCredentials if migration not started and migration service is down', async () => {
+  it('should getAllCredentials if migration not started and migration service is down', async () => {
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeedElem, options)
     const result = await commonNetworkMember.getAllCredentials()
 
