@@ -1,6 +1,5 @@
 import sinon from 'sinon'
 import * as chai from 'chai'
-import Prometheus from 'prom-client'
 import { profile, ProfileAction } from '../../../src'
 import { ConsoleReporter } from '../../../src/profiler/ConsoleReporter'
 import { DefaultProfilerActivator } from '../../../src/profiler/DefaultProfilerActivator'
@@ -173,25 +172,29 @@ describe('ProfilerDecorator', () => {
     expect(delta).to.be.within(timeout, timeout + schedulingDelta)
   })
 
-  it('should use recorder from env vars', () => {
-    sinon.stub(DefaultProfilerActivator, 'isActive').returns(true)
+  try {
+    const Prometheus = require('prom-client')
 
-    process.env.PROFILER_RECORDER = 'prometheus'
-    @profile()
-    class SomeTest {
-      static someMethod() {
-        return 'some result'
+    it('should use recorder from env vars', () => {
+      sinon.stub(DefaultProfilerActivator, 'isActive').returns(true)
+
+      process.env.PROFILER_RECORDER = 'prometheus'
+      @profile()
+      class SomeTest {
+        static someMethod() {
+          return 'some result'
+        }
       }
-    }
-    delete process.env.PROFILER_RECORDER
+      delete process.env.PROFILER_RECORDER
 
-    SomeTest.someMethod()
+      SomeTest.someMethod()
 
-    const metric = <Prometheus.Histogram<string>>(
-      Prometheus.register.getSingleMetric('sdk_operations_duration_seconds_bucket')
-    )
-    expect(metric).to.be.not.undefined
-    const usageCount = (metric as any)?.hashMap?.['desc:SomeTest.someMethod']?.count
-    expect(usageCount).to.be.eq(1)
-  })
+      const metric = Prometheus.register.getSingleMetric('sdk_operations_duration_seconds_bucket')
+      expect(metric).to.be.not.undefined
+      const usageCount = metric?.hashMap?.['desc:SomeTest.someMethod']?.count
+      expect(usageCount).to.be.eq(1)
+    })
+  } catch (e) {
+    console.log('Some tests were skipped cuz `prom-client` is not installed')
+  }
 })

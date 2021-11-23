@@ -39,9 +39,11 @@
   "dependencies": {
     "base64url": "^3.0.1",
     "jsontokens": "^3.0.0",
-    "prom-client": "^14.0.1",
     "randombytes": "^2.1.0",
     "tslib": "^2.2.0"
+  },
+  "optionalDependencies": {
+    "prom-client": "^14.0.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
