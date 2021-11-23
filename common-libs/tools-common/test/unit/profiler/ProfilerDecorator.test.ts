@@ -1,8 +1,9 @@
 import sinon from 'sinon'
 import * as chai from 'chai'
-import { profile, ProfileAction } from '../../src'
-import { ConsoleReporter } from '../../src/profiler/ConsoleReporter'
-import { DefaultProfilerActivator } from '../../src/profiler/DefaultProfilerActivator'
+import Prometheus from 'prom-client'
+import { profile, ProfileAction } from '../../../src'
+import { ConsoleReporter } from '../../../src/profiler/ConsoleReporter'
+import { DefaultProfilerActivator } from '../../../src/profiler/DefaultProfilerActivator'
 
 class SdkOptions {
   didMethod?: 'jolo' | 'elem'
@@ -170,5 +171,27 @@ describe('ProfilerDecorator', () => {
     await AsyncTest.someLongRun(timeout)
     const delta = reporterSpy.firstCall.args[3] - reporterSpy.firstCall.args[2]
     expect(delta).to.be.within(timeout, timeout + schedulingDelta)
+  })
+
+  it('should use recorder from env vars', () => {
+    sinon.stub(DefaultProfilerActivator, 'isActive').returns(true)
+
+    process.env.PROFILER_RECORDER = 'prometheus'
+    @profile()
+    class SomeTest {
+      static someMethod() {
+        return 'some result'
+      }
+    }
+    delete process.env.PROFILER_RECORDER
+
+    SomeTest.someMethod()
+
+    const metric = <Prometheus.Histogram<string>>(
+      Prometheus.register.getSingleMetric('sdk_operations_duration_seconds_bucket')
+    )
+    expect(metric).to.be.not.undefined
+    const usageCount = (metric as any)?.hashMap?.['desc:SomeTest.someMethod']?.count
+    expect(usageCount).to.be.eq(1)
   })
 })
