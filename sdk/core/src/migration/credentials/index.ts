@@ -114,7 +114,8 @@ export class MigrationHelper {
   async runMigration(credentials: any[], accessToken: string, signature: string): Promise<void> {
     try {
       const encryptedVCs = await this.encryptCredentials(credentials)
-      await this.runMigrationByChunk(encryptedVCs, 100, accessToken, signature)
+      const batchSize = Number(process.env.CREDENTIALS_BATCH_SIZE) || 10
+      await this.runMigrationByChunk(encryptedVCs, batchSize, accessToken, signature)
     } catch (err) {
       console.error('Vault-migration-service initiate migration for given user call ends with error: ', err)
     }

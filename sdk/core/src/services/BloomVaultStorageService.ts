@@ -106,6 +106,20 @@ export default class BloomVaultStorageService {
 
   /* istanbul ignore next: private function */
   private async _authorizeVcVault(storageRegion: string) {
+    const { token, signature } = await this._generateBloomVaultOptions(storageRegion)
+
+    await this._vaultApiService.validateAuthToken({
+      storageRegion,
+      accessToken: token,
+      signature,
+      did: this.didEthr,
+    })
+
+    return token
+  }
+
+  /* istanbul ignore next: private function */
+  private async _generateBloomVaultOptions(storageRegion: string) {
     const { privateKeyHex } = this._getVaultKeys()
 
     const {
@@ -116,13 +130,6 @@ export default class BloomVaultStorageService {
     })
 
     const signature = this._signByVaultKeys(token, privateKeyHex)
-
-    await this._vaultApiService.validateAuthToken({
-      storageRegion,
-      accessToken: token,
-      signature,
-      did: this.didEthr,
-    })
 
     return { token, signature }
   }
@@ -254,7 +261,7 @@ export default class BloomVaultStorageService {
 
   public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
     const doesMigrationStarted = await this._migrationHelper.doesMigrationStarted()
-    const { token: accessToken, signature } = await this._authorizeVcVault(storageRegion)
+    const accessToken = await this._authorizeVcVault(storageRegion)
     let migrationDone: string
     if (doesMigrationStarted) {
       migrationDone = await this._migrationHelper.getMigrationStatus()
@@ -268,7 +275,8 @@ export default class BloomVaultStorageService {
     if (doesMigrationStarted && migrationDone === 'no' && credentials?.length) {
       // just send the async call, but no need to wait for response
       // all logic should be done in a background
-      this._migrationHelper.runMigration(credentials, accessToken, signature)
+      const { token, signature } = await this._generateBloomVaultOptions(storageRegion)
+      this._migrationHelper.runMigration(credentials, token, signature)
     }
 
     if (!types) {
@@ -279,7 +287,7 @@ export default class BloomVaultStorageService {
   }
 
   public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
-    const { token: accessToken } = await this._authorizeVcVault(storageRegion)
+    const accessToken = await this._authorizeVcVault(storageRegion)
 
     const credentialBlob = await this._findCredentialById(accessToken, credentialId, storageRegion)
 
@@ -293,13 +301,13 @@ export default class BloomVaultStorageService {
   }
 
   public async deleteCredentialById(id: string, storageRegion: string): Promise<void> {
-    const { token: accessToken } = await this._authorizeVcVault(storageRegion)
+    const accessToken = await this._authorizeVcVault(storageRegion)
     const credentialBlob = await this._findCredentialById(accessToken, id, storageRegion)
     return this._deleteCredentialByIndex(accessToken, credentialBlob.id, storageRegion)
   }
 
   public async deleteAllCredentials(storageRegion: string): Promise<void> {
-    const { token: accessToken } = await this._authorizeVcVault(storageRegion)
+    const accessToken = await this._authorizeVcVault(storageRegion)
 
     try {
       await this._vaultApiService.deleteCredentials({ accessToken, storageRegion, start: 0, end: 99 })

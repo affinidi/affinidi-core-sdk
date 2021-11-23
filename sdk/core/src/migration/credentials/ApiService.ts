@@ -54,7 +54,9 @@ export default class ApiService {
     const { status } = response
     let jsonResponse
     if (status.toString().startsWith('2')) {
-      jsonResponse = await response.json()
+      if (status !== 204) {
+        jsonResponse = await response.json()
+      }
     } else {
       const error = await response.json()
 
