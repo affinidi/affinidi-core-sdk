@@ -45,6 +45,7 @@ export default class WalletStorageService {
     this._bloomVaultStorageService = new BloomVaultStorageService(keysService, platformCryptographyTools, {
       accessApiKey: options.accessApiKey,
       vaultUrl: options.bloomVaultUrl,
+      didAuthAdapter: options.didAuthAdapter,
     })
   }
 

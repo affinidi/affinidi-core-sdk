@@ -10,6 +10,7 @@ interface TestDid {
   seedHex: string
   did: string
   didDocument: { id: string }
+  didDocumentKeyId: string
   publicKey: string
 }
 
@@ -42,6 +43,7 @@ export const generateTestDIDs = async (): Promise<{
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const joloDidDocument = await didDocumentService.getDidDocument(didResolverMock)
+  const joloKeyId = await didDocumentService.getKeyId()
   const joloDid = joloDidDocument.id
 
   const joloPublicKey = KeysService.getPublicKey(joloSeedHex, 'jolo').toString('hex')
@@ -57,6 +59,7 @@ export const generateTestDIDs = async (): Promise<{
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemDidDocument = await didDocumentService.getDidDocument(didResolverMock)
+  const elemKeyId = await didDocumentService.getKeyId()
   const elemDid = await didDocumentService.getMyDid()
 
   const elemPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
@@ -75,6 +78,7 @@ export const generateTestDIDs = async (): Promise<{
 
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemAltDidDocument = await didDocumentService.getDidDocument(didResolverMock)
+  const elemAltKyId = await didDocumentService.getKeyId()
   const elemAltDid = await didDocumentService.getMyDid()
 
   const elemAltPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
@@ -87,6 +91,7 @@ export const generateTestDIDs = async (): Promise<{
       seedHex: joloSeedHex,
       did: joloDid,
       didDocument: joloDidDocument,
+      didDocumentKeyId: joloKeyId,
       publicKey: joloPublicKey,
       publicEthereumKey: joloEthereumPublicKey,
     },
@@ -96,6 +101,7 @@ export const generateTestDIDs = async (): Promise<{
       seedHex: elemSeedHex,
       did: elemDid,
       didDocument: elemDidDocument,
+      didDocumentKeyId: elemKeyId,
       publicKey: elemPublicKey,
     },
     elemAlt: {
@@ -104,6 +110,7 @@ export const generateTestDIDs = async (): Promise<{
       seedHex: elemAltSeedHex,
       did: elemAltDid,
       didDocument: elemAltDidDocument,
+      didDocumentKeyId: elemAltKyId,
       publicKey: elemAltPublicKey,
     },
   }
