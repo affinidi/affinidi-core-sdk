@@ -1,4 +1,4 @@
 import 'mocha'
 
-require('./ProfilerDecorator.test')
+require('./profiler')
 require('./services')
