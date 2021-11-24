@@ -111,7 +111,7 @@ describe('VC Signatures', () => {
       let segment: any
 
       before(async () => {
-        segment = await affinity.deriveSegmentProof(signedCredential, ['fullName'], issuerDidDocument)
+        segment = await affinity.deriveSegmentProof(signedCredential, ['fullName', 'name.firstName'], issuerDidDocument)
       })
 
       it('should throw an error when field does not exist', async () => {
@@ -132,6 +132,8 @@ describe('VC Signatures', () => {
       it('segment should be valid', async () => {
         expect(segment.proof.type).to.be.equal('BbsBlsSignatureProof2020')
         expect(segment.credentialSubject.data.fullName).to.eq('Popov')
+        expect(segment.credentialSubject.data.name.firstName).to.eq('Bobby')
+        expect(segment.credentialSubject.data.name.lastName).to.not.exist
         expect(segment.credentialSubject.data.givenName).to.not.exist
         expect(await isValid(segment, issuerDidDocument)).to.be.true
       })
