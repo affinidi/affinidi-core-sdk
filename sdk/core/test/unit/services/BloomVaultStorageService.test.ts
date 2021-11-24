@@ -105,6 +105,9 @@ describe('BloomVaultStorageService', () => {
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'true')
     const service = createBloomStorageService()
     nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get(`/migration/done/${service.didEthr}`).reply(200, 'false')
+    nock(bloomVaultUrl, { reqheaders })
+      .post(`/auth/request-token?did=${service.didEthr}`)
+      .reply(200, { token: 'token' })
     const credentials = await service.searchCredentials(region)
 
     expect(stub.calledOnce).to.be.true

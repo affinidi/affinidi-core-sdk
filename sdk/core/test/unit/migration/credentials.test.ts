@@ -63,6 +63,30 @@ const createMigrationHelper = () => {
   return new MigrationHelper(didAuthAdapter, undefined, keysService, platformCryptographyTools, didEth)
 }
 
+const countTestingFigures = (numerOfCreds: number) => {
+  const batchSize = Number(process.env.CREDENTIALS_BATCH_SIZE) || 10
+  const callCount = Math.ceil(numerOfCreds / batchSize)
+  const firstArgsLength = batchSize
+  const lastArgsLength = numerOfCreds % batchSize || batchSize
+  return {
+    callCount,
+    firstArgsLength,
+    lastArgsLength,
+  }
+}
+
+const chuncksChecker = async (numberOfCreds: number) => {
+  const { callCount, firstArgsLength, lastArgsLength } = countTestingFigures(numberOfCreds)
+  sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(numberOfCreds))
+  const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
+  const helper = createMigrationHelper()
+  await helper.runMigration([], '', '')
+
+  expect(stubMigrateCredentials.callCount).to.be.eq(callCount)
+  expect(stubMigrateCredentials.firstCall.args[0].length).to.be.eq(firstArgsLength)
+  expect(stubMigrateCredentials.lastCall.args[0].length).to.be.eq(lastArgsLength)
+}
+
 describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () => {
   before(async () => {
     const testDids = await generateTestDIDs()
@@ -166,37 +190,19 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     expect(migrationDone).to.be.eq('error')
   })
 
-  it('`migrateCredentials` should called twice if amount of VCs 150(two chunks)', async () => {
-    sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(150))
-    const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
-    const helper = createMigrationHelper()
-    await helper.runMigration([], '', '')
-
-    expect(stubMigrateCredentials.calledTwice).to.be.true
-    expect(stubMigrateCredentials.firstCall.args[0].length).to.be.eq(100)
-    expect(stubMigrateCredentials.lastCall.args[0].length).to.be.eq(50)
+  it('`migrateCredentials` should called should called the required number of times if amount of VCs 150', async () => {
+    const numberOfCreds = 150
+    await chuncksChecker(numberOfCreds)
   })
 
-  it('`migrateCredentials` should called once if amount of VCs 10(one chunks)', async () => {
-    sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(10))
-    const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
-    const helper = createMigrationHelper()
-    await helper.runMigration([], '', '')
-
-    expect(stubMigrateCredentials.calledOnce).to.be.true
-    expect(stubMigrateCredentials.firstCall.args[0].length).to.be.eq(10)
+  it('`migrateCredentials` should called the required number of times if amount of VCs 10', async () => {
+    const numberOfCreds = 10
+    await chuncksChecker(numberOfCreds)
   })
 
-  it('`migrateCredentials` should called 64 times if amount of VCs 6347(64 chunks)', async () => {
-    sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(6347))
-    const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
-    const helper = createMigrationHelper()
-    await helper.runMigration([], '', '')
-
-    expect(stubMigrateCredentials.callCount).to.be.eq(64)
-
-    expect(stubMigrateCredentials.firstCall.args[0].length).to.be.eq(100)
-    expect(stubMigrateCredentials.lastCall.args[0].length).to.be.eq(47)
+  it('`migrateCredentials` should called the required number of times if amount of VCs 6347', async () => {
+    const numberOfCreds = 6347
+    await chuncksChecker(numberOfCreds)
   })
 
   it('`runMigrationByChunk` and `encryptCredentials` should called once', async () => {
