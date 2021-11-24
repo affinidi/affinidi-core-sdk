@@ -189,7 +189,7 @@ describe('ProfilerDecorator', () => {
 
       SomeTest.someMethod()
 
-      const metric = Prometheus.register.getSingleMetric('sdk_operations_duration_seconds_bucket')
+      const metric = Prometheus.register.getSingleMetric('sdk_operation_duration_seconds')
       expect(metric).to.be.not.undefined
       const usageCount = metric?.hashMap?.['desc:SomeTest.someMethod']?.count
       expect(usageCount).to.be.eq(1)

@@ -1,6 +1,6 @@
 import { IProfilerRecorder } from './IProfilerRecorder'
 
-const METRIC_NAME = 'sdk_operations_duration_seconds_bucket'
+const METRIC_NAME = 'sdk_operation_duration_seconds'
 const BUCKETS_START = 0.05
 const BUCKETS_FACTOR = 1.55
 const BUCKETS_COUNT = 17
