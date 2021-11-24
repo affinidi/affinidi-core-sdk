@@ -2,6 +2,7 @@ import { ConsoleReporter } from './ConsoleReporter'
 import { DefaultProfilerActivator } from './DefaultProfilerActivator'
 import { IProfilerRecorder } from './IProfilerRecorder'
 import { IProfilerActivator } from './IProfileActivator'
+import { PrometheusRecorder } from './PrometheusRecorder'
 const scanListSymbol = Symbol('profilerMetaScan')
 export enum ProfileAction {
   default,
@@ -158,9 +159,21 @@ function wrapClass(
   wrapChain(ctor, className, profilerRecorder, profileActivator, action)
 }
 
+const ensureProfilerRecorderSet = (profilerRecorder?: IProfilerRecorder): IProfilerRecorder => {
+  if (typeof profilerRecorder !== 'undefined') {
+    return profilerRecorder
+  }
+
+  if (process.env.PROFILER_RECORDER === 'prometheus') {
+    return PrometheusRecorder
+  }
+
+  return ConsoleReporter
+}
+
 export const profile = (
   action: ProfileAction = ProfileAction.default,
-  profilerRecorder: IProfilerRecorder = ConsoleReporter,
+  profilerRecorder?: IProfilerRecorder,
   profileActivator: IProfilerActivator = DefaultProfilerActivator,
 ) => (
   // eslint-disable-next-line @typescript-eslint/ban-types
@@ -174,5 +187,5 @@ export const profile = (
     return
   }
 
-  wrapClass(target, profilerRecorder, profileActivator, action)
+  wrapClass(target, ensureProfilerRecorderSet(profilerRecorder), profileActivator, action)
 }
