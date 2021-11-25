@@ -1,0 +1,8 @@
+# old prettier versions do not support template literal types and crash on this file
+src/types/openapi.ts
+# old prettier versions do not support template literal types and crash on this file
+src/types/openapiParser.ts
+# old prettier versions do not support key remapping and crash on this file
+src/types/typeBuilder.ts
+# old prettier versions do not support key remapping and crash on this file
+src/types/didAuth.ts

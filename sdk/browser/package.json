@@ -37,6 +37,7 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@affinidi/platform-fetch-native": "^1.0.0",
     "@affinidi/wallet-core-sdk": "^6.0.4",
     "eccrypto-js": "^5.0.0",
     "randombytes": "^2.1.0"

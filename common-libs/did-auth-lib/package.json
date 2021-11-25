@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
+    "@affinidi/platform-fetch-node": "^1.0.0",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
     "@types/mocha": "8.0.3",

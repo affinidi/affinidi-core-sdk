@@ -31,6 +31,7 @@
   "author": "Roman Brazhnyk <roman.b@affinidi.com>",
   "license": "ISC",
   "dependencies": {
+    "@affinidi/platform-fetch-native": "^1.0.0",
     "@affinidi/wallet-core-sdk": "^6.0.4",
     "assert": "^2.0.0",
     "buffer": "^5.6.0",

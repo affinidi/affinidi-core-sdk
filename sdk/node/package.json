@@ -37,6 +37,7 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@affinidi/platform-fetch-node": "^1.0.0",
     "@affinidi/wallet-core-sdk": "^6.0.4",
     "@mattrglobal/bbs-signatures": "^0.6.0",
     "@mattrglobal/jsonld-signatures-bbs": "^0.10.0",

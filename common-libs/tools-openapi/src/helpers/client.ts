@@ -1,5 +1,5 @@
 import keyBy from 'lodash.keyby'
-import { RequestInfo, RequestInit, Response } from 'node-fetch'
+import { getFetch } from '@affinidi/platform-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
 import { GenericApiSpec } from '../types/openapi'
@@ -8,30 +8,6 @@ import { ResponseForOperation, RequestOptionsForOperation, RequestOptions } from
 import { BuildApiTypeWithoutConstraint, BuiltApiOperationType, BuiltApiType } from '../types/typeBuilder'
 import { createAdditionalHeaders, createHeaders } from './headers'
 import { mapFunctions } from './mapFunctions'
-
-type FetchType = (url: RequestInfo, init?: RequestInit) => Promise<Response>
-
-function useUndiciFetch(): FetchType {
-  const request = require('undici').request
-  return async function (url, options) {
-    const response = await request((url as URL).href ?? url, options)
-    return {
-      status: response.statusCode,
-      json: () => response.body.json(),
-    } as Response
-  }
-}
-
-let fetch: FetchType
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-if (!fetch) {
-  if (process.env.HTTP_CLIENT === 'undici') {
-    fetch = useUndiciFetch()
-  } else {
-    fetch = require('node-fetch')
-  }
-}
 
 export type ThisData = {
   accessApiKey: string
@@ -61,13 +37,17 @@ export type ClientFactoryByRawSpec = {
 type GetRequestOptions<TOperation extends MethodTypeByOperation<any>> = Parameters<TOperation>[0]
 export type GetParams<TOperation extends MethodTypeByOperation<any>> = GetRequestOptions<TOperation>['params']
 
+const httpMethodsLowercase = ['get', 'post', 'put', 'delete'] as const
+type HttpMethodLowercase = typeof httpMethodsLowercase[number]
+type HttpMethodUppercase = Uppercase<HttpMethodLowercase>
+
 const parseSpec = (rawSpec: GenericApiSpec) => {
   const basePath = rawSpec.servers[0].url === '/' ? '' : rawSpec.servers[0].url
 
   const spec = Object.entries(rawSpec.paths).flatMap(([operationPath, operation]) => {
     const path = `${basePath}${operationPath}`
 
-    return (['get', 'post', 'put', 'delete'] as const).flatMap((method) => {
+    return httpMethodsLowercase.flatMap((method) => {
       const operationForMethod = operation[method]
       if (!operationForMethod) {
         return []
@@ -89,7 +69,7 @@ const parseSpec = (rawSpec: GenericApiSpec) => {
 }
 
 const executeByOptions = async (
-  method: string,
+  method: HttpMethodLowercase,
   pathTemplate: string,
   { authorization, params, pathParams, queryParams, storageRegion }: RequestOptions<any, any, any>,
   clientOptions: ThisData,
@@ -104,7 +84,7 @@ const executeByOptions = async (
   }
   const fetchOptions = {
     headers,
-    method: method.toUpperCase(),
+    method: method.toUpperCase() as HttpMethodUppercase,
     ...(!!params && { body: JSON.stringify(params, null, 2) }),
   }
 
@@ -116,6 +96,7 @@ const executeByOptions = async (
     url.searchParams.set(name, value as string)
   }
 
+  const fetch = getFetch()
   const response = await fetch(url, fetchOptions)
   const { status } = response
 
@@ -136,8 +117,9 @@ const executeByOptions = async (
 
 export const createClientMethods: ClientFactoryByRawSpec = <TApiSpec extends GenericApiSpec>(rawSpec: TApiSpec) => {
   type ClientType = ClientTypeByRawSpec<TApiSpec>
-  const specGroupByOperationId: Record<keyof ClientType, { path: string; method: string }> = parseSpec(rawSpec) as any
-  return mapFunctions(specGroupByOperationId, ({ path, method }) => {
+  const parsedSpec = parseSpec(rawSpec)
+  const typedParsedSpec = parsedSpec as Pick<typeof parsedSpec, keyof ClientType & string>
+  return mapFunctions(typedParsedSpec, ({ path, method }) => {
     return (self: ThisData, requestOptions: RequestOptions<any, any, any>) =>
       executeByOptions(method, path, requestOptions, self)
   }) as any // to avoid TS2589 "Type instantiation is excessively deep and possibly infinite"

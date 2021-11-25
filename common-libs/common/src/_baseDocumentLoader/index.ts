@@ -41,14 +41,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import { getFetch } from '@affinidi/platform-fetch'
+
 import { parseLinkHeader, LINK_HEADER_CONTEXT, prependBase } from './util'
 import { localContexts } from './localContexts'
-
-let fetch: any
-
-if (!fetch) {
-  fetch = require('node-fetch')
-}
 
 // Domains with schemas that never change and can be cached,
 // as opposed to domains with documents that change dynamically
@@ -66,6 +62,20 @@ const cachedDocuments = new Map(
   ]),
 )
 
+const fetchSchema = async (url: string) => {
+  try {
+    const fetch = getFetch()
+    return await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/ld+json, application/json',
+      },
+    })
+  } catch (error) {
+    throw new Error(`URL could not be dereferenced, an error occurred. ${error}`)
+  }
+}
+
 export const baseDocumentLoader = async (url: string) => {
   const loader = async (url: string) => {
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -77,18 +87,7 @@ export const baseDocumentLoader = async (url: string) => {
       return cachedDocuments.get(url)
     }
 
-    let res: Response
-
-    try {
-      res = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/ld+json, application/json',
-        },
-      })
-    } catch (error) {
-      throw new Error(`URL could not be dereferenced, an error occurred. ${error}`)
-    }
+    const res = await fetchSchema(url)
 
     if (res.status >= 400) {
       throw new Error(`URL could not be dereferenced, an error occurred. ${res.status}`)

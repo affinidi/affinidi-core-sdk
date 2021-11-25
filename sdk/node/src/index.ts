@@ -1,3 +1,7 @@
+import { useNodeFetch } from '@affinidi/platform-fetch-node'
+
+useNodeFetch()
+
 if (typeof Buffer === 'undefined') global.Buffer = require('buffer').Buffer
 
 import type * as Types from '@affinidi/wallet-core-sdk'
