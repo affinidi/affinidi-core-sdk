@@ -1,13 +1,6 @@
 import { CognitoIdentityServiceProvider } from 'aws-sdk'
 import { profile } from '@affinidi/tools-common'
 
-let fetch: any
-
-/* istanbul ignore next */
-if (!fetch) {
-  ;(global as any).fetch = require('node-fetch')
-}
-
 import { CognitoUserTokens, MessageParameters } from './dto'
 
 type Response<TResult, TSuccessResult extends TResult, TAdditionalSuccessFields> =
