@@ -37,7 +37,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@affinidi/wallet-core-sdk": "^6.0.0",
+    "@affinidi/wallet-core-sdk": "^6.0.2",
     "eccrypto-js": "^5.0.0",
     "randombytes": "^2.1.0"
   },
