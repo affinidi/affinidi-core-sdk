@@ -12,13 +12,18 @@ import { mapFunctions } from './mapFunctions'
 type FetchType = (url: RequestInfo, init?: RequestInit) => Promise<Response>
 
 function useUndiciFetch(): FetchType {
-  const request = require('undici').request
-  return async function (url, options) {
-    const response = await request((url as URL).href ?? url, options)
-    return {
-      status: response.statusCode,
-      json: () => response.body.json(),
-    } as Response
+  try {
+    const request = require('undici').request
+    return async function (url, options) {
+      const response = await request((url as URL).href ?? url, options)
+      return {
+        status: response.statusCode,
+        json: () => response.body.json(),
+      } as Response
+    }
+  } catch (e) {
+    console.error("Undici can't be used as http client as undici package is not installed")
+    return require('node-fetch')
   }
 }
 
