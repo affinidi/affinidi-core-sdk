@@ -15,6 +15,6 @@ export const fetch: FetchType = (url: RequestInfo, options?: OptionsType) => {
   return fetchImpl(url, options)
 }
 
-export const configureFetch = (inputFetch: FetchType) => {
+export const setFetchImpl = (inputFetch: FetchType) => {
   fetchImpl = inputFetch
 }
