@@ -243,7 +243,7 @@ describe('Migration helper works properly', () => {
         '',
       )
     } catch (err) {
-      expect(err.message).to.contain('VMS-4')
+      expect(err.code).to.be.eql('VMS-4')
     }
   })
 })
