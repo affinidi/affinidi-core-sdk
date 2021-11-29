@@ -1,5 +1,5 @@
 import keyBy from 'lodash.keyby'
-import { getFetch } from '@affinidi/platform-fetch'
+import { fetch } from '@affinidi/platform-fetch'
 import { SdkError } from '@affinidi/tools-common'
 
 import { GenericApiSpec } from '../types/openapi'
@@ -96,7 +96,6 @@ const executeByOptions = async (
     url.searchParams.set(name, value as string)
   }
 
-  const fetch = getFetch()
   const response = await fetch(url, fetchOptions)
   const { status } = response
 

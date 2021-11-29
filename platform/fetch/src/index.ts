@@ -5,16 +5,16 @@ type OptionsType = RequestInit & Parameters<typeof undiciRequest>[1]
 
 type FetchType = (url: RequestInfo, options?: OptionsType) => Promise<Response>
 
-let fetch: FetchType | null = null
+let fetchImpl: FetchType | null = null
 
-export const getFetch = () => {
-  if (!fetch) {
+export const fetch: FetchType = (url: RequestInfo, options?: OptionsType) => {
+  if (!fetchImpl) {
     throw new Error('fetch is not configured')
   }
 
-  return fetch
+  return fetchImpl(url, options)
 }
 
 export const configureFetch = (inputFetch: FetchType) => {
-  fetch = inputFetch
+  fetchImpl = inputFetch
 }

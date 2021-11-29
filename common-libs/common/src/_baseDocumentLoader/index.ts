@@ -41,7 +41,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import { getFetch } from '@affinidi/platform-fetch'
+import { fetch } from '@affinidi/platform-fetch'
 
 import { parseLinkHeader, LINK_HEADER_CONTEXT, prependBase } from './util'
 import { localContexts } from './localContexts'
@@ -64,7 +64,6 @@ const cachedDocuments = new Map(
 
 const fetchSchema = async (url: string) => {
   try {
-    const fetch = getFetch()
     return await fetch(url, {
       method: 'GET',
       headers: {
