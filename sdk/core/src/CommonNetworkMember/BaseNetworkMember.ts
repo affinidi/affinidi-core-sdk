@@ -112,6 +112,7 @@ export abstract class BaseNetworkMember {
       verifierUrl,
       bloomVaultUrl,
       affinidiVaultUrl,
+      migrationUrl,
     } = basicOptions
 
     const keysService = new KeysService(encryptedSeed, password)
@@ -144,6 +145,7 @@ export abstract class BaseNetworkMember {
       accessApiKey,
       storageRegion,
       didAuthAdapter,
+      migrationUrl,
     })
     this._holderService = new HolderService(
       { registryUrl, metricsUrl, accessApiKey },

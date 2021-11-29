@@ -19,6 +19,7 @@ const sha256 = (data: unknown) => {
 type ConstructorOptions = {
   bloomVaultUrl: string
   affinidiVaultUrl: string
+  migrationUrl: string
   storageRegion: string
   accessApiKey: string
   didAuthAdapter: DidAuthAdapter
@@ -49,6 +50,8 @@ export default class WalletStorageService {
       accessApiKey: options.accessApiKey,
       vaultUrl: options.bloomVaultUrl,
       didAuthAdapter: options.didAuthAdapter,
+      encryptionService,
+      migrationUrl: options.migrationUrl,
     })
   }
 

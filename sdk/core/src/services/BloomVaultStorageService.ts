@@ -10,6 +10,7 @@ import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
 import { MigrationHelper } from '../migration/credentials'
+import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
 
 const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
@@ -21,6 +22,8 @@ type BloomVaultStorageOptions = {
   didAuthAdapter?: DidAuthAdapter
   accessApiKey: string
   vaultUrl: string
+  migrationUrl: string
+  encryptionService: AffinidiVaultEncryptionService
 }
 
 type PaginationOptions = {
@@ -66,13 +69,13 @@ export default class BloomVaultStorageService {
       accessApiKey: options.accessApiKey,
       sdkVersion: extractSDKVersion(),
     })
-    this._migrationHelper = new MigrationHelper(
-      options.didAuthAdapter,
-      options.accessApiKey,
-      this._keysService,
-      this._platformCryptographyTools,
-      this.didEthr,
-    )
+    this._migrationHelper = new MigrationHelper({
+      accessApiKey: options.accessApiKey,
+      bloomDid: this.didEthr,
+      didAuthAdapter: options.didAuthAdapter,
+      encryptionService: options.encryptionService,
+      migrationUrl: options.migrationUrl,
+    })
   }
 
   get didEthr(): string {

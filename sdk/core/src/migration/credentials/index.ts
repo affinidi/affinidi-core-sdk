@@ -1,15 +1,7 @@
 import { DidAuthAdapter } from '../../shared/DidAuthAdapter'
-import { DidAuthService } from './DidAuthService'
-import ApiService from './ApiService'
-import { isW3cCredential } from '../../_helpers'
-import { KeysService } from '@affinidi/common'
-import { IPlatformCryptographyTools } from '../../shared/interfaces'
-const packageInfo = require('../../../package.json')
-
-const environment = process.env.ENVIRONMENT || 'dev'
-const version = packageInfo.version
-export const VAULT_MIGRATION_SERVICE_URL =
-  process.env.VAULT_MIGRATION_SERVICE_URL || `https://vault-migration-service.${environment}.affinity-project.org`
+import { extractSDKVersion } from '../../_helpers'
+import { VaultMigrationApiService } from '@affinidi/internal-api-clients'
+import AffinidiVaultEncryptionService from '../../services/AffinidiVaultEncryptionService'
 
 interface vcMigrationList {
   bloomVaultIndex: number
@@ -18,91 +10,33 @@ interface vcMigrationList {
   payload: string
 }
 
+type ConstructorOptions = {
+  accessApiKey: string
+  bloomDid: string
+  didAuthAdapter: DidAuthAdapter
+  encryptionService: AffinidiVaultEncryptionService
+  migrationUrl: string
+}
+
 /**
  * Provides bunch of methods that helps to achieve smooth and
  * silent client's VCs migration from `bloom-vault` into `affinidi-vault`.
  * All migration code concentrate in one place(or in `bloom-vault` part) for easy deprecation process.
  */
 export class MigrationHelper {
-  private didAuthService: DidAuthService
-  private readonly baseUrl: string
-  private auth: string
-  private keysService: KeysService
-  private platformCryptographyTools: IPlatformCryptographyTools
-  private readonly apiKey: string
-  private readonly api: ApiService
-  private tokenRequestTime: number
+  private readonly migrationApiService
+  private readonly encryptionService
+  private readonly bloomDid
 
-  constructor(
-    didAuthAdapter: DidAuthAdapter,
-    apiKey: string,
-    keysService: KeysService,
-    platformCryptographyTools: IPlatformCryptographyTools,
-    private readonly bloomDid: string,
-  ) {
-    this.baseUrl = VAULT_MIGRATION_SERVICE_URL
-    this.apiKey = apiKey
-    this.didAuthService = new DidAuthService(didAuthAdapter, this.apiKey, this.baseUrl)
-    this.keysService = keysService
-    this.platformCryptographyTools = platformCryptographyTools
-    this.api = new ApiService(this.baseUrl, {
-      'Api-Key': apiKey,
-      'X-SDK-Version': version,
+  constructor({ accessApiKey, bloomDid, didAuthAdapter, encryptionService, migrationUrl }: ConstructorOptions) {
+    this.migrationApiService = new VaultMigrationApiService({
+      accessApiKey,
+      didAuthAdapter,
+      migrationUrl,
+      sdkVersion: extractSDKVersion(),
     })
-  }
-
-  /**
-   * Fetches authorization token to `vault-migration-service`
-   */
-  private async getAuth(): Promise<string> {
-    if (this.auth && !this.didAuthService.isTokenExpired(this.auth, this.tokenRequestTime)) {
-      return this.auth
-    }
-
-    this.tokenRequestTime = Date.now()
-    const requestToken = await this.didAuthService.pullDidAuthRequestToken()
-    this.auth = await this.didAuthService.createDidAuthResponseToken(requestToken)
-
-    return this.auth
-  }
-
-  /**
-   * Copy of the private method of `AffinidiVaultStorageService`
-   * @param credentials
-   * @private
-   */
-  async encryptCredentials(credentials: any[]): Promise<vcMigrationList[]> {
-    const publicKeyBuffer = this.keysService.getOwnPublicKey()
-    const privateKeyBuffer = this.keysService.getOwnPrivateKey()
-    const encryptedCredentials: vcMigrationList[] = []
-
-    for (const credential of credentials) {
-      let credentialId = credential?.id
-      if (!isW3cCredential(credential)) {
-        credentialId = credential?.data?.id
-      }
-
-      const credentialIdHash = await this.platformCryptographyTools.computePersonalHash(privateKeyBuffer, credentialId)
-
-      const typeHashes = []
-      if (isW3cCredential(credential)) {
-        for (const credentialType of credential.type) {
-          const typeHash = await this.platformCryptographyTools.computePersonalHash(privateKeyBuffer, credentialType)
-          typeHashes.push(typeHash)
-        }
-      }
-
-      const cyphertext = await this.platformCryptographyTools.encryptByPublicKey(publicKeyBuffer, credential)
-
-      encryptedCredentials.push({
-        id: credentialIdHash,
-        types: typeHashes,
-        payload: cyphertext,
-        bloomVaultIndex: credential.bloomId,
-      })
-    }
-
-    return encryptedCredentials
+    this.encryptionService = encryptionService
+    this.bloomDid = bloomDid
   }
 
   /**
@@ -113,7 +47,7 @@ export class MigrationHelper {
    */
   async runMigration(credentials: any[], accessToken: string, signature: string): Promise<void> {
     try {
-      const encryptedVCs = await this.encryptCredentials(credentials)
+      const encryptedVCs = await this.encryptionService.encryptCredentials(credentials)
       const batchSize = Number(process.env.CREDENTIALS_BATCH_SIZE) || 10
       await this.runMigrationByChunk(encryptedVCs, batchSize, accessToken, signature)
     } catch (err) {
@@ -138,47 +72,35 @@ export class MigrationHelper {
   /**
    * Gets migration status for user with given token for specified ethereum DID
    */
-  async getMigrationStatus(): Promise<string> {
-    const url = `migration/done/${this.bloomDid}`
-    let migrationDone: 'no' | 'yes' | 'error' = 'error'
+  async getMigrationStatus() {
     try {
-      const token = await this.getAuth()
-      const response = await this.api.execute(
-        'GET',
-        url,
-        {},
-        {
-          Authorization: `Bearer ${token}`,
-        },
-      )
-      if (response) migrationDone = 'yes'
-      else migrationDone = 'no'
+      const response = await this.migrationApiService.isMigrationDone(this.bloomDid)
+      return response.body ? 'yes' : 'no'
     } catch (err) {
       console.error('Vault-migration-service migration status check call ends with error: ', err)
+      return 'error'
     }
-
-    return migrationDone
   }
 
   /**
    * Checks if migration process has been started. Should work without authentication.
    */
   async doesMigrationStarted(): Promise<boolean> {
-    const url = 'migration/started'
-    let migrationStarted: boolean = false
     try {
-      migrationStarted = (await Promise.race([
-        this.api.execute('GET', url, {}),
+      return await Promise.race([
+        (async () => {
+          const response = await this.migrationApiService.isMigrationStarted()
+          return response.body
+        })(),
         // will skip request to the migration service if it is pending > 2 sec(suppose that migration server is down)
-        new Promise((resolve) => {
-          setTimeout(resolve, 2000, false)
+        new Promise<boolean>((resolve) => {
+          setTimeout(() => resolve(false), 2000)
         }),
-      ])) as boolean
+      ])
     } catch (err) {
       console.error('Vault-migration-service migration started check call ends with error: ', err)
+      return false
     }
-
-    return migrationStarted
   }
 
   /**
@@ -188,22 +110,13 @@ export class MigrationHelper {
    * @param {string} signature - signature of bloom-vault access token
    */
   async migrateCredentials(vcList: vcMigrationList[], accessToken: string, signature: string): Promise<void> {
-    const token = await this.getAuth()
-    const url = 'migration/credentials'
-    return this.api.execute(
-      'POST',
-      url,
-      {
-        bloomOptions: {
-          did: this.bloomDid,
-          accessToken: accessToken,
-          tokenSignature: signature,
-        },
-        verifiableCredentials: vcList,
+    await this.migrationApiService.migrateCredentials({
+      bloomOptions: {
+        did: this.bloomDid,
+        accessToken: accessToken,
+        tokenSignature: signature,
       },
-      {
-        Authorization: `Bearer ${token}`,
-      },
-    )
+      verifiableCredentials: vcList,
+    })
   }
 }

@@ -1,21 +1,22 @@
 import { AffinidiWallet, AffinidiWalletV6 } from '../../helpers/AffinidiWallet'
 import { expect } from 'chai'
-import { getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
+import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 import { SignedCredential } from '../../../src/dto'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 import { MigrationHelper } from '../../../src/migration/credentials'
-import platformCryptographyTools from '../../../../node/src/PlatformCryptographyTools'
 import { generateTestDIDs } from '../../factory/didFactory'
 import { extractSDKVersion } from '../../../src/_helpers'
 import { KeysService, LocalKeyVault } from '@affinidi/common'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
+import AffinidiVaultEncryptionService from '../../../src/services/AffinidiVaultEncryptionService'
+import { testPlatformTools } from '../../helpers/testPlatformTools'
 
-const { PASSWORD, ENCRYPTED_SEED_ELEM, DEV_API_KEY_HASH } = testSecrets
+const { PASSWORD, ENCRYPTED_SEED_ELEM } = testSecrets
 
 const password = PASSWORD
 const encryptedSeedElem = ENCRYPTED_SEED_ELEM
 
-const options = getBasicOptionsForEnvironment()
+const options = getAllOptionsForEnvironment()
 
 let encryptionKey: string
 let encryptedSeed: string
@@ -30,7 +31,13 @@ const createMigrationHelper = () => {
   const signer = new Signer({ did: audienceDid, keyId: didDocumentKeyId, keyVault })
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter(audienceDid, didAuthService)
-  return new MigrationHelper(didAuthAdapter, DEV_API_KEY_HASH, keysService, platformCryptographyTools, didEth)
+  return new MigrationHelper({
+    accessApiKey: options.accessApiKey,
+    bloomDid: didEth,
+    didAuthAdapter,
+    encryptionService: new AffinidiVaultEncryptionService(keysService, testPlatformTools),
+    migrationUrl: options.migrationUrl,
+  })
 }
 
 describe('Bloom vault when migration server is UP', () => {
@@ -152,10 +159,10 @@ describe('Bloom vault when migration server is UP', () => {
               'eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..AGnpOzGP0N9E9A1UTqE08KAhjfZn0yVrnqH5QOQ1cBAyZ13QD-eEvIgNqUbeE9hyYpsVrKVVgNuuTM51TAtclw',
           },
         })
-        .map((item, idx) => {
+        .map(({ id, ...item }, idx) => {
           return {
             ...item,
-            id: String(idx),
+            id: `{id}:{idx}`,
           }
         })
     }

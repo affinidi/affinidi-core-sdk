@@ -60,6 +60,7 @@ function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
     keyStorageUrl: resolveUrl(Service.KEY_STORAGE, env, options.keyStorageUrl),
     revocationUrl: resolveUrl(Service.REVOCATION, env, options.revocationUrl),
     metricsUrl: resolveUrl(Service.METRICS, env),
+    migrationUrl: resolveUrl(Service.VAULT_MIGRATION, env),
   }
 
   switch (env) {

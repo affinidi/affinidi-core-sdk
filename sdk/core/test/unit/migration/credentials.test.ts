@@ -3,23 +3,28 @@
 import nock from 'nock'
 import sinon from 'sinon'
 
-import { KeysService, LocalKeyVault } from '@affinidi/common'
+import { JwtService, KeysService, LocalKeyVault } from '@affinidi/common'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
+import { resolveUrl, Service } from '@affinidi/url-resolver'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 
 import { generateTestDIDs } from '../../factory/didFactory'
-import platformCryptographyTools from '../../../../node/src/PlatformCryptographyTools'
 import { expect } from 'chai'
 import signedCredential from '../../factory/signedCredential'
 import { extractSDKVersion } from '../../../src/_helpers'
 
-import { MigrationHelper, VAULT_MIGRATION_SERVICE_URL } from '../../../src/migration/credentials'
-import { DidAuthService } from '../../../src/migration/credentials/DidAuthService'
+import { MigrationHelper } from '../../../src/migration/credentials'
+import AffinidiVaultEncryptionService from '../../../src/services/AffinidiVaultEncryptionService'
+import { testPlatformTools } from '../../helpers/testPlatformTools'
+
+const migrationUrl = resolveUrl(Service.VAULT_MIGRATION, 'staging')
+const registryUrl = resolveUrl(Service.VAULT_MIGRATION, 'staging')
 
 let encryptionKey: string
 let encryptedSeed: string
 let didEth: string
 let audienceDid: string
+let requestToken: string
 let didDocumentKeyId: string
 const reqheaders: Record<string, string> = {}
 
@@ -41,26 +46,28 @@ const createEncryptedCreds = (count: number) => {
   })
 }
 
-const mockAndStubMigrationHelperCalls = () => {
-  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get(`/migration/done/${didEth}`).reply(200, 'false')
-  nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).post('/migration/credentials').reply(200, {})
-  const stubPullDidAuthRequestToken = sinon
-    .stub(DidAuthService.prototype, 'pullDidAuthRequestToken')
-    .resolves('requestToken')
-  const stubCreateDidAuthResponseToken = sinon
-    .stub(DidAuthService.prototype, 'createDidAuthResponseToken')
-    .resolves('responseToken')
-  sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(1))
-  return [stubPullDidAuthRequestToken, stubCreateDidAuthResponseToken]
+const mockDidAuth = () => {
+  nock(migrationUrl, { reqheaders })
+    .post('/did-auth/create-did-auth-request')
+    .reply(200, JSON.stringify(requestToken), { 'content-type': 'application/json' })
+
+  nock(registryUrl, { reqheaders }).post('/api/v1/did-auth/create-did-auth-response').reply(200, {})
 }
 
 const createMigrationHelper = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
+  const encryptionService = new AffinidiVaultEncryptionService(keysService, testPlatformTools)
   const keyVault = new LocalKeyVault(keysService)
   const signer = new Signer({ did: audienceDid, keyId: didDocumentKeyId, keyVault })
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter(audienceDid, didAuthService)
-  return new MigrationHelper(didAuthAdapter, undefined, keysService, platformCryptographyTools, didEth)
+  return new MigrationHelper({
+    accessApiKey: '',
+    bloomDid: didEth,
+    didAuthAdapter,
+    encryptionService,
+    migrationUrl,
+  })
 }
 
 const countTestingFigures = (numerOfCreds: number) => {
@@ -77,7 +84,7 @@ const countTestingFigures = (numerOfCreds: number) => {
 
 const chuncksChecker = async (numberOfCreds: number) => {
   const { callCount, firstArgsLength, lastArgsLength } = countTestingFigures(numberOfCreds)
-  sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(numberOfCreds))
+  sinon.stub(AffinidiVaultEncryptionService.prototype, 'encryptCredentials').resolves(createEncryptedCreds(numberOfCreds))
   const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
   const helper = createMigrationHelper()
   await helper.runMigration([], '', '')
@@ -97,6 +104,22 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     audienceDid = testDids.elem.did
     didDocumentKeyId = testDids.elem.didDocumentKeyId
 
+    const keysService = new KeysService(encryptedSeed, encryptionKey)
+    const requestTokenObject = await keysService.signJWT({
+      header: {
+        alg: 'HS256',
+        typ: 'JWT',
+      },
+      payload: {
+        sub: '1234567890',
+        name: 'John Doe',
+        exp: Date.now() + 60 * 60 * 1000,
+        createdAt: Date.now(),
+        iss: 'did:elem:EiCH-xxcnkgZv6Qvjvo_UXn-8DUdUN3EtBJxolAQbQrCcA#',
+      },
+    })
+    requestToken = JwtService.encodeObjectToJWT(requestTokenObject)
+
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
 
@@ -104,12 +127,19 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     nock.cleanAll()
   })
 
+  beforeEach(() => {
+    mockDidAuth()
+  })
+
   afterEach(() => {
     sinon.restore()
   })
 
   it('should return false if migration service response with delay more than 2 sec started', async () => {
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').delayConnection(3000).reply(200, 'true')
+    nock(migrationUrl, { reqheaders })
+      .get('/migration/started')
+      .delayConnection(3000)
+      .reply(200, 'true', { 'content-type': 'application/json' })
 
     const helper = createMigrationHelper()
     const doesMigrationStarted = await helper.doesMigrationStarted()
@@ -117,7 +147,9 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   })
 
   it('should return false if migration NOT started', async () => {
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'false')
+    nock(migrationUrl, { reqheaders })
+      .get('/migration/started')
+      .reply(200, 'false', { 'content-type': 'application/json' })
 
     const helper = createMigrationHelper()
     const doesMigrationStarted = await helper.doesMigrationStarted()
@@ -125,7 +157,9 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   })
 
   it('should return true if migration started', async () => {
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders }).get('/migration/started').reply(200, 'true')
+    nock(migrationUrl, { reqheaders })
+      .get('/migration/started')
+      .reply(200, 'true', { 'content-type': 'application/json' })
 
     const helper = createMigrationHelper()
     const doesMigrationStarted = await helper.doesMigrationStarted()
@@ -133,7 +167,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   })
 
   it('should catch and log error if `doesMigrationStarted` ends with error', async () => {
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+    nock(migrationUrl, { reqheaders })
       .get('/migration/started')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
     const stubConsole = sinon.stub(console, 'error')
@@ -145,39 +179,9 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     expect(doesMigrationStarted).to.be.false
   })
 
-  it('Authentication token is NOT expired: `pullDidAuthRequestToken` and `createDidAuthResponseToken` should called once', async () => {
-    const isTokenExpired = false
-    const [stubPullDidAuthRequestToken, stubCreateDidAuthResponseToken] = mockAndStubMigrationHelperCalls()
-    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(isTokenExpired)
-
-    const helper = createMigrationHelper()
-    await helper.getMigrationStatus()
-    await helper.runMigration([], '', '')
-
-    expect(stubPullDidAuthRequestToken.calledOnce).to.be.true
-    expect(stubCreateDidAuthResponseToken.calledOnce).to.be.true
-  })
-
-  it('Authentication token is expired: `pullDidAuthRequestToken` and `createDidAuthResponseToken` should called twice', async () => {
-    const isTokenExpired = true
-    const [stubPullDidAuthRequestToken, stubCreateDidAuthResponseToken] = mockAndStubMigrationHelperCalls()
-    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(isTokenExpired)
-
-    const helper = createMigrationHelper()
-    await helper.getMigrationStatus()
-    await helper.runMigration([], '', '')
-
-    expect(stubPullDidAuthRequestToken.calledTwice).to.be.true
-    expect(stubCreateDidAuthResponseToken.calledTwice).to.be.true
-  })
-
   it('should catch and log error if `getMigrationStatus` ends with error', async () => {
-    const isTokenExpired = false
-    sinon.stub(DidAuthService.prototype, 'pullDidAuthRequestToken').resolves('requestToken')
-    sinon.stub(DidAuthService.prototype, 'createDidAuthResponseToken').resolves('responseToken')
-    sinon.stub(MigrationHelper.prototype, 'encryptCredentials').resolves(createEncryptedCreds(1))
-    sinon.stub(DidAuthService.prototype, 'isTokenExpired').returns(isTokenExpired)
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+    sinon.stub(AffinidiVaultEncryptionService.prototype, 'encryptCredentials').resolves(createEncryptedCreds(1))
+    nock(migrationUrl, { reqheaders })
       .get(`/migration/done/${didEth}`)
       .reply(500, { code: 'COM-1', message: 'internal server error' })
     const stubConsole = sinon.stub(console, 'error')
@@ -185,9 +189,9 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     const helper = createMigrationHelper()
     const migrationDone = await helper.getMigrationStatus()
 
+    expect(migrationDone).to.be.eq('error')
     expect(stubConsole.calledOnce).to.be.true
     expect(stubConsole.calledWith('Vault-migration-service migration status check call ends with error: ')).to.be.true
-    expect(migrationDone).to.be.eq('error')
   })
 
   it('`migrateCredentials` should called should called the required number of times if amount of VCs 150', async () => {
@@ -208,7 +212,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   it('`runMigrationByChunk` and `encryptCredentials` should called once', async () => {
     const stubRunMigrationByChunk = sinon.stub(MigrationHelper.prototype, 'runMigrationByChunk')
     const stubEncryptCredentials = sinon
-      .stub(MigrationHelper.prototype, 'encryptCredentials')
+      .stub(AffinidiVaultEncryptionService.prototype, 'encryptCredentials')
       .resolves(createEncryptedCreds(1))
     const helper = createMigrationHelper()
     await helper.runMigration([], '', '')
@@ -219,9 +223,9 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
 
   it('should catch and log error if `runMigration` ends with error', async () => {
     const stubEncryptCredentials = sinon
-      .stub(MigrationHelper.prototype, 'encryptCredentials')
+      .stub(AffinidiVaultEncryptionService.prototype, 'encryptCredentials')
       .resolves(createEncryptedCreds(1))
-    nock(VAULT_MIGRATION_SERVICE_URL, { reqheaders })
+    nock(migrationUrl, { reqheaders })
       .post('/migration/credentials')
       .reply(500, { code: 'COM-1', message: 'internal server error' })
     const stubConsole = sinon.stub(console, 'error')
@@ -243,6 +247,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
   })
 
   it('`encryptCredentials` should return array of VCs with expected structure', async () => {
+    sinon.stub(AffinidiVaultEncryptionService.prototype, 'encryptCredentials').resolves(createEncryptedCreds(1))
     const stub = sinon.stub(MigrationHelper.prototype, 'runMigrationByChunk')
     const helper = createMigrationHelper()
     await helper.runMigration(migrationTestCredentials, '', '')
@@ -275,7 +280,7 @@ describe('Migration of credentials from `bloom-vault` to `affinidi-vault`', () =
     for (const credential of encryptionResult) {
       const idx = encryptionResult.indexOf(credential)
       const payload = credential.payload
-      const decryptedPayload = await platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, payload)
+      const decryptedPayload = await testPlatformTools.decryptByPrivateKey(privateKeyBuffer, payload)
       expect(decryptedPayload).to.deep.eq(migrationTestCredentials[idx])
     }
   })
