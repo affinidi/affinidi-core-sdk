@@ -162,7 +162,7 @@ describe('Bloom vault when migration server is UP', () => {
         .map(({ id, ...item }, idx) => {
           return {
             ...item,
-            id: `{id}:{idx}`,
+            id: `${id}:${idx}`,
           }
         })
     }

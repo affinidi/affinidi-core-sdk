@@ -84,7 +84,9 @@ const countTestingFigures = (numerOfCreds: number) => {
 
 const chuncksChecker = async (numberOfCreds: number) => {
   const { callCount, firstArgsLength, lastArgsLength } = countTestingFigures(numberOfCreds)
-  sinon.stub(AffinidiVaultEncryptionService.prototype, 'encryptCredentials').resolves(createEncryptedCreds(numberOfCreds))
+  sinon
+    .stub(AffinidiVaultEncryptionService.prototype, 'encryptCredentials')
+    .resolves(createEncryptedCreds(numberOfCreds))
   const stubMigrateCredentials = sinon.stub(MigrationHelper.prototype, 'migrateCredentials')
   const helper = createMigrationHelper()
   await helper.runMigration([], '', '')
