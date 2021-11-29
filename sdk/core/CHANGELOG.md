@@ -1,3 +1,5 @@
+# release 6.0.3 (2021-11-29)
+* Updated migration service implementation
 # release 6.0.0-beta.21 (2021-11-03)
 * Added `@affinidi/url-resolver` dependency
 * Replaced predefined Affinity services urls from config with resolveUrl function from `@affinidi/url-resolver`
