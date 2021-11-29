@@ -13,4 +13,5 @@ export enum Service {
   REVOCATION = 'revocation-api',
   USER_AUTH = 'user-auth',
   SCHEMA_MANAGER = 'affinidi-schema-manager',
+  VAULT_MIGRATION = 'vault-migration-service',
 }

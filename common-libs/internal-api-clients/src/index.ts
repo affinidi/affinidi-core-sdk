@@ -6,6 +6,7 @@ import RegistryApiService from './services/RegistryApiService'
 import RevocationApiService from './services/RevocationApiService'
 import VerifierApiService from './services/VerifierApiService'
 import CloudWalletApiService from './services/CloudWalletApiService'
+import VaultMigrationApiService from './services/VaultMigrationApiService'
 
 export {
   AffinidiVaultApiService,
@@ -16,4 +17,5 @@ export {
   RevocationApiService,
   VerifierApiService,
   CloudWalletApiService,
+  VaultMigrationApiService,
 }
