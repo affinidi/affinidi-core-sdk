@@ -1,5 +1,6 @@
 import { KeysService } from '@affinidi/common'
 import { BloomVaultApiService } from '@affinidi/internal-api-clients'
+import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import { profile } from '@affinidi/tools-common'
 
 import { toRpcSig, ecsign } from 'ethereumjs-util'
@@ -8,6 +9,7 @@ import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
+import { MigrationHelper } from '../migration/credentials'
 
 const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
@@ -16,6 +18,7 @@ const bip32 = require('bip32')
 const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
 
 type BloomVaultStorageOptions = {
+  didAuthAdapter?: DidAuthAdapter
   accessApiKey: string
   vaultUrl: string
 }
@@ -48,6 +51,8 @@ export default class BloomVaultStorageService {
   private _keysService
   private _platformCryptographyTools
   private _vaultApiService
+  private _migrationHelper
+  private _didEth: string
 
   constructor(
     keysService: KeysService,
@@ -61,6 +66,22 @@ export default class BloomVaultStorageService {
       accessApiKey: options.accessApiKey,
       sdkVersion: extractSDKVersion(),
     })
+    this._migrationHelper = new MigrationHelper(
+      options.didAuthAdapter,
+      options.accessApiKey,
+      this._keysService,
+      this._platformCryptographyTools,
+      this.didEthr,
+    )
+  }
+
+  get didEthr(): string {
+    if (!this._didEth) {
+      const { addressHex } = this._getVaultKeys()
+      this._didEth = `did:ethr:0x${addressHex}`
+    }
+
+    return this._didEth
   }
 
   /* istanbul ignore next: private function */
@@ -85,26 +106,32 @@ export default class BloomVaultStorageService {
 
   /* istanbul ignore next: private function */
   private async _authorizeVcVault(storageRegion: string) {
-    const { addressHex, privateKeyHex } = this._getVaultKeys()
-    const didEth = `did:ethr:0x${addressHex}`
-
-    const {
-      body: { token },
-    } = await this._vaultApiService.requestAuthToken({
-      storageRegion,
-      did: didEth,
-    })
-
-    const signature = this._signByVaultKeys(token, privateKeyHex)
+    const { token, signature } = await this._generateBloomVaultOptions(storageRegion)
 
     await this._vaultApiService.validateAuthToken({
       storageRegion,
       accessToken: token,
       signature,
-      did: didEth,
+      did: this.didEthr,
     })
 
     return token
+  }
+
+  /* istanbul ignore next: private function */
+  private async _generateBloomVaultOptions(storageRegion: string) {
+    const { privateKeyHex } = this._getVaultKeys()
+
+    const {
+      body: { token },
+    } = await this._vaultApiService.requestAuthToken({
+      storageRegion,
+      did: this.didEthr,
+    })
+
+    const signature = this._signByVaultKeys(token, privateKeyHex)
+
+    return { token, signature }
   }
 
   /* istanbul ignore next: private function */
@@ -214,7 +241,7 @@ export default class BloomVaultStorageService {
     const allCredentials: any[] = []
     for (const blob of allBlobs) {
       const credential = await this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
-      allCredentials.push(credential)
+      allCredentials.push({ ...credential, bloomId: blob.id })
     }
 
     return allCredentials
@@ -233,9 +260,24 @@ export default class BloomVaultStorageService {
   }
 
   public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
+    const doesMigrationStarted = await this._migrationHelper.doesMigrationStarted()
     const accessToken = await this._authorizeVcVault(storageRegion)
+    let migrationDone: string
+    if (doesMigrationStarted) {
+      migrationDone = await this._migrationHelper.getMigrationStatus()
+      if (migrationDone === 'yes') {
+        return []
+      }
+    }
 
     const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
+
+    if (doesMigrationStarted && migrationDone === 'no' && credentials?.length) {
+      // just send the async call, but no need to wait for response
+      // all logic should be done in a background
+      const { token, signature } = await this._generateBloomVaultOptions(storageRegion)
+      this._migrationHelper.runMigration(credentials, token, signature)
+    }
 
     if (!types) {
       return credentials
