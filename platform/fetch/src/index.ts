@@ -1,13 +1,22 @@
-import type { RequestInfo, RequestInit, Response } from 'node-fetch'
-import { request as undiciRequest } from 'undici/types/api'
+type OptionsType = {
+  headers?: Record<string, string>
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  body?: string
+}
 
-type OptionsType = RequestInit & Parameters<typeof undiciRequest>[1]
+type Response = {
+  headers: {
+    get(name: string): string | null
+  }
+  status: number
+  json(): Promise<any>
+}
 
-type FetchType = (url: RequestInfo, options?: OptionsType) => Promise<Response>
+type FetchType = (url: string, options?: OptionsType) => Promise<Response>
 
 let fetchImpl: FetchType | null = null
 
-export const fetch: FetchType = (url: RequestInfo, options?: OptionsType) => {
+export const fetch: FetchType = (url, options) => {
   if (!fetchImpl) {
     throw new Error('fetch is not configured')
   }

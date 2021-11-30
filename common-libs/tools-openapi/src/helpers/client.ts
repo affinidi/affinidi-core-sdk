@@ -96,7 +96,7 @@ const executeByOptions = async (
     url.searchParams.set(name, value as string)
   }
 
-  const response = await fetch(url, fetchOptions)
+  const response = await fetch(url.toString(), fetchOptions)
   const { status } = response
 
   if (!status.toString().startsWith('2')) {
