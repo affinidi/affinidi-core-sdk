@@ -11,7 +11,7 @@ import { DidDocumentService, KeysService, DigestService, MetricsService } from '
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
 import { DidResolver } from './shared/DidResolver'
-import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots, validateObjectHasPaths } from './utils/objectUtil'
+import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots } from './utils/objectUtil'
 
 const revocationList = require('vc-revocation-list') // eslint-disable-line
 
@@ -601,7 +601,7 @@ export class Affinity {
 
   async deriveSegmentProof<TKeys extends string, TData extends SimpleThing & Record<TKeys, unknown>>(
     credential: VCV1<VCV1Subject<TData>>,
-    fields: TKeys[],
+    fields: string[],
     didDocument?: any,
   ): Promise<any> {
     if ('id' in credential.credentialSubject) {
@@ -628,17 +628,10 @@ export class Affinity {
     fields: string[],
   ) {
     if (Array.isArray(credential.credentialSubject)) {
-      throw new Error()
+      throw new Error('credentialSubject can not be an array')
     }
 
-    const validationErrors = validateObjectHasPaths(credential.credentialSubject.data, fields)
-    if (validationErrors) {
-      const firstError = validationErrors[0]
-      throw new Error(`Field "${firstError.field}" not a part of credential`)
-    }
-
-    const dataFields = buildObjectSkeletonFromPaths(fields)
-    injectFieldForAllParentRoots(dataFields, '@explicit', true)
+    const dataFields = injectFieldForAllParentRoots(buildObjectSkeletonFromPaths(fields), '@explicit', true)
 
     const fragment = {
       '@context': credential['@context'],
