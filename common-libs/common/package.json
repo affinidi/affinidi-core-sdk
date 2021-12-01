@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/common",
-  "version": "2.0.0-beta.21",
+  "version": "2.0.0",
   "description": "Common utilities and types for Affinidi SDKs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -39,7 +39,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/affinity-metrics-lib": "^0.0.25",
-    "@affinidi/internal-api-clients": "^1.0.0-beta.14",
+    "@affinidi/internal-api-clients": "^1.0.0",
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.1",
     "@affinidi/tools-common": "^1.0.0-beta.2",
     "@affinidi/url-resolver": "^1.0.0",

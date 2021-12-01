@@ -1,8 +1,8 @@
 import sinon from 'sinon'
 import * as chai from 'chai'
-import { profile, ProfileAction } from '../../src'
-import { ConsoleReporter } from '../../src/profiler/ConsoleReporter'
-import { DefaultProfilerActivator } from '../../src/profiler/DefaultProfilerActivator'
+import { profile, ProfileAction } from '../../../src'
+import { ConsoleReporter } from '../../../src/profiler/ConsoleReporter'
+import { DefaultProfilerActivator } from '../../../src/profiler/DefaultProfilerActivator'
 
 class SdkOptions {
   didMethod?: 'jolo' | 'elem'
@@ -171,4 +171,30 @@ describe('ProfilerDecorator', () => {
     const delta = reporterSpy.firstCall.args[3] - reporterSpy.firstCall.args[2]
     expect(delta).to.be.within(timeout, timeout + schedulingDelta)
   })
+
+  try {
+    const Prometheus = require('prom-client')
+
+    it('should use recorder from env vars', () => {
+      sinon.stub(DefaultProfilerActivator, 'isActive').returns(true)
+
+      process.env.PROFILER_RECORDER = 'prometheus'
+      @profile()
+      class SomeTest {
+        static someMethod() {
+          return 'some result'
+        }
+      }
+      delete process.env.PROFILER_RECORDER
+
+      SomeTest.someMethod()
+
+      const metric = Prometheus.register.getSingleMetric('sdk_operation_duration_seconds')
+      expect(metric).to.be.not.undefined
+      const usageCount = metric?.hashMap?.['desc:SomeTest.someMethod']?.count
+      expect(usageCount).to.be.eq(1)
+    })
+  } catch (e) {
+    console.log('Some tests were skipped cuz `prom-client` is not installed')
+  }
 })

@@ -1,0 +1,9 @@
+{
+  "//": "TODO: Remove this, it is only needed as a temporary workaround for circular dependencies caused by did-auth-lib being in a separate repository",
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", "test/**/*"]
+}
+ 

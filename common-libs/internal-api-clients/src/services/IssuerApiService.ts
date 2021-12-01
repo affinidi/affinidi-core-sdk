@@ -1,6 +1,6 @@
 import { profile } from '@affinidi/tools-common'
+import { ClientOptions, createClient, createClientMethods, GetParams } from '@affinidi/tools-openapi'
 
-import { ClientOptions, createClient, createClientMethods, GetParams } from '../helpers/client'
 import issuerSpec from '../spec/_issuer'
 
 type ConstructorOptions = ClientOptions & { issuerUrl: string }
