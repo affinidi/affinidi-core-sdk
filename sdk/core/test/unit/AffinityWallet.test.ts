@@ -7,7 +7,7 @@ import sinonChai from 'sinon-chai'
 import { LegacyNetworkMemberWithFactories as MockableNetworkMember } from '../../src/CommonNetworkMember/LegacyNetworkMemberWithFactories'
 import { SdkOptions } from '../../src/dto'
 import KeyManagementService from '../../src/services/KeyManagementService'
-import UserManagementService from '../../src/services/UserManagementService'
+import { UserManagementService } from '@affinidi/user-management'
 import WalletStorageService from '../../src/services/WalletStorageService'
 import * as AnchoringHandler from '../../src/services/anchoringHandler'
 
