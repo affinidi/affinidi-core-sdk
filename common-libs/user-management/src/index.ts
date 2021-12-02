@@ -1,3 +1,4 @@
-export { UserManagementService } from './UserManagementService'
-export { validateUsername } from './validateUsername'
-export { normalizeUsername } from './normalizeUsername'
+export * from './UserManagementService'
+export * from './validateUsername'
+export * from './normalizeUsername'
+export * from './CognitoIdentityService'
