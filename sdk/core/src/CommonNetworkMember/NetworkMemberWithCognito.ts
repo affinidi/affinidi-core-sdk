@@ -1,6 +1,5 @@
 import { profile } from '@affinidi/tools-common'
 
-import { UserManagementService } from '@affinidi/user-management'
 import WalletStorageService from '../services/WalletStorageService'
 import { withDidData } from '../shared/getDidData'
 import {
@@ -19,18 +18,7 @@ import {
   ConstructorUserData,
   createKeyManagementService,
 } from './BaseNetworkMember'
-import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
-import { KeyStorageApiService } from '@affinidi/internal-api-clients'
-import { extractSDKVersion } from '../_helpers'
-
-const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-  const keyStorageApiService = new KeyStorageApiService({
-    keyStorageUrl: basicOptions.keyStorageUrl,
-    accessApiKey,
-    sdkVersion: extractSDKVersion(),
-  })
-  return new UserManagementService({ ...basicOptions, region: DEFAULT_COGNITO_REGION }, { keyStorageApiService })
-}
+import { createUserManagementService } from '../shared/createUserManagementService'
 
 type UserDataWithCognito = ConstructorUserData & {
   cognitoUserTokens: CognitoUserTokens

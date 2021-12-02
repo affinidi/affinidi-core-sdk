@@ -11,6 +11,7 @@ import { UserManagementService, normalizeUsername } from '@affinidi/user-managem
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 import { AffinidiWallet } from '../../helpers/AffinidiWallet'
 import { extractSDKVersion } from '../../../src/_helpers'
+import { createUserManagementService } from '../../../src/shared/createUserManagementService'
 
 const options = getAllOptionsForEnvironment()
 
@@ -41,7 +42,7 @@ const createKeyStorageApiService = () => {
 
 describe('WalletStorageService', () => {
   beforeEach(() => {
-    userManagementService = new UserManagementService(options)
+    userManagementService = createUserManagementService({ ...options, basicOptions: options })
   })
 
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {

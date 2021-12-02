@@ -20,6 +20,7 @@ import { generateCredentials } from '../helpers/generateCredentials'
 import { SignedCredential, SdkOptions } from '../../src/dto'
 import { testPlatformTools } from '../helpers/testPlatformTools'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
+import { createUserManagementService } from '../../src/shared/createUserManagementService'
 
 const {
   PASSWORD,
@@ -1017,7 +1018,7 @@ describe('CommonNetworkMember', () => {
     //       and `options` has only accessApiKey and env
     //       This is important for testing against different environments
     const fullOptions = getAllOptionsForEnvironment()
-    const userManagementService = new UserManagementService(fullOptions)
+    const userManagementService = createUserManagementService({ ...fullOptions, basicOptions: fullOptions })
 
     const { idToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
 
