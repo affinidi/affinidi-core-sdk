@@ -1,8 +1,14 @@
 'use strict'
+
+// TODO: Move this integration test to @affinidi/user-management package itself.
+//       It requires testSecrets and _defaultConfig usage from SDK source code & environment,
+//       which causes circular dependency.
+
 import { expect } from 'chai'
-import { UserManagementService } from '../../src/UserManagementService'
+import { UserManagementService } from '@affinidi/user-management'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
-import { testSecrets, getAllOptionsForEnvironment } from '../helpers'
+import { testSecrets, getAllOptionsForEnvironment } from '../../helpers'
+import { DEFAULT_COGNITO_REGION } from '../../../src/_defaultConfig'
 
 const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = testSecrets
 
@@ -16,10 +22,10 @@ const existingConfirmedCognitoUser = email
 const existingUnconfirmedCognitoUser = COGNITO_USERNAME_UNCONFIRMED as string
 const nonExistingCognitoUser = 'non_existing_user'
 
-const { cognitoRegion, clientId, userPoolId, keyStorageUrl, accessApiKey } = getAllOptionsForEnvironment()
+const { clientId, userPoolId, keyStorageUrl, accessApiKey } = getAllOptionsForEnvironment()
 
 const options = {
-  region: cognitoRegion,
+  region: DEFAULT_COGNITO_REGION,
   clientId,
   userPoolId,
 }

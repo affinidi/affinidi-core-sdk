@@ -51,8 +51,6 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/url-resolver": "^1.1.0",
-    "@affinidi/wallet-core-sdk": "^6.0.2",
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
     "@types/node": "^13.13.52",
@@ -61,7 +59,6 @@
     "aws-sdk-mock": "^5.4.0",
     "chai": "^4.3.4",
     "cross-env": "^7.0.3",
-    "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.4",
