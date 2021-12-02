@@ -11,10 +11,10 @@
     "tsc": "tsc -p tsconfig-build.json",
     "lint": "eslint src/** test/**",
     "test": "npm run test:unit && npm run test:integration",
-    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
-    "test:integration": "cross-env NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
-    "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
-    "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.core.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
+    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/**/*.test.ts -p ./tsconfig.json --timeout 8000",
+    "test:integration": "cross-env NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 10000 --exit",
+    "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov mocha -r ts-node/register test/unit/**/*.test.ts -p ./tsconfig.json --timeout 8000",
+    "test:coverage:codeclimate": "npm run test:coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.common_li.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev) || echo \"lcov file is empty. There is no tests\"",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "publishConfig": {
@@ -52,6 +52,8 @@
   "devDependencies": {
     "@affinidi/eslint-config": "^2.0.0-beta.0",
     "@affinidi/prettier-config": "^2.0.0-beta.0",
+    "@affinidi/url-resolver": "^1.1.0",
+    "@affinidi/wallet-core-sdk": "^6.0.2",
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
     "@types/node": "^13.13.52",
@@ -60,6 +62,7 @@
     "aws-sdk-mock": "^5.4.0",
     "chai": "^4.3.4",
     "cross-env": "^7.0.3",
+    "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-plugin-prettier": "^4.0.0",
     "license-checker": "^25.0.1",

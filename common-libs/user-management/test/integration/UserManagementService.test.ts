@@ -2,8 +2,9 @@
 import { expect } from 'chai'
 import { UserManagementService } from '../../src/UserManagementService'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { testSecrets, getAllOptionsForEnvironment } from '../helpers'
 
-const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = process.env
+const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = testSecrets
 
 let username: string
 let randomPassword: string = 'P4ssw0rd'
@@ -15,16 +16,18 @@ const existingConfirmedCognitoUser = email
 const existingUnconfirmedCognitoUser = COGNITO_USERNAME_UNCONFIRMED as string
 const nonExistingCognitoUser = 'non_existing_user'
 
+const { cognitoRegion, clientId, userPoolId, keyStorageUrl, accessApiKey } = getAllOptionsForEnvironment()
+
 const options = {
-  region: process.env.AWS_REGION as string,
-  clientId: process.env.COGNITO_CLIENT_ID as string,
-  userPoolId: process.env.COGNITO_USER_POOL_ID as string,
+  region: cognitoRegion,
+  clientId,
+  userPoolId,
 }
 
 const dependencies = {
   keyStorageApiService: new KeyStorageApiService({
-    accessApiKey: process.env.ACCESS_API_KEY as string,
-    keyStorageUrl: process.env.KEY_STORAGE_URL as string,
+    accessApiKey,
+    keyStorageUrl,
   })
 }
 
