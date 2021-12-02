@@ -7,7 +7,7 @@ import { testSecrets, getAllOptionsForEnvironment } from '../helpers'
 const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = testSecrets
 
 let username: string
-let randomPassword: string = 'P4ssw0rd'
+const randomPassword: string = 'P4ssw0rd'
 
 const email = COGNITO_USERNAME as string
 const password = COGNITO_PASSWORD as string
@@ -28,7 +28,7 @@ const dependencies = {
   keyStorageApiService: new KeyStorageApiService({
     accessApiKey,
     keyStorageUrl,
-  })
+  }),
 }
 
 // NOTE: consider having special pool for test users

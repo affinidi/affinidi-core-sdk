@@ -53,7 +53,7 @@ const dependencies = {
   keyStorageApiService: new KeyStorageApiService({
     accessApiKey: undefined as any,
     keyStorageUrl: undefined as any,
-  })
+  }),
 }
 
 const cognitoTokens = { accessToken: cognitoAccessToken }

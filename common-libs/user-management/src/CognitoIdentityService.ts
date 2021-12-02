@@ -122,7 +122,7 @@ export class CognitoIdentityService {
   private readonly clientId
   private readonly cognitoidentityserviceprovider
 
-  constructor({ region, clientId }: { region: string, clientId: string }) {
+  constructor({ region, clientId }: { region: string; clientId: string }) {
     this.clientId = clientId
     this.cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
       region,
