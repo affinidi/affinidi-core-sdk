@@ -43,7 +43,6 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/common": "^2.0.0-beta.20",
     "@affinidi/internal-api-clients": "^1.0.0-beta.14",
     "@affinidi/tools-common": "^1.0.0-beta.2",
     "aws-sdk": "^2.1017.0",
@@ -72,7 +71,6 @@
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "ts-node": "^10.4.0",
-    "typedoc": "^0.22.7",
     "typescript": "^4.3.2"
   },
   "gitHead": "5420b34bac444d42d16b336a7ae95f47741d150c"
