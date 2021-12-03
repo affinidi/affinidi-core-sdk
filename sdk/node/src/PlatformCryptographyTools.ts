@@ -1,3 +1,4 @@
+import './utils/jsonldFrameWrapper'
 import { IPlatformCryptographyTools, ecdsaCryptographyTools } from '@affinidi/wallet-core-sdk'
 import { generateBls12381G2KeyPair } from '@mattrglobal/bbs-signatures'
 import {
