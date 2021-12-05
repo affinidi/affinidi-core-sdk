@@ -1,3 +1,4 @@
+import { CredentialLike } from '../../dto/internal'
 import { DidAuthAdapter } from '../../shared/DidAuthAdapter'
 import { extractSDKVersion } from '../../_helpers'
 import { VaultMigrationApiService } from '@affinidi/internal-api-clients'
@@ -16,6 +17,11 @@ type ConstructorOptions = {
   didAuthAdapter: DidAuthAdapter
   encryptionService: AffinidiVaultEncryptionService
   migrationUrl: string
+}
+
+type CredentialWithBloomId = {
+  credential: CredentialLike
+  bloomId: number
 }
 
 /**
@@ -45,11 +51,19 @@ export class MigrationHelper {
    * @param {string} accessToken - bloom-vault access token
    * @param {string} signature - signature of bloom-vault access token
    */
-  async runMigration(credentials: any[], accessToken: string, signature: string): Promise<void> {
+  async runMigration(credentials: CredentialWithBloomId[], accessToken: string, signature: string): Promise<void> {
     try {
-      const encryptedVCs = await this.encryptionService.encryptCredentials(credentials)
+      const encryptedCredentials = await this.encryptionService.encryptCredentials(credentials)
+      const credentialsForMigration = encryptedCredentials.map(
+        ({ cyphertext, idHash, originalCredential, typeHashes }) => ({
+          bloomVaultIndex: originalCredential.bloomId,
+          id: idHash,
+          payload: cyphertext,
+          types: typeHashes,
+        }),
+      )
       const batchSize = Number(process.env.CREDENTIALS_BATCH_SIZE) || 10
-      await this.runMigrationByChunk(encryptedVCs, batchSize, accessToken, signature)
+      await this.runMigrationByChunk(credentialsForMigration, batchSize, accessToken, signature)
     } catch (err) {
       console.error('Vault-migration-service initiate migration for given user call ends with error: ', err)
     }
@@ -62,7 +76,12 @@ export class MigrationHelper {
    * @param {string} accessToken - bloom-vault access token
    * @param {string} signature - signature of bloom-vault access token
    */
-  async runMigrationByChunk(encryptedVCs: any[], chunk: number, accessToken: string, signature: string): Promise<void> {
+  async runMigrationByChunk(
+    encryptedVCs: vcMigrationList[],
+    chunk: number,
+    accessToken: string,
+    signature: string,
+  ): Promise<void> {
     for (let i = 0, L = encryptedVCs.length; i < L; i += chunk) {
       const chunkedVCList = encryptedVCs.slice(i, i + chunk)
       await this.migrateCredentials(chunkedVCList, accessToken, signature)
@@ -72,7 +91,7 @@ export class MigrationHelper {
   /**
    * Gets migration status for user with given token for specified ethereum DID
    */
-  async getMigrationStatus() {
+  private async getMigrationStatus() {
     try {
       const response = await this.migrationApiService.isMigrationDone(this.bloomDid)
       return response.body ? 'yes' : 'no'
@@ -82,10 +101,27 @@ export class MigrationHelper {
     }
   }
 
+  async getMigrationActions() {
+    const isMigrationStarted = await this.isMigrationStarted()
+    if (isMigrationStarted) {
+      const migrationDoneStatus = await this.getMigrationStatus()
+
+      if (migrationDoneStatus === 'no') {
+        return { shouldFetchCredentials: true, shouldRunMigration: true }
+      }
+
+      if (migrationDoneStatus === 'yes') {
+        return { shouldFetchCredentials: false, shouldRunMigration: false }
+      }
+    }
+
+    return { shouldFetchCredentials: true, shouldRunMigration: false }
+  }
+
   /**
    * Checks if migration process has been started. Should work without authentication.
    */
-  async doesMigrationStarted(): Promise<boolean> {
+  private async isMigrationStarted(): Promise<boolean> {
     try {
       return await Promise.race([
         (async () => {

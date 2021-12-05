@@ -2,6 +2,7 @@ import { AffinidiVaultApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
 import { extractSDKVersion } from '../_helpers'
+import { CredentialLike } from '../dto/internal'
 import { VaultCredential } from '../dto/vault.dto'
 import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
@@ -27,15 +28,17 @@ export default class AffinidiVaultStorageService {
     })
   }
 
-  public async saveCredentials(credentials: any[], storageRegion: string): Promise<VaultCredential[]> {
+  public async saveCredentials(credentials: CredentialLike[], storageRegion: string): Promise<VaultCredential[]> {
     const responses: VaultCredential[] = []
 
-    const encryptedCredentials = await this._encryptionService.encryptCredentials(credentials)
+    const encryptedCredentials = await this._encryptionService.encryptCredentials(
+      credentials.map((credential) => ({ credential })),
+    )
 
     for (const credential of encryptedCredentials) {
-      const { body } = await this._vaultApiService.storeCredential(storageRegion, credential.credentialId, {
-        credentialTypes: credential.credentialTypes,
-        payload: credential.payload,
+      const { body } = await this._vaultApiService.storeCredential(storageRegion, credential.idHash, {
+        credentialTypes: credential.typeHashes,
+        payload: credential.cyphertext,
       })
 
       responses.push(body)
@@ -44,7 +47,7 @@ export default class AffinidiVaultStorageService {
     return responses
   }
 
-  public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
+  public async searchCredentials(storageRegion: string, types?: string[][]): Promise<CredentialLike[]> {
     const hashedTypes = types ? await this._encryptionService.computeTypesHashes(types) : undefined
 
     const { body } = await this._vaultApiService.searchCredentials(storageRegion, hashedTypes)
@@ -53,7 +56,7 @@ export default class AffinidiVaultStorageService {
     return credentials
   }
 
-  public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
+  public async getCredentialById(credentialId: string, storageRegion: string): Promise<CredentialLike> {
     const hashedId = await this._encryptionService.computeHashedId(credentialId)
     const { body } = await this._vaultApiService.getCredential(storageRegion, hashedId)
 

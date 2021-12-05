@@ -84,7 +84,7 @@ describe('BloomVaultStorageService', () => {
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
 
-  after(() => {
+  afterEach(() => {
     nock.cleanAll()
   })
 
@@ -98,7 +98,7 @@ describe('BloomVaultStorageService', () => {
 
   it(' should not run `MigrationHelper.getMigrationStatus` and  `runMigration.MigrationHelper` if migration not started', async () => {
     await authorizeVault()
-    const stubStatus = sinon.stub(MigrationHelper.prototype, 'getMigrationStatus').resolves('error')
+    const stubStatus = sinon.stub(MigrationHelper.prototype as any, 'getMigrationStatus').resolves('error')
     const stubMigrationProcess = sinon.stub(MigrationHelper.prototype, 'runMigration').resolves()
 
     nock(bloomVaultUrl, { reqheaders })

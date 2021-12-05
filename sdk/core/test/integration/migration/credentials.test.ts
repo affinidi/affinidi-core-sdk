@@ -205,26 +205,19 @@ describe('Migration helper works properly', () => {
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
 
-  it('should return getMigrationStatus', async () => {
+  it('should return actions', async () => {
     const migrationHelper = createMigrationHelper()
-    const result = await migrationHelper.getMigrationStatus()
+    const actions = await migrationHelper.getMigrationActions()
 
-    console.log('result getMigrationStatus', result)
+    console.log('result getMigrationActions', actions)
 
-    expect(result).exist
-    expect(typeof result).to.be.eql('string')
-    expect(result).to.be.oneOf(['no', 'yes', 'error'])
-  })
+    expect(actions.shouldRunMigration).exist
+    expect(typeof actions.shouldRunMigration).to.be.eql('boolean')
+    expect(actions.shouldRunMigration).to.be.oneOf([true, false])
 
-  it('should check doesMigrationStarted', async () => {
-    const migrationHelper = createMigrationHelper()
-    const result = await migrationHelper.doesMigrationStarted()
-
-    console.log('result doesMigrationStarted', result)
-
-    expect(result).exist
-    expect(typeof result).to.be.eql('boolean')
-    expect(result).to.be.oneOf([true, false])
+    expect(actions.shouldFetchCredentials).exist
+    expect(typeof actions.shouldFetchCredentials).to.be.eql('boolean')
+    expect(actions.shouldFetchCredentials).to.be.oneOf([true, false])
   })
 
   it('should check migrateCredentials fails with dummy bloomDid', async () => {

@@ -2,8 +2,20 @@ import { KeysService } from '@affinidi/common'
 import { profile } from '@affinidi/tools-common'
 
 import { isW3cCredential } from '../_helpers'
+import { CredentialLike } from '../dto/internal'
 import { VaultCredential } from '../dto/vault.dto'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
+
+type OriginalCredential = {
+  credential: CredentialLike
+}
+
+type EncryptedCredential<TOriginal> = {
+  idHash: string
+  typeHashes: string[]
+  cyphertext: string
+  originalCredential: TOriginal
+}
 
 @profile()
 export default class AffinidiVaultEncryptionService {
@@ -15,21 +27,20 @@ export default class AffinidiVaultEncryptionService {
     this._platformCryptographyTools = platformCryptographyTools
   }
 
-  // TODO: Make this private; it is only used by migration service
-  async encryptCredentials(credentials: any[]): Promise<VaultCredential[]> {
+  async encryptCredentials<TOriginal extends OriginalCredential>(
+    credentials: TOriginal[],
+  ): Promise<EncryptedCredential<TOriginal>[]> {
     const publicKeyBuffer = this._keysService.getOwnPublicKey()
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
-    const encryptedCredentials: VaultCredential[] = []
+    const encryptedCredentials: EncryptedCredential<TOriginal>[] = []
 
-    for (const credential of credentials) {
-      let credentialId = credential?.id
-      if (!isW3cCredential(credential)) {
-        credentialId = credential?.data?.id
-      }
+    for (const originalCredential of credentials) {
+      const { credential } = originalCredential
+      const credentialId = isW3cCredential(credential) ? credential.id : credential.data.id
 
-      const credentialIdHash = await this._platformCryptographyTools.computePersonalHash(privateKeyBuffer, credentialId)
+      const idHash = await this._platformCryptographyTools.computePersonalHash(privateKeyBuffer, credentialId)
 
-      const typeHashes = []
+      const typeHashes: string[] = []
       if (isW3cCredential(credential)) {
         for (const credentialType of credential.type) {
           const typeHash = await this._platformCryptographyTools.computePersonalHash(privateKeyBuffer, credentialType)
@@ -40,9 +51,10 @@ export default class AffinidiVaultEncryptionService {
       const cyphertext = await this._platformCryptographyTools.encryptByPublicKey(publicKeyBuffer, credential)
 
       encryptedCredentials.push({
-        credentialId: credentialIdHash,
-        credentialTypes: typeHashes,
-        payload: cyphertext,
+        idHash,
+        typeHashes,
+        cyphertext,
+        originalCredential,
       })
     }
 
@@ -66,8 +78,8 @@ export default class AffinidiVaultEncryptionService {
     return hashedTypes
   }
 
-  async decryptCredentials(encryptedCredentials: VaultCredential[]): Promise<any[]> {
-    const credentials: any[] = []
+  async decryptCredentials(encryptedCredentials: VaultCredential[]): Promise<CredentialLike[]> {
+    const credentials: CredentialLike[] = []
 
     for (const encryptedCredential of encryptedCredentials) {
       const credential = await this.decryptCredential(encryptedCredential)
@@ -77,7 +89,7 @@ export default class AffinidiVaultEncryptionService {
     return credentials
   }
 
-  async decryptCredential(encryptedCredential: VaultCredential): Promise<any> {
+  async decryptCredential(encryptedCredential: VaultCredential): Promise<CredentialLike> {
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
 
     const credential = await this._platformCryptographyTools.decryptByPrivateKey(
