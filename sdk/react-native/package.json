@@ -28,7 +28,7 @@
     "network",
     "did"
   ],
-  "author": "Roman Brazhnyk <roman@affinity-project.org>",
+  "author": "Roman Brazhnyk <roman.b@affinidi.com>",
   "license": "ISC",
   "dependencies": {
     "@affinidi/wallet-core-sdk": "^6.0.2",

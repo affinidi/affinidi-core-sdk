@@ -1,3 +1,11 @@
+# release 6.0.3
+* Removed UserManagementService from the SDK in favor of `@affinidi/user-management`
+# release 6.0.2
+* Fixed integration tests
+# release 6.0.1
+* Prepare for Vault migration
+# release 6.0.0
+* Release v6
 # release 6.0.0-beta.21 (2021-11-03)
 * Added `@affinidi/url-resolver` dependency
 * Replaced predefined Affinity services urls from config with resolveUrl function from `@affinidi/url-resolver`

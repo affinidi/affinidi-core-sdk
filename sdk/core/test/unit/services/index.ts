@@ -1,6 +1,5 @@
 require('./EmailIssuerService.test')
 require('./PhoneIssuerService.test')
-require('./UserManagementService.test')
 require('./WalletStorageService.test')
 require('./AffinidiVaultStorageService.test')
 require('./BloomVaultStorageService.test')

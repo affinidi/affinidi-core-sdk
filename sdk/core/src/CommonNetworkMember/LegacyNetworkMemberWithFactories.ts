@@ -6,14 +6,12 @@ import { withDidData } from '../shared/getDidData'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
-import { validateUsername } from '../shared/validateUsername'
-import UserManagementService from '../services/UserManagementService'
+import { validateUsername } from '@affinidi/user-management'
 import { StaticDependencies, ConstructorUserData, createKeyManagementService } from './BaseNetworkMember'
 import { LegacyNetworkMember } from './LegacyNetworkMember'
-
-const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-  return new UserManagementService({ ...basicOptions, accessApiKey })
-}
+import { createUserManagementService } from '../shared/createUserManagementService'
+import { normalizeShortPassword } from '../shared/normalizeShortPassword'
+import { generatePassword } from '../shared/generatePassword'
 
 type UserDataWithCognito = ConstructorUserData & {
   cognitoUserTokens: CognitoUserTokens | undefined
@@ -29,11 +27,8 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
 
   constructor(userData: UserDataWithCognito, dependencies: StaticDependencies, options: ParsedOptions) {
     super(userData, dependencies, options)
-    const { accessApiKey, basicOptions } = this._options
-    const { clientId, userPoolId, keyStorageUrl } = basicOptions
-    this._userManagementService = new UserManagementService({ clientId, userPoolId, keyStorageUrl, accessApiKey })
-    const { cognitoUserTokens } = userData
-    this.cognitoUserTokens = cognitoUserTokens
+    this._userManagementService = createUserManagementService(options)
+    this.cognitoUserTokens = userData.cognitoUserTokens
   }
 
   /**
@@ -103,14 +98,15 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
    * 2. using access token pull encrypted seed from Affinity Guardian Wallet
    * associated with this AWS Cognito userId
    * @param username - email or phone number used to create Affinity user
-   * @param password - password used on create Affinity user
+   * @param inputPassword - password used on create Affinity user
    */
-  async pullEncryptedSeed(username: string, password: string): Promise<string> {
+  async pullEncryptedSeed(username: string, inputPassword: string): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: 'string', isRequired: true, value: password },
+      { isArray: false, type: 'string', isRequired: true, value: inputPassword },
     ])
 
+    const password = normalizeShortPassword(inputPassword, username)
     const { accessToken } = await this._userManagementService.logInWithPassword(username, password)
     const { encryptedSeed } = await this._keyManagementService.pullKeyAndSeed(accessToken)
 
@@ -120,14 +116,14 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   /**
    * @description Saves encrypted seed to Guardian Wallet
    * @param username - email/phoneNumber, registered in Cognito
-   * @param password - password for Cognito user
+   * @param inputPassword - password for Cognito user
    * @param token - Cognito access token, required for authorization.
    * If not provided, in order to get it, sign in to Cognito will be initiated.
    */
-  async storeEncryptedSeed(username: string, password: string, token: string = undefined): Promise<void> {
+  async storeEncryptedSeed(username: string, inputPassword: string, token: string = undefined): Promise<void> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: 'string', isRequired: true, value: password },
+      { isArray: false, type: 'string', isRequired: true, value: inputPassword },
       { isArray: false, type: 'jwt', isRequired: false, value: token },
     ])
 
@@ -135,6 +131,7 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
 
     /* istanbul ignore else: code simplicity */
     if (!token) {
+      const password = normalizeShortPassword(inputPassword, username)
       this.cognitoUserTokens = await this._userManagementService.logInWithPassword(username, password)
 
       accessToken = this.cognitoUserTokens.accessToken
@@ -256,25 +253,26 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   /**
    * @description Logins to Affinity with login and password
    * @param username - email/phoneNumber, registered in Cognito
-   * @param password - password for Cognito user
+   * @param inputPassword - password for Cognito user
    * @param options - optional parameters for BaseNetworkMember initialization
    * @returns initialized instance of SDK
    */
   static async fromLoginAndPassword(
     dependencies: StaticDependencies,
     username: string,
-    password: string,
+    inputPassword: string,
     inputOptions: SdkOptions,
   ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: 'password', isRequired: true, value: password },
+      { isArray: false, type: 'password', isRequired: true, value: inputPassword },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
+    const password = normalizeShortPassword(inputPassword, username)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
     const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
     return new LegacyNetworkMemberWithFactories({ ...userData, cognitoUserTokens }, dependencies, options)
@@ -284,7 +282,7 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
    * @description Initiates sign up flow to Affinity wallet with already created did
    * @param keyParams - { ecnryptedSeed, password } - previously created keys to be storead at wallet.
    * @param username - arbitrary username, email or phoneNumber
-   * @param password - is required if arbitrary username was provided.
+   * @param inputPassword - is required if arbitrary username was provided.
    * It is optional and random one will be generated, if not provided when
    * email or phoneNumber was given as a username.
    * @param options - optional parameters with specified environment
@@ -296,21 +294,26 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     dependencies: StaticDependencies,
     keyParams: KeyParams,
     login: string,
-    password: string,
+    inputPassword: string,
     inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string | LegacyNetworkMemberWithFactories> {
     const { isUsername } = validateUsername(login)
 
     if (!isUsername) {
-      return LegacyNetworkMemberWithFactories._signUpByEmailOrPhone(login, password, inputOptions, messageParameters)
+      return LegacyNetworkMemberWithFactories._signUpByEmailOrPhone(
+        login,
+        inputPassword,
+        inputOptions,
+        messageParameters,
+      )
     }
 
     const username = login
     await ParametersValidator.validate([
       { isArray: false, type: KeyParams, isRequired: true, value: keyParams },
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: 'password', isRequired: true, value: password },
+      { isArray: false, type: 'password', isRequired: true, value: inputPassword },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
@@ -319,6 +322,7 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
+    const password = normalizeShortPassword(inputPassword, username)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     return LegacyNetworkMemberWithFactories._confirmSignUp(dependencies, options, cognitoTokens, password, keyParams)
   }
@@ -326,19 +330,20 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   private static async _signUpByUsernameAutoConfirm(
     dependencies: StaticDependencies,
     username: string,
-    password: string,
+    inputPassword: string,
     inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: 'password', isRequired: true, value: password },
+      { isArray: false, type: 'password', isRequired: true, value: inputPassword },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
+    const password = normalizeShortPassword(inputPassword, username)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
       dependencies,
@@ -353,19 +358,20 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
 
   private static async _signUpByEmailOrPhone(
     login: string,
-    password: string,
+    inputPassword: string,
     inputOptions: SdkOptions,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
-      { isArray: false, type: 'password', isRequired: false, value: password },
+      { isArray: false, type: 'password', isRequired: false, value: inputPassword },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
+    const password = normalizeShortPassword(inputPassword || (await generatePassword()), login)
     return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
   }
 
@@ -565,7 +571,8 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     if (doesConfirmedUserExist) {
       return userManagementService.initiateLogInPasswordless(login, messageParameters)
     } else {
-      return userManagementService.initiateSignUpWithEmailOrPhone(login, null, messageParameters)
+      const password = normalizeShortPassword(await generatePassword(), login)
+      return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
     }
   }
 
