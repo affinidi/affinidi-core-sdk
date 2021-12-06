@@ -15,7 +15,8 @@
     "test:integration": "cross-env NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
     "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 55000",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.node.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
-    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary",
+    "preinstall": "npx npm-force-resolutions"
   },
   "publishConfig": {
     "access": "public"
@@ -40,7 +41,6 @@
     "@affinidi/wallet-core-sdk": "^6.0.2",
     "@mattrglobal/bbs-signatures": "^0.6.0",
     "@mattrglobal/jsonld-signatures-bbs": "^0.10.0",
-    "@mattrglobal/node-bbs-signatures": "^0.11.0",
     "bs58": "^4.0.1",
     "crypto-ld": "^3.9.0",
     "eccrypto-js": "^5.0.0",
@@ -80,6 +80,9 @@
     "ts-node": "8.10.2",
     "typedoc": "0.16.11",
     "typescript": "^4.3.2"
+  },
+  "resolutions": {
+    "@mattrglobal/node-bbs-signatures": "^0.13.0"
   },
   "gitHead": "39b8ae64eb5e37ddae2f80438b320adaefae8ef6"
 }
