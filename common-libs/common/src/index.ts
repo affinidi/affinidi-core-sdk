@@ -22,6 +22,8 @@ export { IPlatformCryptographyTools } from './shared/interfaces'
 
 export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
 
+export { wrapJsonldFrameFunction } from './utils/jsonldFrameWrapper'
+
 export {
   generateFullSeed,
   generateSeedHexWithMethod,
