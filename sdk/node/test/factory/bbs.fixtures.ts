@@ -1,4 +1,4 @@
-import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
+import { buildVCV1Unsigned, buildVCV1Skeleton, VCV1Type } from '@affinidi/vc-common'
 import { getVCNamePersonV1Context } from '@affinidi/vc-data'
 
 export const holderDid =
@@ -27,6 +27,35 @@ export const unsignedCredential = buildVCV1Unsigned({
   issuanceDate: '2021-03-01T07:06:35.403Z',
   expirationDate: '2031-01-16T07:06:35.337Z',
 })
+
+export const unsignedCredentialWithNewCtx = {
+  '@context': ['https://www.w3.org/2018/credentials/v1', 'https://schema.affinidi.com/GoodDeveloperV1-2.jsonld'],
+  id: 'claimId:9fea404ee7345748',
+  type: ['VerifiableCredential', 'GoodDeveloper'] as VCV1Type,
+  holder: {
+    id: 'did:elem:EiBPOmOmRgCcopkf_E1kiyNlMOOJ-MT5IaMpQTZud8Wycw',
+  },
+  credentialSubject: {
+    data: {
+      '@type': ['VerifiableCredential', 'GoodDeveloper'],
+      name: 'Bob Belcher',
+      githubLink: 'https://github.com/bobber',
+      Influence: {
+        area: 'web3',
+        level: 'high',
+      },
+      personal: {
+        credo: 'everything that can be decentralized must be decentralized',
+      },
+    },
+  },
+  credentialSchema: {
+    id: 'https://schema.affinidi.com/GoodDeveloperV1-2.json',
+    type: 'JsonSchemaValidator2018',
+  },
+  issuanceDate: '2021-12-01T08:35:22.817Z',
+  expirationDate: '2022-09-10T00:00:00.000Z',
+}
 
 export const issuerEncryptionKey = 'O}do-+Y?4e6q`lj_`3$MQw=]M%Kh644b'
 export const issuerEncryptedSeed =
