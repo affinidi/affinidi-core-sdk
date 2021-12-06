@@ -30,7 +30,7 @@
     "common",
     "did"
   ],
-  "author": "Denis Popov <denis@slatestudio.com>",
+  "author": "Denis Popov <denis.p@affinidi.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/affinityproject/affinidi-core-sdk/issues"

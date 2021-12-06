@@ -1,5 +1,5 @@
 import { JwtService } from '@affinidi/common'
-import { validateUsername } from '../shared'
+import { validateUsername } from '@affinidi/user-management'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
 import { DEFAULT_DID_METHOD } from '../_defaultConfig'

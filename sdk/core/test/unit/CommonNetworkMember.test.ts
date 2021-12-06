@@ -23,7 +23,8 @@ import { getAllOptionsForEnvironment } from '../helpers'
 import cognitoSignInWithUsernameResponseToken from '../factory/cognitoSignInWithUsernameResponseToken'
 import { generateTestDIDs } from '../factory/didFactory'
 import { DEFAULT_DID_METHOD } from '../../src/_defaultConfig'
-import CognitoIdentityService, {
+import {
+  CognitoIdentityService,
   CompleteForgotPasswordResult,
   CompleteLoginPasswordlessResult,
   CompleteSignUpResult,
@@ -32,7 +33,7 @@ import CognitoIdentityService, {
   LogInWithPasswordResult,
   ResendSignUpResult,
   SignUpResult,
-} from '../../src/services/CognitoIdentityService'
+} from '@affinidi/user-management'
 
 import signedCredential from '../factory/signedCredential'
 import didDocument from '../factory/didDocument'

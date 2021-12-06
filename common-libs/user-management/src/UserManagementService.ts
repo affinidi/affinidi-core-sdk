@@ -1,14 +1,13 @@
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
-import { CognitoUserTokens, MessageParameters } from '../dto/shared.dto'
-import { validateUsername } from '../shared'
-import SdkErrorFromCode from '../shared/SdkErrorFromCode'
-import { normalizeShortPassword } from '../shared/normalizeShortPassword'
-import { normalizeUsername } from '../shared/normalizeUsername'
-import { SessionStorageService } from '../shared/sessionStorageHandler'
-import { randomBytes } from '../shared/randomBytes'
-import CognitoIdentityService, {
+import { CognitoUserTokens, MessageParameters } from './dto'
+import { validateUsername } from './validateUsername'
+import SdkErrorFromCode from './SdkErrorFromCode'
+import { normalizeUsername } from './normalizeUsername'
+import { SessionStorageService } from './SessionStorageService'
+import {
+  CognitoIdentityService,
   CompleteChangeLoginResult,
   CompleteForgotPasswordResult,
   CompleteLoginPasswordlessResult,
@@ -21,14 +20,6 @@ import CognitoIdentityService, {
   SignUpResult,
   UsernameWithAttributes,
 } from './CognitoIdentityService'
-import { extractSDKVersion } from '../_helpers'
-
-const generatePassword = async () => {
-  const randomPassword = (await randomBytes(32)).toString('hex')
-  // Make first found letter uppercase because hex string doesn't meet password requirements
-  // Special characters at the end of password to make comply with cognito requirements
-  return randomPassword.replace(/[a-f]/, 'A') + '!'
-}
 
 class DefaultResultError extends Error {
   constructor(result: never) {
@@ -37,11 +28,14 @@ class DefaultResultError extends Error {
 }
 
 type ConstructorOptions = {
+  region: string
   clientId: string
   userPoolId: string
-  keyStorageUrl: string
-  accessApiKey: string
   shouldDisableNameNormalisation?: boolean
+}
+
+type ConstructorDependencies = {
+  keyStorageApiService: KeyStorageApiService
 }
 
 /**
@@ -56,18 +50,14 @@ type ConstructorOptions = {
  *   - complete: second step (requires confirmation code, and a token if one was returned on first step)
  */
 @profile()
-export default class UserManagementService {
+export class UserManagementService {
   private _cognitoIdentityService
   private _keyStorageApiService
   private _sessionStorageService
   private _shouldDisableNameNormalisation
 
-  constructor(options: ConstructorOptions) {
-    this._keyStorageApiService = new KeyStorageApiService({
-      keyStorageUrl: options.keyStorageUrl,
-      accessApiKey: options.accessApiKey,
-      sdkVersion: extractSDKVersion(),
-    })
+  constructor(options: ConstructorOptions, dependencies: ConstructorDependencies) {
+    this._keyStorageApiService = dependencies.keyStorageApiService
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
     this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
@@ -96,31 +86,24 @@ export default class UserManagementService {
     }
   }
 
-  async signUpWithUsernameAndConfirm(username: string, inputPassword: string): Promise<CognitoUserTokens> {
+  async signUpWithUsernameAndConfirm(username: string, password: string) {
     this._loginShouldBeUsername(username)
     const usernameWithAttributes = this._buildUserAttributes(username)
 
-    if (!inputPassword) {
+    if (!password) {
       throw new Error(`Expected non-empty password for '${username}'`)
     }
 
-    const password = normalizeShortPassword(inputPassword, username)
     await this._signUp(usernameWithAttributes, password)
     await this._keyStorageApiService.adminConfirmUser({ username })
-    const cognitoTokens = await this.logInWithPassword(username, inputPassword)
+    const cognitoTokens = await this.logInWithPassword(username, password)
     return cognitoTokens
   }
 
-  async initiateSignUpWithEmailOrPhone(
-    login: string,
-    inputPassword: string,
-    messageParameters: MessageParameters,
-  ): Promise<string> {
+  async initiateSignUpWithEmailOrPhone(login: string, password: string, messageParameters?: MessageParameters) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
 
-    const shortPassword = inputPassword || (await generatePassword())
-    const password = normalizeShortPassword(shortPassword, login)
     await this._signUp(usernameWithAttributes, password, messageParameters)
     const signUpToken = `${login}::${password}`
 
@@ -145,8 +128,7 @@ export default class UserManagementService {
     }
   }
 
-  async logInWithPassword(login: string, shortPassword: string) {
-    const password = normalizeShortPassword(shortPassword, login)
+  async logInWithPassword(login: string, password: string) {
     const response = await this._cognitoIdentityService.tryLogInWithPassword(login, password)
 
     switch (response.result) {
@@ -167,10 +149,7 @@ export default class UserManagementService {
     return { login, shortPassword }
   }
 
-  async completeSignUpForEmailOrPhone(
-    token: string,
-    confirmationCode: string,
-  ): Promise<{ cognitoTokens: CognitoUserTokens; shortPassword: string }> {
+  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
     const { login, shortPassword } = this.parseSignUpToken(token)
     this._loginShouldBeEmailOrPhoneNumber(login)
     await this._completeSignUp(login, confirmationCode)
@@ -328,11 +307,7 @@ export default class UserManagementService {
     })
   }
 
-  async initiateChangeLogin(
-    cognitoTokens: CognitoUserTokens,
-    newLogin: string,
-    messageParameters?: MessageParameters,
-  ): Promise<CognitoUserTokens> {
+  async initiateChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, messageParameters?: MessageParameters) {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
       this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const result = await this._cognitoIdentityService.initiateChangeAttributes(
@@ -351,11 +326,7 @@ export default class UserManagementService {
     })
   }
 
-  async completeChangeLogin(
-    cognitoTokens: CognitoUserTokens,
-    newLogin: string,
-    confirmationCode: string,
-  ): Promise<CognitoUserTokens> {
+  async completeChangeLogin(cognitoTokens: CognitoUserTokens, newLogin: string, confirmationCode: string) {
     return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
       this._loginShouldBeEmailOrPhoneNumber(newLogin)
       const { isEmailValid } = validateUsername(newLogin)
@@ -376,7 +347,7 @@ export default class UserManagementService {
     })
   }
 
-  readUserTokensFromSessionStorage(): CognitoUserTokens {
+  readUserTokensFromSessionStorage() {
     return this._sessionStorageService.readUserTokens()
   }
 

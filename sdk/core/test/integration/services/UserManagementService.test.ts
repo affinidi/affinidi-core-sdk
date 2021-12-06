@@ -1,36 +1,48 @@
 'use strict'
+
+// TODO: Move this integration test to @affinidi/user-management package itself.
+//       It requires testSecrets and _defaultConfig usage from SDK source code & environment,
+//       which causes circular dependency.
+
 import { expect } from 'chai'
-import { randomBytes } from '../../../src/shared/randomBytes'
-import UserManagementService from '../../../src/services/UserManagementService'
-import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
+import { UserManagementService } from '@affinidi/user-management'
+import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { testSecrets, getAllOptionsForEnvironment } from '../../helpers'
+import { DEFAULT_COGNITO_REGION } from '../../../src/_defaultConfig'
 
 const { COGNITO_PASSWORD, COGNITO_USERNAME, COGNITO_USERNAME_UNCONFIRMED } = testSecrets
 
 let username: string
-let randomPassword: string
+const randomPassword: string = 'P4ssw0rd'
 
-const email = COGNITO_USERNAME
-const password = COGNITO_PASSWORD
+const email = COGNITO_USERNAME as string
+const password = COGNITO_PASSWORD as string
 
 const existingConfirmedCognitoUser = email
-const existingUnconfirmedCognitoUser = COGNITO_USERNAME_UNCONFIRMED
+const existingUnconfirmedCognitoUser = COGNITO_USERNAME_UNCONFIRMED as string
 const nonExistingCognitoUser = 'non_existing_user'
 
 const { clientId, userPoolId, keyStorageUrl, accessApiKey } = getAllOptionsForEnvironment()
-const constructorOptions = { clientId, userPoolId, keyStorageUrl, accessApiKey }
+
+const options = {
+  region: DEFAULT_COGNITO_REGION,
+  clientId,
+  userPoolId,
+}
+
+const dependencies = {
+  keyStorageApiService: new KeyStorageApiService({
+    accessApiKey,
+    keyStorageUrl,
+  }),
+}
 
 // NOTE: consider having special pool for test users
 describe('UserManagementService', () => {
-  beforeEach(async () => {
-    const randomHex = (await randomBytes(32)).toString('hex')
-    // Make first found letter uppercase because hex string doesn't meet password requirements
-    randomPassword = randomHex.replace(/[a-f]/, 'A')
-  })
-
   it('#signIn', async () => {
     username = email
 
-    const userManagementService = new UserManagementService(constructorOptions)
+    const userManagementService = new UserManagementService(options, dependencies)
     const accessToken = await userManagementService.logInWithPassword(username, password)
 
     expect(accessToken).to.exist
@@ -39,9 +51,9 @@ describe('UserManagementService', () => {
   it('#signIn throws `COR-4 / 404` if user does not exists', async () => {
     username = nonExistingCognitoUser
 
-    const userManagementService = new UserManagementService(constructorOptions)
+    const userManagementService = new UserManagementService(options, dependencies)
 
-    let responseError
+    let responseError: any
 
     try {
       await userManagementService.logInWithPassword(username, password)
@@ -59,12 +71,12 @@ describe('UserManagementService', () => {
     username = nonExistingCognitoUser
     const password = randomPassword
 
-    const userManagementService = new UserManagementService(constructorOptions)
+    const userManagementService = new UserManagementService(options, dependencies)
     const result = await userManagementService.signUpWithUsernameAndConfirm(username, password)
 
     expect(result).to.be.a('string')
 
-    let responseError
+    let responseError: any
 
     try {
       await userManagementService.signUpWithUsernameAndConfirm(username, password)
@@ -82,9 +94,9 @@ describe('UserManagementService', () => {
     const email = 'non_existing@email.com'
 
     const confirmationCode = '777777'
-    const userManagementService = new UserManagementService(constructorOptions)
+    const userManagementService = new UserManagementService(options, dependencies)
 
-    let responseError
+    let responseError: any
 
     try {
       await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
@@ -100,7 +112,7 @@ describe('UserManagementService', () => {
 
   it('#isUserUnconfirmed returns `true` WHEN user is UNCONFIRMED', async () => {
     const cognitoUsername = existingUnconfirmedCognitoUser
-    const userManagementService = new UserManagementService(constructorOptions)
+    const userManagementService = new UserManagementService(options, dependencies)
     const isUserUnconfirmed = await userManagementService.doesUnconfirmedUserExist(cognitoUsername)
 
     expect(isUserUnconfirmed).to.equal(true)
@@ -108,7 +120,7 @@ describe('UserManagementService', () => {
 
   it('#isUserUnconfirmed returns `false` WHEN user not UNCONFIRMED', async () => {
     const cognitoUsername = existingConfirmedCognitoUser
-    const userManagementService = new UserManagementService(constructorOptions)
+    const userManagementService = new UserManagementService(options, dependencies)
     const isUserUnconfirmed = await userManagementService.doesUnconfirmedUserExist(cognitoUsername)
 
     expect(isUserUnconfirmed).to.equal(false)
