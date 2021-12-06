@@ -1,3 +1,4 @@
+import { wrapJsonldFrameFunction } from '@affinidi/common'
 import { IPlatformCryptographyTools, ecdsaCryptographyTools } from '@affinidi/wallet-core-sdk'
 import { generateBls12381G2KeyPair } from '@mattrglobal/bbs-signatures'
 import {
@@ -16,6 +17,8 @@ const { RsaSignature2018 } = jsonldSignatures.suites
 
 const cryptoLd = require('crypto-ld')
 const { RSAKeyPair } = cryptoLd
+
+wrapJsonldFrameFunction(require('jsonld'))
 
 const isValidPrivateKey = (privateKey: Buffer) => {
   const { EC_GROUP_ORDER, ZERO32 } = eccrypto
