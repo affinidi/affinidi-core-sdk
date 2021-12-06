@@ -5,13 +5,13 @@ import { decode as jwtDecode } from 'jsonwebtoken'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 
 import KeyManagementService from '../../../src/services/KeyManagementService'
-import UserManagementService from '../../../src/services/UserManagementService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
-import { normalizeUsername } from '../../../src/shared'
+import { UserManagementService, normalizeUsername } from '@affinidi/user-management'
 
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 import { AffinidiWallet } from '../../helpers/AffinidiWallet'
 import { extractSDKVersion } from '../../../src/_helpers'
+import { createUserManagementService } from '../../../src/shared/createUserManagementService'
 
 const options = getAllOptionsForEnvironment()
 
@@ -42,7 +42,7 @@ const createKeyStorageApiService = () => {
 
 describe('WalletStorageService', () => {
   beforeEach(() => {
-    userManagementService = new UserManagementService(options)
+    userManagementService = createUserManagementService({ ...options, basicOptions: options })
   })
 
   it('#storeEncryptedSeed throws 409 exception WHEN key for userId already exists', async () => {

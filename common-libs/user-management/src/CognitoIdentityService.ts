@@ -8,8 +8,7 @@ if (!fetch) {
   ;(global as any).fetch = require('node-fetch')
 }
 
-import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
-import { CognitoUserTokens, MessageParameters } from '../dto'
+import { CognitoUserTokens, MessageParameters } from './dto'
 
 type Response<TResult, TSuccessResult extends TResult, TAdditionalSuccessFields> =
   | { result: Exclude<TResult, TSuccessResult> }
@@ -119,14 +118,14 @@ const INVALID_PASSWORD = '1'
  * @internal
  */
 @profile()
-export default class CognitoIdentityService {
+export class CognitoIdentityService {
   private readonly clientId
   private readonly cognitoidentityserviceprovider
 
-  constructor({ clientId }: { clientId: string }) {
+  constructor({ region, clientId }: { region: string; clientId: string }) {
     this.clientId = clientId
     this.cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
-      region: DEFAULT_COGNITO_REGION,
+      region,
       apiVersion: '2016-04-18',
     })
   }
@@ -283,7 +282,7 @@ export default class CognitoIdentityService {
   async trySignUp(
     usernameWithAttributes: UsernameWithAttributes,
     password: string,
-    messageParameters: MessageParameters,
+    messageParameters?: MessageParameters,
   ): Promise<SignUpResult> {
     const params = {
       ClientId: this.clientId,

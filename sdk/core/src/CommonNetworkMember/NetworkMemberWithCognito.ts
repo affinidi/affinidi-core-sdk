@@ -1,6 +1,5 @@
 import { profile } from '@affinidi/tools-common'
 
-import UserManagementService from '../services/UserManagementService'
 import WalletStorageService from '../services/WalletStorageService'
 import { withDidData } from '../shared/getDidData'
 import {
@@ -19,10 +18,9 @@ import {
   ConstructorUserData,
   createKeyManagementService,
 } from './BaseNetworkMember'
-
-const createUserManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-  return new UserManagementService({ ...basicOptions, accessApiKey })
-}
+import { createUserManagementService } from '../shared/createUserManagementService'
+import { generatePassword } from '../shared/generatePassword'
+import { normalizeShortPassword } from '../shared/normalizeShortPassword'
 
 type UserDataWithCognito = ConstructorUserData & {
   cognitoUserTokens: CognitoUserTokens
@@ -211,10 +209,11 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     dependencies: StaticDependencies,
     options: ParsedOptions,
     username: string,
-    password: string,
+    inputPassword: string,
   ) {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
+    const password = normalizeShortPassword(inputPassword, username)
     const cognitoUserTokens = await userManagementService.logInWithPassword(username, password)
     const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
     return new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
@@ -224,7 +223,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
    * @description Initiates sign up flow to Affinity wallet, optionally with already created did
    * @param inputOptiosn - parameters with specified environment
    * @param username - arbitrary username
-   * @param password - password
+   * @param inputPassword - password
    * @param keyParamsOrOptions (optional) - { encryptedSeed, password } - previously created keys to be stored at wallet
    * @returns initialized instance of SDK
    */
@@ -232,13 +231,13 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     dependencies: StaticDependencies,
     inputOptions: SdkOptions,
     username: string,
-    password: string,
+    inputPassword: string,
     keyParamsOrOptions?: KeyParamsOrOptions,
   ) {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: 'string', isRequired: true, value: username },
-      { isArray: false, type: 'password', isRequired: true, value: password },
+      { isArray: false, type: 'password', isRequired: true, value: inputPassword },
       NetworkMemberWithCognito._createKeyParamsOrOptionsValidator(keyParamsOrOptions),
     ])
 
@@ -246,6 +245,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
+    const password = normalizeShortPassword(inputPassword, username)
     const cognitoTokens = await userManagementService.signUpWithUsernameAndConfirm(username, password)
     return NetworkMemberWithCognito._confirmSignUp(dependencies, options, cognitoTokens, password, keyParamsOrOptions)
   }
@@ -253,18 +253,19 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
   private static async _initiateSignUpByEmailOrPhone(
     inputOptions: SdkOptions,
     login: string,
-    password?: string,
+    inputPassword?: string,
     messageParameters?: MessageParameters,
   ): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: login },
-      { isArray: false, type: 'password', isRequired: false, value: password },
+      { isArray: false, type: 'password', isRequired: false, value: inputPassword },
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
       { isArray: false, type: MessageParameters, isRequired: false, value: messageParameters },
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
+    const password = normalizeShortPassword(inputPassword || (await generatePassword()), login)
     return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
   }
 
@@ -458,9 +459,10 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
         logInToken: await userManagementService.initiateLogInPasswordless(login, messageParameters),
       })
     } else {
+      const password = normalizeShortPassword(await generatePassword(), login)
       return JSON.stringify({
         signInType: 'signUp',
-        signUpToken: await userManagementService.initiateSignUpWithEmailOrPhone(login, null, messageParameters),
+        signUpToken: await userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters),
       })
     }
   }
