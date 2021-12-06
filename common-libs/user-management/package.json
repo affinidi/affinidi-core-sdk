@@ -45,8 +45,7 @@
   "dependencies": {
     "@affinidi/internal-api-clients": "^1.0.0-beta.14",
     "@affinidi/tools-common": "^1.0.0-beta.2",
-    "aws-sdk": "^2.1017.0",
-    "class-validator": "^0.13.1"
+    "aws-sdk": "^2.1017.0"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",

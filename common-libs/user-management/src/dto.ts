@@ -1,31 +1,12 @@
-import { IsOptional, IsNumber, IsString } from 'class-validator'
-
-export class CognitoUserTokens {
-  @IsOptional()
-  @IsString()
+export interface CognitoUserTokens {
   accessToken?: string
-
-  @IsOptional()
-  @IsString()
   idToken?: string
-
-  @IsOptional()
-  @IsString()
   refreshToken?: string
-
-  @IsOptional()
-  @IsNumber()
   expiresIn?: number
 }
 
-export class MessageParameters {
+export interface MessageParameters {
   message: string
-
-  @IsOptional()
-  @IsString()
   subject?: string
-
-  @IsOptional()
-  @IsString()
   htmlMessage?: string
 }
