@@ -47,7 +47,7 @@ describe('VC Signatures', () => {
   })
 
   describe('[BBS+]', () => {
-    const { issuerEncryptionKey, unsignedCredential } = bbsFixtures
+    const { issuerEncryptionKey, unsignedCredential, unsignedCredentialWithNewCtx } = bbsFixtures
 
     it('should generate BBS keys, seed and did document, sign VC using BBS key and verify it', async () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
@@ -81,6 +81,42 @@ describe('VC Signatures', () => {
       const signedCredential4 = simpleClonePlainObject(signedCredential)
       signedCredential4.credentialSubject.data.someNewProperty = 'Some New Value'
       expect(await isValid(signedCredential4)).to.be.false
+    })
+
+    it('should derive segment proof and verify it for cred with new type of jsonld context', async () => {
+      const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
+      const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
+
+      const signedCredential = await affinidi.signCredential(
+        unsignedCredentialWithNewCtx,
+        encryptedSeed,
+        issuerEncryptionKey,
+        'bbs',
+      )
+
+      const segment = await affinidi.deriveSegmentProof(signedCredential, ['name'])
+
+      expect(segment.proof.type).to.be.equal('BbsBlsSignatureProof2020')
+      expect(segment.credentialSubject.data.name).to.eq('Bob Belcher')
+      expect(segment.credentialSubject.data.githubLink).to.not.exist
+      expect(segment.credentialSubject.data.Influence).to.not.exist
+      expect(segment.credentialSubject.data.personal).to.not.exist
+      expect(await isValid(segment)).to.be.true
+
+      // delete revealed field
+      const segment1 = simpleClonePlainObject(segment)
+      delete segment1.credentialSubject.data.name
+      expect(await isValid(segment1)).to.be.false
+
+      // change revealed field
+      const segment2 = simpleClonePlainObject(segment)
+      segment2.credentialSubject.data.name = 'Fake Name'
+      expect(await isValid(segment2)).to.be.false
+
+      // add unrevealed field
+      const segment3 = simpleClonePlainObject(segment)
+      segment3.credentialSubject.data.githubLink = 'https://github.com/bobber'
+      expect(await isValid(segment3)).to.be.false
     })
 
     it('should derive segment proof and verify it', async () => {
