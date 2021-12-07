@@ -62,7 +62,7 @@ type GetRequestOptions<TOperation extends MethodTypeByOperation<any>> = Paramete
 export type GetParams<TOperation extends MethodTypeByOperation<any>> = GetRequestOptions<TOperation>['params']
 
 const parseSpec = (rawSpec: GenericApiSpec) => {
-  const basePath = rawSpec.servers[0].url
+  const basePath = rawSpec.servers[0].url === '/' ? '' : rawSpec.servers[0].url
 
   const spec = Object.entries(rawSpec.paths).flatMap(([operationPath, operation]) => {
     const path = `${basePath}${operationPath}`

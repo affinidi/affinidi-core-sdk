@@ -26,6 +26,7 @@ import { extractSDKVersion } from '../../../src/_helpers'
 const affinidiVaultUrl = resolveUrl(Service.VAULT, 'staging')
 const bloomVaultUrl = resolveUrl(Service.BLOOM_VAUlT, 'staging')
 const keyStorageUrl = resolveUrl(Service.KEY_STORAGE, 'staging')
+const migrationUrl = resolveUrl(Service.VAULT_MIGRATION, 'staging')
 
 let walletPassword: string
 
@@ -47,6 +48,7 @@ const createWalletStorageService = () => {
   return new WalletStorageService(keysService, testPlatformTools, {
     bloomVaultUrl,
     affinidiVaultUrl,
+    migrationUrl,
     accessApiKey: undefined,
     storageRegion: region,
     didAuthAdapter,

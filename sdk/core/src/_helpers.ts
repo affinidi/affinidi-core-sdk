@@ -1,5 +1,6 @@
 import { SUPPORTED_DID_METHODS } from './_defaultConfig'
 import SdkErrorFromCode from './shared/SdkErrorFromCode'
+import { CredentialLike, W3cCredentialLike } from './dto/internal'
 
 const packageInfo = require('../package.json')
 
@@ -16,7 +17,7 @@ export const stripParamsFromDidUrl = (did: string): string =>
     // Strip out query params
     .replace(/([?][^#]*)?/g, '')
 
-export function isW3cCredential(credential: any): boolean {
+export function isW3cCredential(credential: CredentialLike): credential is W3cCredentialLike {
   return !!credential.type
 }
 

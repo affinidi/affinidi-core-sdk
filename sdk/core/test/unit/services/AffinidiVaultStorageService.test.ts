@@ -7,6 +7,7 @@ import { KeysService, JwtService, DidDocumentService, LocalKeyVault } from '@aff
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import { resolveUrl, Service } from '@affinidi/url-resolver'
 
+import AffinidiVaultEncryptionService from '../../../src/services/AffinidiVaultEncryptionService'
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 import { generateTestDIDs } from '../../factory/didFactory'
@@ -28,6 +29,7 @@ const reqheaders: Record<string, string> = {}
 
 const createAffinidiStorageService = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
+  const encryptionService = new AffinidiVaultEncryptionService(keysService, testPlatformTools)
   const documentService = DidDocumentService.createDidDocumentService(keysService)
   const keyVault = new LocalKeyVault(keysService)
   const signer = new Signer({
@@ -37,7 +39,7 @@ const createAffinidiStorageService = () => {
   })
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter(audienceDid, didAuthService)
-  return new AffinidiVaultStorageService(keysService, testPlatformTools, {
+  return new AffinidiVaultStorageService(encryptionService, {
     vaultUrl: affinidiVaultUrl,
     accessApiKey: undefined,
     didAuthAdapter,
