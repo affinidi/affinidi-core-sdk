@@ -1,3 +1,5 @@
+# release 2.1.0 (2021-12-07)
+* Updated `internal-api-clients` and `common` (removing dependency on `node-fetch` and `undici`)
 # release 2.0.0-beta.2 (2021-11-03)
 * Added `@affinidi/url-resolver` dependency
 * Replaced predefined Affinity services urls from config with resolveUrl function from `@affinidi/url-resolver`
