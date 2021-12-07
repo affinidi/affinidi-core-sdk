@@ -8,6 +8,7 @@ import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import AffinidiVaultStorageService from './AffinidiVaultStorageService'
 import BloomVaultStorageService from './BloomVaultStorageService'
+import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
 
 const createHash = require('create-hash')
 
@@ -18,6 +19,7 @@ const sha256 = (data: unknown) => {
 type ConstructorOptions = {
   bloomVaultUrl: string
   affinidiVaultUrl: string
+  migrationUrl: string
   storageRegion: string
   accessApiKey: string
   didAuthAdapter: DidAuthAdapter
@@ -36,7 +38,9 @@ export default class WalletStorageService {
   ) {
     this._storageRegion = options.storageRegion
 
-    this._affinidiVaultStorageService = new AffinidiVaultStorageService(keysService, platformCryptographyTools, {
+    const encryptionService = new AffinidiVaultEncryptionService(keysService, platformCryptographyTools)
+
+    this._affinidiVaultStorageService = new AffinidiVaultStorageService(encryptionService, {
       didAuthAdapter: options.didAuthAdapter,
       accessApiKey: options.accessApiKey,
       vaultUrl: options.affinidiVaultUrl,
@@ -46,6 +50,8 @@ export default class WalletStorageService {
       accessApiKey: options.accessApiKey,
       vaultUrl: options.bloomVaultUrl,
       didAuthAdapter: options.didAuthAdapter,
+      encryptionService,
+      migrationUrl: options.migrationUrl,
     })
   }
 

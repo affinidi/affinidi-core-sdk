@@ -28,6 +28,7 @@ export const getAllOptionsForEnvironment = () => {
     registryUrl: resolveUrl(Service.REGISTRY, env),
     revocationUrl: resolveUrl(Service.REVOCATION, env),
     keyStorageUrl: resolveUrl(Service.KEY_STORAGE, env),
+    migrationUrl: resolveUrl(Service.VAULT_MIGRATION, env),
   }
 
   switch (env) {

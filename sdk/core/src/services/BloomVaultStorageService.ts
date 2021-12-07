@@ -5,11 +5,13 @@ import { profile } from '@affinidi/tools-common'
 
 import { toRpcSig, ecsign } from 'ethereumjs-util'
 
+import { CredentialLike } from '../dto/internal'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import { FetchCredentialsPaginationOptions } from '../dto/shared.dto'
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
 import { MigrationHelper } from '../migration/credentials'
+import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
 
 const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
@@ -21,6 +23,8 @@ type BloomVaultStorageOptions = {
   didAuthAdapter?: DidAuthAdapter
   accessApiKey: string
   vaultUrl: string
+  migrationUrl: string
+  encryptionService: AffinidiVaultEncryptionService
 }
 
 type PaginationOptions = {
@@ -66,13 +70,13 @@ export default class BloomVaultStorageService {
       accessApiKey: options.accessApiKey,
       sdkVersion: extractSDKVersion(),
     })
-    this._migrationHelper = new MigrationHelper(
-      options.didAuthAdapter,
-      options.accessApiKey,
-      this._keysService,
-      this._platformCryptographyTools,
-      this.didEthr,
-    )
+    this._migrationHelper = new MigrationHelper({
+      accessApiKey: options.accessApiKey,
+      bloomDid: this.didEthr,
+      didAuthAdapter: options.didAuthAdapter,
+      encryptionService: options.encryptionService,
+      migrationUrl: options.migrationUrl,
+    })
   }
 
   get didEthr(): string {
@@ -82,6 +86,10 @@ export default class BloomVaultStorageService {
     }
 
     return this._didEth
+  }
+
+  private _decryptCredential(privateKeyBuffer: Buffer, encryptedDataString: string): Promise<CredentialLike> {
+    return this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, encryptedDataString)
   }
 
   /* istanbul ignore next: private function */
@@ -209,15 +217,12 @@ export default class BloomVaultStorageService {
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const allBlobs = await this._fetchAllBlobs(accessToken, storageRegion)
     for (const blob of allBlobs) {
-      const credential = await this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
+      const credential = await this._decryptCredential(privateKeyBuffer, blob.cyphertext)
 
-      let credentialId = credential?.id
-      if (!isW3cCredential(credential)) {
-        credentialId = credential?.data?.id
-      }
+      const credentialId = isW3cCredential(credential) ? credential.id : credential.data.id
 
       if (credentialId && credentialId === id) {
-        return blob
+        return { bloomId: blob.id, credential }
       }
     }
 
@@ -225,7 +230,7 @@ export default class BloomVaultStorageService {
   }
 
   /* istanbul ignore next: private function */
-  private _filterCredentialsByTypes(types: string[][], credentials: any[]): any[] {
+  private _filterCredentialsByTypes(types: string[][], credentials: CredentialLike[]): CredentialLike[] {
     const filteredCredentials = credentials.filter((credential) => {
       if (!isW3cCredential(credential)) return false
       return types.some((subtypes) => subtypes.every((subtype) => (credential?.type || []).includes(subtype)))
@@ -235,13 +240,13 @@ export default class BloomVaultStorageService {
   }
 
   /* istanbul ignore next: private function */
-  private async _fetchAllDecryptedCredentials(accessToken: string, storageRegion: string): Promise<any[]> {
+  private async _fetchAllDecryptedCredentials(accessToken: string, storageRegion: string) {
     const privateKeyBuffer = this._keysService.getOwnPrivateKey()
     const allBlobs = await this._fetchAllBlobs(accessToken, storageRegion)
-    const allCredentials: any[] = []
+    const allCredentials: { credential: CredentialLike; bloomId: number }[] = []
     for (const blob of allBlobs) {
-      const credential = await this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, blob.cyphertext)
-      allCredentials.push({ ...credential, bloomId: blob.id })
+      const credential = await this._decryptCredential(privateKeyBuffer, blob.cyphertext)
+      allCredentials.push({ credential, bloomId: blob.id })
     }
 
     return allCredentials
@@ -259,26 +264,23 @@ export default class BloomVaultStorageService {
     }
   }
 
-  public async searchCredentials(storageRegion: string, types?: string[][]): Promise<any[]> {
-    const doesMigrationStarted = await this._migrationHelper.doesMigrationStarted()
-    const accessToken = await this._authorizeVcVault(storageRegion)
-    let migrationDone: string
-    if (doesMigrationStarted) {
-      migrationDone = await this._migrationHelper.getMigrationStatus()
-      if (migrationDone === 'yes') {
-        return []
-      }
+  public async searchCredentials(storageRegion: string, types?: string[][]): Promise<CredentialLike[]> {
+    const { shouldFetchCredentials, shouldRunMigration } = await this._migrationHelper.getMigrationActions()
+    if (!shouldFetchCredentials) {
+      return []
     }
 
-    const credentials = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
+    const accessToken = await this._authorizeVcVault(storageRegion)
+    const credentialsWithBloomIds = await this._fetchAllDecryptedCredentials(accessToken, storageRegion)
 
-    if (doesMigrationStarted && migrationDone === 'no' && credentials?.length) {
+    if (shouldRunMigration && credentialsWithBloomIds?.length) {
       // just send the async call, but no need to wait for response
       // all logic should be done in a background
       const { token, signature } = await this._generateBloomVaultOptions(storageRegion)
-      this._migrationHelper.runMigration(credentials, token, signature)
+      this._migrationHelper.runMigration(credentialsWithBloomIds, token, signature)
     }
 
+    const credentials = credentialsWithBloomIds.map(({ credential }) => credential)
     if (!types) {
       return credentials
     }
@@ -286,24 +288,17 @@ export default class BloomVaultStorageService {
     return this._filterCredentialsByTypes(types, credentials)
   }
 
-  public async getCredentialById(credentialId: string, storageRegion: string): Promise<any> {
+  public async getCredentialById(credentialId: string, storageRegion: string): Promise<CredentialLike> {
     const accessToken = await this._authorizeVcVault(storageRegion)
 
-    const credentialBlob = await this._findCredentialById(accessToken, credentialId, storageRegion)
-
-    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
-    const credential = await this._platformCryptographyTools.decryptByPrivateKey(
-      privateKeyBuffer,
-      credentialBlob.cyphertext,
-    )
-
+    const { credential } = await this._findCredentialById(accessToken, credentialId, storageRegion)
     return credential
   }
 
   public async deleteCredentialById(id: string, storageRegion: string): Promise<void> {
     const accessToken = await this._authorizeVcVault(storageRegion)
-    const credentialBlob = await this._findCredentialById(accessToken, id, storageRegion)
-    return this._deleteCredentialByIndex(accessToken, credentialBlob.id, storageRegion)
+    const { bloomId } = await this._findCredentialById(accessToken, id, storageRegion)
+    return this._deleteCredentialByIndex(accessToken, bloomId, storageRegion)
   }
 
   public async deleteAllCredentials(storageRegion: string): Promise<void> {

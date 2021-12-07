@@ -22,4 +22,5 @@ export const envSetupUrls: Record<Service, string> = {
   [Service.REVOCATION]: process.env.REVOCATION_SERVICE_URL,
   [Service.USER_AUTH]: process.env.USER_AUTH_SERVICE_URL,
   [Service.SCHEMA_MANAGER]: process.env.SCHEMA_MANAGER_SERVICE_URL,
+  [Service.VAULT_MIGRATION]: process.env.VAULT_MIGRATION_SERVICE_URL,
 }
