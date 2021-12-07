@@ -9,7 +9,7 @@
     "buildDocs": "typedoc --out docs src",
     "start": "npm run build && node dist/index.js",
     "tsc": "tsc -p tsconfig-build.json",
-    "lint": "eslint src/** test/**",
+    "lint": "eslint src/**",
     "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
   },
   "publishConfig": {
