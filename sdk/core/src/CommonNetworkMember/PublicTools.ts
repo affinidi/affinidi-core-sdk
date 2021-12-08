@@ -31,7 +31,7 @@ export class PublicTools {
 
   deriveSegmentProof<TKeys extends string, TData extends SimpleThing & Record<TKeys, unknown>>(
     credential: VCV1<VCV1Subject<TData>>,
-    fields: string[],
+    fields: TKeys[],
     didDocument?: any,
   ) {
     return this.affinidi.deriveSegmentProof(credential, fields, didDocument)
