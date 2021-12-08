@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/tools-openapi",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -41,11 +41,10 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
+    "@affinidi/platform-fetch": "^1.0.0",
     "@affinidi/tools-common": "^1.0.0",
     "lodash.keyby": "^4.6.0",
-    "lodash.mapvalues": "^4.6.0",
-    "node-fetch": "^2.6.0",
-    "undici": "^4.9.5"
+    "lodash.mapvalues": "^4.6.0"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
@@ -55,7 +54,6 @@
     "@types/lodash.keyby": "^4.6.6",
     "@types/lodash.mapvalues": "^4.6.6",
     "@types/mocha": "5.2.7",
-    "@types/node-fetch": "^2.5.4",
     "@types/sinon": "9.0.4",
     "chai": "4.2.0",
     "chai-spies": "1.0.0",

@@ -119,7 +119,7 @@ export const buildVCV1: BuildVCV1 = async ({
     )
 
     return result
-  } catch (error) {
+  } catch (error: any) {
     if (
       typeof error.message === 'string' &&
       /The property ".+" in the input was not defined in the context./g.test(error.message)

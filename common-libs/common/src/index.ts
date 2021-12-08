@@ -9,6 +9,8 @@ if (typeof process === 'undefined') {
 }
 
 if (typeof process.version === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   global.process.version = ''
 }
 

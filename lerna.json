@@ -1,5 +1,5 @@
 {
-  "packages": ["common-libs/*", "sdk/*"],
+  "packages": ["common-libs/*", "platform/*", "sdk/*"],
   "command": {
     "publish": {
       "ignoreChanges": ["ignored-file", "*.md"],

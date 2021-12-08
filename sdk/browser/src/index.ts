@@ -1,3 +1,7 @@
+import { useNativeFetch } from '@affinidi/platform-fetch-native'
+
+useNativeFetch()
+
 if (typeof Buffer === 'undefined') global.Buffer = require('buffer').Buffer
 
 // import * as Sentry from '@sentry/browser'
