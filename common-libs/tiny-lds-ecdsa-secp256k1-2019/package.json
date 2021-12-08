@@ -31,7 +31,7 @@
     "jsonld": "^4.0.1",
     "jsonld-signatures": "^7.0.0",
     "tiny-secp256k1": "^1.1.6",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
