@@ -1,3 +1,5 @@
+# release 1.1.0 (2021-12-07)
+  * Removed dependency on `node-fetch` and `undici`
 # release 1.0.2 (2021-11-29)
   * Added support for services installed into domain root
 # release 1.0.1 (2021-11-22)

@@ -1,0 +1,58 @@
+{
+  "name": "@affinidi/platform-fetch-node",
+  "version": "1.0.0",
+  "description": "SDK core monorepo for affinity DID solution",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run tsc",
+    "buildDocs": "typedoc --out docs src",
+    "start": "npm run build && node dist/index.js",
+    "tsc": "tsc -p tsconfig-build.json",
+    "lint": "eslint src/**",
+    "checkLicenses": "license-checker --production --failOn 'AGPL 3.0;LGPL 2.1' --summary"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/affinityproject/affinidi-core-sdk.git",
+    "directory": "sdk/core"
+  },
+  "keywords": [
+    "sdk",
+    "affinity",
+    "network",
+    "did"
+  ],
+  "author": "Denis Popov <denis@slatestudio.com>",
+  "contributors": [
+    "Roman Brazhnyk <roman@affinity-project.org>"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/affinityproject/affinidi-core-sdk/issues"
+  },
+  "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
+  "dependencies": {
+    "@affinidi/platform-fetch": "^1.0.0",
+    "node-fetch": "^2.6.0",
+    "undici": "^4.9.5"
+  },
+  "devDependencies": {
+    "@affinidi/eslint-config": "1.0.1",
+    "@affinidi/prettier-config": "1.0.1",
+    "@types/node-fetch": "^2.5.4",
+    "cross-env": "^7.0.3",
+    "eslint": "7.6.0",
+    "eslint-config-prettier": "6.11.0",
+    "eslint-plugin-prettier": "3.1.4",
+    "license-checker": "25.0.1",
+    "prettier": "2.0.5",
+    "ts-node": "8.10.2",
+    "typedoc": "0.16.11",
+    "typescript": "^4.4.3"
+  },
+  "gitHead": "5420b34bac444d42d16b336a7ae95f47741d150c"
+}

@@ -10,15 +10,15 @@
     "tsc": "lerna run tsc",
     "link": "lerna link",
     "version": "lerna version",
-    "lint": "lerna run --parallel lint",
+    "lint": "lerna run --no-bail --parallel lint",
     "build": "lerna run build",
     "bootstrap": "lerna bootstrap",
     "publish": "lerna publish",
-    "test": "lerna run --parallel test",
-    "test:coverage": "lerna run --parallel test:coverage",
+    "test": "lerna run --no-bail --parallel test",
+    "test:coverage": "lerna run --no-bail --parallel test:coverage",
     "test:coverage:codeclimate": "lerna run --parallel test:coverage:codeclimate",
     "exec": "lerna exec",
     "list-packages": "lerna list --json",
-    "checkLicenses": "lerna run --parallel checkLicenses"
+    "checkLicenses": "lerna run --no-bail --parallel checkLicenses"
   }
 }
