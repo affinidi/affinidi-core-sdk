@@ -9,11 +9,11 @@ import { parse } from 'did-resolver'
 import { AffinityOptions, EventOptions } from './dto/shared.dto'
 import { DidDocumentService, KeysService, DigestService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
-import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
+import { IPlatformCryptographyTools, Path, ProofType } from './shared/interfaces'
 import { DidResolver } from './shared/DidResolver'
 import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots } from './utils/objectUtil'
 
-const revocationList = require('vc-revocation-list') // eslint-disable-line
+const revocationList = require('vc-revocation-list')
 
 type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
@@ -599,9 +599,9 @@ export class Affinity {
     return KeysService.encryptSeed(seedHexWithMethod, encryptionKeyBuffer)
   }
 
-  async deriveSegmentProof<TKeys extends string, TData extends SimpleThing & Record<TKeys, unknown>>(
+  async deriveSegmentProof<TData extends SimpleThing>(
     credential: VCV1<VCV1Subject<TData>>,
-    fields: string[],
+    paths: Path<TData>[],
     didDocument?: any,
   ): Promise<any> {
     if ('id' in credential.credentialSubject) {
@@ -614,7 +614,7 @@ export class Affinity {
       [issuerDid]: issuerDidDocument,
     })
 
-    const revealDocument = this._buildFragment(credential, fields)
+    const revealDocument = this._buildFragment(credential, paths)
 
     return this._platformCryptographyTools.deriveBbsSegmentProof({
       credential,
@@ -625,13 +625,13 @@ export class Affinity {
 
   private _buildFragment<TKeys extends string, TData extends SimpleThing & Record<TKeys, unknown>>(
     credential: VCV1<VCV1Subject<TData>>,
-    fields: string[],
+    paths: Path<TData>[],
   ) {
     if (Array.isArray(credential.credentialSubject)) {
       throw new Error('credentialSubject can not be an array')
     }
 
-    const dataFields = injectFieldForAllParentRoots(buildObjectSkeletonFromPaths(fields), '@explicit', true)
+    const dataFields = injectFieldForAllParentRoots(buildObjectSkeletonFromPaths(paths), '@explicit', true)
 
     const fragment = {
       '@context': credential['@context'],

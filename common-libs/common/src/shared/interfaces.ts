@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment, prettier/prettier */
 import { baseDocumentLoader } from '../_baseDocumentLoader'
 
 export interface FreeFormObject {
@@ -49,3 +50,14 @@ export type IPlatformCryptographyTools = Readonly<{
     documentLoader: typeof baseDocumentLoader
   }) => Promise<{ result: boolean; error: string }>
 }>
+
+export type InnerPath<TObject extends Record<string, unknown> | []> = TObject extends Record<string, unknown> | [] ? {
+  [key in keyof TObject]: key extends string
+      // @ts-ignore
+      ? `${key}/${Path<TObject[key]>}`
+      : never
+} : never
+
+export type Path<TObject> = TObject extends Record<string, unknown>
+    ? ((keyof TObject) | InnerPath<TObject>[keyof InnerPath<TObject>])
+    : never
