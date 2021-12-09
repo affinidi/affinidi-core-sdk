@@ -9,10 +9,6 @@ export const buildObjectSkeletonFromPaths = (paths: string[] = []): Record<strin
 }
 
 export const buildPathAsObject = (path: string): Record<string, any> => {
-  if (!path.includes(NESTED_FIELDS_SEPARATOR)) {
-    return { [path]: {} }
-  }
-
   const splitPath = path.split(NESTED_FIELDS_SEPARATOR)
   return splitPath.reduceRight((res, field) => ({ [field]: res }), {})
 }
