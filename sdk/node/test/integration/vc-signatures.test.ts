@@ -94,12 +94,13 @@ describe('VC Signatures', () => {
         'bbs',
       )
 
-      const segment = await affinidi.deriveSegmentProof(signedCredential, ['name'])
+      const segment = await affinidi.deriveSegmentProof(signedCredential, ['name', 'Influence/area'])
 
       expect(segment.proof.type).to.be.equal('BbsBlsSignatureProof2020')
       expect(segment.credentialSubject.data.name).to.eq('Bob Belcher')
       expect(segment.credentialSubject.data.githubLink).to.not.exist
-      expect(segment.credentialSubject.data.Influence).to.not.exist
+      expect(segment.credentialSubject.data.Influence.area).to.eq('web3')
+      expect(segment.credentialSubject.data.Influence.level).to.not.exist
       expect(segment.credentialSubject.data.personal).to.not.exist
       expect(await isValid(segment)).to.be.true
 
