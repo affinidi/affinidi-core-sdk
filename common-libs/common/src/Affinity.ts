@@ -9,7 +9,7 @@ import { parse } from 'did-resolver'
 import { AffinityOptions, EventOptions } from './dto/shared.dto'
 import { DidDocumentService, KeysService, DigestService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
-import { IPlatformCryptographyTools, Path, ProofType } from './shared/interfaces'
+import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
 import { DidResolver } from './shared/DidResolver'
 import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots } from './utils/objectUtil'
 
@@ -599,9 +599,9 @@ export class Affinity {
     return KeysService.encryptSeed(seedHexWithMethod, encryptionKeyBuffer)
   }
 
-  async deriveSegmentProof<TData extends SimpleThing>(
-    credential: VCV1<VCV1Subject<TData>>,
-    paths: Path<TData>[],
+  async deriveSegmentProof(
+    credential: VCV1<VCV1Subject<SimpleThing>>,
+    paths: string[],
     didDocument?: any,
   ): Promise<any> {
     if ('id' in credential.credentialSubject) {
@@ -623,10 +623,7 @@ export class Affinity {
     })
   }
 
-  private _buildFragment<TKeys extends string, TData extends SimpleThing & Record<TKeys, unknown>>(
-    credential: VCV1<VCV1Subject<TData>>,
-    paths: Path<TData>[],
-  ) {
+  private _buildFragment(credential: VCV1<VCV1Subject<SimpleThing>>, paths: string[]) {
     if (Array.isArray(credential.credentialSubject)) {
       throw new Error('credentialSubject can not be an array')
     }
