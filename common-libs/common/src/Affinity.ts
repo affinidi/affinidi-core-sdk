@@ -11,8 +11,9 @@ import { DidDocumentService, KeysService, DigestService, MetricsService } from '
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
 import { DidResolver } from './shared/DidResolver'
+import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots } from './utils/objectUtil'
 
-const revocationList = require('vc-revocation-list') // eslint-disable-line
+const revocationList = require('vc-revocation-list')
 
 type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
@@ -598,9 +599,9 @@ export class Affinity {
     return KeysService.encryptSeed(seedHexWithMethod, encryptionKeyBuffer)
   }
 
-  async deriveSegmentProof<TKeys extends string, TData extends SimpleThing & Record<TKeys, unknown>>(
-    credential: VCV1<VCV1Subject<TData>>,
-    fields: TKeys[],
+  async deriveSegmentProof(
+    credential: VCV1<VCV1Subject<SimpleThing>>,
+    paths: string[],
     didDocument?: any,
   ): Promise<any> {
     if ('id' in credential.credentialSubject) {
@@ -613,7 +614,7 @@ export class Affinity {
       [issuerDid]: issuerDidDocument,
     })
 
-    const revealDocument = this._buildFragment(credential, fields)
+    const revealDocument = this._buildFragment(credential, paths)
 
     return this._platformCryptographyTools.deriveBbsSegmentProof({
       credential,
@@ -622,22 +623,12 @@ export class Affinity {
     })
   }
 
-  private _buildFragment<TKeys extends string, TData extends SimpleThing & Record<TKeys, unknown>>(
-    credential: VCV1<VCV1Subject<TData>>,
-    fields: TKeys[],
-  ) {
+  private _buildFragment(credential: VCV1<VCV1Subject<SimpleThing>>, paths: string[]) {
     if (Array.isArray(credential.credentialSubject)) {
-      throw new Error()
+      throw new Error('credentialSubject can not be an array')
     }
 
-    const dataFields: Record<TKeys, Record<string, never>> = {} as any
-    for (const field of fields) {
-      if (credential.credentialSubject.data[field] === undefined) {
-        throw new Error(`Field "${field}" not a part of credential`)
-      }
-
-      dataFields[field] = {}
-    }
+    const dataFields = injectFieldForAllParentRoots(buildObjectSkeletonFromPaths(paths), '@explicit', true)
 
     const fragment = {
       '@context': credential['@context'],

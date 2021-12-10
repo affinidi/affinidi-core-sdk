@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment, prettier/prettier */
 import { baseDocumentLoader } from '../_baseDocumentLoader'
 
 export interface FreeFormObject {

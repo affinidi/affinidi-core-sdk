@@ -12,6 +12,10 @@ export const unsignedCredential = buildVCV1Unsigned({
         '@type': ['Person', 'PersonE', 'NamePerson'],
         givenName: 'DenisUpdated',
         fullName: 'Popov',
+        name: {
+          firstName: 'Bobby',
+          lastName: 'Chessman',
+        },
       },
     },
     holder: {
