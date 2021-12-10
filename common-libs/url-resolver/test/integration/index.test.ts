@@ -3,6 +3,9 @@ import { expect } from 'chai'
 import { Env, resolveUrl, Service } from '../../src'
 
 describe('resolveUrl', () => {
+  // should always be public for tests
+  process.env.AFFINIDI_INTERNAL_SERVICE = undefined
+
   Object.values(Service).forEach((service) => {
     it(`should provide valid urls for ${service}`, async () => {
       const urls = ['dev', 'staging', 'prod'].map((env: Env) => resolveUrl(service, env))
