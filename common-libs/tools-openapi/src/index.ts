@@ -1,6 +1,7 @@
 export { ClientOptions, createClient, createClientMethods, GetParams } from './helpers/client'
 export {
   createDidAuthClient,
+  DidAuthAdapterType,
   DidAuthConstructorOptions,
   GetDidAuthParams,
   wrapWithDidAuth,

@@ -1,14 +1,13 @@
-import { AffinidiVaultApiService } from '@affinidi/internal-api-clients'
+import { AffinidiVaultApiService, DidAuthAdapterType } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
 import { extractSDKVersion } from '../_helpers'
 import { CredentialLike } from '../dto/internal'
 import { VaultCredential } from '../dto/vault.dto'
-import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
 
 type AffinidiVaultStorageOptions = {
-  didAuthAdapter: DidAuthAdapter
+  didAuthAdapter: DidAuthAdapterType
   accessApiKey: string
   vaultUrl: string
 }

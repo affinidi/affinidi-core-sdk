@@ -1,7 +1,6 @@
+import { DidAuthAdapterType, VaultMigrationApiService } from '@affinidi/internal-api-clients'
 import { CredentialLike } from '../../dto/internal'
-import { DidAuthAdapter } from '../../shared/DidAuthAdapter'
 import { extractSDKVersion } from '../../_helpers'
-import { VaultMigrationApiService } from '@affinidi/internal-api-clients'
 import AffinidiVaultEncryptionService from '../../services/AffinidiVaultEncryptionService'
 
 interface vcMigrationList {
@@ -14,7 +13,7 @@ interface vcMigrationList {
 type ConstructorOptions = {
   accessApiKey: string
   bloomDid: string
-  didAuthAdapter: DidAuthAdapter
+  didAuthAdapter: DidAuthAdapterType
   encryptionService: AffinidiVaultEncryptionService
   migrationUrl: string
 }

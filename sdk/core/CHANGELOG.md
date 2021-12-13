@@ -1,3 +1,5 @@
+# release 6.1.1 (2021-12-13)
+* Implemented `didAuthAdapter` field
 # release 6.1.0 (2021-12-07)
 * Updated `internal-api-clients`, `did-auth-lib`, `user-management` and `common` (removing dependency on `node-fetch` and `undici`)
 # release 6.0.4 (2021-12-06)

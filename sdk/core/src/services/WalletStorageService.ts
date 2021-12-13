@@ -1,9 +1,8 @@
 import { JwtService, KeysService } from '@affinidi/common'
-import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { DidAuthAdapterType, KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 import { extractSDKVersion } from '../_helpers'
 import { Env, SignedCredential } from '../dto/shared.dto'
-import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import AffinidiVaultStorageService from './AffinidiVaultStorageService'
@@ -22,7 +21,7 @@ type ConstructorOptions = {
   migrationUrl: string
   storageRegion: string
   accessApiKey: string
-  didAuthAdapter: DidAuthAdapter
+  didAuthAdapter: DidAuthAdapterType
 }
 
 @profile()

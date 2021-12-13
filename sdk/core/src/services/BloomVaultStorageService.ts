@@ -1,6 +1,5 @@
 import { KeysService } from '@affinidi/common'
-import { BloomVaultApiService } from '@affinidi/internal-api-clients'
-import { DidAuthAdapter } from '../shared/DidAuthAdapter'
+import { BloomVaultApiService, DidAuthAdapterType } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
 import { toRpcSig, ecsign } from 'ethereumjs-util'
@@ -20,7 +19,7 @@ const bip32 = require('bip32')
 const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
 
 type BloomVaultStorageOptions = {
-  didAuthAdapter?: DidAuthAdapter
+  didAuthAdapter?: DidAuthAdapterType
   accessApiKey: string
   vaultUrl: string
   migrationUrl: string

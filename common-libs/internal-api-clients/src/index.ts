@@ -19,3 +19,5 @@ export {
   CloudWalletApiService,
   VaultMigrationApiService,
 }
+
+export type { DidAuthAdapterType } from '@affinidi/tools-openapi'
