@@ -11,7 +11,7 @@ export type MaybeArray<T> = T | Array<T>
 export type VCV1Subject<Data extends SimpleThing> = {
   '@context'?: string
   id?: string
-  data: Data
+  data?: Data
 }
 
 export type VCV1SubjectMA<D extends SimpleThing = SimpleThing> = MaybeArray<VCV1Subject<D>>

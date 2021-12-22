@@ -247,11 +247,17 @@ const createVC = async (
   issuer: Signer,
   holder: Holder,
   options?: {
+    withLegacyDataNesting?: boolean
     withLegacyTypeAttribute?: boolean
     exirationDate?: boolean
     revocation?: boolean
   },
 ): Promise<VCV1> => {
+  const data = {
+    name: 'John Smith',
+    ...(options?.withLegacyTypeAttribute && { '@type': 'Person' }),
+  }
+
   const signed = await buildVCV1({
     unsigned: buildVCV1Unsigned({
       skeleton: buildVCV1Skeleton({
@@ -261,14 +267,11 @@ const createVC = async (
         },
         credentialSubject: {
           id: holder.did,
-          data: {
-            ...(options?.withLegacyTypeAttribute && { '@type': 'Person' }),
-          },
+          ...(options?.withLegacyDataNesting ? { data } : data),
         },
         type: ['CustomCredential'],
         context: {
           '@version': 1.1,
-
           CustomCredential: {
             '@id': 'https://example.com/CustomCredential',
             '@context': {
@@ -276,7 +279,6 @@ const createVC = async (
               '@protected': true,
             },
           },
-
           OtherType: {
             '@id': 'https://example.com/OtherType',
             '@context': {
@@ -284,11 +286,16 @@ const createVC = async (
               '@protected': true,
             },
           },
-
-          data: {
-            '@id': 'https://example.com/data',
-            '@type': '@json',
+          name: {
+            '@id': 'schema-id:name',
+            '@type': 'https://schema.org/Text',
           },
+          ...(options?.withLegacyDataNesting && {
+            data: {
+              '@id': 'https://example.com/data',
+              '@type': '@json',
+            },
+          }),
           revocation: {
             '@id': 'https://example.com/revocation',
             '@type': '@json',
@@ -875,38 +882,6 @@ describe('validateVCV1 [RSA]', () => {
           'Invalid value for field "credentialSubject": The following errors have occurred:\ninvalid_param: Invalid value for field "id": Expected to start with "did:"',
       })
     })
-
-    it('with invalid data', async () => {
-      expect.assertions(1)
-
-      const { issuer, bob } = didConfigs
-      // Issue a VC to bob
-      const vc = await createVC(
-        {
-          did: issuer.did,
-          keyId: `${issuer.did}#primary`,
-          privateKey: issuer.primaryKey.privateKey,
-        },
-        { did: bob.did },
-      )
-
-      if (Array.isArray(vc.credentialSubject)) {
-        vc.credentialSubject.forEach((sub) => {
-          sub.data = 'hello world' as any
-        })
-      } else {
-        vc.credentialSubject.data = 'hello world' as any
-      }
-
-      // Verify the VC
-      const res = await validateVCV1({ documentLoader, getVerifySuite })(vc)
-
-      expectToBeInvalidWith(res, {
-        kind: 'invalid_param',
-        message:
-          'Invalid value for field "credentialSubject": The following errors have occurred:\ninvalid_param: Invalid value for field "data": Expected an object',
-      })
-    })
   })
 
   describe('fails with an invalid revocation', () => {
@@ -1004,6 +979,36 @@ describe('validateVCV1 [RSA]', () => {
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
+      )
+
+      // Verify the VC
+      const res = await validateVCV1({ documentLoader, getVerifySuite })({
+        ...vc,
+        credentialSubject: {
+          ...vc.credentialSubject,
+          name: 'Changed Name',
+        },
+      })
+
+      expectToBeInvalidWith(res, {
+        kind: 'invalid_param',
+        message: 'Invalid value for field "proof": Invalid credential proof:\nError: Invalid signature.',
+      })
+    })
+
+    it('when the content are tampered with (with legacy data nesting)', async () => {
+      expect.assertions(1)
+
+      const { issuer, bob } = didConfigs
+      // Issue a VC to bob
+      const vc = await createVC(
+        {
+          did: issuer.did,
+          keyId: `${issuer.did}#primary`,
+          privateKey: issuer.primaryKey.privateKey,
+        },
+        { did: bob.did },
+        { withLegacyDataNesting: true },
       )
 
       // Verify the VC
@@ -1966,6 +1971,51 @@ describe('validateVPV1', () => {
           privateKey: issuer.primaryKey.privateKey,
         },
         { did: bob.did },
+      )
+
+      // Bob creates a VP containing his VC
+      const vp = await createVP(
+        {
+          did: bob.did,
+          keyId: `${bob.did}#primary`,
+          privateKey: bob.primaryKey.privateKey,
+        },
+        vc,
+      )
+
+      // Verify the VP
+      const res = await validateVPV1({ documentLoader, getVerifySuite })({
+        ...vp,
+        verifiableCredential: [
+          {
+            ...vp.verifiableCredential[0],
+            credentialSubject: {
+              ...vp.verifiableCredential[0].credentialSubject,
+              name: 'Changed Name',
+            },
+          },
+        ],
+      })
+
+      expectToBeInvalidWith(res, {
+        kind: 'invalid_param',
+        message: 'Invalid value for field "proof": Invalid presentation proof:\nError: Invalid signature.',
+      })
+    })
+
+    it('when the content is tampered with (with legacy data nesting)', async () => {
+      expect.assertions(1)
+
+      const { issuer, bob } = didConfigs
+      // Issue a VC to bob
+      const vc = await createVC(
+        {
+          did: issuer.did,
+          keyId: `${issuer.did}#primary`,
+          privateKey: issuer.primaryKey.privateKey,
+        },
+        { did: bob.did },
+        { withLegacyDataNesting: true },
       )
 
       // Bob creates a VP containing his VC
