@@ -1,3 +1,5 @@
+# release 1.1.2 (2021-03-12)
+Local urls are never used with NODE_ENV set to 'test'
 # release 1.1.1 (2021-11-29)
 Added support for migration service
 # release 1.1.0 (2021-11-12)

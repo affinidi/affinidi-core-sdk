@@ -10,7 +10,8 @@ const pickPublicTemplate = (service: Service, env: Env) =>
 const pickInternalTemplate = () => defaultInternalTemplate
 
 function resolveUrl(service: Service, env: Env, userTemplate?: string): string {
-  const isAffinidiInternalService = process.env.AFFINIDI_INTERNAL_SERVICE === 'true'
+  const isAffinidiInternalService =
+    process.env.AFFINIDI_INTERNAL_SERVICE === 'true' && process.env.NODE_ENV !== 'test'
   if (!Object.values(Service).includes(service)) {
     throw new Error(`Service ${service} is not supported by url-resolver`)
   }
