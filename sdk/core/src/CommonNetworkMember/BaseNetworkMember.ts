@@ -1,6 +1,7 @@
 import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity, LocalKeyVault } from '@affinidi/common'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import {
+  DidAuthAdapterType,
   IssuerApiService,
   RegistryApiService,
   RevocationApiService,
@@ -92,6 +93,7 @@ export abstract class BaseNetworkMember {
   private readonly _didDocumentKeyId: string
   protected readonly _component: EventComponent
   protected readonly _platformCryptographyTools
+  public readonly didAuthAdapter
 
   constructor(
     { did, didDocumentKeyId, encryptedSeed, password }: ConstructorUserData,
@@ -119,7 +121,7 @@ export abstract class BaseNetworkMember {
     const keyVault = new LocalKeyVault(keysService)
     const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault })
     const didAuthService = new DidAuthClientService(signer)
-    const didAuthAdapter = new DidAuthAdapter(did, didAuthService)
+    const didAuthAdapter: DidAuthAdapterType = new DidAuthAdapter(did, didAuthService)
 
     this._metricsService = new MetricsService({
       metricsUrl,
@@ -170,6 +172,7 @@ export abstract class BaseNetworkMember {
     this._did = did
     this._didDocumentKeyId = didDocumentKeyId
     this._platformCryptographyTools = platformCryptographyTools
+    this.didAuthAdapter = didAuthAdapter
   }
 
   /**
