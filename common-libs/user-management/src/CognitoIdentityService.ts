@@ -104,6 +104,8 @@ const getAdditionalParameters = (messageParameters?: MessageParameters) => {
   return messageParameters ? { ClientMetadata: messageParameters as Record<string, any> } : {}
 }
 
+// TODO: Storing session in memory won't work in case of scaling (> 1 pod).
+//       Shared Redis can be a solution.
 const tempSession: Record<string, string> = {}
 const INVALID_PASSWORD = '1'
 
@@ -196,6 +198,24 @@ export class CognitoIdentityService {
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(result.AuthenticationResult)
       return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens }
     } catch (error) {
+      // NOTE: IF below is a fix: when user first time enters wrong OTP, Cognito
+      //       returns new session, for which correct OTP wont work, so user
+      //       will be stuck until server restart and user enters OTP correctly
+      //       from the 1st attempt
+      if (error?.code === 'COR-5' && error?.inputParams?.token) {
+        const { token } = error.inputParams
+
+        try {
+          const parsedToken = JSON.parse(token)
+
+          tempSession[USERNAME] = parsedToken?.logInToken?.Session
+
+        } catch (parseError) {
+          // throw new SdkError('COR-5', {}, parseError)
+          // TODO: How to pass original error?
+          return { result: CompleteLoginPasswordlessResult.ConfirmationCodeWrong }
+        }
+      }
       // NOTE: Incorrect username or password. -> Corresponds to custom auth challenge
       //       error when OTP was entered incorrectly 3 times.
       if (error.message === 'Incorrect username or password.') {
