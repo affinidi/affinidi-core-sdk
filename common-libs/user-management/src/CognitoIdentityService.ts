@@ -1,3 +1,4 @@
+const createHash = require('create-hash/browser')
 import { CognitoIdentityServiceProvider } from 'aws-sdk'
 import { profile } from '@affinidi/tools-common'
 
@@ -103,9 +104,16 @@ export type UsernameWithAttributes = {
 const getAdditionalParameters = (messageParameters?: MessageParameters) => {
   return messageParameters ? { ClientMetadata: messageParameters as Record<string, any> } : {}
 }
+const sha256 = (data: string): string =>
+  createHash('sha256')
+    .update(data || '')
+    .digest()
+    .toString('base64')
 
-// TODO: Storing session in memory won't work in case of scaling (> 1 pod).
-//       Shared Redis can be a solution.
+/* TODO: NUC-270 we should design stateless flow or use external configurable storage .
+ Storing session in memory won't work in case of scaling (> 1 pod).
+ Shared Redis can be a solution.
+ */
 const tempSession: Record<string, string> = {}
 const INVALID_PASSWORD = '1'
 
@@ -171,9 +179,9 @@ export class CognitoIdentityService {
 
   async completeLogInPasswordless(token: string, confirmationCode: string): Promise<CompleteLoginPasswordlessResponse> {
     const { Session: tokenSession, ChallengeName, ChallengeParameters } = JSON.parse(token)
-
-    const { USERNAME } = ChallengeParameters
-    const Session = tempSession[USERNAME] || tokenSession
+    //TODO: session is approx 920 character long string
+    const hashedTokenSession = sha256(tokenSession)
+    const Session = tempSession[hashedTokenSession] || tokenSession
 
     const params = {
       ClientId: this.clientId,
@@ -187,7 +195,14 @@ export class CognitoIdentityService {
 
     try {
       const result = await this.cognitoidentityserviceprovider.respondToAuthChallenge(params).promise()
-      tempSession[USERNAME] = result.Session
+      //NOTE : successful OTP return a undefined session . wrong code return a new session
+      if (result.Session) {
+        tempSession[hashedTokenSession] = result.Session
+      } else {
+        //TODO : we still need to think about clean up for sessions that was not finished by user. ex. session was confirmed with wrong pasword 1 or 2 times with out sucess.
+        // potential memory leak.
+        delete tempSession[hashedTokenSession]
+      }
 
       // NOTE: respondToAuthChallenge for the custom auth flow do not return
       //       error, but if response has `ChallengeName` - it is an error
@@ -198,24 +213,9 @@ export class CognitoIdentityService {
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(result.AuthenticationResult)
       return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens }
     } catch (error) {
-      // NOTE: IF below is a fix: when user first time enters wrong OTP, Cognito
-      //       returns new session, for which correct OTP wont work, so user
-      //       will be stuck until server restart and user enters OTP correctly
-      //       from the 1st attempt
-      if (error?.code === 'COR-5' && error?.inputParams?.token) {
-        const { token } = error.inputParams
+      // NOTE: not deleted sessions after any errors will block user session
+      delete tempSession[hashedTokenSession]
 
-        try {
-          const parsedToken = JSON.parse(token)
-
-          tempSession[USERNAME] = parsedToken?.logInToken?.Session
-
-        } catch (parseError) {
-          // throw new SdkError('COR-5', {}, parseError)
-          // TODO: How to pass original error?
-          return { result: CompleteLoginPasswordlessResult.ConfirmationCodeWrong }
-        }
-      }
       // NOTE: Incorrect username or password. -> Corresponds to custom auth challenge
       //       error when OTP was entered incorrectly 3 times.
       if (error.message === 'Incorrect username or password.') {
