@@ -414,7 +414,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(commonNetworkMember.did).to.exist
     })
 
-    it.only('OPT code expire after use ', async function () {
+    it('OPT code expire after use ', async function () {
       const { inbox } = await createUser()
       const loginToken = await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
