@@ -292,8 +292,8 @@ parallel('CommonNetworkMember [OTP]', () => {
       return { inbox, originalNetworkMember }
     }
     const getRandomInt = (min: number, max: number) => {
-      min = Math.ceil(min);
-      max = Math.floor(max);
+      min = Math.ceil(min)
+      max = Math.floor(max)
       return Math.floor(Math.random() * (max - min + 1)) + min
     }
     const randomOTP = () => `${getRandomInt(100000, 999999)}`
@@ -369,12 +369,14 @@ parallel('CommonNetworkMember [OTP]', () => {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-5')
       }
+
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
       } catch (errFirstTry) {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-13')
       }
+
       await wait(180)
 
       const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, loginToken, loginCode)
@@ -392,12 +394,14 @@ parallel('CommonNetworkMember [OTP]', () => {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-5')
       }
+
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
       } catch (errFirstTry) {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-5')
       }
+
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
       } catch (errFirstTry) {
