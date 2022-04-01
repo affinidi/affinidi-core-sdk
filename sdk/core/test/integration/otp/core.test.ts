@@ -374,7 +374,7 @@ parallel('CommonNetworkMember [OTP]', () => {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
       } catch (errFirstTry) {
         expect(errFirstTry).to.be.instanceOf(SdkError)
-        expect(errFirstTry.name).to.eql('COR-13')
+        expect(errFirstTry.name).to.eql('COR-5')
       }
 
       await wait(180)
