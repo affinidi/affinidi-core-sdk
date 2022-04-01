@@ -196,14 +196,7 @@ export class CognitoIdentityService {
     try {
       const result = await this.cognitoidentityserviceprovider.respondToAuthChallenge(params).promise()
       //NOTE : successful OTP return a undefined session . wrong code return a new session
-      if (result.Session) {
-        tempSession[hashedTokenSession] = result.Session
-      } else {
-        //TODO : we still need to think about clean up for sessions that was not finished by user. ex. session was confirmed with wrong pasword 1 or 2 times with out sucess.
-        // potential memory leak.
-        delete tempSession[hashedTokenSession]
-      }
-
+      tempSession[hashedTokenSession] = result.Session
       // NOTE: respondToAuthChallenge for the custom auth flow do not return
       //       error, but if response has `ChallengeName` - it is an error
       if (result.ChallengeName === 'CUSTOM_CHALLENGE') {
@@ -211,6 +204,9 @@ export class CognitoIdentityService {
       }
 
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(result.AuthenticationResult)
+      //TODO : we still need to think about clean up for sessions that was not finished by user. ex. session was confirmed with wrong pasword 1 or 2 times with out sucess.
+      // potential memory leak.
+      delete tempSession[hashedTokenSession]
       return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens }
     } catch (error) {
       // NOTE: not deleted sessions after any errors will block user session
