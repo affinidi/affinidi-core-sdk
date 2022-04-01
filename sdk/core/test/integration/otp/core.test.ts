@@ -38,7 +38,7 @@ function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
 }
 
-parallel('CommonNetworkMember [OTP]', () => {
+describe('CommonNetworkMember [OTP]', () => {
   it('sends email with OTP code using the provided template (message parameters) when #signIn is called', async () => {
     const inbox = createInbox()
 
@@ -384,7 +384,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(commonNetworkMember.did).to.exist
     })
 
-    it('user get COR-13 on 3 wrong otp codes ', async function () {
+    it.only('user get COR-13 on 3 wrong otp codes ', async function () {
       const { inbox } = await createUser()
       const loginToken = await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, messageParameters)
       await waitForOtpCode(inbox)
@@ -395,30 +395,41 @@ parallel('CommonNetworkMember [OTP]', () => {
         expect(errFirstTry.name).to.eql('COR-5')
       }
 
+      const otp = randomOTP()
+      let newToken
       try {
-        await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
+        await AffinidiWallet.completeLogInPasswordless(options, loginToken, otp)
       } catch (errFirstTry) {
+        newToken = errFirstTry.context.newToken
+        expect(newToken).to.exist
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-5')
       }
 
-      try {
-        await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
-      } catch (errFirstTry) {
-        expect(errFirstTry).to.be.instanceOf(SdkError)
-        expect(errFirstTry.name).to.eql('COR-13')
-      }
-
-      await wait(680)
-      const newLoginToken = await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, messageParameters)
-      const loginCode = await waitForOtpCode(inbox)
-
-      const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, newLoginToken, loginCode)
+      // new test
+      console.log({ newToken, otp })
+      const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, newToken, otp)
       checkIsWallet(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
+
+
+      // try {
+      //   await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
+      // } catch (errFirstTry) {
+      //   expect(errFirstTry).to.be.instanceOf(SdkError)
+      //   expect(errFirstTry.name).to.eql('COR-13')
+      // }
+
+      // await wait(680)
+      // const newLoginToken = await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, messageParameters)
+      // const loginCode = await waitForOtpCode(inbox)
+
+      // const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, newLoginToken, loginCode)
+      // checkIsWallet(commonNetworkMember)
+      // expect(commonNetworkMember.did).to.exist
     })
 
-    it('OPT code expire after use ', async function () {
+    it('OTP code expire after use ', async function () {
       const { inbox } = await createUser()
       const loginToken = await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, messageParameters)
       const loginCode = await waitForOtpCode(inbox)
