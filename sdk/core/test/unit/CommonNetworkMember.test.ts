@@ -270,6 +270,7 @@ describe('CommonNetworkMember', () => {
   it('.completeLoginChallenge', async () => {
     sinon.stub(CognitoIdentityService.prototype, 'completeLogInPasswordless').resolves({
       result: CompleteLoginPasswordlessResult.Success,
+      token: null,
       cognitoTokens: cognitoUserTokens,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
@@ -427,6 +428,7 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(CognitoIdentityService.prototype, 'completeLogInPasswordless').resolves({
       result: CompleteLoginPasswordlessResult.Success,
+      token: null,
       cognitoTokens: cognitoUserTokens,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
@@ -450,6 +452,7 @@ describe('CommonNetworkMember', () => {
 
     sinon.stub(CognitoIdentityService.prototype, 'completeLogInPasswordless').resolves({
       result: CompleteLoginPasswordlessResult.Success,
+      token: null,
       cognitoTokens: cognitoUserTokens,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
