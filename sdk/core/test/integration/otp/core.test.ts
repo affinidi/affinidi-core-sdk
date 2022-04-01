@@ -397,6 +397,7 @@ parallel('CommonNetworkMember [OTP]', () => {
         expect(errFirstTry.name).to.eql('COR-5')
         expect(errFirstTry.context.newToken).to.exist
       }
+
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
       } catch (errFirstTry) {

@@ -36,9 +36,8 @@ export enum CompleteLoginPasswordlessResult {
 
 type CompleteLoginPasswordlessResponse = Response<
   CompleteLoginPasswordlessResult,
-  CompleteLoginPasswordlessResult.Success |
-  CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
-  { cognitoTokens: CognitoUserTokens, token: string }
+  CompleteLoginPasswordlessResult.Success | CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
+  { cognitoTokens: CognitoUserTokens; token: string }
 >
 
 export enum InitiateLoginPasswordlessResult {
@@ -205,7 +204,7 @@ export class CognitoIdentityService {
         return {
           result: CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
           cognitoTokens: null,
-          token: JSON.stringify({ ...tokenObject, Session: result.Session })
+          token: JSON.stringify({ ...tokenObject, Session: result.Session }),
         }
       }
 
