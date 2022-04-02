@@ -1,3 +1,5 @@
+# release 6.1.1 (2022-04-03)
+* Fix complete passwordless login operation
 # release 6.0.0-beta.20 (2021-10-20)
 Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.20
 # release 6.0.0-beta.19 (2021-10-13)
