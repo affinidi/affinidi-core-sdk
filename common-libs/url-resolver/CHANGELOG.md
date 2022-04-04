@@ -1,3 +1,7 @@
+# release 1.1.3 (2022-04-04)
+Remove unused service 
+  - user auth 
+  - sff-issuer 
 # release 1.1.2 (2021-03-12)
 Local urls are never used with NODE_ENV set to 'test'
 # release 1.1.1 (2021-11-29)
