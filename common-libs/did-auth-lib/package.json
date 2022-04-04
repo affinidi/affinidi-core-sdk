@@ -40,14 +40,14 @@
   "homepage": "https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib#readme",
   "dependencies": {
     "@affinidi/common": "^2.1.4",
-    "@affinidi/internal-api-clients": "^1.1.0",
+    "@affinidi/internal-api-clients": "^1.2.1",
     "@affinidi/tools-common": "^1.0.0",
     "@affinidi/url-resolver": "^1.1.3",
     "did-resolver": "^2.0.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
-    "@affinidi/platform-fetch-node": "^1.0.0",
+    "@affinidi/platform-fetch-node": "^1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
     "@types/mocha": "8.0.3",

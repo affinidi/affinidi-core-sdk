@@ -44,7 +44,7 @@
     "@affinidi/affinidi-did-auth-lib": "^2.1.1",
     "@affinidi/affinity-metrics-lib": "^0.0.25",
     "@affinidi/common": "^2.1.4",
-    "@affinidi/internal-api-clients": "^1.2.0",
+    "@affinidi/internal-api-clients": "^1.2.1",
     "@affinidi/issuer-email-ses-client": "^0.1.1",
     "@affinidi/issuer-phone-twilio-client": "^0.1.1",
     "@affinidi/tools-common": "^1.0.0",
@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
-    "@affinidi/platform-fetch-node": "^1.0.0",
+    "@affinidi/platform-fetch-node": "^1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/async-retry": "^1.4.2",
     "@types/chai": "4.2.12",
