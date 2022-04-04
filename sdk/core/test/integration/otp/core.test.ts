@@ -365,6 +365,7 @@ parallel('CommonNetworkMember [OTP]', () => {
 
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
+        expect.fail('COR-5 error expected')
       } catch (errFirstTry) {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-5')
@@ -373,10 +374,11 @@ parallel('CommonNetworkMember [OTP]', () => {
 
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
-      } catch (errFirstTry) {
-        expect(errFirstTry).to.be.instanceOf(SdkError)
-        expect(errFirstTry.name).to.eql('COR-5')
-        expect(errFirstTry.context.newToken).to.exist
+        expect.fail('COR-5 error expected')
+      } catch (errSecondTry) {
+        expect(errSecondTry).to.be.instanceOf(SdkError)
+        expect(errSecondTry.name).to.eql('COR-5')
+        expect(errSecondTry.context.newToken).to.exist
       }
 
       await wait(180)
@@ -390,8 +392,10 @@ parallel('CommonNetworkMember [OTP]', () => {
       const { inbox } = await createUser()
       const loginToken = await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, messageParameters)
       await waitForOtpCode(inbox)
+
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
+        expect.fail('COR-5 error expected')
       } catch (errFirstTry) {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-5')
@@ -400,17 +404,19 @@ parallel('CommonNetworkMember [OTP]', () => {
 
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
-      } catch (errFirstTry) {
-        expect(errFirstTry).to.be.instanceOf(SdkError)
-        expect(errFirstTry.name).to.eql('COR-5')
-        expect(errFirstTry.context.newToken).to.exist
+        expect.fail('COR-5 error expected')
+      } catch (errSecondTry) {
+        expect(errSecondTry).to.be.instanceOf(SdkError)
+        expect(errSecondTry.name).to.eql('COR-5')
+        expect(errSecondTry.context.newToken).to.exist
       }
 
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
-      } catch (errFirstTry) {
-        expect(errFirstTry).to.be.instanceOf(SdkError)
-        expect(errFirstTry.name).to.eql('COR-13')
+        expect.fail('COR-13 error expected')
+      } catch (errThirdTry) {
+        expect(errThirdTry).to.be.instanceOf(SdkError)
+        expect(errThirdTry.name).to.eql('COR-13')
       }
 
       await wait(680)
@@ -428,6 +434,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       const loginCode = await waitForOtpCode(inbox)
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
+        expect.fail('COR-5 error expected')
       } catch (errFirstTry) {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-5')
@@ -437,6 +444,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       let newToken
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
+        expect.fail('COR-5 error expected')
       } catch (errSecondTry) {
         newToken = errSecondTry.context.newToken
         expect(newToken).to.exist
@@ -459,6 +467,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(commonNetworkMember.did).to.exist
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, loginCode)
+        expect.fail('COR-5 error expected')
       } catch (errFirstTry) {
         expect(errFirstTry).to.be.instanceOf(SdkError)
         expect(errFirstTry.name).to.eql('COR-17')
