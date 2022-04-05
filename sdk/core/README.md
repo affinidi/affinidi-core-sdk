@@ -413,6 +413,32 @@ const wallet = await AffinidiWallet.completeLoginPasswordless(options, token, co
 
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
 
+`completeLoginPasswordless` could return next errors: 
+
+- `COR-5` Invalid confirmation OTP code  was uses.
+As part of error payload new session token is passed that should be used for continuation of completing a session with old OTP
+
+```ts
+import retry from "async-retry";
+
+let newToken;
+try {
+  const wallet = await AffinidiWallet.completeLoginPasswordless(options, token, invalidConfirmationCode)
+} catch (sdkError) {
+  if (sdkError.code === 'COR-5') {
+    newToken = sdkError.context.newToken
+  }
+}
+const wallet = await AffinidiWallet.completeLoginPasswordless(options, newToken, confirmationCode)
+
+```
+**CAUTION** for serverside SDK usage you should always use a token returned with error to continue process
+
+Up to 3 retries are possible. After 3 times new session should be used
+
+- `COR-13` Invalid confirmation OTP code was used 3 times or more. Use a `initiateLogInPasswordless` call to initiate a new session.
+- `COR-17` Confirmation code is expired. Lifetime of confirmation code is around 3 minutes. Use a `initiateLogInPasswordless` call to initiate a new session
+
 #### Password recovery
 
 NOTE: Password recovery is not possible with arbitrary username.

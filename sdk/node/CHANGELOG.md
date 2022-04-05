@@ -1,3 +1,6 @@
+# release 6.1.1 (2022-04-03)
+* Fix complete passwordless login operation
+* minor fix of hashing functions for browser support
 # release 6.2.0 (2021-12-09)
 * Update BBS related libs
 * Selective disclosure for nested fields

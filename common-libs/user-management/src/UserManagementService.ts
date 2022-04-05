@@ -201,7 +201,7 @@ export class UserManagementService {
       case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
         throw new SdkErrorFromCode('COR-17', { confirmationCode })
       case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
-        throw new SdkErrorFromCode('COR-5')
+        throw new SdkErrorFromCode('COR-5', { newToken: response.token })
       default:
         throw new DefaultResultError(response)
     }
