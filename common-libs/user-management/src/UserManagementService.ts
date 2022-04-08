@@ -158,7 +158,8 @@ export class UserManagementService {
   }
 
   async doesUnconfirmedUserExist(username: string) {
-    return this._cognitoIdentityService.doesUnconfirmedUserExist(username)
+    const normalizedUsername = normalizeUsername(username)
+    return this._cognitoIdentityService.doesUnconfirmedUserExist(normalizedUsername)
   }
 
   async doesConfirmedUserExist(login: string) {
