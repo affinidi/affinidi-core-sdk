@@ -1,3 +1,5 @@
+# release 6.1.2 (2022-04-08)
+fix passwordless signin for users with arbitrary user name
 # release 6.1.1 (2022-04-03)
 * Fix complete passwordless login operation
 # release 6.0.0-beta.20 (2021-10-20)

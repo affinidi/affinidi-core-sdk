@@ -158,13 +158,11 @@ export class UserManagementService {
   }
 
   async doesUnconfirmedUserExist(username: string) {
-    const normalizedUsername = normalizeUsername(username)
-    return this._cognitoIdentityService.doesUnconfirmedUserExist(normalizedUsername)
+    return this._cognitoIdentityService.doesUnconfirmedUserExist(username)
   }
 
   async doesConfirmedUserExist(login: string) {
-    const normalizedUsername = normalizeUsername(login)
-    return this._cognitoIdentityService.doesConfirmedUserExist(normalizedUsername)
+    return this._cognitoIdentityService.doesConfirmedUserExist(login)
   }
 
   async initiateLogInPasswordless(login: string, messageParameters?: MessageParameters): Promise<string> {
