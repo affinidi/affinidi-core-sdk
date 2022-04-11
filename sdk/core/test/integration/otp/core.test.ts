@@ -7,6 +7,7 @@ import {
   AffinidiWalletV6 as AffinidiWallet,
   AffinidiWallet as LegacyAffinidiWallet,
   checkIsWallet,
+  AffinidiWallet as AffinityWallet,
 } from '../../helpers/AffinidiWallet'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 
@@ -28,7 +29,7 @@ const messageParameters: MessageParameters = {
 
 const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   const { body } = await inbox.waitForNewEmail()
-  return body.replace('Your verification code is: ', '')
+  return body.match(/\d{6}/)[0]
 }
 
 const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.core' })
@@ -545,6 +546,42 @@ parallel('CommonNetworkMember [OTP]', () => {
 
       expect(error).to.be.instanceOf(SdkError)
       expect(error.name).to.eql('COR-7')
+    })
+
+    it('passwordless signIn after email change for arbitrary username name', async () => {
+      const generateUsername = () => {
+        const TIMESTAMP = Date.now().toString(16).toUpperCase()
+        return `test.user-${TIMESTAMP}`
+      }
+
+      const networkMemberSignUp = await AffinityWallet.signUp(generateUsername(), 'nuc27!testPassword', options)
+      checkIsWallet(networkMemberSignUp)
+
+      expect(networkMemberSignUp.did).to.exist
+      const newInbox = createInbox()
+      await networkMemberSignUp.changeUsername(newInbox.email, options)
+      const changeUsernameOtp = await waitForOtpCode(newInbox)
+
+      await networkMemberSignUp.confirmChangeUsername(newInbox.email, changeUsernameOtp, options)
+
+      await networkMemberSignUp.signOut(options)
+
+      const token = await AffinidiWallet.initiateSignInPasswordless(options, newInbox.email)
+      const signInOtp = await waitForOtpCode(newInbox)
+      const { wallet, isNew } = await AffinidiWallet.completeSignInPasswordless(options, token, signInOtp)
+      expect(isNew).to.be.equal(false)
+      checkIsWallet(wallet)
+    })
+
+    it('uncongirmed user can make signin', async () => {
+      const newInbox = createInbox()
+
+      await AffinityWallet.signUp(newInbox.email, 'nuc27!testPassword', options)
+      await waitForOtpCode(newInbox)
+      const token = await AffinidiWallet.initiateSignInPasswordless(options, newInbox.email)
+      const signInOtp = await waitForOtpCode(newInbox)
+      const { wallet } = await AffinidiWallet.completeSignInPasswordless(options, token, signInOtp)
+      checkIsWallet(wallet)
     })
 
     it('allows to change email after password was reset for user registered with email', async () => {
