@@ -573,6 +573,20 @@ parallel('CommonNetworkMember [OTP]', () => {
       checkIsWallet(wallet)
     })
 
+    it('uncongirmed user can make signin', async () => {
+
+      const newInbox = createInbox()
+
+      await AffinityWallet.signUp(newInbox.email, 'nuc27!testPassword', options)
+      await waitForOtpCode(newInbox)
+      const token = await AffinidiWallet.initiateSignInPasswordless(options, newInbox.email)
+      const signInOtp = await waitForOtpCode(newInbox)
+      console.log({ signInOtp })
+      const { wallet, isNew } = await AffinidiWallet.completeSignInPasswordless(options, token, signInOtp)
+      expect(isNew).to.be.equal(false)
+      checkIsWallet(wallet)
+    })
+
     it('allows to change email after password was reset for user registered with email', async () => {
       const { inbox, originalNetworkMember } = await createUser()
       await originalNetworkMember.logOut()
