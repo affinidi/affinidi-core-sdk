@@ -574,7 +574,6 @@ parallel('CommonNetworkMember [OTP]', () => {
     })
 
     it('uncongirmed user can make signin', async () => {
-
       const newInbox = createInbox()
 
       await AffinityWallet.signUp(newInbox.email, 'nuc27!testPassword', options)
