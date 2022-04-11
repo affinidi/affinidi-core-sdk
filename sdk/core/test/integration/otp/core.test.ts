@@ -580,9 +580,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       await waitForOtpCode(newInbox)
       const token = await AffinidiWallet.initiateSignInPasswordless(options, newInbox.email)
       const signInOtp = await waitForOtpCode(newInbox)
-      console.log({ signInOtp })
-      const { wallet, isNew } = await AffinidiWallet.completeSignInPasswordless(options, token, signInOtp)
-      expect(isNew).to.be.equal(false)
+      const { wallet } = await AffinidiWallet.completeSignInPasswordless(options, token, signInOtp)
       checkIsWallet(wallet)
     })
 
