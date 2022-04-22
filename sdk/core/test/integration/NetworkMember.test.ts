@@ -473,7 +473,7 @@ describe('CommonNetworkMember', () => {
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeed, options)
     const commonNetworkMemberElem = new AffinidiWallet(password, encryptedSeedElem, options)
 
-    const customExpiresAt = '2022-04-15T00:00:00.000Z'
+    const customExpiresAt = new Date(new Date().getTime() + 5 * 24 * 60 * 60 * 1000)
     const customNonce = '123123123'
     const audienceDid = seedDid
     const jwtOptions = { audienceDid, expiresAt: customExpiresAt, nonce: customNonce, callbackUrl }
@@ -554,7 +554,7 @@ describe('CommonNetworkMember', () => {
   it('#generateCredentialShareRequestToken with jwtOptions', async () => {
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeed, options)
     const issuerDid = seedDid
-    const customExpiresAt = '2022-04-15T00:00:00.000Z'
+    const customExpiresAt = new Date(new Date().getTime() + 5 * 24 * 60 * 60 * 1000)
     const customNonce = '123123123'
     const audienceDid = 'did:jolo:testDID123'
     const jwtOptions = { audienceDid, expiresAt: customExpiresAt, nonce: customNonce, callbackUrl }
