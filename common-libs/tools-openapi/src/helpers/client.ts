@@ -94,8 +94,6 @@ const executeByOptions = async (
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(`${value}`)}`)
     .join('&')
   const url = `${clientOptions.serviceUrl}${path}${queryParamsString !== '' ? `?${queryParamsString}` : ''}`
-
-  console.log('>> executeByOptions', {path, queryParamsString , url})
   const response = await fetch(url, fetchOptions)
   const { status } = response
 
