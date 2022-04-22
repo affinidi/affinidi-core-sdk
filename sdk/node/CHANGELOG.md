@@ -1,3 +1,5 @@
+# release 6.2.3 (2021-04-22)
+* fix react native bug
 # release 6.2.2 (2022-04-08)
 fix passwordless signin for users with arbitrary user name
 # release 6.2.1 (2022-04-03)

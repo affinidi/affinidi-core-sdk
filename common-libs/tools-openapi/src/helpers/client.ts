@@ -90,7 +90,9 @@ const executeByOptions = async (
 
   // eslint-disable-next-line no-unused-vars
   const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => pathParams?.[p1])
-  const queryParamsString = Object.entries(queryParams ?? {}).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(`${value}`)}`).join('&')
+  const queryParamsString = Object.entries(queryParams ?? {})
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(`${value}`)}`)
+    .join('&')
   const url = `${clientOptions.serviceUrl}${path}${queryParamsString !== '' ? `?${queryParams}` : ''}`
 
   const response = await fetch(url, fetchOptions)
