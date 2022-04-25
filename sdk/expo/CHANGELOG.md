@@ -1,3 +1,5 @@
+# release 6.1.3 (2021-04-22)
+* fix react native bug
 # release 6.1.1 (2022-04-03)
 * Fix complete passwordless login operation
 * minor fix of hashing functions for browser support

@@ -1,3 +1,5 @@
+# release 1.2.3 (2021-04-22)
+* fix react native bug
 * release 1.2.2(2022-04-08)
   * Fix `doesConfirmedUserExist` to work with changes user email and phone
 * release 1.2.1 (2022-04-03)

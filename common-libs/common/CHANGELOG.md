@@ -1,3 +1,5 @@
+# release 2.1.5 (2021-04-22)
+* fix react native bug
 # release 2.1.2 (2022-03-11)
 * fixed a minor bug in selective disclosure of nested fields
 # release 2.1.1 (2021-12-09)
