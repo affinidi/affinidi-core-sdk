@@ -1,3 +1,5 @@
+# release 6.2.4 (2021-04-27)
+* add optional `constraints` field to `CredentialRequirement`
 # release 6.2.3 (2021-04-22)
 * fix react native bug
 # release 6.2.2 (2022-04-08)

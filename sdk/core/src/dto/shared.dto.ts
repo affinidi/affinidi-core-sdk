@@ -267,6 +267,9 @@ export class CredentialRequirement {
   @IsDefined()
   @IsArray()
   type: string[]
+  @IsOptional()
+  @IsArray()
+  constraints?: string[]
 }
 
 export class JwtOptions {
