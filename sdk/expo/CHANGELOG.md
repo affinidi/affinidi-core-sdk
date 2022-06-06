@@ -1,3 +1,10 @@
+# release 6.1.4 (2021-04-27)
+* add optional `constraints` field to `CredentialRequirement`
+# release 6.1.3 (2021-04-22)
+* fix react native bug
+# release 6.1.1 (2022-04-03)
+* Fix complete passwordless login operation
+* minor fix of hashing functions for browser support
 # release 6.0.0-beta.20 (2021-10-20)
 Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.20
 # release 6.0.0-beta.19 (2021-10-13)

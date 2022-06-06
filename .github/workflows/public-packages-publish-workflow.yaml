@@ -50,7 +50,8 @@ jobs:
       - name: Install npm v7
         run: npm install -g npm@7
       - name: Publish to npmjs.org
-        run: npm run publish from-package -- --yes --registry https://registry.npmjs.org/
+        # more info: https://github.com/lerna/lerna/issues/2788
+        run: npm run publish from-package -- --yes --registry https://registry.npmjs.org/ --no-verify-access
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLIC_NPM_NODE_AUTH_TOKEN}}
           TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}

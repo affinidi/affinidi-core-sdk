@@ -1,3 +1,5 @@
+# release 2.1.2 (2021-04-22)
+* fix react native bug
 # release 2.1.0 (2021-12-07)
 * Updated `internal-api-clients` and `common` (removing dependency on `node-fetch` and `undici`)
 # release 2.0.0-beta.2 (2021-11-03)

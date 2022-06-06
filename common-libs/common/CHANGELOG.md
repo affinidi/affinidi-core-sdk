@@ -1,5 +1,10 @@
+# release 2.1.5 (2021-04-22)
+* fix react native bug
+# release 2.1.2 (2022-03-11)
+* fixed a minor bug in selective disclosure of nested fields
 # release 2.1.1 (2021-12-09)
 * add jsonld wrapper for dependents libs
+* implemented support for selective disclosure of nested fields
 # release 2.1.0 (2021-12-07)
 * Updated `internal-api-clients`
 * Removed dependency on `node-fetch` and `undici`

@@ -90,13 +90,11 @@ const executeByOptions = async (
 
   // eslint-disable-next-line no-unused-vars
   const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => pathParams?.[p1])
-  const url = new URL(`${clientOptions.serviceUrl}${path}`)
-
-  for (const [name, value] of Object.entries(queryParams ?? {})) {
-    url.searchParams.set(name, value as string)
-  }
-
-  const response = await fetch(url.toString(), fetchOptions)
+  const queryParamsString = Object.entries(queryParams ?? {})
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(`${value}`)}`)
+    .join('&')
+  const url = `${clientOptions.serviceUrl}${path}${queryParamsString !== '' ? `?${queryParamsString}` : ''}`
+  const response = await fetch(url, fetchOptions)
   const { status } = response
 
   if (!status.toString().startsWith('2')) {

@@ -1,6 +1,5 @@
 import encode from 'base64url'
 import { fromSeed as bip32FromSeed, BIP32Interface } from 'bip32'
-import createHash from 'create-hash'
 import { ecsign } from 'ethereumjs-util'
 
 import { validateDidMethodSupported } from '../_helpers'
@@ -9,6 +8,7 @@ import { convertDecryptedSeedBufferToString, parseDecryptedSeed } from '../share
 import DigestService from './DigestService'
 import DidDocumentService from './DidDocumentService'
 
+const createHash = require('create-hash/browser')
 const tinySecp256k1 = require('tiny-secp256k1')
 const aes = require('browserify-aes/browser')
 const aesModes = require('browserify-aes/modes')

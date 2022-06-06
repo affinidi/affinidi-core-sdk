@@ -1,3 +1,12 @@
+# release 6.2.4 (2021-04-27)
+* add optional `constraints` field to `CredentialRequirement`
+# release 6.2.3 (2021-04-22)
+* fix react native bug
+# release 6.2.2 (2022-04-08)
+fix passwordless signin for users with arbitrary user name
+# release 6.2.1 (2022-04-03)
+* Fix complete passwordless login operation
+* minor fix of hashing functions for browser support
 # release 6.2.0 (2021-12-09)
 * Update BBS related libs
 * Selective disclosure for nested fields

@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/user-management",
-  "version": "1.1.0",
+  "version": "1.2.3",
   "description": "User Management implementation for AWS Cognito",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -28,6 +28,7 @@
   "keywords": [
     "sdk",
     "affinity",
+    "affinidi",
     "network",
     "cognito",
     "aws"
@@ -35,7 +36,8 @@
   "author": "Inga Lev <inga.l@affinidi.com>",
   "contributors": [
     "Vitaly Rudenko <vitaly.r@affinidi.com>",
-    "Dmytro Filipenko <dmytro.f@affinidi.com>"
+    "Dmytro Filipenko <dmytro.f@affinidi.com>",
+    "Volodymyr Pavlyshyn <volodymyr.p@affinidi.com>"
   ],
   "license": "ISC",
   "bugs": {
@@ -43,14 +45,16 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/internal-api-clients": "^1.2.0",
+    "@affinidi/internal-api-clients": "^1.2.2",
     "@affinidi/tools-common": "^1.0.0",
-    "aws-sdk": "^2.1017.0"
+    "aws-sdk": "^2.1017.0",
+    "create-hash": "^1.2.0"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "^4.2.22",
+    "@types/create-hash": "^1.2.2",
     "@types/mocha": "^9.0.0",
     "@types/node": "^13.13.52",
     "@typescript-eslint/eslint-plugin": "3.7.1",

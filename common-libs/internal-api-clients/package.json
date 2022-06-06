@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/internal-api-clients",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -42,11 +42,11 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/tools-common": "^1.0.1",
-    "@affinidi/tools-openapi": "^1.1.0"
+    "@affinidi/tools-openapi": "^1.1.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
-    "@affinidi/platform-fetch-node": "^1.0.0",
+    "@affinidi/platform-fetch-node": "^1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
     "@types/chai-spies": "1.0.2",

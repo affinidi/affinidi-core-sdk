@@ -163,8 +163,7 @@ export class UserManagementService {
   }
 
   async doesConfirmedUserExist(login: string) {
-    const normalizedUsername = normalizeUsername(login)
-    return this._cognitoIdentityService.doesConfirmedUserExist(normalizedUsername)
+    return this._cognitoIdentityService.doesConfirmedUserExist(login)
   }
 
   async initiateLogInPasswordless(login: string, messageParameters?: MessageParameters): Promise<string> {
@@ -201,7 +200,7 @@ export class UserManagementService {
       case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
         throw new SdkErrorFromCode('COR-17', { confirmationCode })
       case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
-        throw new SdkErrorFromCode('COR-5')
+        throw new SdkErrorFromCode('COR-5', { newToken: response.token })
       default:
         throw new DefaultResultError(response)
     }
