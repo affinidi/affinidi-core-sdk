@@ -1,6 +1,8 @@
-# release 6.2.4 (2021-04-27)
+# release 6.2.5 (2022-06-06)
+* update README to notify users use the latest versions with affinidi-vault support
+# release 6.2.4 (2022-04-27)
 * add optional `constraints` field to `CredentialRequirement`
-# release 6.2.3 (2021-04-22)
+# release 6.2.3 (2022-04-22)
 * fix react native bug
 # release 6.2.2 (2022-04-08)
 fix passwordless signin for users with arbitrary user name
