@@ -11,6 +11,7 @@ export default class SdkErrorFromCode extends SdkError {
     super({ ...error, code }, context, originalError)
   }
 
+  // TODO: synchronize these errors with defined in /common-libs/user-management/src/SdkErrorFromCode
   static get errors(): any {
     return {
       'COR-0': {
