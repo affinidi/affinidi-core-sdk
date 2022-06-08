@@ -1,4 +1,5 @@
-
+# release 1.3.0 (2022-06-08)
+  * Updated KeyStorageApiService to support AdminDeleteIncompleteUser feature
 # release 1.2.0 (2021-12-07)
   * Updated `tools-openapi` (removing dependency on `node-fetch` and `undici`)
 # release 1.1.1 (2021-11-29)

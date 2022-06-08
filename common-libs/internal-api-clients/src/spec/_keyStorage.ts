@@ -55,13 +55,18 @@ export default {
 				"type": "object",
 				"additionalProperties": false
 			},
+			"Env": {
+				"type": "string",
+				"enum": [
+					"dev",
+					"staging",
+					"prod"
+				]
+			},
 			"FreeFormObjectResponse": {
 				"properties": {},
 				"type": "object",
-				"additionalProperties": {
-					"additionalProperties": true,
-					"type": "object"
-				}
+				"additionalProperties": {}
 			},
 			"GetSignedCredentialOutput": {
 				"properties": {
@@ -78,94 +83,8 @@ export default {
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CognitoUserTokens": {
+			"TsoaSdkOptions": {
 				"properties": {
-					"accessToken": {
-						"type": "string"
-					},
-					"idToken": {
-						"type": "string"
-					},
-					"refreshToken": {
-						"type": "string"
-					},
-					"expiresIn": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"accessToken",
-					"idToken",
-					"refreshToken",
-					"expiresIn"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"SdkOptions": {
-				"properties": {
-					"registryUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"issuerUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"verifierUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"keyStorageUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"vaultUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"revocationUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"cognitoUserTokens": {
-						"$ref": "#/components/schemas/CognitoUserTokens",
-						"nullable": true
-					},
-					"didMethod": {
-						"type": "string",
-						"enum": [
-							"jolo",
-							"elem"
-						],
-						"nullable": true
-					},
-					"env": {
-						"type": "string",
-						"enum": [
-							"dev",
-							"staging",
-							"prod"
-						],
-						"nullable": true
-					},
-					"phoneIssuerBasePath": {
-						"type": "string",
-						"nullable": true
-					},
-					"emailIssuerBasePath": {
-						"type": "string",
-						"nullable": true
-					},
-					"skipBackupEncryptedSeed": {
-						"type": "boolean",
-						"nullable": true
-					},
-					"skipBackupCredentials": {
-						"type": "boolean",
-						"nullable": true
-					},
 					"apiKey": {
 						"type": "string",
 						"nullable": true
@@ -174,15 +93,15 @@ export default {
 						"type": "string",
 						"nullable": true
 					},
-					"isProfilerActive": {
-						"type": "boolean",
+					"env": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Env"
+							}
+						],
 						"nullable": true
 					},
-					"metricsUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"storageRegion": {
+					"issuerUrl": {
 						"type": "string",
 						"nullable": true
 					}
@@ -196,7 +115,11 @@ export default {
 						"type": "string"
 					},
 					"options": {
-						"$ref": "#/components/schemas/SdkOptions",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TsoaSdkOptions"
+							}
+						],
 						"nullable": true
 					}
 				},
@@ -265,10 +188,14 @@ export default {
 	},
 	"info": {
 		"title": "affinity-wallet-backend",
-		"version": "1.0.58",
+		"version": "1.4.0",
 		"description": "Backend for Affinity SaaS Wallet",
 		"license": {
 			"name": "ISC"
+		},
+		"contact": {
+			"name": "Denis Popov ",
+			"email": "denis.p@affinity-project.org"
 		}
 	},
 	"openapi": "3.0.0",
@@ -278,9 +205,6 @@ export default {
 				"operationId": "StoreTemplate",
 				"responses": {
 					"204": {
-						"content": {
-							"application/json": {}
-						},
 						"description": "No content"
 					}
 				},
@@ -290,6 +214,7 @@ export default {
 				"security": [],
 				"parameters": [],
 				"requestBody": {
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -305,9 +230,6 @@ export default {
 				"operationId": "DeleteTemplate",
 				"responses": {
 					"204": {
-						"content": {
-							"application/json": {}
-						},
 						"description": "No content"
 					}
 				},
@@ -317,6 +239,7 @@ export default {
 				"security": [],
 				"parameters": [],
 				"requestBody": {
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -332,14 +255,14 @@ export default {
 				"operationId": "GetCredentialOffer",
 				"responses": {
 					"200": {
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/GetCredentialOfferOutput"
 								}
 							}
-						},
-						"description": "Ok"
+						}
 					}
 				},
 				"tags": [
@@ -372,12 +295,7 @@ export default {
 						"name": "env",
 						"required": false,
 						"schema": {
-							"type": "string",
-							"enum": [
-								"dev",
-								"staging",
-								"prod"
-							]
+							"$ref": "#/components/schemas/Env"
 						}
 					}
 				]
@@ -388,14 +306,14 @@ export default {
 				"operationId": "GetSignedCredential",
 				"responses": {
 					"200": {
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/GetSignedCredentialOutput"
 								}
 							}
-						},
-						"description": "Ok"
+						}
 					}
 				},
 				"tags": [
@@ -417,6 +335,7 @@ export default {
 					}
 				],
 				"requestBody": {
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -432,14 +351,14 @@ export default {
 				"operationId": "ReadMyKey",
 				"responses": {
 					"200": {
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/KeyOutput"
 								}
 							}
-						},
-						"description": "Ok"
+						}
 					}
 				},
 				"tags": [
@@ -467,14 +386,14 @@ export default {
 				"operationId": "StoreMyKey",
 				"responses": {
 					"200": {
+						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/KeyOutput"
 								}
 							}
-						},
-						"description": "Ok"
+						}
 					}
 				},
 				"tags": [
@@ -496,6 +415,7 @@ export default {
 					}
 				],
 				"requestBody": {
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -511,9 +431,6 @@ export default {
 				"operationId": "AdminConfirmUser",
 				"responses": {
 					"204": {
-						"content": {
-							"application/json": {}
-						},
 						"description": "No content"
 					}
 				},
@@ -523,6 +440,7 @@ export default {
 				"security": [],
 				"parameters": [],
 				"requestBody": {
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -538,9 +456,6 @@ export default {
 				"operationId": "AdminDeleteUnconfirmedUser",
 				"responses": {
 					"204": {
-						"content": {
-							"application/json": {}
-						},
 						"description": "No content"
 					}
 				},
@@ -550,6 +465,7 @@ export default {
 				"security": [],
 				"parameters": [],
 				"requestBody": {
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -558,6 +474,35 @@ export default {
 						}
 					}
 				}
+			}
+		},
+		"/userManagement/adminDeleteIncompleteUser": {
+			"post": {
+				"operationId": "AdminDeleteIncompleteUser",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"description": "This endpoint should be used as a fallback in case user creation hangs,\nand it should delete the user from cognito, to allow retries.",
+				"tags": [
+					"UserManagement"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		}
 	},
