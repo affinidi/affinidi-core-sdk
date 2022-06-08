@@ -24,7 +24,7 @@ export enum LogInWithPasswordResult {
 type LogInWithPasswordResponse = Response<
   LogInWithPasswordResult,
   LogInWithPasswordResult.Success,
-  { cognitoTokens: CognitoUserTokens }
+  { cognitoTokens: CognitoUserTokens; registrationStatus: RegistrationStatus }
 >
 
 export enum CompleteLoginPasswordlessResult {
@@ -37,7 +37,7 @@ export enum CompleteLoginPasswordlessResult {
 type CompleteLoginPasswordlessResponse = Response<
   CompleteLoginPasswordlessResult,
   CompleteLoginPasswordlessResult.Success | CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
-  { cognitoTokens: CognitoUserTokens; token: string }
+  { cognitoTokens: CognitoUserTokens; token: string; registrationStatus: RegistrationStatus }
 >
 
 export enum InitiateLoginPasswordlessResult {
@@ -94,12 +94,22 @@ enum AuthFlow {
   RefreshToken = 'REFRESH_TOKEN_AUTH',
 }
 
+export enum RegistrationStatus {
+  Incomplete = 'incomplete',
+  Complete = 'complete',
+}
+
 export type UsernameWithAttributes = {
   normalizedUsername: string
   login: string
   phoneNumber?: string
   emailAddress?: string
+  registrationStatus?: RegistrationStatus // in cognito pool "gender" attribute is used to store this value
 }
+
+type BuildUserAttributesInput = Pick<UsernameWithAttributes, 'phoneNumber' | 'emailAddress' | 'registrationStatus'>
+
+const REGISTRATION_STATUS_ATTRIBUTE = 'gender'
 
 const getAdditionalParameters = (messageParameters?: MessageParameters) => {
   return messageParameters ? { ClientMetadata: messageParameters as Record<string, any> } : {}
@@ -138,10 +148,11 @@ export class CognitoIdentityService {
       const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, login, password)
       const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
-
+      const registrationStatus = await this._getRegistrationStatus(cognitoTokens.accessToken)
       return {
         result: LogInWithPasswordResult.Success,
         cognitoTokens,
+        registrationStatus,
       }
     } catch (error) {
       switch (error.code) {
@@ -205,6 +216,7 @@ export class CognitoIdentityService {
           result: CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
           cognitoTokens: null,
           token: JSON.stringify({ ...tokenObject, Session: result.Session }),
+          registrationStatus: RegistrationStatus.Complete,
         }
       }
 
@@ -212,7 +224,8 @@ export class CognitoIdentityService {
       //TODO : we still need to think about clean up for sessions that was not finished by user. ex. session was confirmed with wrong pasword 1 or 2 times with out sucess.
       // potential memory leak.
       delete tempSession[hashedTokenSession]
-      return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens, token: null }
+      const registrationStatus = await this._getRegistrationStatus(cognitoTokens.accessToken)
+      return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens, token: null, registrationStatus }
     } catch (error) {
       // NOTE: not deleted sessions after any errors will block user session
       delete tempSession[hashedTokenSession]
@@ -302,7 +315,10 @@ export class CognitoIdentityService {
       ClientId: this.clientId,
       Password: password,
       Username: usernameWithAttributes.normalizedUsername,
-      UserAttributes: this._buildUserAttributes(usernameWithAttributes),
+      UserAttributes: this._buildUserAttributes({
+        ...usernameWithAttributes,
+        registrationStatus: RegistrationStatus.Incomplete,
+      }),
       ...getAdditionalParameters(messageParameters),
     }
 
@@ -488,16 +504,26 @@ export class CognitoIdentityService {
 
   public async logInWithRefreshToken(token: string): Promise<CognitoUserTokens> {
     const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, token)
-    console.log('params', params)
     const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
     const cognitoUserTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
     return cognitoUserTokens
   }
 
-  private _buildUserAttributes({ phoneNumber, emailAddress }: UsernameWithAttributes) {
+  public async markRegistrationComplete(accessToken: string) {
+    const params = {
+      AccessToken: accessToken,
+      UserAttributes: this._buildUserAttributes({ registrationStatus: RegistrationStatus.Complete }),
+    }
+    await this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
+  }
+
+  private _buildUserAttributes({ phoneNumber, emailAddress, registrationStatus }: BuildUserAttributesInput) {
     return [
       ...(emailAddress ? [{ Name: 'email', Value: emailAddress }] : []),
       ...(phoneNumber ? [{ Name: 'phone_number', Value: phoneNumber }] : []),
+      // The "gender" attribute is used to store status of registration,
+      // two possible options "incomplete" and "complete"
+      ...(registrationStatus ? [{ Name: REGISTRATION_STATUS_ATTRIBUTE, Value: registrationStatus }] : []),
     ]
   }
 
@@ -521,5 +547,26 @@ export class CognitoIdentityService {
     const { userExists } = await this._logInWithInvalidPassword(username)
 
     return userExists
+  }
+
+  /**
+   * @returns RegistrationStatus of the current user, this data is stored in cognito attributes, "gender" attribute
+   * For backward compatibility RegistrationStatus.Incomplete is returned only when attribute gender is equals "incomplete"
+   * @param accessToken
+   * @private
+   */
+  private async _getRegistrationStatus(accessToken: string): Promise<RegistrationStatus> {
+    const userData = await this.cognitoidentityserviceprovider
+      .getUser({
+        AccessToken: accessToken,
+      })
+      .promise()
+
+    const registrationStatusRawValue = userData.UserAttributes.find(
+      (a) => a.Name === REGISTRATION_STATUS_ATTRIBUTE,
+    )?.Value
+    return registrationStatusRawValue === RegistrationStatus.Incomplete
+      ? RegistrationStatus.Incomplete
+      : RegistrationStatus.Complete
   }
 }

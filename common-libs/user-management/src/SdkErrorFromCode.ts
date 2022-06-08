@@ -1,5 +1,6 @@
 import { SdkError } from '@affinidi/tools-common'
 
+// TODO: synchronize these errors with defined in /sdk/core/src/shared/SdkErrorFromCode
 const errors = {
   'COR-2': {
     type: 'InvalidParametersError',
@@ -55,6 +56,11 @@ const errors = {
     type: 'InvalidParametersError',
     message: 'Confirmation code expired. Please sign in again.',
     httpStatusCode: 400,
+  },
+  'COR-26': {
+    type: 'OperationError',
+    message: 'User registration was not completed, the old user record is deleted. Please run registration flow again.',
+    httpStatusCode: 409,
   },
 }
 
