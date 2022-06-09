@@ -130,6 +130,7 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
     registrationStatus: RegistrationStatus.Complete,
   })
   sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves(SignUpResult.Success)
+  sinon.stub(CognitoIdentityService.prototype, 'markRegistrationComplete').resolves()
   sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey').resolves(opts.password)
   sinon.stub(KeysService, 'normalizePassword').returns(Buffer.from(opts.password))
   sinon.stub(KeysService, 'encryptSeed').resolves(opts.seedHex)

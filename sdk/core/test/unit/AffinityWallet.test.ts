@@ -39,6 +39,7 @@ const stubConfirmAuthRequests = async (opts: { walletPassword: string; encrypted
       cognitoTokens: { accessToken, idToken },
       shortPassword: opts.walletPassword,
     }),
+    markRegistrationComplete: sinon.stub(UserManagementService.prototype, 'markRegistrationComplete').resolves(),
     reencryptSeed: sinon.stub(KeyManagementService.prototype, 'reencryptSeed').resolves({
       encryptionKey: opts.walletPassword,
       updatedEncryptedSeed: opts.encryptedSeed,
