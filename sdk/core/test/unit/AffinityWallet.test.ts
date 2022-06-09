@@ -130,6 +130,7 @@ describe('AffinityWallet', () => {
 
     expect(response.did).to.exist
     checkIsWallet(response)
+    expect(spys.markRegistrationComplete).to.have.been.called
     expect(spys.getSignupCredentials).not.to.have.been.called
   })
 
@@ -141,6 +142,7 @@ describe('AffinityWallet', () => {
 
     expect(response.did).to.exist
     checkIsWallet(response)
+    expect(spys.markRegistrationComplete).to.have.been.called
     expect(spys.getSignupCredentials).to.have.been.called
   })
 
@@ -156,6 +158,7 @@ describe('AffinityWallet', () => {
     expect(isNew).to.be.true
     expect(affinityWallet.did).to.exist
     checkIsWallet(affinityWallet)
+    expect(spys.markRegistrationComplete).to.have.been.called
     expect(spys.getSignupCredentials).not.to.have.been.called
   })
 
@@ -172,6 +175,7 @@ describe('AffinityWallet', () => {
     expect(isNew).to.be.true
     expect(affinityWallet.did).to.exist
     checkIsWallet(affinityWallet)
+    expect(spys.markRegistrationComplete).to.have.been.called
     expect(spys.getSignupCredentials).to.have.been.called
   })
 })
