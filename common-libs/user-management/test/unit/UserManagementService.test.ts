@@ -256,6 +256,56 @@ describe('UserManagementService', () => {
     })
   })
 
+  describe('#logInWithPassword', () => {
+    it(successPathTestName, async () => {
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithCompleteRegistration)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      const response = await userManagementService.logInWithPassword('username', 'pAssword123')
+
+      expect(response.accessToken).to.exist
+    })
+
+    it(`${successPathTestName} for old users`, async () => {
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithoutRegistrationStatus)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      const response = await userManagementService.logInWithPassword('username', 'pAssword123')
+
+      expect(response.accessToken).to.exist
+    })
+
+    it('throws COR-26 / 409 when user registration status is incomplete', async () => {
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithIncompleteRegistration)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      try {
+        await userManagementService.logInWithPassword('username', 'pAssword123')
+        expect.fail()
+      } catch (err) {
+        expect(err.code).to.eql('COR-26')
+        expect(err.httpStatusCode).to.eql(409)
+      }
+    })
+
+    it(cognitoErrorTestName, async () => {
+      const error = { code: COGNITO_EXCEPTION }
+      stubMethod(INITIATE_AUTH, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      try {
+        await userManagementService.logInWithPassword('username', 'pAssword123')
+        expect.fail()
+      } catch (err) {
+        expect(err.code).to.eql(COGNITO_EXCEPTION)
+      }
+    })
+  })
+
   describe('#forgotPassword', () => {
     it(successPathTestName, async () => {
       stubMethod(FORGOT_PASSWORD, {})
