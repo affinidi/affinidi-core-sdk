@@ -13,6 +13,7 @@ import { cognitoAuthSuccessResponse } from '../factory/cognitoAuthSuccessRespons
 import { cognitoInitiateCustomAuthResponse } from '../factory/cognitoInitiateCustomAuthResponse'
 import { cognitoSignInWithUsernameResponseToken } from '../factory/cognitoSignInWithUsernameResponseToken'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import { cognitoUserWithCompleteRegistration, cognitoUserWithIncompleteRegistration } from '../factory/cognitoUser'
 
 const email = 'user@email.com'
 const username = 'test_username'
@@ -33,6 +34,7 @@ const UPDATE_USER_ATTRIBUTES = 'updateUserAttributes'
 const CONFIRM_FORGOT_PASSWORD = 'confirmForgotPassword'
 const RESEND_CONFIRMATION_CODE = 'resendConfirmationCode'
 const RESPOND_TO_AUTH_CHALLENGE = 'respondToAuthChallenge'
+const GET_USER = 'getUser'
 
 const COGNITO_EXCEPTION = 'Exception'
 const EXPIRED_CODE_EXCEPTION = 'ExpiredCodeException'
@@ -66,18 +68,10 @@ describe('UserManagementService', () => {
   })
 
   const stubMethod = (methodName: string, responseObject: any = null, errorObject: any = null) => {
-    if (errorObject) {
-      // eslint-disable-next-line
-      AWSMock.mock('CognitoIdentityServiceProvider', methodName, (params: any, callback: any) => {
-        callback(errorObject, null)
-      })
-
-      return
-    }
-
-    // eslint-disable-next-line
+    // eslint-disable-next-line no-unused-vars
     AWSMock.mock('CognitoIdentityServiceProvider', methodName, (params: any, callback: any) => {
-      callback(null, responseObject)
+      if (errorObject) callback(errorObject, null)
+      else callback(null, responseObject)
     })
   }
 
@@ -139,6 +133,7 @@ describe('UserManagementService', () => {
       const token = cognitoSignInWithUsernameResponseToken
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithCompleteRegistration)
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeLogInPasswordless(token, otp)
@@ -606,6 +601,7 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(CONFIRM_SIGN_UP, {})
       stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithIncompleteRegistration)
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeSignUpForEmailOrPhone(`${email}::`, confirmationCode)

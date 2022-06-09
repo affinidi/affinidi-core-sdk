@@ -109,7 +109,7 @@ export type UsernameWithAttributes = {
 
 type BuildUserAttributesInput = Pick<UsernameWithAttributes, 'phoneNumber' | 'emailAddress' | 'registrationStatus'>
 
-const REGISTRATION_STATUS_ATTRIBUTE = 'gender'
+export const REGISTRATION_STATUS_ATTRIBUTE = 'gender'
 
 const getAdditionalParameters = (messageParameters?: MessageParameters) => {
   return messageParameters ? { ClientMetadata: messageParameters as Record<string, any> } : {}
