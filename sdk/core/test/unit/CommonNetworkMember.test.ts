@@ -31,6 +31,7 @@ import {
   InitiateForgotPasswordResult,
   InitiateLoginPasswordlessResult,
   LogInWithPasswordResult,
+  RegistrationStatus,
   ResendSignUpResult,
   SignUpResult,
 } from '@affinidi/user-management'
@@ -126,6 +127,7 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
   sinon.stub(CognitoIdentityService.prototype, 'tryLogInWithPassword').resolves({
     result: LogInWithPasswordResult.Success,
     cognitoTokens: {},
+    registrationStatus: RegistrationStatus.Complete,
   })
   sinon.stub(CognitoIdentityService.prototype, 'trySignUp').resolves(SignUpResult.Success)
   sinon.stub(KeyManagementService.prototype as any, '_pullEncryptionKey').resolves(opts.password)
@@ -272,6 +274,7 @@ describe('CommonNetworkMember', () => {
       result: CompleteLoginPasswordlessResult.Success,
       token: null,
       cognitoTokens: cognitoUserTokens,
+      registrationStatus: RegistrationStatus.Complete,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
       encryptedSeed: encryptedSeedJolo,
@@ -430,6 +433,7 @@ describe('CommonNetworkMember', () => {
       result: CompleteLoginPasswordlessResult.Success,
       token: null,
       cognitoTokens: cognitoUserTokens,
+      registrationStatus: RegistrationStatus.Complete,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
       encryptedSeed: encryptedSeedJolo,
@@ -454,6 +458,7 @@ describe('CommonNetworkMember', () => {
       result: CompleteLoginPasswordlessResult.Success,
       token: null,
       cognitoTokens: cognitoUserTokens,
+      registrationStatus: RegistrationStatus.Complete,
     })
     sinon.stub(KeyManagementService.prototype, 'pullKeyAndSeed').resolves({
       encryptedSeed: encryptedSeedJolo,
