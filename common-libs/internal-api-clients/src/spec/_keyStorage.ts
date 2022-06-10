@@ -188,7 +188,7 @@ export default {
 	},
 	"info": {
 		"title": "affinity-wallet-backend",
-		"version": "1.4.0",
+		"version": "1.11.1",
 		"description": "Backend for Affinity SaaS Wallet",
 		"license": {
 			"name": "ISC"
