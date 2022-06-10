@@ -180,6 +180,7 @@ describe('UserManagementService', () => {
       } catch (err) {
         expect(err.code).to.eql('COR-26')
         expect(err.httpStatusCode).to.eql(409)
+        expect(dependencies.keyStorageApiService.adminDeleteIncompleteUser).to.be.calledOnce
       }
     })
 
@@ -288,6 +289,7 @@ describe('UserManagementService', () => {
       } catch (err) {
         expect(err.code).to.eql('COR-26')
         expect(err.httpStatusCode).to.eql(409)
+        expect(dependencies.keyStorageApiService.adminDeleteIncompleteUser).to.be.calledOnce
       }
     })
 
