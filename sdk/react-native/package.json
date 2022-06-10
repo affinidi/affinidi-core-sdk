@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-react-native-sdk",
-  "version": "6.1.5",
+  "version": "6.1.6",
   "description": "SDK for affinity DID solution for React Native",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
