@@ -79,7 +79,11 @@ describe('UserManagementService', () => {
     sinon.restore()
   })
 
-  const stubMethod = (methodName: string, responseObject: any = null, errorObject: any = null) => {
+  const stubMethod = (
+    methodName: keyof AWS.CognitoIdentityServiceProvider,
+    responseObject: any = null,
+    errorObject: any = null,
+  ) => {
     // eslint-disable-next-line no-unused-vars
     AWSMock.mock('CognitoIdentityServiceProvider', methodName, (params: any, callback: any) => {
       if (errorObject) callback(errorObject, null)
