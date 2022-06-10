@@ -362,6 +362,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     shortPassword?: string,
     inputKeyParamsOrOptions?: KeyParamsOrOptions,
   ) {
+    const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       cognitoUserTokens.accessToken,
@@ -375,6 +376,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     })
 
     const result = new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
+    await userManagementService.markRegistrationComplete(cognitoUserTokens)
     if (NetworkMemberWithCognito._shouldCallAfterConfirmSignUp(inputKeyParamsOrOptions)) {
       result.afterConfirmSignUp()
     }

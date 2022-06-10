@@ -2,7 +2,9 @@
 
 import * as AWSMock from 'aws-sdk-mock'
 import AWS from 'aws-sdk'
-import { expect } from 'chai'
+import sinon from 'sinon'
+import sinonChai from 'sinon-chai'
+import { expect, use as chaiUse } from 'chai'
 
 import { UserManagementService } from '../../src/UserManagementService'
 import { normalizeUsername } from '../../src/normalizeUsername'
@@ -13,6 +15,13 @@ import { cognitoAuthSuccessResponse } from '../factory/cognitoAuthSuccessRespons
 import { cognitoInitiateCustomAuthResponse } from '../factory/cognitoInitiateCustomAuthResponse'
 import { cognitoSignInWithUsernameResponseToken } from '../factory/cognitoSignInWithUsernameResponseToken'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
+import {
+  cognitoUserWithCompleteRegistration,
+  cognitoUserWithIncompleteRegistration,
+  cognitoUserWithoutRegistrationStatus,
+} from '../factory/cognitoUser'
+
+chaiUse(sinonChai)
 
 const email = 'user@email.com'
 const username = 'test_username'
@@ -33,6 +42,7 @@ const UPDATE_USER_ATTRIBUTES = 'updateUserAttributes'
 const CONFIRM_FORGOT_PASSWORD = 'confirmForgotPassword'
 const RESEND_CONFIRMATION_CODE = 'resendConfirmationCode'
 const RESPOND_TO_AUTH_CHALLENGE = 'respondToAuthChallenge'
+const GET_USER = 'getUser'
 
 const COGNITO_EXCEPTION = 'Exception'
 const EXPIRED_CODE_EXCEPTION = 'ExpiredCodeException'
@@ -49,35 +59,35 @@ const options = {
   userPoolId: 'fakePoolId' as string,
 }
 
-const dependencies = {
-  keyStorageApiService: new KeyStorageApiService({
-    accessApiKey: undefined as any,
-    keyStorageUrl: undefined as any,
-  }),
-}
+let dependencies: { keyStorageApiService: KeyStorageApiService }
 
 const cognitoTokens = { accessToken: cognitoAccessToken }
 
 describe('UserManagementService', () => {
   AWSMock.setSDKInstance(AWS)
 
-  afterEach(() => {
-    AWSMock.restore('CognitoIdentityServiceProvider')
+  beforeEach(() => {
+    dependencies = {
+      keyStorageApiService: sinon.createStubInstance(KeyStorageApiService, {
+        adminDeleteIncompleteUser: undefined,
+      }),
+    }
   })
 
-  const stubMethod = (methodName: string, responseObject: any = null, errorObject: any = null) => {
-    if (errorObject) {
-      // eslint-disable-next-line
-      AWSMock.mock('CognitoIdentityServiceProvider', methodName, (params: any, callback: any) => {
-        callback(errorObject, null)
-      })
+  afterEach(() => {
+    AWSMock.restore('CognitoIdentityServiceProvider')
+    sinon.restore()
+  })
 
-      return
-    }
-
-    // eslint-disable-next-line
+  const stubMethod = (
+    methodName: keyof AWS.CognitoIdentityServiceProvider,
+    responseObject: any = null,
+    errorObject: any = null,
+  ) => {
+    // eslint-disable-next-line no-unused-vars
     AWSMock.mock('CognitoIdentityServiceProvider', methodName, (params: any, callback: any) => {
-      callback(null, responseObject)
+      if (errorObject) callback(errorObject, null)
+      else callback(null, responseObject)
     })
   }
 
@@ -139,11 +149,43 @@ describe('UserManagementService', () => {
       const token = cognitoSignInWithUsernameResponseToken
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithCompleteRegistration)
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeLogInPasswordless(token, otp)
 
       expect(response.accessToken).to.exist
+    })
+
+    it(`${successPathTestName} for old users`, async () => {
+      const otp = '123456'
+      const token = cognitoSignInWithUsernameResponseToken
+
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithoutRegistrationStatus)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      const response = await userManagementService.completeLogInPasswordless(token, otp)
+
+      expect(response.accessToken).to.exist
+    })
+
+    it('throws COR-26 / 409 when user registration status is incomplete', async () => {
+      const otp = '123456'
+      const token = cognitoSignInWithUsernameResponseToken
+
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithIncompleteRegistration)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      try {
+        await userManagementService.completeLogInPasswordless(token, otp)
+        expect.fail()
+      } catch (err) {
+        expect(err.code).to.eql('COR-26')
+        expect(err.httpStatusCode).to.eql(409)
+        expect(dependencies.keyStorageApiService.adminDeleteIncompleteUser).to.be.calledOnce
+      }
     })
 
     it('throws `COR-13 / 400` when wrong username or password provided', async () => {
@@ -216,6 +258,57 @@ describe('UserManagementService', () => {
       const { code } = responseError
 
       expect(code).to.eql(COGNITO_EXCEPTION)
+    })
+  })
+
+  describe('#logInWithPassword', () => {
+    it(successPathTestName, async () => {
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithCompleteRegistration)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      const response = await userManagementService.logInWithPassword('username', 'pAssword123')
+
+      expect(response.accessToken).to.exist
+    })
+
+    it(`${successPathTestName} for old users`, async () => {
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithoutRegistrationStatus)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      const response = await userManagementService.logInWithPassword('username', 'pAssword123')
+
+      expect(response.accessToken).to.exist
+    })
+
+    it('throws COR-26 / 409 when user registration status is incomplete', async () => {
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithIncompleteRegistration)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      try {
+        await userManagementService.logInWithPassword('username', 'pAssword123')
+        expect.fail()
+      } catch (err) {
+        expect(err.code).to.eql('COR-26')
+        expect(err.httpStatusCode).to.eql(409)
+        expect(dependencies.keyStorageApiService.adminDeleteIncompleteUser).to.be.calledOnce
+      }
+    })
+
+    it(cognitoErrorTestName, async () => {
+      const error = { code: COGNITO_EXCEPTION }
+      stubMethod(INITIATE_AUTH, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      try {
+        await userManagementService.logInWithPassword('username', 'pAssword123')
+        expect.fail()
+      } catch (err) {
+        expect(err.code).to.eql(COGNITO_EXCEPTION)
+      }
     })
   })
 
@@ -606,6 +699,7 @@ describe('UserManagementService', () => {
     it(successPathTestName, async () => {
       stubMethod(CONFIRM_SIGN_UP, {})
       stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithIncompleteRegistration)
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.completeSignUpForEmailOrPhone(`${email}::`, confirmationCode)
@@ -831,6 +925,37 @@ describe('UserManagementService', () => {
       }
 
       expect(responseError.code).to.eql(COGNITO_EXCEPTION)
+    })
+  })
+
+  describe('#markRegistrationComplete', () => {
+    it(successPathTestName, async () => {
+      stubMethod(UPDATE_USER_ATTRIBUTES, {})
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      await userManagementService.markRegistrationComplete(cognitoTokens)
+    })
+
+    it('throws error from Cognito', async () => {
+      stubMethod(UPDATE_USER_ATTRIBUTES, {}, new Error('Cognito Error'))
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      try {
+        await userManagementService.markRegistrationComplete(cognitoTokens)
+        throw new Error('Test Error')
+      } catch (err) {
+        expect(err.message).to.eql('Cognito Error')
+      }
+    })
+  })
+
+  describe('#adminDeleteIncompleteUser', () => {
+    it(successPathTestName, async () => {
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      await userManagementService.adminDeleteIncompleteUser(cognitoTokens)
+
+      expect(dependencies.keyStorageApiService.adminDeleteIncompleteUser).to.be.calledOnce
     })
   })
 })

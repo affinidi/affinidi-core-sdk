@@ -464,11 +464,14 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     }
 
     const keyManagementService = createKeyManagementService(options)
+    const userManagementService = createUserManagementService(options)
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       cognitoUserTokens.accessToken,
       keyParams,
       !options.otherOptions.skipBackupEncryptedSeed,
     )
+
+    await userManagementService.markRegistrationComplete(cognitoUserTokens)
 
     const userData = withDidData({
       encryptedSeed: updatedEncryptedSeed,

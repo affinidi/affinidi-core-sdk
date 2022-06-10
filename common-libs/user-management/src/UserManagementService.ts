@@ -16,6 +16,7 @@ import {
   InitiateForgotPasswordResult,
   InitiateLoginPasswordlessResult,
   LogInWithPasswordResult,
+  RegistrationStatus,
   ResendSignUpResult,
   SignUpResult,
   UsernameWithAttributes,
@@ -96,7 +97,7 @@ export class UserManagementService {
 
     await this._signUp(usernameWithAttributes, password)
     await this._keyStorageApiService.adminConfirmUser({ username })
-    const cognitoTokens = await this.logInWithPassword(username, password)
+    const cognitoTokens = await this._logInWithPassword(username, password, true)
     return cognitoTokens
   }
 
@@ -128,20 +129,30 @@ export class UserManagementService {
     }
   }
 
-  async logInWithPassword(login: string, password: string) {
+  private async _logInWithPassword(login: string, password: string, isSignUpFlow: boolean) {
     const response = await this._cognitoIdentityService.tryLogInWithPassword(login, password)
-
-    switch (response.result) {
-      case LogInWithPasswordResult.Success:
-        this._sessionStorageService.saveUserTokens(response.cognitoTokens)
-        return response.cognitoTokens
-      case LogInWithPasswordResult.UserNotConfirmed:
-        throw new SdkErrorFromCode('COR-16', { username: login })
-      case LogInWithPasswordResult.UserNotFound:
-        throw new SdkErrorFromCode('COR-4', { username: login })
-      default:
-        throw new DefaultResultError(response)
+    if (response.result !== LogInWithPasswordResult.Success) {
+      switch (response.result) {
+        case LogInWithPasswordResult.UserNotConfirmed:
+          throw new SdkErrorFromCode('COR-16', { username: login })
+        case LogInWithPasswordResult.UserNotFound:
+          throw new SdkErrorFromCode('COR-4', { username: login })
+        default:
+          throw new DefaultResultError(response)
+      }
     }
+
+    if (!isSignUpFlow && response.registrationStatus === RegistrationStatus.Incomplete) {
+      await this.adminDeleteIncompleteUser(response.cognitoTokens)
+      throw new SdkErrorFromCode('COR-26')
+    }
+
+    this._sessionStorageService.saveUserTokens(response.cognitoTokens)
+    return response.cognitoTokens
+  }
+
+  async logInWithPassword(login: string, password: string) {
+    return this._logInWithPassword(login, password, false)
   }
 
   private parseSignUpToken(token: string) {
@@ -153,7 +164,7 @@ export class UserManagementService {
     const { login, shortPassword } = this.parseSignUpToken(token)
     this._loginShouldBeEmailOrPhoneNumber(login)
     await this._completeSignUp(login, confirmationCode)
-    const cognitoTokens = await this.logInWithPassword(login, shortPassword)
+    const cognitoTokens = await this._logInWithPassword(login, shortPassword, true)
     return { cognitoTokens, shortPassword }
   }
 
@@ -191,19 +202,26 @@ export class UserManagementService {
 
   async completeLogInPasswordless(token: string, confirmationCode: string): Promise<CognitoUserTokens> {
     const response = await this._cognitoIdentityService.completeLogInPasswordless(token, confirmationCode)
-    switch (response.result) {
-      case CompleteLoginPasswordlessResult.Success:
-        this._sessionStorageService.saveUserTokens(response.cognitoTokens)
-        return response.cognitoTokens
-      case CompleteLoginPasswordlessResult.AttemptsExceeded:
-        throw new SdkErrorFromCode('COR-13')
-      case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
-        throw new SdkErrorFromCode('COR-17', { confirmationCode })
-      case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
-        throw new SdkErrorFromCode('COR-5', { newToken: response.token })
-      default:
-        throw new DefaultResultError(response)
+    if (response.result !== CompleteLoginPasswordlessResult.Success) {
+      switch (response.result) {
+        case CompleteLoginPasswordlessResult.AttemptsExceeded:
+          throw new SdkErrorFromCode('COR-13')
+        case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
+          throw new SdkErrorFromCode('COR-17', { confirmationCode })
+        case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
+          throw new SdkErrorFromCode('COR-5', { newToken: response.token })
+        default:
+          throw new DefaultResultError(response as never)
+      }
     }
+
+    if (response.registrationStatus === RegistrationStatus.Incomplete) {
+      await this.adminDeleteIncompleteUser(response.cognitoTokens)
+      throw new SdkErrorFromCode('COR-26')
+    }
+
+    this._sessionStorageService.saveUserTokens(response.cognitoTokens)
+    return response.cognitoTokens
   }
 
   private async refreshUserSessionTokens(refreshToken: string) {
@@ -346,7 +364,19 @@ export class UserManagementService {
     })
   }
 
-  readUserTokensFromSessionStorage() {
+  public async markRegistrationComplete(cognitoTokens: CognitoUserTokens) {
+    await this._withStoredTokens(cognitoTokens, ({ accessToken }) => {
+      return this._cognitoIdentityService.markRegistrationComplete(accessToken)
+    })
+  }
+
+  public async adminDeleteIncompleteUser(cognitoTokens: CognitoUserTokens) {
+    await this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
+      await this._keyStorageApiService.adminDeleteIncompleteUser({ accessToken })
+    })
+  }
+
+  public readUserTokensFromSessionStorage() {
     return this._sessionStorageService.readUserTokens()
   }
 

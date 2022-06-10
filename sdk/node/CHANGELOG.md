@@ -1,3 +1,5 @@
+# release 6.2.6 (2022-06-10)
+* fix handling of user registration status incomplete
 # release 6.2.5 (2022-06-06)
 * update README to notify users use the latest versions with affinidi-vault support
 # release 6.2.4 (2022-04-27)
