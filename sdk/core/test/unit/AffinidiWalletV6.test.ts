@@ -8,6 +8,7 @@ import { generateTestDIDs } from '../factory/didFactory'
 
 const sdkOptions = { env: 'dev', apiKey: 'fakeApiKey' } as const
 const accessToken = 'dummy_token'
+const refreshToken = 'refresh_dummy_token'
 const idToken = 'dummy_token'
 
 let walletPassword: string
@@ -15,15 +16,18 @@ let encryptedSeed: string
 
 const stubConfirmAuthRequests = (opts = { walletPassword, encryptedSeed }) => ({
   confirmSignUp: sinon.stub(UserManagementService.prototype, 'completeSignUpForEmailOrPhone').resolves({
-    cognitoTokens: { accessToken, idToken },
+    cognitoTokens: { accessToken, idToken, refreshToken },
     shortPassword: opts.walletPassword,
   }),
   signUpWithUsernameAndConfirm: sinon
     .stub(UserManagementService.prototype, 'signUpWithUsernameAndConfirm')
-    .resolves({ accessToken, idToken }),
+    .resolves({ accessToken, idToken, refreshToken }),
   logInWithPassword: sinon
     .stub(UserManagementService.prototype, 'logInWithPassword')
-    .resolves({ accessToken, idToken }),
+    .resolves({ accessToken, idToken, refreshToken }),
+  logInWithRefreshToken: sinon
+    .stub(UserManagementService.prototype, 'logInWithRefreshToken')
+    .resolves({ accessToken, idToken, refreshToken }),
   markRegistrationComplete: sinon.stub(UserManagementService.prototype, 'markRegistrationComplete').resolves(),
   reencryptSeed: sinon.stub(KeyManagementService.prototype, 'reencryptSeed').resolves({
     encryptionKey: opts.walletPassword,
@@ -116,6 +120,16 @@ describe('AffinidiWalletV6', () => {
     it('should return wallet', async () => {
       stubConfirmAuthRequests()
       const wallet = await AffinidiWalletV6.logInWithPassword(sdkOptions, 'username', 'passworD1')
+
+      checkIsWallet(wallet)
+      expect(wallet.did).to.exist
+    })
+  })
+
+  describe('#logIn with refresh token', () => {
+    it('should return wallet', async () => {
+      stubConfirmAuthRequests()
+      const wallet = await AffinidiWalletV6.logInWithRefreshToken(sdkOptions, refreshToken)
 
       checkIsWallet(wallet)
       expect(wallet.did).to.exist

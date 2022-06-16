@@ -79,6 +79,16 @@ export const createCognitoWalletFactories = (
     },
 
     /**
+     * @description Logins to Affinity with refreshToken
+     * @param inputOptions - optional parameters for BaseNetworkMember initialization
+     * @param refreshToken - refresh token
+     * @returns initialized instance of SDK
+     */
+    logInWithRefreshToken: (inputOptions: SdkOptions, refreshToken: string) => {
+      return Wallet.logInWithRefreshToken(dependencies, inputOptions, refreshToken)
+    },
+
+    /**
      * @description Initiates sign up flow to Affinity wallet, optionally with already created did
      * @param inputOptiosn - parameters with specified environment
      * @param username - arbitrary username
