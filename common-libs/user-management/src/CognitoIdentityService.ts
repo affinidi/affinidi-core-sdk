@@ -15,6 +15,17 @@ export enum SignUpResult {
   InvalidPassword,
 }
 
+export enum LogInWithRefreshTokenResult {
+  Success,
+  NotAuthorizedException,
+}
+
+type LogInWithRefreshTokenResponse = Response<
+  LogInWithRefreshTokenResult,
+  LogInWithRefreshTokenResult.Success,
+  { cognitoTokens: CognitoUserTokens }
+>
+
 export enum LogInWithPasswordResult {
   Success,
   UserNotFound,
@@ -109,6 +120,12 @@ export type UsernameWithAttributes = {
 
 type BuildUserAttributesInput = Pick<UsernameWithAttributes, 'phoneNumber' | 'emailAddress' | 'registrationStatus'>
 
+type GetCognitoAuthParametersObjectInput = {
+  login?: string
+  password?: string
+  refreshToken?: string
+}
+
 export const REGISTRATION_STATUS_ATTRIBUTE = 'gender'
 
 const getAdditionalParameters = (messageParameters?: MessageParameters) => {
@@ -145,7 +162,7 @@ export class CognitoIdentityService {
 
   async tryLogInWithPassword(login: string, password: string): Promise<LogInWithPasswordResponse> {
     try {
-      const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, login, password)
+      const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, { login, password })
       const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
       const registrationStatus = await this._getRegistrationStatus(cognitoTokens.accessToken)
@@ -171,7 +188,7 @@ export class CognitoIdentityService {
     messageParameters?: MessageParameters,
   ): Promise<InitiateLoginPasswordlessResponse> {
     const params = {
-      ...this._getCognitoAuthParametersObject(AuthFlow.Custom, login),
+      ...this._getCognitoAuthParametersObject(AuthFlow.Custom, { login }),
       ...getAdditionalParameters(messageParameters),
     }
 
@@ -480,9 +497,7 @@ export class CognitoIdentityService {
 
   private _getCognitoAuthParametersObject(
     authFlow: AuthFlow,
-    login: string = null,
-    password: string = null,
-    refreshToken: string = null,
+    { login = null, password = null, refreshToken = null }: GetCognitoAuthParametersObjectInput,
   ) {
     return {
       AuthFlow: authFlow as string,
@@ -502,11 +517,16 @@ export class CognitoIdentityService {
     return { accessToken, idToken, refreshToken, expiresIn }
   }
 
-  public async logInWithRefreshToken(token: string): Promise<CognitoUserTokens> {
-    const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, token)
-    const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
-    const cognitoUserTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
-    return cognitoUserTokens
+  public async logInWithRefreshToken(refreshToken: string): Promise<LogInWithRefreshTokenResponse> {
+    const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, { refreshToken })
+    try {
+      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
+      const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
+      return { result: LogInWithRefreshTokenResult.Success, cognitoTokens }
+    } catch (error) {
+      if (error.code === 'NotAuthorizedException') return { result: LogInWithRefreshTokenResult.NotAuthorizedException }
+      throw error
+    }
   }
 
   public async markRegistrationComplete(accessToken: string) {

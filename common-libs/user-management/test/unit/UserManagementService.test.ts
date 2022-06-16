@@ -52,6 +52,7 @@ const USERNAME_EXISTS_EXCEPTION = 'UsernameExistsException'
 const INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException'
 const INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException'
 const USER_NOT_CONFIRMED_EXCEPTION = 'UserNotConfirmedException'
+const NOT_AUTHORIZED_EXCEPTION = 'NotAuthorizedException'
 
 const options = {
   region: 'fakeRegion',
@@ -305,6 +306,43 @@ describe('UserManagementService', () => {
 
       try {
         await userManagementService.logInWithPassword('username', 'pAssword123')
+        expect.fail()
+      } catch (err) {
+        expect(err.code).to.eql(COGNITO_EXCEPTION)
+      }
+    })
+  })
+
+  describe('#logInWithRefreshToken', () => {
+    it(successPathTestName, async () => {
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      const response = await userManagementService.logInWithRefreshToken('testRefreshToken')
+
+      expect(response.accessToken).to.exist
+    })
+
+    it('throws COR-27', async () => {
+      stubMethod(INITIATE_AUTH, undefined, { code: NOT_AUTHORIZED_EXCEPTION })
+
+      const userManagementService = new UserManagementService(options, dependencies)
+      try {
+        await userManagementService.logInWithRefreshToken('testRefreshToken')
+        expect.fail()
+      } catch (err) {
+        expect(err.code).to.eql('COR-27')
+        expect(err.httpStatusCode).to.eql(401)
+      }
+    })
+
+    it(cognitoErrorTestName, async () => {
+      stubMethod(INITIATE_AUTH, null, { code: COGNITO_EXCEPTION })
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      try {
+        await userManagementService.logInWithRefreshToken('testRefreshToken')
         expect.fail()
       } catch (err) {
         expect(err.code).to.eql(COGNITO_EXCEPTION)
