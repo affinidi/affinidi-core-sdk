@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-node-sdk",
-  "version": "6.2.6",
+  "version": "6.3.0",
   "description": "SDK monorepo for affinity DID solution for node",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
