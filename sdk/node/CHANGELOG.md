@@ -1,4 +1,4 @@
-# release 6.3.6 (2022-06-16)
+# release 6.3.0 (2022-06-16)
 * add login with refreshToken
 # release 6.2.6 (2022-06-10)
 * fix handling of user registration status incomplete
