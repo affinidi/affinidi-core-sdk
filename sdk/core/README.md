@@ -393,6 +393,21 @@ const wallet = await AffinidiWallet.logInWithPassword(options, username, passwor
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
 
+#### Initiate instance of SDK with refreshToken
+
+To initiate instance of wallet using refreshToken.  
+To get refreshToken use wallet.serializeSession() (for wallets with cognito, when logged in)
+
+> Take care about refresh token to save it in right place, its lifetime is 30 days. 
+> To invalidate tokens please use wallet.logOut() method. 
+> The best way to use only access token and re-login user each hour (lifetime of accessToken)
+
+```ts
+const wallet = await AffinidiWallet.logInWithRefreshToken(options, refreshToken)
+```
+
+`options` - (optional) used to specify environment stack (dev | staging | prod).
+
 #### Passwordless login
 
 Login to the network by username, registered in AWS Cognito.
@@ -501,10 +516,22 @@ await wallet.completeChangeEmailOrPhone(options, token, confirmationCode)
 
 #### Sign Out
 
-Signs out current user.
+Signs out current user from all devices.  
+It also invalidates all refresh tokens issued to a user.  
+The user's current access and Id tokens remain valid until their expiry.  
+Access and Id tokens expire one hour after they are issued.
 
 ```ts
 await wallet.logOut()
+```
+
+#### Serialize session
+
+Returns all active cognito tokens as json string  
+{ "accessToken": "eyJraWQiOiJHiLCJlxKU...", "idToken": 'eyJraWQiOiJQYTVjZFwvKzVyb...", "refreshToken": 'eyJjdHkiOiJKV1QiLCJ...", "expiresIn": 1655544042964 }
+
+```ts
+await wallet.serializeSession()
 ```
 
 ### Issuer
