@@ -1,5 +1,5 @@
 # release 6.1.7 (2022-06-22)
-* updated `common`, `wallet-core-sdk`
+* updated `common`, `wallet-core-sdk` with BigInt fix for react native
 * # release 6.1.6 (2022-06-10)
 * fix handling of user registration status incomplete
 # release 6.1.5 (2022-06-06)
