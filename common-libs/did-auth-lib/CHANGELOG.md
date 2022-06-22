@@ -1,3 +1,5 @@
+# release 2.1.3 (2022-06-22)
+* fixed `jsontokens` version to 3.0.0 for avoid BigInt error on react native
 # release 2.1.2 (2021-04-22)
 * fix react native bug
 # release 2.1.0 (2021-12-07)

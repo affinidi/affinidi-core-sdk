@@ -1,3 +1,5 @@
+# release 2.1.6 (2022-06-22)
+* updated `internal-api-clients`, `tools-common` with BigInt fix for react native
 # release 2.1.5 (2021-04-22)
 * fix react native bug
 # release 2.1.2 (2022-03-11)

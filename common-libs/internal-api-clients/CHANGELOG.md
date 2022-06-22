@@ -1,3 +1,5 @@
+# release 1.3.1 (2022-06-22)
+  * Updated `tools-common`, `tools-openapi` with BigInt fix for react native
 # release 1.3.0 (2022-06-08)
   * Updated KeyStorageApiService to support AdminDeleteIncompleteUser feature
 # release 1.2.0 (2021-12-07)

@@ -1,6 +1,8 @@
 # release 6.2.0 (2022-06-16)
 * add login with refreshToken
-# release 6.1.6 (2022-06-10)
+# release 6.1.7 (2022-06-22)
+* updated `common`, `wallet-core-sdk` with BigInt fix for react native
+* # release 6.1.6 (2022-06-10)
 * fix handling of user registration status incomplete
 # release 6.1.5 (2022-06-06)
 * update README to notify users use the latest versions with affinidi-vault support
