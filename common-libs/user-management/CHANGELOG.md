@@ -1,3 +1,5 @@
+# release 1.3.1 (2022-06-22)
+* updated `internal-api-clients`, `tools-common` with BigInt fix for react native
 # release 1.3.0 (2022-06-10)
 * add logic to work with user registration status
   * in the start of signUp flow mark user registration status as `incomplete` and in the end - `complete`
