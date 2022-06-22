@@ -106,6 +106,10 @@ export class SdkOptions {
 
   @IsOptional()
   issueSignupCredential?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  queryBloomVault?: boolean
 }
 
 export class MessageParameters {
