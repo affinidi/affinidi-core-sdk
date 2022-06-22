@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-expo-sdk",
-  "version": "6.1.6",
+  "version": "6.1.7",
   "description": "SDK monorepo for affinity DID solution for Expo",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -39,7 +39,7 @@
   "license": "ISC",
   "dependencies": {
     "@affinidi/platform-fetch-native": "^1.0.0",
-    "@affinidi/wallet-core-sdk": "^6.1.6",
+    "@affinidi/wallet-core-sdk": "^6.1.7",
     "assert": "^2.0.0",
     "buffer": "^5.6.0",
     "eccrypto-js": "^5.0.0",
@@ -49,7 +49,7 @@
     "text-encoding": "^0.7.0"
   },
   "devDependencies": {
-    "@affinidi/common": "^2.1.4",
+    "@affinidi/common": "^2.1.6",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
