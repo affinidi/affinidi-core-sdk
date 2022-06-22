@@ -1,4 +1,6 @@
-# release 6.1.6 (2022-06-10)
+# release 6.1.7 (2022-06-22)
+* updated `wallet-react-native-sdk`, `common`
+* # release 6.1.6 (2022-06-10)
 * fix handling of user registration status incomplete
 # release 6.1.5 (2022-06-06)
 * update README to notify users use the latest versions with affinidi-vault support

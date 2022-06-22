@@ -1,4 +1,6 @@
-# release 6.2.6 (2022-06-10)
+# release 6.2.7 (2022-06-22)
+* updated `wallet-core-sdk`, `common`
+* # release 6.2.6 (2022-06-10)
 * fix handling of user registration status incomplete
 # release 6.2.5 (2022-06-06)
 * update README to notify users use the latest versions with affinidi-vault support

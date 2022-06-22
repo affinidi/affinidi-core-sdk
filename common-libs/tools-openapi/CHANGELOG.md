@@ -1,3 +1,5 @@
+# release 1.1.2 (2022-06-22)
+* updated `tools-common`
 # release 1.1.1 (2021-04-22)
 * fix react native bug 
 # release 1.1.0 (2021-12-07)
