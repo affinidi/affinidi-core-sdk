@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/affinidi-did-auth-lib",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Affinidi Did Auth Helpers",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -60,7 +60,7 @@
     "eslint": "7.8.1",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.4",
-    "jsontokens": "^3.0.0",
+    "jsontokens": "3.0.0",
     "license-checker": "25.0.1",
     "mocha": "8.1.3",
     "nock": "^12.0.3",
