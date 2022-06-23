@@ -52,6 +52,7 @@ const createWalletStorageService = () => {
     accessApiKey: undefined,
     storageRegion: region,
     didAuthAdapter,
+    queryBloomVault: true,
   })
 }
 
