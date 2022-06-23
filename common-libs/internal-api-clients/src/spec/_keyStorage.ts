@@ -188,7 +188,7 @@ export default {
 	},
 	"info": {
 		"title": "affinity-wallet-backend",
-		"version": "1.11.1",
+		"version": "1.14.0",
 		"description": "Backend for Affinity SaaS Wallet",
 		"license": {
 			"name": "ISC"
@@ -485,6 +485,35 @@ export default {
 					}
 				},
 				"description": "This endpoint should be used as a fallback in case user creation hangs,\nand it should delete the user from cognito, to allow retries.",
+				"tags": [
+					"UserManagement"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/userManagement/adminLogOutUser": {
+			"post": {
+				"operationId": "AdminLogOutUser",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"description": "Signs out a user from all devices.\nIt also invalidates all refresh tokens that Amazon Cognito has issued to a user.\nThe user's current access and ID tokens remain valid until they expire.\nBy default, access and ID tokens expire one hour after they're issued.\nA user can still use a hosted UI cookie to retrieve new tokens for the duration of the cookie validity period of 1 hour.",
 				"tags": [
 					"UserManagement"
 				],
