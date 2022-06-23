@@ -265,7 +265,7 @@ export class CognitoIdentityService {
   //       Id tokens remain valid until their expiry.
   //       Access and Id tokens expire one hour after they are issued.
   async logOut(AccessToken: string): Promise<void> {
-    await this.cognitoidentityserviceprovider.globalSignOut({ AccessToken }).promise()
+    this.cognitoidentityserviceprovider.globalSignOut({ AccessToken })
   }
 
   async initiateForgotPassword(
