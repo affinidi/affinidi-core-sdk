@@ -262,7 +262,7 @@ export class UserManagementService {
 
       const { accessToken } = newTokens
 
-      await this._cognitoIdentityService.logOut(accessToken)
+      await this._keyStorageApiService.adminLogOutUser({ accessToken })
     }
 
     this._sessionStorageService.clearUserTokens()

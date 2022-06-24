@@ -65,6 +65,10 @@ export default class KeyStorageApiService {
     return this.client.AdminDeleteIncompleteUser({ authorization: accessToken })
   }
 
+  async adminLogOutUser({ accessToken }: { accessToken: string }) {
+    return this.client.AdminLogOutUser({ authorization: accessToken })
+  }
+
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {
     return this.client.GetCredentialOffer({ authorization: accessToken, queryParams: { env } })
   }
