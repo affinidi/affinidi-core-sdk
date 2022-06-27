@@ -110,6 +110,14 @@ export class SdkOptions {
   @IsBoolean()
   @IsOptional()
   queryBloomVault?: boolean
+
+  @IsString()
+  @IsOptional()
+  userPoolId?: string
+
+  @IsString()
+  @IsOptional()
+  clientId?: string
 }
 
 export class MessageParameters {
