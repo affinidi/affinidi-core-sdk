@@ -63,7 +63,7 @@ const createKeyManagementService = () => {
   })
 }
 
-describe.only('WalletStorageService', () => {
+describe('WalletStorageService', () => {
   before(async () => {
     const testDids = await generateTestDIDs()
     walletPassword = testDids.password
