@@ -185,9 +185,7 @@ export default class WalletStorageService {
         return await this._bloomVaultStorageService.getCredentialById(credentialId, storageRegion)
       }
 
-      if (error.code !== 'AVT-2') {
-        throw error
-      }
+      throw error
     }
   }
 
@@ -199,12 +197,10 @@ export default class WalletStorageService {
     } catch (error) {
       if (error.code === 'AVT-2' && this._queryBloomVault) {
         // should be deleted during migration to affinidi-vault Phase #2
-        await this._bloomVaultStorageService.deleteCredentialById(credentialId, storageRegion)
+        return await this._bloomVaultStorageService.deleteCredentialById(credentialId, storageRegion)
       }
 
-      if (error.code !== 'AVT-2') {
-        throw error
-      }
+      throw error
     }
   }
 
