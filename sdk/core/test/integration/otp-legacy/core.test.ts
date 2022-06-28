@@ -123,7 +123,12 @@ parallel('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    }
+
     checkIsWallet(commonNetworkMember)
 
     await commonNetworkMember.signOut(options)
@@ -167,7 +172,12 @@ parallel('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    }
+
     checkIsWallet(commonNetworkMember)
   })
 
