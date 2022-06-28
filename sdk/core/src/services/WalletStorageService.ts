@@ -185,7 +185,9 @@ export default class WalletStorageService {
         return await this._bloomVaultStorageService.getCredentialById(credentialId, storageRegion)
       }
 
-      throw error
+      if (error.code !== 'AVT-2') {
+        throw error
+      }
     }
   }
 
@@ -200,7 +202,9 @@ export default class WalletStorageService {
         await this._bloomVaultStorageService.deleteCredentialById(credentialId, storageRegion)
       }
 
-      throw error
+      if (error.code !== 'AVT-2') {
+        throw error
+      }
     }
   }
 

@@ -34,7 +34,7 @@ let encryptedSeed: string
 
 const region = 'eu-west-2'
 
-const createWalletStorageService = () => {
+const createWalletStorageService = (queryBloomVault?: boolean) => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
   const documentService = DidDocumentService.createDidDocumentService(keysService)
   const keyVault = new LocalKeyVault(keysService)
@@ -52,7 +52,7 @@ const createWalletStorageService = () => {
     accessApiKey: undefined,
     storageRegion: region,
     didAuthAdapter,
-    queryBloomVault: true,
+    queryBloomVault: queryBloomVault === false ? false : true,
   })
 }
 
@@ -63,7 +63,7 @@ const createKeyManagementService = () => {
   })
 }
 
-describe('WalletStorageService', () => {
+describe.only('WalletStorageService', () => {
   before(async () => {
     const testDids = await generateTestDIDs()
     walletPassword = testDids.password
@@ -132,6 +132,28 @@ describe('WalletStorageService', () => {
     expect(response).to.include(signedCredential)
   })
 
+  it('#getCredentialsByShareToken if queryBloomVault is disabled', async () => {
+    sinon
+      .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
+      .withArgs(region, [signedCredential.type])
+      .resolves([signedCredential])
+
+    const BloomVaultStorageServiceCall = sinon
+      .stub(BloomVaultStorageService.prototype, 'searchCredentials')
+      .resolves([{ ...signedCredential, id: 'bloomId' }])
+
+    sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
+
+    const walletStorageService = createWalletStorageService(false)
+
+    const response = await walletStorageService.getCredentialsByShareToken(credentialShareRequestToken)
+
+    expect(BloomVaultStorageServiceCall).not.to.be.called
+    expect(response).to.be.an('array')
+    expect(response).to.length(1)
+    expect(response).to.include(signedCredential)
+  })
+
   it('#getCredentialsByShareToken when share request token not provided', async () => {
     sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
 
@@ -148,6 +170,25 @@ describe('WalletStorageService', () => {
 
     expect(response).to.be.an('array')
     expect(response).to.length(2)
+    expect(response).to.include(signedCredential)
+  })
+
+  it('#getCredentialsByShareToken when share request token not provided and if queryBloomVault is disabled', async () => {
+    sinon.stub(AffinidiVaultStorageService.prototype, 'searchCredentials').withArgs(region).resolves([signedCredential])
+
+    const BloomVaultStorageServiceCall = sinon
+      .stub(BloomVaultStorageService.prototype, 'searchCredentials')
+      .resolves([{ ...signedCredential, id: 'bloomId' }])
+
+    sinon.stub(JwtService, 'fromJWT').returns(parsedCredentialShareRequestToken)
+
+    const walletStorageService = createWalletStorageService(false)
+
+    const response = await walletStorageService.getCredentialsByShareToken(null)
+
+    expect(BloomVaultStorageServiceCall).not.to.be.called
+    expect(response).to.be.an('array')
+    expect(response).to.length(1)
     expect(response).to.include(signedCredential)
   })
 
@@ -168,6 +209,23 @@ describe('WalletStorageService', () => {
 
       expect(response).to.be.an('array')
       expect(response).to.length(2)
+    })
+
+    it('should get from Affinidi only if queryBloomVault is disabled', async () => {
+      sinon
+        .stub(AffinidiVaultStorageService.prototype, 'searchCredentials')
+        .withArgs(region)
+        .resolves([signedCredential])
+
+      const BloomVaultStorageServiceCall = sinon
+        .stub(BloomVaultStorageService.prototype, 'searchCredentials')
+        .resolves([{ ...signedCredential, id: 'bloomId' }])
+
+      const walletStorageService = createWalletStorageService(false)
+      const response = await walletStorageService.getAllCredentials()
+      expect(BloomVaultStorageServiceCall).not.to.be.called
+      expect(response).to.be.an('array')
+      expect(response).to.length(1)
     })
 
     it('should remove duplicates from Affinidi Vault and Bloom Vault results', async () => {
@@ -215,6 +273,27 @@ describe('WalletStorageService', () => {
       const response = await walletStorageService.getCredentialById(signedCredential.id)
 
       expect(response).to.eql(signedCredential)
+    })
+
+    it('should get from Affinidi Vault if queryBloomVault is disabled', async () => {
+      sinon
+        .stub(AffinidiVaultStorageService.prototype, 'getCredentialById')
+        .withArgs(signedCredential.id, region)
+        .throws({ code: 'AVT-2' })
+
+      const BloomVaultStorageServiceCall = sinon
+        .stub(BloomVaultStorageService.prototype, 'getCredentialById')
+        .resolves(signedCredential)
+
+      const walletStorageService = createWalletStorageService(false)
+
+      try {
+        await walletStorageService.getCredentialById(signedCredential.id)
+      } catch (error) {
+        expect(error.code).to.eql('AVT-2')
+      }
+
+      expect(BloomVaultStorageServiceCall).not.to.be.called
     })
 
     it('should throw if Affinidi Vault throws something else than not found', async () => {
@@ -282,6 +361,27 @@ describe('WalletStorageService', () => {
       expect(bloomVaultStorageDeleteCall.calledOnce).to.be.true
     })
 
+    it('should delete only from Affinidi Vault if queryBloomVault is disabled', async () => {
+      const affinidiVaultStorageDeleteCall = sinon
+        .stub(AffinidiVaultStorageService.prototype, 'deleteCredentialById')
+        .withArgs(signedCredential.id, region)
+        .throws({ code: 'AVT-2' })
+
+      const bloomVaultStorageDeleteCall = sinon
+        .stub(BloomVaultStorageService.prototype, 'deleteCredentialById')
+        .resolves()
+
+      const walletStorageService = createWalletStorageService(false)
+      try {
+        await walletStorageService.deleteCredentialById(signedCredential.id)
+      } catch (error) {
+        expect(error.code).to.eql('AVT-2')
+      }
+
+      expect(affinidiVaultStorageDeleteCall.calledOnce).to.be.true
+      expect(bloomVaultStorageDeleteCall).not.to.be.called
+    })
+
     it('should throw if Bloom Vault throws', async () => {
       const affinidiVaultStorageDeleteCall = sinon
         .stub(AffinidiVaultStorageService.prototype, 'deleteCredentialById')
@@ -338,6 +438,22 @@ describe('WalletStorageService', () => {
 
       expect(affinidiVaultStorageDeleteCall.calledOnce).to.be.true
       expect(bloomVaultStorageDeleteCall.calledOnce).to.be.true
+    })
+    it('should remove only from Affinidi Vault if queryBloomVault is disabled', async () => {
+      const affinidiVaultStorageDeleteCall = sinon
+        .stub(AffinidiVaultStorageService.prototype, 'deleteAllCredentials')
+        .withArgs(region)
+        .resolves()
+
+      const bloomVaultStorageDeleteCall = sinon
+        .stub(BloomVaultStorageService.prototype, 'deleteAllCredentials')
+        .resolves()
+
+      const walletStorageService = createWalletStorageService(false)
+      await walletStorageService.deleteAllCredentials()
+
+      expect(affinidiVaultStorageDeleteCall.calledOnce).to.be.true
+      expect(bloomVaultStorageDeleteCall).not.to.be.called
     })
 
     it('should throw if Affinidi Vault throw', async () => {
