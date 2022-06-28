@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-core-sdk",
-  "version": "6.1.8",
+  "version": "6.1.9",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -11,7 +11,7 @@
     "tsc": "tsc -p tsconfig-build.json",
     "lint": "eslint src/** test/**",
     "test": "npm run test:unit && npm run test:integration",
-    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts -p ./tsconfig.json --timeout 55000",
+    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/index.test.ts  ./tsconfig.json --timeout 55000 --no-parallel",
     "test:integration": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
     "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register test/unit/index.test.ts test/integration/index.test.ts -p ./tsconfig.json --timeout 115000",
     "test:coverage:codeclimate": "npm run test:coverage && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.core.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev)",
