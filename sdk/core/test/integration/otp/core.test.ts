@@ -126,7 +126,7 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     await commonNetworkMember.completeChangeEmailOrPhone(changeToken, changeUsernameCode)
     await commonNetworkMember.logOut()
-
+    // NOTE: try/catch added as a workaround because of issue NotAuthorizedException see https://github.com/aws-amplify/amplify-js/issues/9838
     try {
       commonNetworkMember = await AffinidiWallet.logInWithPassword(options, newInbox.email, password)
     } catch (err) {
@@ -175,7 +175,7 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     await commonNetworkMember.completeChangeEmailOrPhone(changeToken, changeUsernameCode)
     await commonNetworkMember.logOut()
-
+    // NOTE: try/catch added as a workaround because of issue NotAuthorizedException see https://github.com/aws-amplify/amplify-js/issues/9838
     try {
       commonNetworkMember = await AffinidiWallet.logInWithPassword(options, newInbox.email, password)
     } catch (err) {
