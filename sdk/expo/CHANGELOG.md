@@ -1,5 +1,9 @@
 # release 6.2.0 (2022-06-16)
 * add login with refreshToken
+# release 6.1.8 (2022-06-28)
+* add new sdk options
+- `queryBloomVault` - query legacy credential store . `true` by default.
+- `userPoolId` & `clientId` configure custom cognito pool & client. use environment specific settings by default
 # release 6.1.7 (2022-06-22)
 * updated `wallet-expo-sdk`, `common` with BigInt fix for react native
 * # release 6.1.6 (2022-06-10)
