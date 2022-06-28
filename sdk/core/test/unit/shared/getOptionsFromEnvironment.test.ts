@@ -19,7 +19,7 @@ describe('getOptionsFromEnvironment', () => {
   it('should provide default cognito settings', () => {
     const resultOptions = getOptionsFromEnvironment({
       env: 'prod',
-      apiKey
+      apiKey,
     })
     expect(resultOptions.basicOptions.clientId).to.exist
     expect(resultOptions.basicOptions.userPoolId).to.exist
