@@ -1,4 +1,4 @@
-# release 1.4.0 (2022-06-16)
+# release 1.4.0 (2022-06-30)
 * add logInWithRefreshToken auth method
 # release 1.3.1 (2022-06-22)
 * updated `internal-api-clients`, `tools-common` with BigInt fix for react native
