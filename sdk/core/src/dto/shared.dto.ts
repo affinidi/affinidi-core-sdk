@@ -118,6 +118,10 @@ export class SdkOptions {
   @IsString()
   @IsOptional()
   clientId?: string
+
+  @IsString()
+  @IsOptional()
+  region?: string
 }
 
 export class MessageParameters {

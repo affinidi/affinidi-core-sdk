@@ -15,6 +15,7 @@ import {
   STAGING_COGNITO_USER_POOL_ID,
   STAGING_EMAIL_ISSUER_BASE_PATH,
   STAGING_PHONE_ISSUER_BASE_PATH,
+  DEFAULT_COGNITO_REGION
 } from '../_defaultConfig'
 
 type AccessApiKeyOptions = {
@@ -117,10 +118,12 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
     storageRegion,
     clientId,
     userPoolId,
+    region,
     ...otherOptions
   } = options
 
   return {
+    region,
     accessApiKeyOptions: {
       accessApiKey,
       apiKey,
@@ -145,9 +148,10 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
 }
 
 export const getOptionsFromEnvironment = (options: SdkOptions) => {
-  const { accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(options)
+  const { region, accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(options)
 
   return {
+    region: region || DEFAULT_COGNITO_REGION,
     basicOptions: getBasicOptionsFromEnvironment(environmentOptions),
     accessApiKey: getAccessApiKeyFromOptions(accessApiKeyOptions),
     storageRegion,
