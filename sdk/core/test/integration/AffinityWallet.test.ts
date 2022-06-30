@@ -183,11 +183,21 @@ describe('AffinityWallet', () => {
 
     await networkMemberSignUp.signOut(options)
 
-    const networkMemberFromLoginAndPassword = await AffinityWallet.fromLoginAndPassword(
-      cognitoUsername,
-      cognitoPassword,
-      options,
-    )
+    let networkMemberFromLoginAndPassword
+    try {
+      networkMemberFromLoginAndPassword = await AffinityWallet.fromLoginAndPassword(
+        cognitoUsername,
+        cognitoPassword,
+        options,
+      )
+    } catch (err) {
+      networkMemberFromLoginAndPassword = await AffinityWallet.fromLoginAndPassword(
+        cognitoUsername,
+        cognitoPassword,
+        options,
+      )
+    }
+
     checkIsWallet(networkMemberFromLoginAndPassword)
   })
 })
