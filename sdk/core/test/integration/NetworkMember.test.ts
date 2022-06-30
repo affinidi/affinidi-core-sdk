@@ -897,7 +897,12 @@ describe('CommonNetworkMember', () => {
 
     await signUpNetworkMember.signOut(options)
 
-    const fromLoginNetworkMember = await AffinidiWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+    let fromLoginNetworkMember
+    try {
+      fromLoginNetworkMember = await AffinidiWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+    } catch (err) {
+      fromLoginNetworkMember = await AffinidiWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+    }
 
     checkIsWallet(fromLoginNetworkMember)
   })

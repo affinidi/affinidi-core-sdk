@@ -276,7 +276,12 @@ parallel('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.confirmChangeUsername(inbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
+    }
+
     checkIsWallet(commonNetworkMember)
 
     const newPassword = `${password}_updated`
@@ -284,7 +289,12 @@ parallel('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.changePassword(password, newPassword, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
+    }
+
     checkIsWallet(commonNetworkMember)
   })
 

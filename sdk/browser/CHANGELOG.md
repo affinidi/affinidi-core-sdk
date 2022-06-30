@@ -1,4 +1,4 @@
-# release 6.2.0 (2022-06-29)
+# release 6.2.0 (2022-06-30)
 * add login with refreshToken
 # release 6.1.9 (2022-06-28)
 * fix bug in a fetch credential logic
