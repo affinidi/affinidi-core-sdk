@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { getOptionsFromEnvironment } from '../../../src/shared/getOptionsFromEnvironment'
 
-describe.only('getOptionsFromEnvironment', () => {
+describe('getOptionsFromEnvironment', () => {
   const apiKey = '12f7b7d9-85d3-43a6-b8ea-4b80bb3fc689'
   it('should accept custom cognito settings', () => {
     const customUserPool = 'userpool_id'
