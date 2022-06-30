@@ -1,3 +1,7 @@
+# release 6.2.1 (2022-06-30)
+* add new sdk options
+  - `region` configure aws region use `DEFAULT_COGNITO_REGION` as default 
+* add login with refreshToken
 # release 6.2.0 (2022-06-30)
 * add login with refreshToken
 # release 6.1.9 (2022-06-28)
