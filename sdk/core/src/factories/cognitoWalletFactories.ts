@@ -79,6 +79,19 @@ export const createCognitoWalletFactories = (
     },
 
     /**
+     * @description Logins to Affinity with refreshToken
+     * Take care about refresh token to save it in right place, its lifetime is 30 days.
+     * To invalidate tokens please use wallet.logOut() method.
+     * The best way to use only access token and re-login user each hour (lifetime of accessToken)
+     * @param inputOptions - optional parameters for BaseNetworkMember initialization
+     * @param refreshToken - refresh token
+     * @returns initialized instance of SDK
+     */
+    logInWithRefreshToken: (inputOptions: SdkOptions, refreshToken: string) => {
+      return Wallet.logInWithRefreshToken(dependencies, inputOptions, refreshToken)
+    },
+
+    /**
      * @description Initiates sign up flow to Affinity wallet, optionally with already created did
      * @param inputOptiosn - parameters with specified environment
      * @param username - arbitrary username

@@ -16,6 +16,7 @@ import {
   InitiateForgotPasswordResult,
   InitiateLoginPasswordlessResult,
   LogInWithPasswordResult,
+  LogInWithRefreshTokenResult,
   RegistrationStatus,
   ResendSignUpResult,
   SignUpResult,
@@ -155,6 +156,18 @@ export class UserManagementService {
     return this._logInWithPassword(login, password, false)
   }
 
+  async logInWithRefreshToken(refreshToken: string) {
+    const response = await this._cognitoIdentityService.logInWithRefreshToken(refreshToken)
+    if (response.result === LogInWithRefreshTokenResult.Success) {
+      this._sessionStorageService.saveUserTokens(response.cognitoTokens)
+      return response.cognitoTokens
+    }
+
+    if (response.result === LogInWithRefreshTokenResult.NotAuthorizedException) throw new SdkErrorFromCode('COR-27')
+
+    throw new DefaultResultError(response)
+  }
+
   private parseSignUpToken(token: string) {
     const [login, shortPassword] = token.split('::')
     return { login, shortPassword }
@@ -226,9 +239,10 @@ export class UserManagementService {
 
   private async refreshUserSessionTokens(refreshToken: string) {
     try {
-      const cognitoTokens = await this._cognitoIdentityService.logInWithRefreshToken(refreshToken)
-      this._sessionStorageService.saveUserTokens(cognitoTokens)
-      return cognitoTokens
+      const operationResult = await this._cognitoIdentityService.logInWithRefreshToken(refreshToken)
+      if (operationResult.result !== LogInWithRefreshTokenResult.Success) throw new Error()
+      this._sessionStorageService.saveUserTokens(operationResult.cognitoTokens)
+      return operationResult.cognitoTokens
     } catch (error) {
       throw new SdkErrorFromCode('COR-9')
     }
@@ -248,7 +262,7 @@ export class UserManagementService {
 
       const { accessToken } = newTokens
 
-      await this._cognitoIdentityService.logOut(accessToken)
+      await this._keyStorageApiService.adminLogOutUser({ accessToken })
     }
 
     this._sessionStorageService.clearUserTokens()

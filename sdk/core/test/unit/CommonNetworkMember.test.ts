@@ -301,16 +301,6 @@ describe('CommonNetworkMember', () => {
     expect(filteredCredentials).to.eql([signedCredential])
   })
 
-  it('#signOut', async () => {
-    sinon.stub(CognitoIdentityService.prototype, 'logOut')
-
-    const networkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
-
-    const response = await networkMember.signOut(options)
-
-    expect(response).to.be.undefined
-  })
-
   it('#forgotPassword (with default SDK options)', async () => {
     sinon
       .stub(CognitoIdentityService.prototype, 'initiateForgotPassword')

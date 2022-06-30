@@ -220,6 +220,40 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
   }
 
   /**
+   * @description Logins to Affinity with refresh token
+   * @param dependencies - static dependencies including platform crypto tools
+   * @param inputOptions - optional parameters for BaseNetworkMember initialization
+   * @param refreshToken - refresh token to login and get new refreshed tokens
+   * @returns initialized instance of SDK
+   */
+  public static async logInWithRefreshToken(
+    dependencies: StaticDependencies,
+    inputOptions: SdkOptions,
+    refreshToken: string,
+  ) {
+    await ParametersValidator.validate([
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
+      { isArray: false, type: 'string', isRequired: true, value: refreshToken },
+    ])
+
+    const options = getOptionsFromEnvironment(inputOptions)
+    return await NetworkMemberWithCognito._logInWithRefreshToken(dependencies, options, refreshToken)
+  }
+
+  private static async _logInWithRefreshToken(
+    dependencies: StaticDependencies,
+    options: ParsedOptions,
+    refreshToken: string,
+  ) {
+    const userManagementService = createUserManagementService(options)
+    const keyManagementService = createKeyManagementService(options)
+
+    const cognitoUserTokens = await userManagementService.logInWithRefreshToken(refreshToken)
+    const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+    return new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)
+  }
+
+  /**
    * @description Initiates sign up flow to Affinity wallet, optionally with already created did
    * @param inputOptiosn - parameters with specified environment
    * @param username - arbitrary username

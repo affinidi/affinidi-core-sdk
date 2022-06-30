@@ -62,6 +62,11 @@ const errors = {
     message: 'User registration was not completed, the old user record is deleted. Please run registration flow again.',
     httpStatusCode: 409,
   },
+  'COR-27': {
+    type: 'OperationError',
+    message: 'Invalid refresh token',
+    httpStatusCode: 401,
+  },
 }
 
 export default class SdkErrorFromCode extends SdkError {
