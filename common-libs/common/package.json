@@ -32,6 +32,10 @@
     "did"
   ],
   "author": "Denis Popov <denis.p@affinidi.com>",
+  "contributors": [
+    "Anton Iskryzhytskyi <anton.i@affinidi.com>",
+    "Volodymyr Pavlyshyn <volodymyr.p@affinidi.com>"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/affinityproject/affinidi-core-sdk/issues"

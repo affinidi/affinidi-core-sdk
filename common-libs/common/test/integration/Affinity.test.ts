@@ -1,9 +1,10 @@
 import { legacySignedCredential } from '../factory/legacySignedCredential'
 import { expect } from 'chai'
 import { signedCredential, signedCredentialWithLongFormVerificationMethod } from '../factory/signedCredential'
-import { signedPresentation } from '../factory/signedPresentation'
+import { signedPresentation, signedPresentationWithPolygon } from '../factory/signedPresentation'
 import { Affinity } from '../../src'
 import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
+import { signedCredentialWithPolygon } from '../factory/credential'
 
 const { TEST_SECRETS } = process.env
 const { STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
@@ -35,12 +36,24 @@ describe('Validation Snapshots', () => {
     expect(result.result).to.be.true
   })
 
+  it('#validateCredential (existing cred) (polygon)', async () => {
+    const result = await affinity.validateCredential(signedCredentialWithPolygon)
+
+    expect(result.result).to.be.true
+  })
+
   it('#validatePresentation (existing presentations)', async () => {
     const result = await affinity.validatePresentation(signedPresentation)
 
     if (result.result === false) {
       console.log(result.error)
     }
+
+    expect(result.result).to.be.true
+  })
+
+  it('#validatePresentation (existing presentations) (polygon)', async () => {
+    const result = await affinity.validatePresentation(signedPresentationWithPolygon)
 
     expect(result.result).to.be.true
   })

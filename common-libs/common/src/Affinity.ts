@@ -275,6 +275,11 @@ export class Affinity {
       getProofPurposeOptions: async ({ proofPurpose, controller }) => {
         if (proofPurpose === 'assertionMethod') {
           const resolvedDidDoc = await this._resolveDidIfNoDidDocument(controller, didDocument)
+          // TODO: workaround, for now polygon dids has only verificationMethod
+          // it could be changed in future as polygon is under developing
+          if (!resolvedDidDoc[proofPurpose] && resolvedDidDoc.verificationMethod) {
+            resolvedDidDoc[proofPurpose] = resolvedDidDoc.verificationMethod
+          }
 
           return {
             controller: resolvedDidDoc,
@@ -465,6 +470,13 @@ export class Affinity {
           case 'authentication':
           case 'assertionMethod': {
             const resolvedDidDoc = await this._resolveDidIfNoDidDocument(controller, didDocument)
+
+            // TODO: workaround, for now polygon dids has only verificationMethod
+            // it could be changed in future as polygon is under developing
+
+            if (!resolvedDidDoc[proofPurpose] && resolvedDidDoc.verificationMethod) {
+              resolvedDidDoc[proofPurpose] = resolvedDidDoc.verificationMethod
+            }
 
             return {
               controller: resolvedDidDoc,

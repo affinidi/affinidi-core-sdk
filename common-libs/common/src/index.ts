@@ -18,13 +18,25 @@ export { JwtService } from '@affinidi/tools-common'
 
 export { Affinity, Affinity as Affinidi } from './Affinity'
 
-export { KeyVault, LocalKeyVault, DidDocumentService, DigestService, KeysService, MetricsService } from './services'
+export {
+  KeyVault,
+  LocalKeyVault,
+  DidDocumentService,
+  DigestService,
+  KeysService,
+  MetricsService,
+  PolygonDidDocumentService,
+  ElemDidDocumentService,
+  ElemAnchoredDidDocumentService,
+  JoloDidDocumentService,
+} from './services'
 
 export { IPlatformCryptographyTools } from './shared/interfaces'
 
 export { ecdsaCryptographyTools } from './shared/EcdsaCryptographyTools'
 
 export { wrapJsonldFrameFunction } from './utils/jsonldFrameWrapper'
+export * from './utils/ethUtils'
 
 export {
   generateFullSeed,
@@ -34,3 +46,4 @@ export {
 } from './shared/seedTools'
 
 export { DidResolver } from './shared/DidResolver'
+export * from './shared/interfaces'

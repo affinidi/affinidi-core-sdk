@@ -4,28 +4,7 @@ const cryptoRandomString = require('crypto-random-string')
 import { randomBytes } from '../../src/shared/randomBytes'
 import { KeysService, DidDocumentService, DidResolver } from '../../'
 
-interface TestDid {
-  seed: string
-  encryptedSeed: string
-  seedHex: string
-  did: string
-  didDocument: { id: string }
-  publicKey: string
-  publicRSAKey?: string
-  publicBBSKey?: string
-}
-
-interface TestJoloDid extends TestDid {
-  publicEthereumKey: string
-}
-
-export const generateTestDIDs = async (): Promise<{
-  password: string
-  jolo: TestJoloDid
-  elem: TestDid
-  elemWithRSA: TestDid
-  elemWithBBS: TestDid
-}> => {
+export const generateTestDIDs = async () => {
   let keysService
   let didDocumentService
   const didResolverMock: DidResolver = {
@@ -61,6 +40,19 @@ export const generateTestDIDs = async (): Promise<{
   const elemDid = await didDocumentService.getMyDid()
 
   const elemPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
+
+  const polygonSeed = await randomBytes(32)
+  const polygonSeedHex = polygonSeed.toString('hex')
+  const polygonSeedWithMethod = `${polygonSeedHex}++polygon:testnet`
+  const polygonPasswordBuffer = KeysService.normalizePassword(password)
+  const polygonEncryptedSeed = await KeysService.encryptSeed(polygonSeedWithMethod, polygonPasswordBuffer)
+
+  keysService = new KeysService(polygonEncryptedSeed, password)
+
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const { didDocument: polygonDidDocument, did: polygonDid } = await didDocumentService.buildDidDocumentForRegister()
+
+  const polygonPublicKey = KeysService.getPublicKey(polygonSeedHex, 'polygon').toString('hex')
 
   const keys = [
     {
@@ -167,6 +159,14 @@ export const generateTestDIDs = async (): Promise<{
       did: elemDid,
       didDocument: elemDidDocument,
       publicKey: elemPublicKey,
+    },
+    polygon: {
+      seed: polygonSeed,
+      encryptedSeed: polygonEncryptedSeed,
+      seedHex: polygonSeedHex,
+      did: polygonDid,
+      didDocument: polygonDidDocument,
+      publicKey: polygonPublicKey,
     },
     elemWithRSA: {
       seed: elemRSASeed,

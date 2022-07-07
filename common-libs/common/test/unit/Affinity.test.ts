@@ -1,12 +1,11 @@
 import { expect } from 'chai'
-import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
-import { VCSNamePersonV1, getVCNamePersonV1Context } from '@affinidi/vc-data'
 import nock from 'nock'
 
 import { KeysService } from '../../src/services'
 import { Affinity } from '../../src'
 import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
 import {
+  createUnsignedCredential,
   credential,
   credentialStatus,
   revocationListCredential,
@@ -54,7 +53,7 @@ const jwt =
   'b03db20ad810356029519188e92ae7bc61763f23c1d01dcb45ab1be130cbe2ea45890fbe3' +
   '5649a58786ee5bec8945'
 
-let testDids
+let testDids: any
 
 let password: string
 
@@ -101,6 +100,11 @@ describe('Affinity', () => {
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: elemDidDocument })
 
+    nock('https://affinity-registry.staging.affinity-project.org')
+      .post('/api/v1/did/resolve-did', /polygon/gi)
+      .times(Number.MAX_SAFE_INTEGER)
+      .reply(200, { didDocument: testDids.polygon.didDocument })
+
     nock('https://www.w3.org').get('/2018/credentials/v1').times(Number.MAX_SAFE_INTEGER).reply(200, credentialsV1)
 
     nock('https://w3id.org')
@@ -122,6 +126,13 @@ describe('Affinity', () => {
 
     expect(didDocument).to.exist
     expect(didDocument.id).to.be.equal(didElemShortForm)
+  })
+
+  it('#resolveDid (polygon)', async () => {
+    const didDocument = await affinity.resolveDid(testDids.polygon.did)
+
+    expect(didDocument).to.exist
+    expect(didDocument.id).to.be.equal(testDids.polygon.did)
   })
 
   it('.fromJwt', async () => {
@@ -148,6 +159,14 @@ describe('Affinity', () => {
     expect(signedJwtObject.signature).to.be.exist
   })
 
+  it('#signJWTObject (polygon)', async () => {
+    const extendedPayload = Object.assign({}, jwtObject.payload, { exp: Date.now() + 1000 })
+    jwtObject.payload = extendedPayload
+    const signedJwtObject = await affinity.signJWTObject(jwtObject, testDids.polygon.encryptedSeed, password)
+
+    expect(signedJwtObject.signature).to.be.exist
+  })
+
   it('#encodeObjectToJWT', async () => {
     const exp = Date.now() + 2000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
@@ -163,11 +182,46 @@ describe('Affinity', () => {
     expect(object.payload.exp).to.be.equal(exp)
   })
 
+  it('#encodeObjectToJWT ()polygon', async () => {
+    const exp = Date.now() + 2000
+    const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
+    jwtObject.payload = extendedPayload
+    const signedJwtObject = await Affinity.signJWTObject(jwtObject, testDids.polygon.encryptedSeed, password)
+
+    const token = await Affinity.encodeObjectToJWT(signedJwtObject)
+    expect(token).to.be.exist
+
+    const object = Affinity.fromJwt(token)
+    expect(object).to.exist
+    expect(object.payload).to.exist
+    expect(object.payload.exp).to.be.equal(exp)
+  })
+
   it('#validateJWT', async () => {
     const exp = Date.now() + 9000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
     jwtObject.payload = extendedPayload
     const signedJwtObject = await Affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
+
+    const token = await Affinity.encodeObjectToJWT(signedJwtObject)
+    expect(token).to.be.exist
+
+    let tokenValidationError
+
+    try {
+      await affinity.validateJWT(token)
+    } catch (error) {
+      tokenValidationError = error
+    }
+
+    expect(tokenValidationError).to.be.undefined
+  })
+
+  it('#validateJWT (polygon)', async () => {
+    const exp = Date.now() + 9000
+    const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
+    jwtObject.payload = extendedPayload
+    const signedJwtObject = await Affinity.signJWTObject(jwtObject, testDids.polygon.encryptedSeed, password)
 
     const token = await Affinity.encodeObjectToJWT(signedJwtObject)
     expect(token).to.be.exist
@@ -247,6 +301,17 @@ describe('Affinity', () => {
     expect(createdCredential.proof.jws).to.exist
   })
 
+  it('#signCredential (polygon)', async () => {
+    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+
+    const keyId = `${testDids.polygon.did}#key-1`
+    expect(createdCredential).to.exist
+    expect(createdCredential.proof).to.exist
+    expect(createdCredential['@context']).to.exist
+    expect(createdCredential.proof.verificationMethod).to.be.equal(keyId)
+    expect(createdCredential.proof.jws).to.exist
+  })
+
   it('#validateCredential (jolo)', async () => {
     const createdCredential = await affinity.signCredential(credential, encryptedSeedJolo, password)
     const result = await affinity.validateCredential(createdCredential)
@@ -256,6 +321,12 @@ describe('Affinity', () => {
 
   it('#validateCredential (elem)', async () => {
     const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
+    const result = await affinity.validateCredential(createdCredential)
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (polygon)', async () => {
+    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })
@@ -274,26 +345,22 @@ describe('Affinity', () => {
     expect(result.result).to.be.true
   })
 
+  it("#validateCredential (polygon) when holderKey is set and doesn't match", async () => {
+    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+    const result = await affinity.validateCredential(createdCredential, `${didJolo}#primary`)
+
+    expect(result.result).to.be.false
+  })
+
+  it('#validateCredential (polygon) when holderKey is set', async () => {
+    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+    const result = await affinity.validateCredential(createdCredential, `${credential.holder.id}#key`)
+
+    expect(result.result).to.be.true
+  })
+
   it('#signPresentation (elem)', async () => {
-    const unsignedCredential = buildVCV1Unsigned({
-      skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
-        id: 'claimId:63b5d11c0d1b5566',
-        credentialSubject: {
-          data: {
-            '@type': ['Person', 'PersonE', 'NamePerson'],
-            givenName: 'DenisUpdated',
-            familyName: 'Popov',
-          },
-        },
-        holder: {
-          id: didElem,
-        },
-        type: 'NameCredentialPersonV1',
-        context: getVCNamePersonV1Context(),
-      }),
-      issuanceDate: '2020-01-17T07:06:35.403Z',
-      expirationDate: '2021-01-16T07:06:35.337Z',
-    })
+    const unsignedCredential = createUnsignedCredential(didElem)
     const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedElem, password)
     const createdPresentation = await affinity.signPresentation({
       vp: buildPresentation([createdCredential], didElem),
@@ -316,25 +383,7 @@ describe('Affinity', () => {
   })
 
   it('#signPresentation (jolo)', async () => {
-    const unsignedCredential = buildVCV1Unsigned({
-      skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
-        id: 'claimId:63b5d11c0d1b5566',
-        credentialSubject: {
-          data: {
-            '@type': ['Person', 'PersonE', 'NamePerson'],
-            givenName: 'DenisUpdated',
-            familyName: 'Popov',
-          },
-        },
-        holder: {
-          id: didJolo,
-        },
-        type: 'NameCredentialPersonV1',
-        context: getVCNamePersonV1Context(),
-      }),
-      issuanceDate: '2020-01-17T07:06:35.403Z',
-      expirationDate: '2021-01-16T07:06:35.337Z',
-    })
+    const unsignedCredential = createUnsignedCredential(didJolo)
     const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
     const createdPresentation = await affinity.signPresentation({
       vp: buildPresentation([createdCredential], didElem),
@@ -356,31 +405,63 @@ describe('Affinity', () => {
     expect(createdPresentation.proof.jws).to.exist
   })
 
-  it('#validatePresentation (elem) (new presentations)', async () => {
-    const unsignedCredential = buildVCV1Unsigned({
-      skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
-        id: 'claimId:63b5d11c0d1b5566',
-        credentialSubject: {
-          data: {
-            '@type': ['Person', 'PersonE', 'NamePerson'],
-            givenName: 'DenisUpdated',
-            familyName: 'Popov',
-          },
-        },
-        holder: {
-          id: didElem,
-        },
-        type: 'NameCredentialPersonV1',
-        context: getVCNamePersonV1Context(),
-      }),
-      issuanceDate: '2020-01-17T07:06:35.403Z',
-      expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  it('#signPresentation (polygon)', async () => {
+    const unsignedCredential = createUnsignedCredential(didElem)
+    const createdCredential = await affinity.signCredential(
+      unsignedCredential,
+      testDids.polygon.encryptedSeed,
+      password,
+    )
+    const createdPresentation = await affinity.signPresentation({
+      vp: buildPresentation([createdCredential], testDids.polygon.did),
+      encryption: {
+        seed: testDids.polygon.encryptedSeed,
+        key: password,
+      },
+      purpose: {
+        challenge: 'challenge',
+        domain: 'domain',
+      },
     })
+
+    const keyId = `${testDids.polygon.did}#key-1`
+    expect(createdPresentation).to.exist
+    expect(createdPresentation.proof).to.exist
+    expect(createdPresentation['@context']).to.exist
+    expect(createdPresentation.proof.verificationMethod).to.be.equal(keyId)
+    expect(createdPresentation.proof.jws).to.exist
+  })
+
+  it('#validatePresentation (elem) (new presentations)', async () => {
+    const unsignedCredential = createUnsignedCredential(didElem)
     const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
     const createdPresentation = await affinity.signPresentation({
       vp: buildPresentation([createdCredential], didElem),
       encryption: {
         seed: encryptedSeedElem,
+        key: password,
+      },
+      purpose: {
+        challenge: 'challenge',
+        domain: 'domain',
+      },
+    })
+
+    const result = await affinity.validatePresentation(createdPresentation)
+    expect(result.result).to.be.true
+  })
+
+  it('#validatePresentation (polygon) (new presentations)', async () => {
+    const unsignedCredential = createUnsignedCredential(testDids.polygon.did)
+    const createdCredential = await affinity.signCredential(
+      unsignedCredential,
+      testDids.polygon.encryptedSeed,
+      password,
+    )
+    const createdPresentation = await affinity.signPresentation({
+      vp: buildPresentation([createdCredential], testDids.polygon.did),
+      encryption: {
+        seed: testDids.polygon.encryptedSeed,
         key: password,
       },
       purpose: {
@@ -407,31 +488,57 @@ describe('Affinity', () => {
     expect(result.result).to.be.true
   })
 
+  it('#validateCredential when credential is revokable (polygon) (when not revoked)', async () => {
+    nock('https://affinity-revocation.staging.affinity-project.org')
+      .get('/api/v1/revocation/revocation-list-2020-credentials/1')
+      .reply(200, revocationListCredential)
+
+    const revokableCredential = Object.assign({}, credential, { credentialStatus })
+    // eslint-disable-next-line
+    // @ts-ignore
+    revokableCredential['@context'].push('https://w3id.org/vc-revocation-list-2020/v1')
+    const createdCredential = await affinity.signCredential(
+      revokableCredential,
+      testDids.polygon.encryptedSeed,
+      password,
+    )
+
+    const result = await affinity.validateCredential(createdCredential, `${credential.holder.id}#key-1`)
+    expect(result.result).to.be.true
+  })
+
   it('#validatePresentation (jolo) (new presentations)', async () => {
-    const unsignedCredential = buildVCV1Unsigned({
-      skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
-        id: 'claimId:63b5d11c0d1b5566',
-        credentialSubject: {
-          data: {
-            '@type': ['Person', 'PersonE', 'NamePerson'],
-            givenName: 'DenisUpdated',
-            familyName: 'Popov',
-          },
-        },
-        holder: {
-          id: didJolo,
-        },
-        type: 'NameCredentialPersonV1',
-        context: getVCNamePersonV1Context(),
-      }),
-      issuanceDate: '2020-01-17T07:06:35.403Z',
-      expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    })
+    const unsignedCredential = createUnsignedCredential(didJolo)
     const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
     const createdPresentation = await affinity.signPresentation({
       vp: buildPresentation([createdCredential], didJolo),
       encryption: {
         seed: encryptedSeedJolo,
+        key: password,
+      },
+      purpose: {
+        challenge: 'challenge',
+        domain: 'domain',
+      },
+    })
+
+    const result = await affinity.validatePresentation(createdPresentation)
+
+    expect(result.result).to.be.true
+  })
+
+  it('#validatePresentation (polygon) (new presentations)', async () => {
+    const unsignedCredential = createUnsignedCredential(testDids.polygon.did)
+    console.dir({ unsignedCredential }, { depth: null })
+    const createdCredential = await affinity.signCredential(
+      unsignedCredential,
+      testDids.polygon.encryptedSeed,
+      password,
+    )
+    const createdPresentation = await affinity.signPresentation({
+      vp: buildPresentation([createdCredential], testDids.polygon.did),
+      encryption: {
+        seed: testDids.polygon.encryptedSeed,
         key: password,
       },
       purpose: {
