@@ -252,7 +252,7 @@ describe('DidDocumentService', () => {
     const keyId = didDocumentService.getKeyId()
 
     expect(keyId).to.exist
-    expect(keyId).to.be.equal(polygonTestnetDid)
+    expect(keyId).to.be.equal(`${polygonTestnetDid}#key-1`)
   })
 
   it('#buildDidDocument (elem)', async () => {
