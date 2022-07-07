@@ -309,10 +309,10 @@ export abstract class BaseNetworkMember {
   protected static _validateKeys(keyParams: KeyParams) {
     const { encryptedSeed, password } = keyParams
 
-    let didMethod
+    let didMethod: DidMethod
     try {
       const keysService = new KeysService(encryptedSeed, password)
-      didMethod = keysService.decryptSeed().didMethod
+      didMethod = keysService.decryptSeed().didMethod as DidMethod
     } catch (error) {
       throw new SdkErrorFromCode('COR-24', {}, error)
     }
@@ -1112,8 +1112,7 @@ export abstract class BaseNetworkMember {
       didDocument = await this.resolveDid(did)
     }
 
-    const publicKeyHex = Util.getPublicKeyHexFromDidDocument(didDocument)
-    const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
+    const publicKeyBuffer = Util.getPublicKeyFromDidDocument(didDocument)
 
     return this._platformCryptographyTools.encryptByPublicKey(publicKeyBuffer, object)
   }

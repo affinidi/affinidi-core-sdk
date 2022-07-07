@@ -18,8 +18,8 @@ import {
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
 
 export type Env = 'dev' | 'staging' | 'prod'
-export type DidMethod = 'jolo' | 'elem' | 'elem-anchored'
-export const DID_METHOD = /^(jolo|elem)$/
+export type DidMethod = typeof SUPPORTED_DID_METHODS[number]
+export const DID_METHOD = /^(jolo|elem|polygon|polygon:testnet)$/
 export const DID = /^did:[\w\d]{2,}:[\w\d:;\-=]{10,}/
 export const PASSWORD = /^.{6,}$/
 export const JWT = /^[A-Za-z0-9_=-]+\.[A-Za-z0-9_=-]+\.?[A-Za-z0-9_.+/=-]*$/

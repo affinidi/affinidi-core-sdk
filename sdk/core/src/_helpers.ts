@@ -1,12 +1,16 @@
 import { SUPPORTED_DID_METHODS } from './_defaultConfig'
 import SdkErrorFromCode from './shared/SdkErrorFromCode'
 import { CredentialLike, W3cCredentialLike } from './dto/internal'
+import { DidMethod } from './dto/shared.dto'
 
 const packageInfo = require('../package.json')
 
-export const validateDidMethodSupported = (didMethod: string) => {
+export const validateDidMethodSupported = (didMethod: DidMethod) => {
   if (!SUPPORTED_DID_METHODS.includes(didMethod)) {
-    throw new SdkErrorFromCode('COM-10', { didMethod: didMethod, supportedDidMethods: SUPPORTED_DID_METHODS })
+    throw new SdkErrorFromCode('COM-10', {
+      didMethod: didMethod,
+      supportedDidMethods: SUPPORTED_DID_METHODS.join(', '),
+    })
   }
 }
 
