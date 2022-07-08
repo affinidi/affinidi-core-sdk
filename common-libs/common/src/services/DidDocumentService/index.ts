@@ -5,6 +5,9 @@ import ElemDidDocumentService from './ElemDidDocumentService'
 import ElemAnchoredDidDocumentService from './ElemAnchoredDidDocumentService'
 import { parse } from 'did-resolver'
 import { LocalKeyVault } from './LocalKeyVault'
+import PolygonDidDocumentService from './PolygonDidDocumentService'
+import { DidDocument } from '../../shared/interfaces'
+import { decodeBase58 } from '../../utils/ethUtils'
 
 export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
@@ -24,30 +27,31 @@ export default class DidDocumentService {
       jolo: new JoloDidDocumentService(keysService),
       elem: new ElemDidDocumentService(new LocalKeyVault(keysService)),
       'elem-anchored': new ElemAnchoredDidDocumentService(new LocalKeyVault(keysService)),
+      polygon: new PolygonDidDocumentService(new LocalKeyVault(keysService), { isTestnet: false }),
+      'polygon:testnet': new PolygonDidDocumentService(new LocalKeyVault(keysService), { isTestnet: true }),
     }[didMethod]
   }
-  static getPublicKey(fulleKeyId: string, didDocument: any, keyId?: string): Buffer {
+
+  static getPublicKey(fulleKeyId: string, didDocument: DidDocument, keyId?: string): Buffer {
     // Support finding the publicKey with the short form DID + fragment or full keyId
     if (!keyId) {
       const { did, fragment } = parse(fulleKeyId)
       keyId = `${did}#${fragment}`
     }
 
-    const keySection = didDocument.publicKey.find((section: any) => section.id === keyId || section.id === fulleKeyId)
+    const keySection = didDocument.publicKey?.find((section) => section.id === keyId || section.id === fulleKeyId)
 
-    if (!keySection) {
-      throw new Error('Key not found.')
-    }
+    if (keySection?.publicKeyPem) return Buffer.from(keySection.publicKeyPem)
+    if (keySection?.publicKeyBase58) return Buffer.from(keySection.publicKeyBase58)
+    if (keySection?.publicKeyHex) return Buffer.from(keySection.publicKeyHex, 'hex')
 
-    if (keySection.publicKeyPem) {
-      return Buffer.from(keySection.publicKeyPem)
-    }
+    const methodSection = didDocument.verificationMethod?.find(
+      (section) => section.id === keyId || section.id === fulleKeyId,
+    )
 
-    if (keySection.publicKeyBase58) {
-      return Buffer.from(keySection.publicKeyBase58)
-    }
+    if (methodSection?.publicKeyBase58) return decodeBase58(methodSection?.publicKeyBase58)
 
-    return Buffer.from(keySection.publicKeyHex, 'hex')
+    throw new Error('Key not found.')
   }
 
   /** NOTE: https://www.w3.org/TR/2019/WD-did-core-20191209/#generic-did-syntax
@@ -60,6 +64,7 @@ export default class DidDocumentService {
   static parseDid(did: string): string[] {
     const [, method, methodId, parameters] = did.split(':')
 
+    if (methodId === 'testnet') return [method + ':' + methodId, parameters]
     return [method, methodId, parameters]
   }
 

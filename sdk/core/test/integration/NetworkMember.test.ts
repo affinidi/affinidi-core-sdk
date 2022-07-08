@@ -1188,4 +1188,24 @@ describe('CommonNetworkMember', () => {
 
     expect(cnmByCreateWallet.did).to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
   })
+
+  it.skip('#createWallet and #openWalletByEncryptedSeed should return the same did (polygon)', async () => {
+    // NOTE: this test is skipped by default as it takes matic from registry wallet
+    // to run it locally please check your apiKey is allowed to use polygon(:testnet)
+    const customOptions: SdkOptions = {
+      ...options,
+      didMethod: 'polygon:testnet',
+      registryUrl: 'http://localhost:3000',
+      accessApiKey: '9713c8ac898648abf7c161ed12c4bbc69f55fd9b091a27a57a6a0ae7f441d17c',
+    }
+    const cnmByCreateWallet = await AffinidiWallet.createWallet(customOptions, password)
+
+    const cnmByOpenWalletByEncryptedSeed = await AffinidiWallet.openWalletByEncryptedSeed(
+      customOptions,
+      cnmByCreateWallet.encryptedSeed,
+      password,
+    )
+
+    expect(cnmByCreateWallet.did).to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
+  })
 })

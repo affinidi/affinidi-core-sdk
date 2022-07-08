@@ -5,6 +5,28 @@ export interface FreeFormObject {
   [key: string]: any
 }
 
+export type DidDocument = {
+  '@context': string | Record<string, any> | Record<string, any>[]
+  id: string
+  verificationMethod?: {
+    id: string
+    type: string
+    controller: string
+    publicKeyBase58: string
+  }[]
+  publicKey?: {
+    id: string
+    usage: 'signing' | 'recovery' | string
+    type: string
+    publicKeyHex?: string
+    publicKeyPem?: string
+    publicKeyBase58?: string
+  }[]
+  authentication?: string[]
+  assertionMethod?: string[]
+  [k: string]: any
+}
+
 type GetSignSuiteOptions = {
   controller: string
   keyId: string

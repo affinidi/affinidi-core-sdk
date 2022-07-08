@@ -4,7 +4,6 @@ import { expect } from 'chai'
 import DidDocumentService from '../../../src/services/DidDocumentService'
 import KeyService from '../../../src/services/KeysService'
 import { generateTestDIDs } from '../../factory/didFactory'
-import { DidResolver } from '../../../src'
 
 /*
  _____  _                        _   __                     ___                _   _         _     _____                    _  _    _
@@ -30,6 +29,12 @@ const encryptedSeedElem =
   'f6d18b619e97a2033f0ec7a6630fdcd3827a0dd70b3c439ab4' +
   '76b3fc264b639c84935d6e5d6fcabb3d027d411ae5d74d570fd16d604b038a9250ce4ac271fd6a86d8401ac52c52'
 
+const encryptedSeedPolygonTestnet =
+  '40ab24d5c83a66b449a30fd5013b6fc4c52af01b98189b6828' +
+  '557314682cc1d4c0cfcd948ae59407be92279847bf249bcff7' +
+  '27c850b60d3bd25a47d2314b04bd0c3be34d51e767e7c6a841' +
+  'c87b16cdfce597df2e454cba63b793934153374c06980aaa3b260e183440a8beca3e06193d'
+
 const encryptedSeedElemAnchored =
   'e7697091e36dc34575bdbaf72dbb2fe608cabbc9ce08978d3f' +
   '6b1b3863c0179c6460bd04ccf9595522ac4860c809abc920a7' +
@@ -48,11 +53,14 @@ const encryptedSeedJolo =
 
 const joloPublicKeyHex = '03c02f9a44b0eeaa0c50b47d6d670595c898362bcd4987d6d3c16517adc78157eb'
 const elemPublicKeyHex = '021abb4bbaaec970d0c25dd46ad36e44b4ab3650458d23a06be0e7128bfd3013b9'
+const polygonTestnetPublicKeyHex = '037b92a080b367ea2e1a4e2edac6fbe3b7703f504e4e1a4c06f8c2139a8f18274f'
 
 const joloMethod = 'jolo'
 const joloMethodId = '94f928808d7cbe228a86e6b2ba7549f873e0080be0ed7e04b957c2bcf7db93cb'
 const joloDid = `did:${joloMethod}:${joloMethodId}`
 const joloDidKey = `${joloDid}#keys-1`
+const polygonTestnetDid = 'did:polygon:testnet:0xfd789b28fea8917dce28441d387ba1e2ddbc5630'
+const polygonTestnetDidKey = `${polygonTestnetDid}#key-1`
 const elemDidShortForm = 'did:elem:EiD5Rx3mRfvGTD-IBzjtOs0k5nLMwiPgZyd2_TYuGBK0cw'
 const elemAnchoredDid = elemDidShortForm
 const elemDid =
@@ -81,6 +89,19 @@ const elemDid =
 const elemDidkey = `${elemDidShortForm}#primary`
 const elemDidLongkey = `${elemDid}#primary`
 
+const polygonTestnetDidDoc = {
+  '@context': 'https://w3id.org/did/v1',
+  id: 'did:polygon:testnet:0xfd789b28fea8917dce28441d387ba1e2ddbc5630',
+  verificationMethod: [
+    {
+      id: 'did:polygon:testnet:0xfd789b28fea8917dce28441d387ba1e2ddbc5630#key-1',
+      type: 'EcdsaSecp256k1VerificationKey2019',
+      controller: 'did:polygon:testnet:0xfd789b28fea8917dce28441d387ba1e2ddbc5630',
+      publicKeyBase58: '231KwJqGbRHFRFnBT1nC2szaD1PfgJbWjGKZiEqem1jEN',
+    },
+  ],
+}
+
 /*
  _____             _           __    __  _        _
 |  ___|           | |         / _|  / _|(_)      | |
@@ -93,9 +114,10 @@ const elemDidLongkey = `${elemDid}#primary`
 */
 
 describe('DidDocumentService', () => {
-  const didResolverMock: DidResolver = {
-    resolveDid: () => Promise.resolve({ id: 'did:elem:ushJhdunHuhsecb_hscudTYj2h2e' }),
-  } as any
+  const createDidResolverMock = (didDocMock = { id: 'did:elem:ushJhdunHuhsecb_hscudTYj2h2e' }) =>
+    ({
+      resolveDid: () => Promise.resolve(didDocMock),
+    } as any)
   let password: string
   let elemRSAEncryptedSeed: string
   let elemBBSEncryptedSeed: string
@@ -152,15 +174,24 @@ describe('DidDocumentService', () => {
     expect(did).to.be.equal(elemAnchoredDid)
   })
 
+  it('#getMyDid (polygon)', async () => {
+    const keyService = new KeyService(encryptedSeedPolygonTestnet, demoEncryptionPassword)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
+    const did = didDocumentService.getMyDid()
+
+    expect(did).to.exist
+    expect(did).to.be.equal(polygonTestnetDid)
+  })
+
   it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys RSA)', async () => {
     const keyService = new KeyService(elemRSAEncryptedSeed, password)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
-    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(createDidResolverMock())
     const rsaPublicKey = didDocument.publicKey.find((key: any) => key.type === 'RsaVerificationKey2018')
 
     const rsaKeyId = `${didDocument.id}#secondary`
-    const publicKeyBuffer = DidDocumentService.getPublicKey('', didDocument, rsaKeyId)
+    const publicKeyBuffer = DidDocumentService.getPublicKey('', didDocument as any, rsaKeyId)
     const publicKey = publicKeyBuffer.toString()
 
     expect(did).to.exist
@@ -174,11 +205,11 @@ describe('DidDocumentService', () => {
     const keyService = new KeyService(elemBBSEncryptedSeed, password)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
-    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(createDidResolverMock())
     const bbsPublicKey = didDocument.publicKey.find((key: any) => key.type === 'Bls12381G2Key2020')
 
     const bbsKeyId = `${didDocument.id}#bbs`
-    const publicKeyBuffer = DidDocumentService.getPublicKey('', didDocument, bbsKeyId)
+    const publicKeyBuffer = DidDocumentService.getPublicKey('', didDocument as any, bbsKeyId)
     const publicKey = publicKeyBuffer.toString()
 
     expect(did).to.exist
@@ -215,20 +246,28 @@ describe('DidDocumentService', () => {
     expect(keyId).to.be.equal(`${elemAnchoredDid}#primary`)
   })
 
+  it('#getKeyId (polygon)', async () => {
+    const keyService = new KeyService(encryptedSeedPolygonTestnet, demoEncryptionPassword)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
+    const keyId = didDocumentService.getKeyId()
+
+    expect(keyId).to.exist
+    expect(keyId).to.be.equal(`${polygonTestnetDid}#key-1`)
+  })
+
   it('#buildDidDocument (elem)', async () => {
     const keyService = new KeyService(encryptedSeedElem, demoEncryptionPassword)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(createDidResolverMock())
 
     expect(didDocument.id).to.exist
     expect(didDocument.id).to.be.equal(elemDidShortForm)
   })
 
   it('#buildDidDocument (elem-anchored)', async () => {
-    const fakeRegistryResolveDidService = { resolveDid: () => ({ id: elemAnchoredDid }) }
     const keyService = new KeyService(encryptedSeedElemAnchored, demoEncryptionPassword)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const didDocument = await didDocumentService.getDidDocument(fakeRegistryResolveDidService as any)
+    const didDocument = await didDocumentService.getDidDocument(createDidResolverMock({ id: elemAnchoredDid }))
 
     expect(didDocument.id).to.exist
     expect(didDocument.id).to.be.equal(elemAnchoredDid)
@@ -237,24 +276,33 @@ describe('DidDocumentService', () => {
   it('#buildDidDocument (jolo)', async () => {
     const keyService = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const didDocument = await didDocumentService.getDidDocument(didResolverMock)
+    const didDocument = await didDocumentService.getDidDocument(createDidResolverMock())
 
     expect(didDocument.id).to.exist
     expect(didDocument.id).to.be.equal(joloDid)
   })
 
-  it('!getPublicKey', async () => {
+  it('#buildDidDocument (polygon)', async () => {
+    const keyService = new KeyService(encryptedSeedPolygonTestnet, demoEncryptionPassword)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
+    const didDocument = await didDocumentService.getDidDocument(createDidResolverMock({ id: polygonTestnetDid }))
+
+    expect(didDocument.id).to.exist
+    expect(didDocument.id).to.be.equal(polygonTestnetDid)
+  })
+
+  it('#getPublicKey (jolo | elem)', async () => {
     const keyService1 = new KeyService(encryptedSeedJolo, demoEncryptionPassword)
     const keyService2 = new KeyService(encryptedSeedElem, demoEncryptionPassword)
     const didDocumentServiceJolo = DidDocumentService.createDidDocumentService(keyService1)
     const didDocumentServiceElem = DidDocumentService.createDidDocumentService(keyService2)
-    const didDocumentJolo = await didDocumentServiceJolo.getDidDocument(didResolverMock)
-    const didDocumentElem = await didDocumentServiceElem.getDidDocument(didResolverMock)
+    const didDocumentJolo = await didDocumentServiceJolo.getDidDocument(createDidResolverMock())
+    const didDocumentElem = await didDocumentServiceElem.getDidDocument(createDidResolverMock())
 
-    const publicKeyJolo = DidDocumentService.getPublicKey(joloDidKey, didDocumentJolo)
+    const publicKeyJolo = DidDocumentService.getPublicKey(joloDidKey, didDocumentJolo as any)
     const publicKeyHexJolo = publicKeyJolo.toString('hex')
-    const publicKeyElem = DidDocumentService.getPublicKey(elemDidkey, didDocumentElem)
-    const publicKeyElemLong = DidDocumentService.getPublicKey(elemDidLongkey, didDocumentElem)
+    const publicKeyElem = DidDocumentService.getPublicKey(elemDidkey, didDocumentElem as any)
+    const publicKeyElemLong = DidDocumentService.getPublicKey(elemDidLongkey, didDocumentElem as any)
     const publicKeyHexElem = publicKeyElem.toString('hex')
     const publicKeyHexElemLong = publicKeyElemLong.toString('hex')
 
@@ -263,5 +311,17 @@ describe('DidDocumentService', () => {
     expect(publicKeyHexJolo).to.be.equal(joloPublicKeyHex)
     expect(publicKeyHexElem).to.be.equal(elemPublicKeyHex)
     expect(publicKeyHexElemLong).to.be.equal(elemPublicKeyHex)
+  })
+
+  it('#getPublicKey (polygon)', async () => {
+    const keyService = new KeyService(encryptedSeedPolygonTestnet, demoEncryptionPassword)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
+    const didDocument = await didDocumentService.getDidDocument(createDidResolverMock(polygonTestnetDidDoc))
+
+    const publicKey = DidDocumentService.getPublicKey(polygonTestnetDidKey, didDocument as any)
+    const publicKeyHex = publicKey.toString('hex')
+
+    expect(publicKeyHex).to.exist
+    expect(publicKeyHex).to.be.equal(polygonTestnetPublicKeyHex)
   })
 })

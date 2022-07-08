@@ -49,7 +49,7 @@ export default {
         "properties": {
           "did": {
             "type": "string",
-            "pattern": "^did:(elem|jolo):.*$"
+            "pattern": "^did:(elem|jolo|polygon):.*$"
           },
           "nonce": {
             "type": "number",
@@ -57,12 +57,13 @@ export default {
           },
           "didDocumentAddress": {
             "type": "string"
+          },
+          "publicKeyBase58": {
+            "type": "string"
           }
         },
         "required": [
-          "did",
-          "nonce",
-          "didDocumentAddress"
+          "did"
         ],
         "type": "object",
         "additionalProperties": false
@@ -109,7 +110,10 @@ export default {
         "properties": {
           "did": {
             "type": "string",
-            "pattern": "^did:(elem|jolo):.*$"
+            "pattern": "^did:(elem|jolo|polygon):.*$"
+          },
+          "transactionSignatureJson": {
+            "type": "string"
           },
           "didDocumentAddress": {
             "type": "string"
@@ -125,14 +129,15 @@ export default {
           "ethereumPublicKeyHex": {
             "type": "string"
           },
-          "transactionSignatureJson": {
+          "publicKeyBase58": {
+            "type": "string"
+          },
+          "origin": {
             "type": "string"
           }
         },
         "required": [
           "did",
-          "didDocumentAddress",
-          "ethereumPublicKeyHex",
           "transactionSignatureJson"
         ],
         "type": "object",
@@ -156,7 +161,7 @@ export default {
         "properties": {
           "did": {
             "type": "string",
-            "pattern": "^did:(elem|jolo|key|web):.*$"
+            "pattern": "^did:(elem|jolo|key|web|polygon):.*$"
           }
         },
         "required": [
@@ -170,7 +175,7 @@ export default {
   },
   "info": {
     "title": "affinity-registry",
-    "version": "0.3.11",
+    "version": "0.21.0",
     "description": "Affinity Registry",
     "license": {
       "name": "ISC"
@@ -305,16 +310,7 @@ export default {
           "DID"
         ],
         "security": [],
-        "parameters": [
-          {
-            "in": "header",
-            "name": "Api-Key",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {

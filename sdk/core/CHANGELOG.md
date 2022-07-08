@@ -1,3 +1,5 @@
+# release 6.3.0 (2022-07-08)
+* add support of new did method "polygon"
 # release 6.2.1 (2022-06-30)
 * add new sdk options
   - `region` configure aws region use `DEFAULT_COGNITO_REGION` as default 

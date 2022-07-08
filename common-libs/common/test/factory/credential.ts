@@ -120,3 +120,127 @@ export const legacyCredential = {
   },
   name: 'Name',
 }
+
+export const signedCredentialWithPolygon = {
+  '@context': [
+    'https://www.w3.org/2018/credentials/v1',
+    {
+      NameCredentialPersonV1: {
+        '@id': 'https://schema.affinity-project.org/NameCredentialPersonV1',
+        '@context': { '@version': 1.1, '@protected': true },
+      },
+      data: {
+        '@id': 'https://schema.affinity-project.org/data',
+        '@context': [
+          null,
+          {
+            '@version': 1.1,
+            '@protected': true,
+            '@vocab': 'https://schema.org/',
+            NamePerson: {
+              '@id': 'https://schema.affinity-project.org/NamePerson',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                name: 'https://schema.org/name',
+                givenName: 'https://schema.org/givenName',
+                fullName: 'https://schema.org/fullName',
+              },
+            },
+            PersonE: {
+              '@id': 'https://schema.affinity-project.org/PersonE',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+              },
+            },
+            OrganizationE: {
+              '@id': 'https://schema.affinity-project.org/OrganizationE',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                hasCredential: 'https://schema.org/hasCredential',
+                industry: 'https://schema.affinity-project.org/industry',
+                identifiers: 'https://schema.affinity-project.org/identifiers',
+              },
+            },
+            Credential: {
+              '@id': 'https://schema.affinity-project.org/Credential',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                dateRevoked: 'https://schema.affinity-project.org/dateRevoked',
+                recognizedBy: 'https://schema.affinity-project.org/recognizedBy',
+              },
+            },
+            OrganizationalCredential: {
+              '@id': 'https://schema.affinity-project.org/OrganizationalCredential',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                credentialCategory: 'https://schema.affinity-project.org/credentialCategory',
+                organizationType: 'https://schema.affinity-project.org/organizationType',
+                goodStanding: 'https://schema.affinity-project.org/goodStanding',
+                active: 'https://schema.affinity-project.org/active',
+                primaryJurisdiction: 'https://schema.affinity-project.org/primaryJurisdiction',
+                identifier: 'https://schema.org/identifier',
+              },
+            },
+          },
+        ],
+      },
+    },
+  ],
+  id: 'claimId:63b5d11c0d1b5566',
+  type: ['VerifiableCredential', 'NameCredentialPersonV1'],
+  holder: {
+    id: 'did:polygon:testnet:0xfd789b28fea8917dce28441d387ba1e2ddbc5630',
+  },
+  credentialSubject: {
+    data: {
+      '@type': ['Person', 'PersonE', 'NamePerson'],
+      givenName: 'Affinidi',
+      familyName: 'Project',
+    },
+  },
+  issuanceDate: '2022-07-06T11:20:03.506Z',
+  expirationDate: '2035-07-07T11:20:03.506Z',
+  issuer: 'did:polygon:testnet:0xfd789b28fea8917dce28441d387ba1e2ddbc5630',
+  proof: {
+    type: 'EcdsaSecp256k1Signature2019',
+    created: '2022-07-07T11:39:26Z',
+    verificationMethod: 'did:polygon:testnet:0xfd789b28fea8917dce28441d387ba1e2ddbc5630#key-1',
+    proofPurpose: 'assertionMethod',
+    jws:
+      'eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..nl4YnpCTK-YwfKuKoCzVPl3AVfZtlMS4WR7NJivbDd4XamToMYQtVvokzim8SLXtKSUEzIOQsepenbDY0kcnfA',
+  },
+}
+
+export const createUnsignedCredential = (
+  holderId = 'did:polygon:testnet:0xb83cf29e1029313c20537b04f9b598e1f9cb3df5',
+) => {
+  return buildVCV1Unsigned({
+    skeleton: buildVCV1Skeleton<VCSNamePersonV1>({
+      id: 'claimId:63b5d11c0d1b5566',
+      credentialSubject: {
+        data: {
+          '@type': ['Person', 'PersonE', 'NamePerson'],
+          givenName: 'Affinidi',
+          familyName: 'Project',
+        },
+      },
+      holder: {
+        id: holderId,
+      },
+      type: 'NameCredentialPersonV1',
+      context: getVCNamePersonV1Context(),
+    }),
+    issuanceDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  })
+}
