@@ -1,3 +1,5 @@
+# release 2.2.0 (2022-07-08)
+* Added support of new did method "polygon"
 # release 2.1.7 (2022-06-30)
 * updated `internal-api-clients` with new endpoint
 # release 2.1.6 (2022-06-22)
