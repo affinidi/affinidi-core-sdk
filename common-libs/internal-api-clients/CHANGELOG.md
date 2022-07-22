@@ -1,3 +1,5 @@
+# release 1.5.1 (2022-07-22)
+* Updated `tools-openapi` version
 # release 1.5.0 (2022-07-08)
 * Updated registry spec
 # release 1.4.0 (2022-06-30)

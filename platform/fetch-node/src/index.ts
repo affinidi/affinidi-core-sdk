@@ -29,6 +29,7 @@ export const useNodeFetch = () => {
           },
         },
         json: () => response.body.json(),
+        text: () => response.body.text(),
         status: response.statusCode,
       }
     })

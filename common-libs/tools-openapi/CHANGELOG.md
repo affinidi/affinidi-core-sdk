@@ -1,3 +1,5 @@
+# release 1.1.3 (2022-07-22)
+* added `text/html` and unexpected content-type error handling
 # release 1.1.2 (2022-06-22)
 * updated `tools-common` with BigInt fix for react native
 # release 1.1.1 (2021-04-22)
