@@ -42,6 +42,9 @@ describe('Client Helpers', () => {
       expect(err.message).to.eql(ngnixError)
 
       // @ts-ignore
+      expect(err.code).to.eql('COR-0')
+
+      // @ts-ignore
       expect(err.httpStatusCode).to.eql(413)
       expect(err instanceof SdkError).to.be.true
     }
@@ -76,9 +79,7 @@ describe('Client Helpers', () => {
   })
 
   it('should throw for unexpected content-type (not 200)', async () => {
-    nock('http://fake.url/')
-      .post('/api/v1/client-helper-test')
-      .reply(418, { code: '', message: 'Content type error.', context: {} }, { 'Content-type': 'image/png' })
+    nock('http://fake.url/').post('/api/v1/client-helper-test').reply(418, {}, { 'Content-type': 'image/png' })
 
     try {
       await client.ClientHelperTest({
@@ -89,6 +90,9 @@ describe('Client Helpers', () => {
     } catch (err) {
       // @ts-ignore
       expect(err.message).to.eql('Content type error.')
+
+      // @ts-ignore
+      expect(err.code).to.eql('COR-0')
 
       // @ts-ignore
       expect(err.httpStatusCode).to.eql(418)

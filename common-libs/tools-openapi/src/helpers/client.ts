@@ -109,10 +109,18 @@ const executeByOptions = async (
 
     if (isContentTypeHTML) {
       const errorText = await response.text()
-      throw new SdkError({ code: '', message: errorText }, {}, Object.assign({}, { httpStatusCode: status, errorText }))
+      throw new SdkError(
+        { code: 'COR-0', message: errorText },
+        {},
+        Object.assign({}, { httpStatusCode: status, errorText }),
+      )
     }
 
-    throw new SdkError({ code: '', message: 'Content type error.' }, {}, Object.assign({}, { httpStatusCode: status }))
+    throw new SdkError(
+      { code: 'COR-0', message: 'Content type error.' },
+      {},
+      Object.assign({}, { httpStatusCode: status }),
+    )
   }
 
   if (!isContentTypeJSON) {
