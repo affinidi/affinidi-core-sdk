@@ -1,7 +1,7 @@
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 import { parse } from 'did-resolver'
 
-import { VPV1, VCV1, VCV1SubjectBase, GetSignSuiteFn } from '../..'
+import { VPV1, VCV1, GetSignSuiteFn } from '../..'
 import { validateVPV1, validateVCV1, GetVerifySuiteFn } from '.'
 import { Validatied, ErrorConfig } from '../util'
 import { buildVCV1, buildVCV1Skeleton, buildVCV1Unsigned, buildVPV1, buildVPV1Unsigned } from '../../issuer'
@@ -1001,7 +1001,7 @@ describe('validateVCV1 [RSA]', () => {
 
       const { issuer, bob } = didConfigs
       // Issue a VC to bob
-      const vc = await createVC(
+      const vc: any = await createVC(
         {
           did: issuer.did,
           keyId: `${issuer.did}#primary`,
@@ -1017,7 +1017,7 @@ describe('validateVCV1 [RSA]', () => {
         credentialSubject: {
           ...vc.credentialSubject,
           data: {
-            ...(vc.credentialSubject as VCV1SubjectBase).data,
+            ...vc.credentialSubject.data,
             otherField: 'invalid',
           },
         },
@@ -2019,7 +2019,7 @@ describe('validateVPV1', () => {
       )
 
       // Bob creates a VP containing his VC
-      const vp = await createVP(
+      const vp: any = await createVP(
         {
           did: bob.did,
           keyId: `${bob.did}#primary`,
@@ -2037,7 +2037,7 @@ describe('validateVPV1', () => {
             credentialSubject: {
               ...vp.verifiableCredential[0].credentialSubject,
               data: {
-                ...(vp.verifiableCredential[0].credentialSubject as VCV1SubjectBase).data,
+                ...vp.verifiableCredential[0].credentialSubject.data,
                 otherField: 'invalid',
               },
             },

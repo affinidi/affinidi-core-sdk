@@ -2,7 +2,7 @@ import { TContext } from '../shared'
 
 // TODO: remove SimpleThing since it doesn't serve any purpose
 // Do not import {Thing} from 'schema-dts' because it chokes TS
-export type SimpleThing = { '@type'?: string | string[] }
+export type SimpleThing = { '@type'?: string | string[] } & Record<any, any>
 
 export type VCV1Type = ['VerifiableCredential', ...string[]]
 
@@ -11,7 +11,12 @@ export type MaybeArray<T> = T | Array<T>
 export type VCV1Subject<Data extends SimpleThing> = {
   '@context'?: string
   id?: string
-  data?: Data
+} & Data
+
+export type LegacyVCV1Subject<Data extends SimpleThing> = {
+  '@context'?: string
+  id?: string
+  data: Data
 }
 
 export type VCV1SubjectMA<D extends SimpleThing = SimpleThing> = MaybeArray<VCV1Subject<D>>
