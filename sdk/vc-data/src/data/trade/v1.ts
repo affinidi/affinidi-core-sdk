@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 
 import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries } from '../base/v1'
 import {
@@ -95,7 +95,7 @@ const getHelperContextEntries = () => {
 
 // Cargo Receipt Related
 
-export type VCSCargoReceiptV1 = VCV1Subject<ExpandThing<CargoReceiptV1>>
+export type VCSCargoReceiptV1 = LegacyVCV1Subject<ExpandThing<CargoReceiptV1>>
 
 export type VCCargoReceiptV1 = VCV1<VCSCargoReceiptV1, Type<'CargoReceiptCredentialV1'>>
 
@@ -114,7 +114,7 @@ type BillOfLadingV1Mixin = CreateThing<'BillOfLading'>
 
 export type BillOfLadingV1 = ExtendThing<BillOfLadingV1Mixin, CargoReceiptV1>
 
-export type VCSBillOfLadingV1 = VCV1Subject<ExpandThing<BillOfLadingV1>>
+export type VCSBillOfLadingV1 = LegacyVCV1Subject<ExpandThing<BillOfLadingV1>>
 
 export type VCBillOfLadingV1 = VCV1<VCSBillOfLadingV1, Type<'BillOfLadingCredentialV1'>>
 

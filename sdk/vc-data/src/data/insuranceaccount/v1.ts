@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import { CreateThing, Type, createContextEntry, createVCContextEntry, MaybeArray } from '../util'
@@ -35,8 +35,8 @@ export type CoverageEV1 = CreateThing<
   }
 >
 
-export type VCSInsuranceAccountCoverageV1 = VCV1Subject<CoverageEV1>
-export type VCSInsuranceAccountPatientV1 = VCV1Subject<FHIRPatientE>
+export type VCSInsuranceAccountCoverageV1 = LegacyVCV1Subject<CoverageEV1>
+export type VCSInsuranceAccountPatientV1 = LegacyVCV1Subject<FHIRPatientE>
 
 export type VCSInsuranceAccountPersonV1 = [
   VCSInsuranceAccountCoverageV1,

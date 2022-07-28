@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import { FHIRPatientE, getFHIRV1ContextEntries } from '../base/v1'
 import { CreateThing, Type, createContextEntry, createVCContextEntry, MaybeArray } from '../util'
@@ -88,14 +88,14 @@ export type FHIRBundleContainer = CreateThing<
   }
 >
 
-export type VCSImmunizationV1 = VCV1Subject<ImmunizationV1>
-export type VCSObservationV1 = VCV1Subject<ObservationV1>
-export type VCSPatientV1 = VCV1Subject<FHIRPatientE>
+export type VCSImmunizationV1 = LegacyVCV1Subject<ImmunizationV1>
+export type VCSObservationV1 = LegacyVCV1Subject<ObservationV1>
+export type VCSPatientV1 = LegacyVCV1Subject<FHIRPatientE>
 
 export type VCSHealthPassportImmunizationV1 = [VCSImmunizationV1, VCSPatientV1]
 export type VCSHealthPassportObservationV1 = [VCSObservationV1, VCSPatientV1]
 export type VCSHealthPassportGeneralV1 = [VCSImmunizationV1, VCSObservationV1, VCSPatientV1]
-export type VCSHealthPassportBundleV1 = VCV1Subject<FHIRBundleContainer>
+export type VCSHealthPassportBundleV1 = LegacyVCV1Subject<FHIRBundleContainer>
 
 export type VCHealthPassportImmunizationV1 = VCV1<
   VCSHealthPassportImmunizationV1,

@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 
 import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries, GovernmentOrgV1 } from '../base/v1'
 import { CreateThing, ExtendThing, Type, ExpandThing, createContextEntry, createVCContextEntry } from '../util'
@@ -60,7 +60,7 @@ type NatIDNumPersonV1Mixin = CreateThing<
 
 export type NatIDNumPersonV1 = ExtendThing<NatIDNumPersonV1Mixin, PersonEV1>
 
-export type VCSNatIDNumPersonV1 = VCV1Subject<ExpandThing<NatIDNumPersonV1>>
+export type VCSNatIDNumPersonV1 = LegacyVCV1Subject<ExpandThing<NatIDNumPersonV1>>
 
 export type VCNatIDNumPersonV1 = VCV1<VCSNatIDNumPersonV1, Type<'NatIDNumCredentialPersonV1'>>
 
@@ -93,7 +93,7 @@ type NatIDNumOrganizationV1Mixin = CreateThing<
 
 export type NatIDNumOrganizationV1 = ExtendThing<NatIDNumOrganizationV1Mixin, OrganizationEV1>
 
-export type VCSNatIDNumOrganizationV1 = VCV1Subject<ExpandThing<NatIDNumOrganizationV1>>
+export type VCSNatIDNumOrganizationV1 = LegacyVCV1Subject<ExpandThing<NatIDNumOrganizationV1>>
 
 export type VCNatIDNumOrganizationV1 = VCV1<VCSNatIDNumOrganizationV1, Type<'NatIDNumCredentialOrganizationV1'>>
 

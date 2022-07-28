@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 import { createContextEntry, CreateThing, createVCContextEntry, ExpandThing, ExtendThing, Type } from '../util'
 
 type HackathonEV1Mixin = CreateThing<'HackathonE'>
@@ -25,7 +25,7 @@ type HackathonWinnerV1Mixin = CreateThing<
 
 export type HackathonWinnerV1 = ExtendThing<HackathonWinnerV1Mixin, HackathonEV1>
 
-export type VCSHackathonWinnerV1 = VCV1Subject<ExpandThing<HackathonWinnerV1>>
+export type VCSHackathonWinnerV1 = LegacyVCV1Subject<ExpandThing<HackathonWinnerV1>>
 
 export type VCHackathonWinnerV1 = VCV1<VCSHackathonWinnerV1, Type<'HackathonWinnerCredentialV1'>>
 

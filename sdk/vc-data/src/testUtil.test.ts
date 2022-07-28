@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject, buildVCV1Unsigned, buildVCV1, buildVCV1Skeleton } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject, buildVCV1Unsigned, buildVCV1, buildVCV1Skeleton } from '@affinidi/vc-common'
 import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 
 const jsonld = require('jsonld')
@@ -60,7 +60,7 @@ const keys = {
 
 */
 
-export const expandVC = async <VC extends VCV1, VCS extends VCV1Subject<any>>({
+export const expandVC = async <VC extends VCV1, VCS extends LegacyVCV1Subject<any>>({
   data,
   type,
   context,
