@@ -23,29 +23,7 @@ export default class RegistryApiService {
     return this.client.CreateAnchorTransaction({ params })
   }
 
-  async anchorDid({
-    did,
-    didDocumentAddress,
-    ethereumPublicKeyHex,
-    transactionSignatureJson,
-    nonce,
-    anchoredDidElem,
-  }: {
-    did: string
-    didDocumentAddress: string
-    ethereumPublicKeyHex: string
-    transactionSignatureJson: string
-    nonce?: number
-    anchoredDidElem?: boolean
-  }) {
-    const params = {
-      did,
-      didDocumentAddress,
-      ethereumPublicKeyHex,
-      transactionSignatureJson: transactionSignatureJson as any,
-      nonce,
-      anchoredDidElem,
-    }
+  async anchorDid(params: GetParams<typeof clientMethods.AnchorDid>) {
     return this.client.AnchorDid({ params })
   }
 

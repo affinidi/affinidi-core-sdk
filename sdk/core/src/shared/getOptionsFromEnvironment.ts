@@ -15,6 +15,7 @@ import {
   STAGING_COGNITO_USER_POOL_ID,
   STAGING_EMAIL_ISSUER_BASE_PATH,
   STAGING_PHONE_ISSUER_BASE_PATH,
+  DEFAULT_COGNITO_REGION,
 } from '../_defaultConfig'
 
 type AccessApiKeyOptions = {
@@ -46,6 +47,8 @@ type EnvironmentOptions = {
   phoneIssuerBasePath?: string
   emailIssuerBasePath?: string
   revocationUrl?: string
+  userPoolId?: string
+  clientId?: string
 }
 
 function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
@@ -68,8 +71,8 @@ function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
     case 'dev':
       return {
         env: env as Env,
-        clientId: DEV_COGNITO_CLIENT_ID,
-        userPoolId: DEV_COGNITO_USER_POOL_ID,
+        clientId: options.clientId || DEV_COGNITO_CLIENT_ID,
+        userPoolId: options.userPoolId || DEV_COGNITO_USER_POOL_ID,
         phoneIssuerBasePath: options.phoneIssuerBasePath || DEV_PHONE_ISSUER_BASE_PATH,
         emailIssuerBasePath: options.emailIssuerBasePath || DEV_EMAIL_ISSUER_BASE_PATH,
         ...urls,
@@ -79,8 +82,8 @@ function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
     case 'prod':
       return {
         env: env as Env,
-        clientId: PROD_COGNITO_CLIENT_ID,
-        userPoolId: PROD_COGNITO_USER_POOL_ID,
+        clientId: options.clientId || PROD_COGNITO_CLIENT_ID,
+        userPoolId: options.userPoolId || PROD_COGNITO_USER_POOL_ID,
         phoneIssuerBasePath: options.phoneIssuerBasePath || PROD_PHONE_ISSUER_BASE_PATH,
         emailIssuerBasePath: options.emailIssuerBasePath || PROD_EMAIL_ISSUER_BASE_PATH,
         ...urls,
@@ -89,8 +92,8 @@ function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
     case 'staging':
       return {
         env: env as Env,
-        clientId: STAGING_COGNITO_CLIENT_ID,
-        userPoolId: STAGING_COGNITO_USER_POOL_ID,
+        clientId: options.clientId || STAGING_COGNITO_CLIENT_ID,
+        userPoolId: options.userPoolId || STAGING_COGNITO_USER_POOL_ID,
         phoneIssuerBasePath: options.phoneIssuerBasePath || STAGING_PHONE_ISSUER_BASE_PATH,
         emailIssuerBasePath: options.emailIssuerBasePath || STAGING_EMAIL_ISSUER_BASE_PATH,
         ...urls,
@@ -113,10 +116,14 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
     emailIssuerBasePath,
     revocationUrl,
     storageRegion,
+    clientId,
+    userPoolId,
+    region,
     ...otherOptions
   } = options
 
   return {
+    region,
     accessApiKeyOptions: {
       accessApiKey,
       apiKey,
@@ -132,6 +139,8 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
       phoneIssuerBasePath,
       emailIssuerBasePath,
       revocationUrl,
+      clientId,
+      userPoolId,
     },
     storageRegion,
     otherOptions,
@@ -139,9 +148,10 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
 }
 
 export const getOptionsFromEnvironment = (options: SdkOptions) => {
-  const { accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(options)
+  const { region, accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(options)
 
   return {
+    region: region || DEFAULT_COGNITO_REGION,
     basicOptions: getBasicOptionsFromEnvironment(environmentOptions),
     accessApiKey: getAccessApiKeyFromOptions(accessApiKeyOptions),
     storageRegion,

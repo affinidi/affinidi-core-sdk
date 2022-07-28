@@ -473,7 +473,7 @@ describe('CommonNetworkMember', () => {
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeed, options)
     const commonNetworkMemberElem = new AffinidiWallet(password, encryptedSeedElem, options)
 
-    const customExpiresAt = '2022-04-15T00:00:00.000Z'
+    const customExpiresAt = new Date(new Date().getTime() + 5 * 24 * 60 * 60 * 1000).toISOString()
     const customNonce = '123123123'
     const audienceDid = seedDid
     const jwtOptions = { audienceDid, expiresAt: customExpiresAt, nonce: customNonce, callbackUrl }
@@ -554,7 +554,7 @@ describe('CommonNetworkMember', () => {
   it('#generateCredentialShareRequestToken with jwtOptions', async () => {
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeed, options)
     const issuerDid = seedDid
-    const customExpiresAt = '2022-04-15T00:00:00.000Z'
+    const customExpiresAt = new Date(new Date().getTime() + 5 * 24 * 60 * 60 * 1000).toISOString()
     const customNonce = '123123123'
     const audienceDid = 'did:jolo:testDID123'
     const jwtOptions = { audienceDid, expiresAt: customExpiresAt, nonce: customNonce, callbackUrl }
@@ -897,7 +897,12 @@ describe('CommonNetworkMember', () => {
 
     await signUpNetworkMember.signOut(options)
 
-    const fromLoginNetworkMember = await AffinidiWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+    let fromLoginNetworkMember
+    try {
+      fromLoginNetworkMember = await AffinidiWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+    } catch (err) {
+      fromLoginNetworkMember = await AffinidiWallet.fromLoginAndPassword(cognitoUsername, cognitoPassword, options)
+    }
 
     checkIsWallet(fromLoginNetworkMember)
   })
@@ -1173,6 +1178,26 @@ describe('CommonNetworkMember', () => {
 
   it('#createWallet and #openWalletByEncryptedSeed should return the same did (jolo)', async () => {
     const customOptions: SdkOptions = { ...options, didMethod: 'jolo' }
+    const cnmByCreateWallet = await AffinidiWallet.createWallet(customOptions, password)
+
+    const cnmByOpenWalletByEncryptedSeed = await AffinidiWallet.openWalletByEncryptedSeed(
+      customOptions,
+      cnmByCreateWallet.encryptedSeed,
+      password,
+    )
+
+    expect(cnmByCreateWallet.did).to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
+  })
+
+  it.skip('#createWallet and #openWalletByEncryptedSeed should return the same did (polygon)', async () => {
+    // NOTE: this test is skipped by default as it takes matic from registry wallet
+    // to run it locally please check your apiKey is allowed to use polygon(:testnet)
+    const customOptions: SdkOptions = {
+      ...options,
+      didMethod: 'polygon:testnet',
+      registryUrl: 'http://localhost:3000',
+      accessApiKey: '9713c8ac898648abf7c161ed12c4bbc69f55fd9b091a27a57a6a0ae7f441d17c',
+    }
     const cnmByCreateWallet = await AffinidiWallet.createWallet(customOptions, password)
 
     const cnmByOpenWalletByEncryptedSeed = await AffinidiWallet.openWalletByEncryptedSeed(

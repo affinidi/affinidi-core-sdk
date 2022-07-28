@@ -1,7 +1,6 @@
 export enum Service {
   METRICS = 'affinity-metrics',
   REGISTRY = 'affinity-registry',
-  SFF_ISSUER = 'sff-issuer',
   VAULT = 'affinidi-vault',
   BLOOM_VAUlT = 'bloom-vault',
   CLOUD_WALLET_API = 'cloud-wallet-api',
@@ -11,7 +10,6 @@ export enum Service {
   ONBOARDING_BACKEND = 'affinity-onboarding-backend',
   MESSAGES = 'affinidi-messages',
   REVOCATION = 'revocation-api',
-  USER_AUTH = 'user-auth',
   SCHEMA_MANAGER = 'affinidi-schema-manager',
   VAULT_MIGRATION = 'vault-migration-service',
 }

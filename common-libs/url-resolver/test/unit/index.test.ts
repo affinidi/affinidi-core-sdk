@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { resolveUrl, Service } from '../../src'
 import { envSetupUrls } from '../../src/urls'
+import withEnvOverrides from '../util/withEnvOverrides'
 
 describe('resolveUrl', () => {
   it('should throw error if provided service is not supported', () => {
@@ -38,13 +39,18 @@ describe('resolveUrl', () => {
     envSetupUrls[service] = undefined
   })
 
-  it('should return internal link', () => {
-    process.env.AFFINIDI_INTERNAL_SERVICE = 'true'
-
-    const service = Service.METRICS
-    const url = resolveUrl(service, 'dev')
-    expect(url).to.be.equal(`http://${service}.default.svc.cluster.local`)
-
-    process.env.IS_AFFINIDI_INTERNAL_SERVICE = undefined
-  })
+  it(
+    'should return internal link',
+    withEnvOverrides(
+      {
+        AFFINIDI_INTERNAL_SERVICE: 'true',
+        NODE_ENV: 'dev',
+      },
+      () => {
+        const service = Service.METRICS
+        const url = resolveUrl(service, 'dev')
+        expect(url).to.be.equal(`http://${service}.default.svc.cluster.local`)
+      },
+    ),
+  )
 })

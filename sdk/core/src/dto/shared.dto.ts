@@ -18,8 +18,8 @@ import {
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
 
 export type Env = 'dev' | 'staging' | 'prod'
-export type DidMethod = 'jolo' | 'elem' | 'elem-anchored'
-export const DID_METHOD = /^(jolo|elem)$/
+export type DidMethod = typeof SUPPORTED_DID_METHODS[number]
+export const DID_METHOD = /^(jolo|elem|polygon|polygon:testnet)$/
 export const DID = /^did:[\w\d]{2,}:[\w\d:;\-=]{10,}/
 export const PASSWORD = /^.{6,}$/
 export const JWT = /^[A-Za-z0-9_=-]+\.[A-Za-z0-9_=-]+\.?[A-Za-z0-9_.+/=-]*$/
@@ -106,6 +106,22 @@ export class SdkOptions {
 
   @IsOptional()
   issueSignupCredential?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  queryBloomVault?: boolean
+
+  @IsString()
+  @IsOptional()
+  userPoolId?: string
+
+  @IsString()
+  @IsOptional()
+  clientId?: string
+
+  @IsString()
+  @IsOptional()
+  region?: string
 }
 
 export class MessageParameters {
@@ -267,6 +283,9 @@ export class CredentialRequirement {
   @IsDefined()
   @IsArray()
   type: string[]
+  @IsOptional()
+  @IsArray()
+  constraints?: string[]
 }
 
 export class JwtOptions {

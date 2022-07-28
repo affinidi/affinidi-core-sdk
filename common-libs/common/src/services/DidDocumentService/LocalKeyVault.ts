@@ -13,18 +13,18 @@ export class LocalKeyVault implements KeyVault {
   private readonly _privateKey: Buffer
 
   constructor(keyService: KeysService) {
-    const { seed, externalKeys, metadata } = keyService.decryptSeed()
+    const { seed, externalKeys, metadata, didMethod } = keyService.decryptSeed()
 
     this._externalKeys = externalKeys
     this._metadata = metadata
 
     const seedHex = seed.toString('hex')
 
-    const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, 'elem')
+    const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, didMethod)
     this._publicKey = publicKey
     this._privateKey = privateKey
 
-    const { publicKey: recoveryPublicKey } = KeysService.getAnchorTransactionPublicAndPrivateKeys(seedHex, 'elem')
+    const { publicKey: recoveryPublicKey } = KeysService.getAnchorTransactionPublicAndPrivateKeys(seedHex, didMethod)
     this._recoveryPublicKey = recoveryPublicKey
   }
 

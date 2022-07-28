@@ -1,10 +1,12 @@
 # Affinity Core SDK - Affinity network DID solution
 
-> Please note that versions `>=4.2.6 <=5.0.0` might not work properly (see [this PR](https://github.com/affinityproject/affinidi-core-sdk/pull/105)).
-> 
-> For `v5`, please use versions `>=5.0.1`.
-> 
-> For `v4`, please use version `4.2.5` or, even better, update to `v5`.
+> WARNING **Action required from you**  
+> Update your services to use Affinidi SDK v6.0.4 or above.  
+> Note please pay attention to the changelog while upgrading the version of SDK as some methods may be changed or deprecated.
+> If you are using Affinidi SDK below v6, your application doesn’t support Affinidi Vault and hence we cannot migrate you out of the Bloom Vault.  
+> With Affinidi SDK v6.0.4 onwards, we have also introduced automatic trigger of migration to Affinidi Vault and that is why we ask you to upgrade to that version or above.  
+> Otherwise your credentials will never be migrated. The migration will not anyhow impact SDK performance negatively.  
+> Furthermore, if you have more than 100 credentials in Bloom Vault the performance should be increased after migration.
 
 ## Table of contents
 
@@ -391,6 +393,21 @@ const wallet = await AffinidiWallet.logInWithPassword(options, username, passwor
 
 `options` - (optional) used to specify environment stack (dev | staging | prod).
 
+#### Initiate instance of SDK with refreshToken
+
+To initiate instance of wallet using refreshToken.  
+To get refreshToken use wallet.serializeSession() (for wallets with cognito, when logged in)
+
+> Take care about refresh token to save it in right place, its lifetime is 30 days. 
+> To invalidate tokens please use wallet.logOut() method. 
+> The best way to use only access token and re-login user each hour (lifetime of accessToken)
+
+```ts
+const wallet = await AffinidiWallet.logInWithRefreshToken(options, refreshToken)
+```
+
+`options` - (optional) used to specify environment stack (dev | staging | prod).
+
 #### Passwordless login
 
 Login to the network by username, registered in AWS Cognito.
@@ -412,6 +429,32 @@ const wallet = await AffinidiWallet.completeLoginPasswordless(options, token, co
 `token` - token from the previous step.
 
 `confirmationCode` - 6 digits code, generated and sent by AWS Cognito/SES.
+
+`completeLoginPasswordless` could return next errors: 
+
+- `COR-5` Invalid confirmation OTP code  was uses.
+As part of error payload new session token is passed that should be used for continuation of completing a session with old OTP
+
+```ts
+import retry from "async-retry";
+
+let newToken;
+try {
+  const wallet = await AffinidiWallet.completeLoginPasswordless(options, token, invalidConfirmationCode)
+} catch (sdkError) {
+  if (sdkError.code === 'COR-5') {
+    newToken = sdkError.context.newToken
+  }
+}
+const wallet = await AffinidiWallet.completeLoginPasswordless(options, newToken, confirmationCode)
+
+```
+**CAUTION** for serverside SDK usage you should always use a token returned with error to continue process
+
+Up to 3 retries are possible. After 3 times new session should be used
+
+- `COR-13` Invalid confirmation OTP code was used 3 times or more. Use a `initiateLogInPasswordless` call to initiate a new session.
+- `COR-17` Confirmation code is expired. Lifetime of confirmation code is around 3 minutes. Use a `initiateLogInPasswordless` call to initiate a new session
 
 #### Password recovery
 
@@ -473,10 +516,22 @@ await wallet.completeChangeEmailOrPhone(options, token, confirmationCode)
 
 #### Sign Out
 
-Signs out current user.
+Signs out current user from all devices.  
+It also invalidates all refresh tokens issued to a user.  
+The user's current access and Id tokens remain valid until their expiry.  
+Access and Id tokens expire one hour after they are issued.
 
 ```ts
 await wallet.logOut()
+```
+
+#### Serialize session
+
+Returns all active cognito tokens as json string  
+{ "accessToken": "eyJraWQiOiJHiLCJlxKU...", "idToken": 'eyJraWQiOiJQYTVjZFwvKzVyb...", "refreshToken": 'eyJjdHkiOiJKV1QiLCJ...", "expiresIn": 1655544042964 }
+
+```ts
+await wallet.serializeSession()
 ```
 
 ### Issuer

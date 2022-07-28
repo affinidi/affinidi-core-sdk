@@ -275,6 +275,11 @@ export class Affinity {
       getProofPurposeOptions: async ({ proofPurpose, controller }) => {
         if (proofPurpose === 'assertionMethod') {
           const resolvedDidDoc = await this._resolveDidIfNoDidDocument(controller, didDocument)
+          // TODO: workaround, for now polygon dids has only verificationMethod
+          // it could be changed in future as polygon is under developing
+          if (!resolvedDidDoc[proofPurpose] && resolvedDidDoc.verificationMethod) {
+            resolvedDidDoc[proofPurpose] = resolvedDidDoc.verificationMethod
+          }
 
           return {
             controller: resolvedDidDoc,
@@ -466,6 +471,13 @@ export class Affinity {
           case 'assertionMethod': {
             const resolvedDidDoc = await this._resolveDidIfNoDidDocument(controller, didDocument)
 
+            // TODO: workaround, for now polygon dids has only verificationMethod
+            // it could be changed in future as polygon is under developing
+
+            if (!resolvedDidDoc[proofPurpose] && resolvedDidDoc.verificationMethod) {
+              resolvedDidDoc[proofPurpose] = resolvedDidDoc.verificationMethod
+            }
+
             return {
               controller: resolvedDidDoc,
             }
@@ -628,7 +640,8 @@ export class Affinity {
       throw new Error('credentialSubject can not be an array')
     }
 
-    const dataFields = injectFieldForAllParentRoots(buildObjectSkeletonFromPaths(paths), '@explicit', true)
+    const skeleton = buildObjectSkeletonFromPaths(paths, credential.credentialSubject.data)
+    const dataFields = injectFieldForAllParentRoots(skeleton, '@explicit', true)
 
     const fragment = {
       '@context': credential['@context'],

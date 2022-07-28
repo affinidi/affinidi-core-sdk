@@ -1,10 +1,12 @@
 # Affinity SDK for Expo
 
-> Please note that versions `>=4.2.6 <=5.0.0` might not work properly (see [this PR](https://github.com/affinityproject/affinidi-core-sdk/pull/105)).
-> 
-> For `v5`, please use versions `>=5.0.1`.
-> 
-> For `v4`, please use version `4.2.5` or, even better, update to `v5`.
+> WARNING **Action required from you**  
+> Update your services to use Affinidi SDK v6.0.4 or above.  
+> Note please pay attention to the changelog while upgrading the version of SDK as some methods may be changed or deprecated.
+> If you are using Affinidi SDK below v6, your application doesn’t support Affinidi Vault and hence we cannot migrate you out of the Bloom Vault.  
+> With Affinidi SDK v6.0.4 onwards, we have also introduced automatic trigger of migration to Affinidi Vault and that is why we ask you to upgrade to that version or above.  
+> Otherwise your credentials will never be migrated. The migration will not anyhow impact SDK performance negatively.  
+> Furthermore, if you have more than 100 credentials in Bloom Vault the performance should be increased after migration.
 
 Expo SDK extends CORE SDK. Make sure to check the [CORE SDK documentation](https://www.npmjs.com/package/@affinidi/wallet-core-sdk).
 

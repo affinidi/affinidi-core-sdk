@@ -3,6 +3,7 @@ import { validateUsername } from '@affinidi/user-management'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { randomBytes } from '../shared/randomBytes'
 import { DEFAULT_DID_METHOD } from '../_defaultConfig'
+import { decodeBase58, DidDocument } from '@affinidi/common'
 
 export const Util = {
   /**
@@ -35,6 +36,21 @@ export const Util = {
     const { publicKeyHex } = didDocument.publicKey[0]
 
     return publicKeyHex
+  },
+
+  /**
+   * @description Returns public key from DID document
+   * @param didDocument - user's DID document
+   * @returns publicKey
+   */
+  getPublicKeyFromDidDocument: (didDocument: DidDocument): Buffer => {
+    const keySection = didDocument.publicKey?.[0] // old form of did docs contains publicKey[0].publicKeyHex
+    const methodSection = didDocument.verificationMethod?.[0] // new form of did docs contains verificationMethod[0].publicKeyBase58
+    if (keySection?.publicKeyPem) return Buffer.from(keySection.publicKeyPem)
+    if (keySection?.publicKeyBase58) return Buffer.from(keySection.publicKeyBase58)
+    if (keySection?.publicKeyHex) return Buffer.from(keySection.publicKeyHex, 'hex')
+
+    if (methodSection?.publicKeyBase58) return decodeBase58(methodSection?.publicKeyBase58)
   },
 
   /**

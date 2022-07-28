@@ -1,3 +1,31 @@
+# release 6.3.0 (2022-07-08)
+* add support of new did method "polygon"
+# release 6.2.1 (2022-06-30)
+* add new sdk options
+  - `region` configure aws region use `DEFAULT_COGNITO_REGION` as default
+# release 6.2.0 (2022-06-30)
+* add login with refreshToken
+# release 6.1.9 (2022-06-28)
+* fix bug in a fetch credential logic
+# release 6.1.8 (2022-06-28)
+* add new sdk options
+- `queryBloomVault` - query legacy credential store . `true` by default.
+- `userPoolId` & `clientId` configure custom cognito pool & client. use environment specific settings by default
+# release 6.1.7 (2022-06-22)
+* updated `wallet-react-native-sdk`, `common` with BigInt fix for react native
+* # release 6.1.6 (2022-06-10)
+* fix handling of user registration status incomplete
+# release 6.1.5 (2022-06-06)
+* update README to notify users use the latest versions with affinidi-vault support
+# release 6.1.4 (2022-04-27)
+* add optional `constraints` field to `CredentialRequirement`
+# release 6.1.3 (2022-04-22)
+* fix react native bug with `open-api-tools`
+# release 6.1.2 (2022-04-08)
+fix passwordless signin for users with arbitrary user name
+# release 6.1.1 (2022-04-03)
+* Fix complete passwordless login operation
+* minor fix of hashing functions for browser support
 # release 6.0.0-beta.20 (2021-10-20)
 Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.20
 # release 6.0.0-beta.19 (2021-10-13)

@@ -1,6 +1,5 @@
 import encode from 'base64url'
 import { fromSeed as bip32FromSeed, BIP32Interface } from 'bip32'
-import createHash from 'create-hash'
 import { ecsign } from 'ethereumjs-util'
 
 import { validateDidMethodSupported } from '../_helpers'
@@ -8,7 +7,9 @@ import { randomBytes } from '../shared/randomBytes'
 import { convertDecryptedSeedBufferToString, parseDecryptedSeed } from '../shared/seedTools'
 import DigestService from './DigestService'
 import DidDocumentService from './DidDocumentService'
+import { SUPPORTED_DID_METHODS } from '../_defaultConfig'
 
+const createHash = require('create-hash/browser')
 const tinySecp256k1 = require('tiny-secp256k1')
 const aes = require('browserify-aes/browser')
 const aesModes = require('browserify-aes/modes')
@@ -32,7 +33,7 @@ type JwtObject = {
   signature?: string
 }
 
-type DidMethod = 'elem' | 'elem-anchored' | 'jolo'
+type DidMethod = typeof SUPPORTED_DID_METHODS[number]
 
 const createCipher = (suite: string, key: unknown, iv: unknown, isDecipher = false) => {
   let cipherType = 'createCipheriv'
@@ -115,6 +116,9 @@ export default class KeysService {
       case 'elem':
       case 'elem-anchored':
         return elemIdentityPrimaryKey
+      case 'polygon':
+      case 'polygon:testnet':
+        return etheriumIdentityKey
     }
   }
 
@@ -263,8 +267,14 @@ export default class KeysService {
     })
   }
 
-  async createTransactionSignature(digestHex: string, seedHex: string) {
-    const seed = Buffer.from(seedHex, 'hex')
+  async createTransactionSignature(digestHex: string, seedHex?: string) {
+    let seed: Buffer
+    if (seedHex) {
+      seed = Buffer.from(seedHex, 'hex')
+    } else {
+      ;({ seed } = this.decryptSeed())
+    }
+
     const privateKey = bip32FromSeed(seed).derivePath(etheriumIdentityKey).privateKey
 
     const buffer = Buffer.from(digestHex, 'hex')

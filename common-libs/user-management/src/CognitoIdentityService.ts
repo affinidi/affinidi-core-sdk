@@ -1,3 +1,4 @@
+const createHash = require('create-hash/browser')
 import { CognitoIdentityServiceProvider } from 'aws-sdk'
 import { profile } from '@affinidi/tools-common'
 
@@ -14,6 +15,17 @@ export enum SignUpResult {
   InvalidPassword,
 }
 
+export enum LogInWithRefreshTokenResult {
+  Success,
+  NotAuthorizedException,
+}
+
+type LogInWithRefreshTokenResponse = Response<
+  LogInWithRefreshTokenResult,
+  LogInWithRefreshTokenResult.Success,
+  { cognitoTokens: CognitoUserTokens }
+>
+
 export enum LogInWithPasswordResult {
   Success,
   UserNotFound,
@@ -23,7 +35,7 @@ export enum LogInWithPasswordResult {
 type LogInWithPasswordResponse = Response<
   LogInWithPasswordResult,
   LogInWithPasswordResult.Success,
-  { cognitoTokens: CognitoUserTokens }
+  { cognitoTokens: CognitoUserTokens; registrationStatus: RegistrationStatus }
 >
 
 export enum CompleteLoginPasswordlessResult {
@@ -35,8 +47,8 @@ export enum CompleteLoginPasswordlessResult {
 
 type CompleteLoginPasswordlessResponse = Response<
   CompleteLoginPasswordlessResult,
-  CompleteLoginPasswordlessResult.Success,
-  { cognitoTokens: CognitoUserTokens }
+  CompleteLoginPasswordlessResult.Success | CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
+  { cognitoTokens: CognitoUserTokens; token: string; registrationStatus: RegistrationStatus }
 >
 
 export enum InitiateLoginPasswordlessResult {
@@ -93,17 +105,42 @@ enum AuthFlow {
   RefreshToken = 'REFRESH_TOKEN_AUTH',
 }
 
+export enum RegistrationStatus {
+  Incomplete = 'incomplete',
+  Complete = 'complete',
+}
+
 export type UsernameWithAttributes = {
   normalizedUsername: string
   login: string
   phoneNumber?: string
   emailAddress?: string
+  registrationStatus?: RegistrationStatus // in cognito pool "gender" attribute is used to store this value
 }
+
+type BuildUserAttributesInput = Pick<UsernameWithAttributes, 'phoneNumber' | 'emailAddress' | 'registrationStatus'>
+
+type GetCognitoAuthParametersObjectInput = {
+  login?: string
+  password?: string
+  refreshToken?: string
+}
+
+export const REGISTRATION_STATUS_ATTRIBUTE = 'gender'
 
 const getAdditionalParameters = (messageParameters?: MessageParameters) => {
   return messageParameters ? { ClientMetadata: messageParameters as Record<string, any> } : {}
 }
+const sha256 = (data: string): string =>
+  createHash('sha256')
+    .update(data || '')
+    .digest()
+    .toString('base64')
 
+/* TODO: NUC-270 we should design stateless flow or use external configurable storage .
+ Storing session in memory won't work in case of scaling (> 1 pod).
+ Shared Redis can be a solution.
+ */
 const tempSession: Record<string, string> = {}
 const INVALID_PASSWORD = '1'
 
@@ -125,13 +162,14 @@ export class CognitoIdentityService {
 
   async tryLogInWithPassword(login: string, password: string): Promise<LogInWithPasswordResponse> {
     try {
-      const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, login, password)
+      const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, { login, password })
       const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
-
+      const registrationStatus = await this._getRegistrationStatus(cognitoTokens.accessToken)
       return {
         result: LogInWithPasswordResult.Success,
         cognitoTokens,
+        registrationStatus,
       }
     } catch (error) {
       switch (error.code) {
@@ -150,7 +188,7 @@ export class CognitoIdentityService {
     messageParameters?: MessageParameters,
   ): Promise<InitiateLoginPasswordlessResponse> {
     const params = {
-      ...this._getCognitoAuthParametersObject(AuthFlow.Custom, login),
+      ...this._getCognitoAuthParametersObject(AuthFlow.Custom, { login }),
       ...getAdditionalParameters(messageParameters),
     }
 
@@ -168,10 +206,11 @@ export class CognitoIdentityService {
   }
 
   async completeLogInPasswordless(token: string, confirmationCode: string): Promise<CompleteLoginPasswordlessResponse> {
-    const { Session: tokenSession, ChallengeName, ChallengeParameters } = JSON.parse(token)
-
-    const { USERNAME } = ChallengeParameters
-    const Session = tempSession[USERNAME] || tokenSession
+    const tokenObject = JSON.parse(token)
+    const { Session: tokenSession, ChallengeName, ChallengeParameters } = tokenObject
+    //TODO: session is approx 920 character long string
+    const hashedTokenSession = sha256(tokenSession)
+    const Session = tempSession[hashedTokenSession] || tokenSession
 
     const params = {
       ClientId: this.clientId,
@@ -185,17 +224,29 @@ export class CognitoIdentityService {
 
     try {
       const result = await this.cognitoidentityserviceprovider.respondToAuthChallenge(params).promise()
-      tempSession[USERNAME] = result.Session
-
+      //NOTE : successful OTP return a undefined session . wrong code return a new session
+      tempSession[hashedTokenSession] = result.Session
       // NOTE: respondToAuthChallenge for the custom auth flow do not return
       //       error, but if response has `ChallengeName` - it is an error
       if (result.ChallengeName === 'CUSTOM_CHALLENGE') {
-        return { result: CompleteLoginPasswordlessResult.ConfirmationCodeWrong }
+        return {
+          result: CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
+          cognitoTokens: null,
+          token: JSON.stringify({ ...tokenObject, Session: result.Session }),
+          registrationStatus: RegistrationStatus.Complete,
+        }
       }
 
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(result.AuthenticationResult)
-      return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens }
+      //TODO : we still need to think about clean up for sessions that was not finished by user. ex. session was confirmed with wrong pasword 1 or 2 times with out sucess.
+      // potential memory leak.
+      delete tempSession[hashedTokenSession]
+      const registrationStatus = await this._getRegistrationStatus(cognitoTokens.accessToken)
+      return { result: CompleteLoginPasswordlessResult.Success, cognitoTokens, token: null, registrationStatus }
     } catch (error) {
+      // NOTE: not deleted sessions after any errors will block user session
+      delete tempSession[hashedTokenSession]
+
       // NOTE: Incorrect username or password. -> Corresponds to custom auth challenge
       //       error when OTP was entered incorrectly 3 times.
       if (error.message === 'Incorrect username or password.') {
@@ -207,14 +258,6 @@ export class CognitoIdentityService {
         throw error
       }
     }
-  }
-
-  // NOTE: Signs out users from all devices. It also invalidates all
-  //       refresh tokens issued to a user. The user's current access and
-  //       Id tokens remain valid until their expiry.
-  //       Access and Id tokens expire one hour after they are issued.
-  async logOut(AccessToken: string): Promise<void> {
-    this.cognitoidentityserviceprovider.globalSignOut({ AccessToken })
   }
 
   async initiateForgotPassword(
@@ -281,7 +324,10 @@ export class CognitoIdentityService {
       ClientId: this.clientId,
       Password: password,
       Username: usernameWithAttributes.normalizedUsername,
-      UserAttributes: this._buildUserAttributes(usernameWithAttributes),
+      UserAttributes: this._buildUserAttributes({
+        ...usernameWithAttributes,
+        registrationStatus: RegistrationStatus.Incomplete,
+      }),
       ...getAdditionalParameters(messageParameters),
     }
 
@@ -443,9 +489,7 @@ export class CognitoIdentityService {
 
   private _getCognitoAuthParametersObject(
     authFlow: AuthFlow,
-    login: string = null,
-    password: string = null,
-    refreshToken: string = null,
+    { login = null, password = null, refreshToken = null }: GetCognitoAuthParametersObjectInput,
   ) {
     return {
       AuthFlow: authFlow as string,
@@ -465,18 +509,33 @@ export class CognitoIdentityService {
     return { accessToken, idToken, refreshToken, expiresIn }
   }
 
-  public async logInWithRefreshToken(token: string): Promise<CognitoUserTokens> {
-    const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, token)
-    console.log('params', params)
-    const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
-    const cognitoUserTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
-    return cognitoUserTokens
+  public async logInWithRefreshToken(refreshToken: string): Promise<LogInWithRefreshTokenResponse> {
+    const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, { refreshToken })
+    try {
+      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
+      const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
+      return { result: LogInWithRefreshTokenResult.Success, cognitoTokens }
+    } catch (error) {
+      if (error.code === 'NotAuthorizedException') return { result: LogInWithRefreshTokenResult.NotAuthorizedException }
+      throw error
+    }
   }
 
-  private _buildUserAttributes({ phoneNumber, emailAddress }: UsernameWithAttributes) {
+  public async markRegistrationComplete(accessToken: string) {
+    const params = {
+      AccessToken: accessToken,
+      UserAttributes: this._buildUserAttributes({ registrationStatus: RegistrationStatus.Complete }),
+    }
+    await this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
+  }
+
+  private _buildUserAttributes({ phoneNumber, emailAddress, registrationStatus }: BuildUserAttributesInput) {
     return [
       ...(emailAddress ? [{ Name: 'email', Value: emailAddress }] : []),
       ...(phoneNumber ? [{ Name: 'phone_number', Value: phoneNumber }] : []),
+      // The "gender" attribute is used to store status of registration,
+      // two possible options "incomplete" and "complete"
+      ...(registrationStatus ? [{ Name: REGISTRATION_STATUS_ATTRIBUTE, Value: registrationStatus }] : []),
     ]
   }
 
@@ -500,5 +559,26 @@ export class CognitoIdentityService {
     const { userExists } = await this._logInWithInvalidPassword(username)
 
     return userExists
+  }
+
+  /**
+   * @returns RegistrationStatus of the current user, this data is stored in cognito attributes, "gender" attribute
+   * For backward compatibility RegistrationStatus.Incomplete is returned only when attribute gender is equals "incomplete"
+   * @param accessToken
+   * @private
+   */
+  private async _getRegistrationStatus(accessToken: string): Promise<RegistrationStatus> {
+    const userData = await this.cognitoidentityserviceprovider
+      .getUser({
+        AccessToken: accessToken,
+      })
+      .promise()
+
+    const registrationStatusRawValue = userData.UserAttributes.find(
+      (a) => a.Name === REGISTRATION_STATUS_ATTRIBUTE,
+    )?.Value
+    return registrationStatusRawValue === RegistrationStatus.Incomplete
+      ? RegistrationStatus.Incomplete
+      : RegistrationStatus.Complete
   }
 }

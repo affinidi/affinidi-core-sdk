@@ -122,8 +122,13 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
+    // NOTE: try/catch added as a workaround because of issue NotAuthorizedException see https://github.com/aws-amplify/amplify-js/issues/9838
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    }
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
     checkIsWallet(commonNetworkMember)
 
     await commonNetworkMember.signOut(options)
@@ -166,8 +171,13 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     await commonNetworkMember.confirmChangeUsername(newInbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
+    // NOTE: try/catch added as a workaround because of issue NotAuthorizedException see https://github.com/aws-amplify/amplify-js/issues/9838
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
+    }
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(newInbox.email, password, options)
     checkIsWallet(commonNetworkMember)
   })
 
@@ -266,7 +276,12 @@ parallel('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.confirmChangeUsername(inbox.email, changeUsernameCode, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, password, options)
+    }
+
     checkIsWallet(commonNetworkMember)
 
     const newPassword = `${password}_updated`
@@ -274,7 +289,12 @@ parallel('CommonNetworkMember [OTP]', () => {
     await commonNetworkMember.changePassword(password, newPassword, options)
     await commonNetworkMember.signOut(options)
 
-    commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
+    try {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
+    } catch (err) {
+      commonNetworkMember = await AffinidiWallet.fromLoginAndPassword(inbox.email, newPassword, options)
+    }
+
     checkIsWallet(commonNetworkMember)
   })
 

@@ -90,23 +90,40 @@ const executeByOptions = async (
 
   // eslint-disable-next-line no-unused-vars
   const path = pathTemplate.replace(/\{(\w+)\}/g, (_match, p1) => pathParams?.[p1])
-  const url = new URL(`${clientOptions.serviceUrl}${path}`)
-
-  for (const [name, value] of Object.entries(queryParams ?? {})) {
-    url.searchParams.set(name, value as string)
-  }
-
-  const response = await fetch(url.toString(), fetchOptions)
+  const queryParamsString = Object.entries(queryParams ?? {})
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(`${value}`)}`)
+    .join('&')
+  const url = `${clientOptions.serviceUrl}${path}${queryParamsString !== '' ? `?${queryParamsString}` : ''}`
+  const response = await fetch(url, fetchOptions)
   const { status } = response
+  const contentType = response.headers.get('content-type')
+  const isContentTypeJSON = contentType?.includes('application/json')
+  const isContentTypeHTML = contentType?.includes('text/html')
 
   if (!status.toString().startsWith('2')) {
-    const error = await response.json()
-    const { code, message, context } = error
-    throw new SdkError({ code, message }, context, Object.assign({}, error, { httpStatusCode: status }))
+    if (isContentTypeJSON) {
+      const error = await response.json()
+      const { code, message, context } = error
+      throw new SdkError({ code, message }, context, Object.assign({}, error, { httpStatusCode: status }))
+    }
+
+    if (isContentTypeHTML) {
+      const errorText = await response.text()
+      throw new SdkError(
+        { code: 'COR-0', message: errorText },
+        {},
+        Object.assign({}, { httpStatusCode: status, errorText }),
+      )
+    }
+
+    throw new SdkError(
+      { code: 'COR-0', message: 'Content type error.' },
+      {},
+      Object.assign({}, { httpStatusCode: status }),
+    )
   }
 
-  const contentType = response.headers.get('content-type')
-  if (!contentType || !contentType.includes('application/json')) {
+  if (!isContentTypeJSON) {
     return { body: {}, status }
   }
 

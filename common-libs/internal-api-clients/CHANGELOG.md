@@ -1,3 +1,13 @@
+# release 1.5.1 (2022-07-22)
+* Updated `tools-openapi` version
+# release 1.5.0 (2022-07-08)
+* Updated registry spec
+# release 1.4.0 (2022-06-30)
+  * Updated `keyStorageApiService` with new endpoint `/userManagement/adminLogOutUser`
+# release 1.3.1 (2022-06-22)
+  * Updated `tools-common`, `tools-openapi` with BigInt fix for react native
+# release 1.3.0 (2022-06-08)
+  * Updated KeyStorageApiService to support AdminDeleteIncompleteUser feature
 # release 1.2.0 (2021-12-07)
   * Updated `tools-openapi` (removing dependency on `node-fetch` and `undici`)
 # release 1.1.1 (2021-11-29)

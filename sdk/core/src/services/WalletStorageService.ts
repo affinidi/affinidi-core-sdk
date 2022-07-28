@@ -9,6 +9,7 @@ import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import AffinidiVaultStorageService from './AffinidiVaultStorageService'
 import BloomVaultStorageService from './BloomVaultStorageService'
 import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
+import { CredentialLike } from '../dto/internal'
 
 const createHash = require('create-hash')
 
@@ -23,11 +24,13 @@ type ConstructorOptions = {
   storageRegion: string
   accessApiKey: string
   didAuthAdapter: DidAuthAdapter
+  queryBloomVault: boolean
 }
 
 @profile()
 export default class WalletStorageService {
   private _storageRegion
+  private _queryBloomVault
   private _bloomVaultStorageService
   private _affinidiVaultStorageService
 
@@ -37,6 +40,7 @@ export default class WalletStorageService {
     options: ConstructorOptions,
   ) {
     this._storageRegion = options.storageRegion
+    this._queryBloomVault = options.queryBloomVault
 
     const encryptionService = new AffinidiVaultEncryptionService(keysService, platformCryptographyTools)
 
@@ -99,9 +103,11 @@ export default class WalletStorageService {
     storageRegion = storageRegion || this._storageRegion
 
     const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion, types)
-
+    let bloomCredentials: CredentialLike[] = []
     // should be deleted during migration to affinidi-vault Phase #2
-    const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion, types)
+    if (this._queryBloomVault) {
+      bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion, types)
+    }
 
     return this._uniqueCredentials([...credentials, ...bloomCredentials])
   }
@@ -135,7 +141,10 @@ export default class WalletStorageService {
     const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion)
 
     // should be deleted during migration to affinidi-vault Phase #2
-    const bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion)
+    let bloomCredentials: CredentialLike[] = []
+    if (this._queryBloomVault) {
+      bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion)
+    }
 
     return this._uniqueCredentials([...credentials, ...bloomCredentials])
   }
@@ -171,12 +180,12 @@ export default class WalletStorageService {
     try {
       return await this._affinidiVaultStorageService.getCredentialById(credentialId, storageRegion)
     } catch (error) {
-      if (error.code !== 'AVT-2') {
-        throw error
+      // should be deleted during migration to affinidi-vault Phase #2
+      if (error.code === 'AVT-2' && this._queryBloomVault) {
+        return await this._bloomVaultStorageService.getCredentialById(credentialId, storageRegion)
       }
 
-      // should be deleted during migration to affinidi-vault Phase #2
-      return await this._bloomVaultStorageService.getCredentialById(credentialId, storageRegion)
+      throw error
     }
   }
 
@@ -186,12 +195,12 @@ export default class WalletStorageService {
     try {
       await this._affinidiVaultStorageService.deleteCredentialById(credentialId, storageRegion)
     } catch (error) {
-      if (error.code !== 'AVT-2') {
-        throw error
+      if (error.code === 'AVT-2' && this._queryBloomVault) {
+        // should be deleted during migration to affinidi-vault Phase #2
+        return await this._bloomVaultStorageService.deleteCredentialById(credentialId, storageRegion)
       }
 
-      // should be deleted during migration to affinidi-vault Phase #2
-      await this._bloomVaultStorageService.deleteCredentialById(credentialId, storageRegion)
+      throw error
     }
   }
 
@@ -204,10 +213,12 @@ export default class WalletStorageService {
       throw new SdkErrorFromCode('COR-0', {}, error)
     }
 
-    try {
-      await this._bloomVaultStorageService.deleteAllCredentials(storageRegion)
-    } catch (error) {
-      throw new SdkErrorFromCode('COR-0', {}, error)
+    if (this._queryBloomVault) {
+      try {
+        await this._bloomVaultStorageService.deleteAllCredentials(storageRegion)
+      } catch (error) {
+        throw new SdkErrorFromCode('COR-0', {}, error)
+      }
     }
   }
 }

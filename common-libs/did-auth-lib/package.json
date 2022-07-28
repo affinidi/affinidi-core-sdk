@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/affinidi-did-auth-lib",
-  "version": "2.1.0",
+  "version": "2.1.4",
   "description": "Affinidi Did Auth Helpers",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -39,15 +39,15 @@
   },
   "homepage": "https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib#readme",
   "dependencies": {
-    "@affinidi/common": "^2.1.0",
-    "@affinidi/internal-api-clients": "^1.1.0",
-    "@affinidi/tools-common": "^1.0.0",
-    "@affinidi/url-resolver": "^1.0.0",
+    "@affinidi/common": "^2.1.7",
+    "@affinidi/internal-api-clients": "^1.4.0",
+    "@affinidi/tools-common": "^1.0.4",
+    "@affinidi/url-resolver": "^1.1.3",
     "did-resolver": "^2.0.1"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
-    "@affinidi/platform-fetch-node": "^1.0.0",
+    "@affinidi/platform-fetch-node": "^1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
     "@types/mocha": "8.0.3",
@@ -60,7 +60,7 @@
     "eslint": "7.8.1",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.4",
-    "jsontokens": "^3.0.0",
+    "jsontokens": "3.0.0",
     "license-checker": "25.0.1",
     "mocha": "8.1.3",
     "nock": "^12.0.3",

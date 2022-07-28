@@ -103,7 +103,7 @@ export abstract class BaseNetworkMember {
       throw new Error('`did`, `didDocumentKeyId`, `encryptedSeed` and `password` must be provided!')
     }
 
-    const { accessApiKey, basicOptions, storageRegion } = options
+    const { accessApiKey, basicOptions, storageRegion, otherOptions } = options
     const {
       issuerUrl,
       revocationUrl,
@@ -114,7 +114,7 @@ export abstract class BaseNetworkMember {
       affinidiVaultUrl,
       migrationUrl,
     } = basicOptions
-
+    const queryBloomVault = otherOptions.queryBloomVault === false ? false : true
     const keysService = new KeysService(encryptedSeed, password)
     const keyVault = new LocalKeyVault(keysService)
     const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault })
@@ -146,6 +146,7 @@ export abstract class BaseNetworkMember {
       storageRegion,
       didAuthAdapter,
       migrationUrl,
+      queryBloomVault,
     })
     this._holderService = new HolderService(
       { registryUrl, metricsUrl, accessApiKey },
@@ -308,10 +309,10 @@ export abstract class BaseNetworkMember {
   protected static _validateKeys(keyParams: KeyParams) {
     const { encryptedSeed, password } = keyParams
 
-    let didMethod
+    let didMethod: DidMethod
     try {
       const keysService = new KeysService(encryptedSeed, password)
-      didMethod = keysService.decryptSeed().didMethod
+      didMethod = keysService.decryptSeed().didMethod as DidMethod
     } catch (error) {
       throw new SdkErrorFromCode('COR-24', {}, error)
     }
@@ -1111,8 +1112,7 @@ export abstract class BaseNetworkMember {
       didDocument = await this.resolveDid(did)
     }
 
-    const publicKeyHex = Util.getPublicKeyHexFromDidDocument(didDocument)
-    const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex')
+    const publicKeyBuffer = Util.getPublicKeyFromDidDocument(didDocument)
 
     return this._platformCryptographyTools.encryptByPublicKey(publicKeyBuffer, object)
   }

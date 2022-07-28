@@ -10,6 +10,7 @@ type Response = {
   }
   status: number
   json(): Promise<any>
+  text(): Promise<string>
 }
 
 type FetchType = (url: string, options?: OptionsType) => Promise<Response>

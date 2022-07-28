@@ -1,6 +1,6 @@
 import { RegistryApiService } from '@affinidi/internal-api-clients'
+import { DidDocument } from './interfaces'
 
-type DidDocument = Record<string, any> & { id: string }
 type CachedPromises = Map<string, Promise<DidDocument>>
 type ServiceWithCache = {
   service: RegistryApiService

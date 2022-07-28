@@ -1,3 +1,32 @@
+# release 6.3.0 (2022-07-08)
+* add support of new did method "polygon"
+# release 6.2.1 (2022-06-30)
+* add new sdk options
+  - `region` configure aws region use `DEFAULT_COGNITO_REGION` as default 
+* add login with refreshToken
+# release 6.2.0 (2022-06-30)
+* add login with refreshToken
+# release 6.1.9 (2022-06-28)
+* fix bug in a fetch credential logic 
+# release 6.1.8 (2022-06-28)
+* add new sdk options 
+ - `queryBloomVault` - query legacy credential store . `true` by default.
+ - `userPoolId` & `clientId` configure custom cognito pool & client. use environment specific settings by default
+# release 6.1.7 (2022-06-22)
+* updated `affinidi-did-auth-lib`, `common`, `internal-api-clients` with BigInt fix for react native
+* # release 6.1.6 (2022-06-10)
+* fix handling of user registration status incomplete
+# release 6.1.5 (2022-06-06)
+* update README to notify users use the latest versions with affinidi-vault support
+# release 6.1.4 (2022-04-27)
+* add optional `constraints` field to `CredentialRequirement` 
+# release 6.1.3 (2022-04-22)
+* fix react native bug
+# release 6.1.2 (2022-04-08)
+fix passwordless signin for users with arbitrary user name 
+# release 6.1.1 (2022-04-03)
+* Fix complete passwordless login operation
+* minor fix of hashing functions for browser support
 # release 6.1.0 (2021-12-07)
 * Updated `internal-api-clients`, `did-auth-lib`, `user-management` and `common` (removing dependency on `node-fetch` and `undici`)
 # release 6.0.4 (2021-12-06)
