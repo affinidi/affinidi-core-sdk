@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 
 import { PersonEV1, getBaseV1ContextEntries } from '../base'
 import {
@@ -68,7 +68,7 @@ type CourtRecordSearchPersonV1Mixin = CreateThing<
 
 export type CourtRecordSearchPersonV1 = ExtendThing<CourtRecordSearchPersonV1Mixin, PersonEV1>
 
-export type VCSCourtRecordSearchPersonV1 = VCV1Subject<ExpandThing<CourtRecordSearchPersonV1>>
+export type VCSCourtRecordSearchPersonV1 = LegacyVCV1Subject<ExpandThing<CourtRecordSearchPersonV1>>
 
 export type VCCourtRecordSearchPersonV1 = VCV1<
   VCSCourtRecordSearchPersonV1,

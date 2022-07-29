@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 
 import { PersonEV1, OrganizationEV1, getBaseV1ContextEntries } from '../base/v1'
 import {
@@ -68,7 +68,7 @@ type MetaPersonV1Mixin = CreateThing<
 
 export type MetaPersonV1 = ExtendThing<MetaPersonV1Mixin, PersonEV1>
 
-export type VCSMetaPersonV1 = VCV1Subject<ExpandThing<MetaPersonV1>>
+export type VCSMetaPersonV1 = LegacyVCV1Subject<ExpandThing<MetaPersonV1>>
 
 export type VCMetaPersonV1 = VCV1<VCSMetaPersonV1, Type<'MetaCredentialPersonV1'>>
 
@@ -100,7 +100,7 @@ type MetaOrganizationV1Mixin = CreateThing<
 
 export type MetaOrganizationV1 = ExtendThing<MetaOrganizationV1Mixin, OrganizationEV1>
 
-export type VCSMetaOrganizationV1 = VCV1Subject<ExpandThing<MetaOrganizationV1>>
+export type VCSMetaOrganizationV1 = LegacyVCV1Subject<ExpandThing<MetaOrganizationV1>>
 
 export type VCMetaOrganizationV1 = VCV1<VCSMetaOrganizationV1, Type<'MetaCredentialOrganizationV1'>>
 

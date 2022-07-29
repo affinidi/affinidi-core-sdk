@@ -1,5 +1,5 @@
 import { CreateThing, createContextEntry, AddKeyPairs, createVCContextEntry } from '../util'
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 
 export type AccountOwnershipV1 = CreateThing<
   'AccountOwnership',
@@ -9,7 +9,7 @@ export type AccountOwnershipV1 = CreateThing<
     metaData: AddKeyPairs<any>
   }
 >
-export type VCSAccountOwnershipV1 = VCV1Subject<AccountOwnershipV1>
+export type VCSAccountOwnershipV1 = LegacyVCV1Subject<AccountOwnershipV1>
 export type VCAccountOwnershipV1 = VCV1<VCSAccountOwnershipV1>
 
 export const getAccountOwnershipV1Context = () => {

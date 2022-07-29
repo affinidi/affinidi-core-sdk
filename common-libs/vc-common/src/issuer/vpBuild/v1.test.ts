@@ -1,4 +1,4 @@
-import { VCV1Subject, VCV1, VPV1Unsigned, VPV1 } from '../../'
+import { LegacyVCV1Subject, VCV1, VPV1Unsigned, VPV1 } from '../../'
 import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 
 import { buildVPV1Unsigned, buildVPV1, presentationSubmissionContext } from './v1'
@@ -93,7 +93,7 @@ const getSignSuite: GetSignSuiteFn = async ({ controller, keyId, privateKey }) =
     }),
   })
 
-const credentialSubject: VCV1Subject<{ '@type': string; key: string }> = {
+const credentialSubject: LegacyVCV1Subject<{ '@type': string; key: string }> = {
   id: did,
   data: { '@type': 'Thing', key: 'value' },
 }

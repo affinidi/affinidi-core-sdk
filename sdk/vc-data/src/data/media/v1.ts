@@ -1,5 +1,5 @@
 import { createContextEntry, CreateThing, createVCContextEntry, ExpandThing, ExtendThing, Type } from '../util'
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 import { getBaseV1ContextEntries } from '../base'
 
 type ThingMixin = CreateThing<'Thing', { name: string }>
@@ -33,7 +33,7 @@ type FileV1Mixin = CreateThing<
 
 export type FileV1 = ExtendThing<FileV1Mixin, MediaObject>
 
-export type VCSFileV1 = VCV1Subject<ExpandThing<FileV1>>
+export type VCSFileV1 = LegacyVCV1Subject<ExpandThing<FileV1>>
 
 export type VCFileV1 = VCV1<VCSFileV1, Type<'FileV1'>>
 

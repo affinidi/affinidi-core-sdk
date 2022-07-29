@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 
 import { PersonEV1, OrganizationEV1, MonetaryAmountRV1, getBaseV1ContextEntries } from '../base'
 import {
@@ -262,7 +262,7 @@ type CreditScorePersonV1Mixin = CreateThing<
 
 export type CreditScorePersonV1 = ExtendThing<CreditScorePersonV1Mixin, PersonEV1>
 
-export type VCSCreditScorePersonV1 = VCV1Subject<ExpandThing<CreditScorePersonV1>>
+export type VCSCreditScorePersonV1 = LegacyVCV1Subject<ExpandThing<CreditScorePersonV1>>
 
 export type VCCreditScorePersonV1 = VCV1<VCSCreditScorePersonV1, Type<'CreditScoreCredentialPersonV1'>>
 

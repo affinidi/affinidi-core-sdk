@@ -1,4 +1,4 @@
-import { VCV1, VCV1Subject } from '@affinidi/vc-common'
+import { VCV1, LegacyVCV1Subject } from '@affinidi/vc-common'
 import { createContextEntry, CreateThing, createVCContextEntry, ExpandThing, Type } from '../util'
 import { OrganizationEV1, getBaseV1ContextEntries } from '../base/v1'
 
@@ -25,7 +25,7 @@ type BusinessReferenceV1 = CreateThing<
   }
 >
 
-export type VCSBusinessReferenceV1 = VCV1Subject<ExpandThing<BusinessReferenceV1>>
+export type VCSBusinessReferenceV1 = LegacyVCV1Subject<ExpandThing<BusinessReferenceV1>>
 
 export type VCBusinessReferenceV1 = VCV1<VCSBusinessReferenceV1, Type<'BusinessReferenceCredentialV1'>>
 
