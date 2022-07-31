@@ -3,6 +3,7 @@ export { default as ElemDidDocumentService } from './DidDocumentService/ElemDidD
 export { default as ElemAnchoredDidDocumentService } from './DidDocumentService/ElemAnchoredDidDocumentService'
 export { default as JoloDidDocumentService } from './DidDocumentService/JoloDidDocumentService'
 export { default as PolygonDidDocumentService } from './DidDocumentService/PolygonDidDocumentService'
+export { default as SolDidDocumentService } from './DidDocumentService/SolDidDocumentService'
 export { KeyVault } from './DidDocumentService'
 export { LocalKeyVault } from './DidDocumentService'
 export { default as DigestService } from './DigestService'

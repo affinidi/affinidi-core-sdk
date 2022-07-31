@@ -105,6 +105,11 @@ describe('Affinity', () => {
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: testDids.polygon.didDocument })
 
+    nock('https://affinity-registry.staging.affinity-project.org')
+      .post('/api/v1/did/resolve-did', /sol/gi)
+      .times(Number.MAX_SAFE_INTEGER)
+      .reply(200, { didDocument: testDids.sol.didDocument })
+
     nock('https://www.w3.org').get('/2018/credentials/v1').times(Number.MAX_SAFE_INTEGER).reply(200, credentialsV1)
 
     nock('https://w3id.org')
@@ -327,6 +332,12 @@ describe('Affinity', () => {
 
   it('#validateCredential (polygon)', async () => {
     const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+    const result = await affinity.validateCredential(createdCredential)
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (sol)', async () => {
+    const createdCredential = await affinity.signCredential(credential, testDids.sol.encryptedSeed, password, 'eddsa')
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })

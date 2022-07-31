@@ -45,9 +45,13 @@ type VerifySuite = Partial<{
 
 type GetSignSuiteFn = (options: GetSignSuiteOptions) => SignSuite | Promise<SignSuite>
 
-type CreateVerifySuite = (publicKey: Buffer, verificationMethod: string, controller: string) => VerifySuite
+type CreateVerifySuite = (
+  publicKey: Buffer,
+  verificationMethod: string,
+  controller: string
+) => VerifySuite | Promise<VerifySuite>
 
-export type ProofType = 'EcdsaSecp256k1Signature2019' | 'BbsBlsSignature2020' | 'RsaSignature2018'
+export type ProofType = 'EcdsaSecp256k1Signature2019' | 'BbsBlsSignature2020' | 'RsaSignature2018' | 'Ed25519Signature2018'
 
 type KeyData = {
   privateKey: string
@@ -59,7 +63,7 @@ type KeyGenerator = () => Promise<KeyData>
 
 export type IPlatformCryptographyTools = Readonly<{
   keyGenerators: Record<'rsa' | 'bbs', KeyGenerator>
-  signSuites: Readonly<Record<'ecdsa' | 'rsa' | 'bbs', GetSignSuiteFn>>
+  signSuites: Readonly<Record<'ecdsa' | 'rsa' | 'bbs' | 'eddsa', GetSignSuiteFn>>
   verifySuiteFactories: Readonly<Record<ProofType, CreateVerifySuite>>
   deriveBbsSegmentProof: (options: {
     credential: any
