@@ -4,9 +4,13 @@ import {
   JOLO_DID_METHOD,
   POLYGON_DID_METHOD,
   POLYGON_TESTNET_DID_METHOD,
+  SOL_DEVNET_DID_METHOD,
+  SOL_DID_METHOD,
+  SOL_TESTNET_DID_METHOD,
 } from '../_defaultConfig'
+import nacl from 'tweetnacl'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
-import { KeysService, LocalKeyVault, PolygonDidDocumentService } from '@affinidi/common'
+import { KeysService, LocalKeyVault, PolygonDidDocumentService, SolDidDocumentService } from '@affinidi/common'
 import { DidMethod } from '../dto/shared.dto'
 
 type AnchoringParams = {
@@ -65,8 +69,32 @@ const computePreparedPolygonParams = async ({ did, keysService, didMethod, regis
   return { did, publicKeyBase58, transactionSignatureJson }
 }
 
+const computePreparedSolParams = async ({ did, keysService, didMethod, registry }: AnchoringParams) => {
+  const network = didMethod.replace('sol', '') as 'testnet' | 'devnet' // and ''
+  keysService.getOwnPrivateKey()
+  const didService = new SolDidDocumentService(new LocalKeyVault(keysService), {
+    network: network ?? 'mainnet',
+  })
+  const publicKeyBase58 = didService.getMyPubKeyBase58()
+  const didDocument = didService.buildDidDocumentForRegister()
+  const {
+    body: { digestHex, serializedTransaction },
+  } = await registry.createAnchorTransaction({ did, publicKeyBase58, didDocument })
+
+  const signature = nacl.sign.detached(Buffer.from(digestHex, 'hex'), keysService.getOwnPrivateKey())
+
+  return {
+    did,
+    publicKeyBase58,
+    didDocument,
+    serializedTransaction,
+    transactionSignatureJson: Buffer.from(signature).toString('hex'),
+  }
+}
+
 const computePreparedAnchoringParams = async (params: AnchoringParams) => {
   const { didMethod } = params
+  // TODO: think about simplifying
   switch (didMethod) {
     case JOLO_DID_METHOD:
       return computePreparedJoloParams(params)
@@ -76,6 +104,10 @@ const computePreparedAnchoringParams = async (params: AnchoringParams) => {
     case POLYGON_DID_METHOD:
     case POLYGON_TESTNET_DID_METHOD:
       return computePreparedPolygonParams(params)
+    case SOL_DID_METHOD:
+    case SOL_TESTNET_DID_METHOD:
+    case SOL_DEVNET_DID_METHOD:
+      return computePreparedSolParams(params)
     default:
       throw new Error(`did method: "${didMethod}" is not supported`)
   }
