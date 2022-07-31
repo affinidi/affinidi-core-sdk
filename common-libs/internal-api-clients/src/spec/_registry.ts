@@ -37,6 +37,9 @@ export default {
         "properties": {
           "digestHex": {
             "type": "string"
+          },
+          "serializedTransaction": {
+            "type": "string"
           }
         },
         "required": [
@@ -57,6 +60,11 @@ export default {
           },
           "didDocumentAddress": {
             "type": "string"
+          },
+          "didDocument": {
+            "properties": {},
+            "additionalProperties": {},
+            "type": "object"
           },
           "publicKeyBase58": {
             "type": "string"
@@ -127,6 +135,9 @@ export default {
             "description": "backward compatibility for old versions of sdk."
           },
           "ethereumPublicKeyHex": {
+            "type": "string"
+          },
+          "serializedTransaction": {
             "type": "string"
           },
           "publicKeyBase58": {
