@@ -1,6 +1,8 @@
 /**
  * Abstraction of a key vault used for generating did documents
  */
+import { ExternalKey } from '../../shared/interfaces'
+
 export interface KeyVault {
   /**
    * Primary public key
@@ -15,7 +17,7 @@ export interface KeyVault {
   /**
    * Array of external keys to be added to the elem object
    */
-  externalKeys: any[]
+  externalKeys: ExternalKey[]
 
   /**
    * Object with any additional info

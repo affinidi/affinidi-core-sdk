@@ -5,7 +5,7 @@ import { randomBytes } from './randomBytes'
 import { IPlatformCryptographyTools } from './interfaces'
 import { ELEM_ANCHORED_DID_METHOD } from '../_defaultConfig'
 
-export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'
+export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa' | 'eddsa'
 
 export type KeyOptions = {
   keyTypes: KeyAlgorithmType[]
@@ -60,18 +60,15 @@ export const parseDecryptedSeed = (decryptedSeed: string): ParseDecryptedSeedRes
   return { seed, didMethod, seedHexWithMethod, externalKeys, fullSeedHex: decryptedSeed, metadata, additionalData }
 }
 
-const generateAdditionalKeys = async (cryptographyTools: IPlatformCryptographyTools, keyOptions: KeyOptions) => {
-  const filteredKeyTypes = keyOptions.keyTypes.flatMap((externalKeyType) => {
-    if (externalKeyType === 'ecdsa') {
-      return []
-    }
-
-    return [externalKeyType]
-  })
-
+const generateAdditionalKeys = async (
+  cryptographyTools: IPlatformCryptographyTools,
+  keyOptions: KeyOptions,
+  seed?: Buffer,
+) => {
+  const filteredKeyTypes = keyOptions.keyTypes.filter((e) => !['ecdsa', 'eddsa'].includes(e)) as ('bbs' | 'rsa')[]
   return Promise.all(
     filteredKeyTypes.map(async (externalKeyType) => {
-      const { keyFormat, privateKey, publicKey } = await cryptographyTools.keyGenerators[externalKeyType]()
+      const { keyFormat, privateKey, publicKey } = await cryptographyTools.keyGenerators[externalKeyType](seed)
       return {
         type: externalKeyType,
         format: keyFormat,
@@ -93,10 +90,13 @@ export const buildBase64EncodedAdditionalData = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   keyOptions?: KeyOptions,
   metadata?: Record<string, any>,
+  seed?: Buffer,
 ) => {
   const additionalData = {
     ...(metadata && { [METADATA_KEY]: metadata }),
-    ...(keyOptions && { [EXTERNAL_KEYS_KEY]: await generateAdditionalKeys(platformCryptographyTools, keyOptions) }),
+    ...(keyOptions && {
+      [EXTERNAL_KEYS_KEY]: await generateAdditionalKeys(platformCryptographyTools, keyOptions, seed),
+    }),
   }
   return base64url.encode(JSON.stringify(additionalData))
 }
@@ -107,13 +107,20 @@ export const generateFullSeed = async (
   keyOptions?: KeyOptions,
   metadata?: Record<string, any>,
 ): Promise<string> => {
-  const seedWithMethod = await generateSeedHexWithMethod(didMethod)
+  const seed = await randomBytes(32)
+  const seedHex = seed.toString('hex')
+  const seedWithMethod = `${seedHex}++${didMethod}`
 
   if (!keyOptions && !metadata) {
     return seedWithMethod
   }
 
-  const additionalDataSection = await buildBase64EncodedAdditionalData(platformCryptographyTools, keyOptions, metadata)
+  const additionalDataSection = await buildBase64EncodedAdditionalData(
+    platformCryptographyTools,
+    keyOptions,
+    metadata,
+    seed,
+  )
 
   return `${seedWithMethod}${ADDITIONAL_DATA_SEPARATOR}${additionalDataSection}`
 }

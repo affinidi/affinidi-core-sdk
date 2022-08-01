@@ -2,7 +2,7 @@ import base64url from 'base64url'
 const cryptoRandomString = require('crypto-random-string')
 
 import { randomBytes } from '../../src/shared/randomBytes'
-import { KeysService, DidDocumentService, DidResolver } from '../../'
+import { KeysService, DidDocumentService, DidResolver } from '../../src'
 
 export const generateTestDIDs = async () => {
   let keysService
@@ -52,7 +52,20 @@ export const generateTestDIDs = async () => {
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const { didDocument: polygonDidDocument, did: polygonDid } = await didDocumentService.buildDidDocumentForRegister()
 
-  const polygonPublicKey = KeysService.getPublicKey(polygonSeedHex, 'polygon').toString('hex')
+  const polygonPublicKey = KeysService.getPublicKey(polygonSeedHex, 'sol:devnet').toString('hex')
+
+  const solSeed = await randomBytes(32)
+  const solSeedHex = solSeed.toString('hex')
+  const solSeedWithMethod = `${solSeedHex}++sol:devnet`
+  const solPasswordBuffer = KeysService.normalizePassword(password)
+  const solEncryptedSeed = await KeysService.encryptSeed(solSeedWithMethod, solPasswordBuffer)
+
+  keysService = new KeysService(solEncryptedSeed, password)
+
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const { didDocument: solDidDocument, did: solDid } = await didDocumentService.buildDidDocumentForRegister()
+
+  const solPublicKey = KeysService.getPublicKey(solSeedHex, 'sol:devnet').toString('hex')
 
   const keys = [
     {
@@ -167,6 +180,14 @@ export const generateTestDIDs = async () => {
       did: polygonDid,
       didDocument: polygonDidDocument,
       publicKey: polygonPublicKey,
+    },
+    sol: {
+      seed: solSeed,
+      encryptedSeed: solEncryptedSeed,
+      seedHex: solSeedHex,
+      did: solDid,
+      didDocument: solDidDocument,
+      publicKey: solPublicKey,
     },
     elemWithRSA: {
       seed: elemRSASeed,

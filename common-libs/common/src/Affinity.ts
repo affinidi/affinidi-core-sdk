@@ -15,7 +15,7 @@ import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots } from './ut
 
 const revocationList = require('vc-revocation-list')
 
-type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
+type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs' | 'eddsa'
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
 
 export class Affinity {
@@ -394,8 +394,15 @@ export class Affinity {
           privateKey: keyService.getExternalPrivateKey('bbs'),
           publicKey: keyService.getExternalPublicKey('bbs'),
         }
+      case 'eddsa':
+        return {
+          did,
+          keyId: mainKeyId,
+          privateKey: keyService.getOwnPrivateKey().toString('hex'),
+          publicKey: keyService.getOwnPublicKey().toString('hex'),
+        }
       default:
-        throw new Error(`Unsupported key type '${keySuiteType}`)
+        throw new Error(`Unsupported key type '${keySuiteType}'`)
     }
   }
 

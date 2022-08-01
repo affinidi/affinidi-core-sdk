@@ -6,11 +6,14 @@ import ElemAnchoredDidDocumentService from './ElemAnchoredDidDocumentService'
 import { parse } from 'did-resolver'
 import { LocalKeyVault } from './LocalKeyVault'
 import PolygonDidDocumentService from './PolygonDidDocumentService'
+import SolDidDocumentService from './SolDidDocumentService'
 import { DidDocument } from '../../shared/interfaces'
 import { decodeBase58 } from '../../utils/ethUtils'
 
 export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
+
+const DID_METHOD_NETWORK_POSTFIXES = ['testnet', 'devnet']
 
 export default class DidDocumentService {
   /**
@@ -29,6 +32,9 @@ export default class DidDocumentService {
       'elem-anchored': new ElemAnchoredDidDocumentService(new LocalKeyVault(keysService)),
       polygon: new PolygonDidDocumentService(new LocalKeyVault(keysService), { isTestnet: false }),
       'polygon:testnet': new PolygonDidDocumentService(new LocalKeyVault(keysService), { isTestnet: true }),
+      sol: new SolDidDocumentService(new LocalKeyVault(keysService), { network: 'mainnet' }),
+      'sol:testnet': new SolDidDocumentService(new LocalKeyVault(keysService), { network: 'testnet' }),
+      'sol:devnet': new SolDidDocumentService(new LocalKeyVault(keysService), { network: 'devnet' }),
     }[didMethod]
   }
 
@@ -42,7 +48,7 @@ export default class DidDocumentService {
     const keySection = didDocument.publicKey?.find((section) => section.id === keyId || section.id === fulleKeyId)
 
     if (keySection?.publicKeyPem) return Buffer.from(keySection.publicKeyPem)
-    if (keySection?.publicKeyBase58) return Buffer.from(keySection.publicKeyBase58)
+    if (keySection?.publicKeyBase58) return decodeBase58(keySection.publicKeyBase58)
     if (keySection?.publicKeyHex) return Buffer.from(keySection.publicKeyHex, 'hex')
 
     const methodSection = didDocument.verificationMethod?.find(
@@ -64,7 +70,7 @@ export default class DidDocumentService {
   static parseDid(did: string): string[] {
     const [, method, methodId, parameters] = did.split(':')
 
-    if (methodId === 'testnet') return [method + ':' + methodId, parameters]
+    if (DID_METHOD_NETWORK_POSTFIXES.includes(methodId)) return [method + ':' + methodId, parameters]
     return [method, methodId, parameters]
   }
 

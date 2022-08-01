@@ -1,7 +1,7 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import { NetworkMemberWithoutCognito as Wallet } from '../CommonNetworkMember/NetworkMemberWithoutCognito'
-import { SdkOptions } from '../dto/shared.dto'
+import {KeyOptions, SdkOptions} from '../dto/shared.dto'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 
 export const createCognitolessWalletFactories = (
@@ -17,8 +17,8 @@ export const createCognitolessWalletFactories = (
      * @param password - password
      * @returns initialized instance of SDK
      */
-    createWallet: (inputOptions: SdkOptions, inputPassword: string) => {
-      return Wallet.createWallet(dependencies, inputOptions, inputPassword)
+    createWallet: (inputOptions: SdkOptions, inputPassword: string, keysOption?: KeyOptions) => {
+      return Wallet.createWallet(dependencies, inputOptions, inputPassword, keysOption)
     },
 
     /**

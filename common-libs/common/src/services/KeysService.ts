@@ -1,6 +1,8 @@
 import encode from 'base64url'
 import { fromSeed as bip32FromSeed, BIP32Interface } from 'bip32'
 import { ecsign } from 'ethereumjs-util'
+import * as ed25519 from 'ed25519-hd-key'
+import nacl from 'tweetnacl'
 
 import { validateDidMethodSupported } from '../_helpers'
 import { randomBytes } from '../shared/randomBytes'
@@ -21,8 +23,10 @@ const PASSWORD_LENGTH = 32
 const jolocomIdentityKey = "m/73'/0'/0'/0" // eslint-disable-line
 const etheriumIdentityKey = "m/44'/60'/0'/0/0" // eslint-disable-line
 const elemIdentityPrimaryKey = "m/44'/60'/0'/1/0" // eslint-disable-line
+// why this path: https://docs.solana.com/wallet-guide/paper-wallet#hierarchical-derivation
+const solIdentityPrimaryKey = "m/44'/501'" // eslint-disable-line
 
-const cachedSigningKey: Record<string, BIP32Interface> = {}
+const cachedSigningKey: Record<string, BIP32Interface | { publicKey: Buffer; privateKey: Buffer }> = {}
 
 // eslint-disable-next-line max-len, prettier/prettier
 type TypedArray = Uint8Array | Uint8ClampedArray | Uint16Array | Uint32Array | Int8Array | Int16Array | Int32Array | Float32Array | Float64Array
@@ -73,7 +77,11 @@ export default class KeysService {
     const { seed, didMethod } = this.decryptSeed()
 
     const seedHex = seed.toString('hex')
-    const signingKey = KeysService.getKey(seedHex, didMethod)
+    const signingKey = KeysService.getKey(seedHex, didMethod) as BIP32Interface
+
+    if (!signingKey.sign) {
+      throw new Error(`Signing with KeysService is not supported for did "${didMethod}"`)
+    }
 
     return signingKey.sign(digest)
   }
@@ -106,10 +114,11 @@ export default class KeysService {
   }
 
   private static getDerivationPath(didMethod: DidMethod, isAnchoring: boolean) {
-    if (isAnchoring) {
+    if (!didMethod.startsWith('sol') && isAnchoring) {
       return etheriumIdentityKey
     }
 
+    // TODO: think about simplifying
     switch (didMethod) {
       case 'jolo':
         return jolocomIdentityKey
@@ -119,16 +128,39 @@ export default class KeysService {
       case 'polygon':
       case 'polygon:testnet':
         return etheriumIdentityKey
+      case 'sol':
+      case 'sol:testnet':
+      case 'sol:devnet':
+        return solIdentityPrimaryKey
     }
   }
 
-  private static getKey(seedHex: string, didMethod: string, isAnchoring = false) {
+  private static deriveKey(seed: Buffer, derivationPath: string, didMethod: string) {
+    if (didMethod.startsWith('sol')) {
+      // for sol it is standard to use ed25519 to be interoperable with other wallets
+      // https://stackoverflow.com/questions/69248618/how-to-get-proper-public-address-from-mnemonic-phrase-for-solana
+      const derived = ed25519.derivePath(derivationPath, seed.toString('hex'))
+      const { publicKey, secretKey } = nacl.sign.keyPair.fromSeed(derived.key)
+      // Ed25519VerificationKey2018 is different cryptography for sol keys instead of Secp256k1VerificationKey2018 used before
+      // ed25519 pubKey.length 32, privKey.length 64
+      return { publicKey: Buffer.from(publicKey), privateKey: Buffer.from(secretKey) }
+    }
+
+    // bip32 pubKey.length 33, privKey.length 32
+    return bip32FromSeed(seed).derivePath(derivationPath)
+  }
+
+  private static getKey(
+    seedHex: string,
+    didMethod: string,
+    isAnchoring = false,
+  ): BIP32Interface | { publicKey: Buffer; privateKey: Buffer } {
     validateDidMethodSupported(didMethod)
     const derivationPath = KeysService.getDerivationPath(didMethod, isAnchoring)
     const seed = Buffer.from(seedHex, 'hex')
     const id = `${seedHex}::${derivationPath}`
     if (!cachedSigningKey[id]) {
-      cachedSigningKey[id] = bip32FromSeed(seed).derivePath(derivationPath)
+      cachedSigningKey[id] = KeysService.deriveKey(seed, derivationPath, didMethod)
     }
 
     return cachedSigningKey[id]
