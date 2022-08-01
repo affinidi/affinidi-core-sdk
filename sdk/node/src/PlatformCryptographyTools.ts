@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { wrapJsonldFrameFunction } from '@affinidi/common'
 import { IPlatformCryptographyTools, ecdsaCryptographyTools } from '@affinidi/wallet-core-sdk'
 import { generateBls12381G2KeyPair } from '@mattrglobal/bbs-signatures'
@@ -97,6 +98,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
 
   signSuites: {
     ecdsa: ecdsaCryptographyTools.signSuites.ecdsa,
+    eddsa: ecdsaCryptographyTools.signSuites.eddsa,
     bbs: ({ keyId, privateKey, publicKey, controller }) => {
       return new BbsBlsSignature2020({
         key: new Bls12381G2KeyPair({
@@ -137,6 +139,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
   },
   verifySuiteFactories: {
     EcdsaSecp256k1Signature2019: ecdsaCryptographyTools.verifySuiteFactories.EcdsaSecp256k1Signature2019,
+    Ed25519Signature2018: ecdsaCryptographyTools.verifySuiteFactories.Ed25519Signature2018,
     BbsBlsSignature2020: (publicKey, verificationMethod, controller) => {
       return new BbsBlsSignature2020({
         key: new Bls12381G2KeyPair({
@@ -160,8 +163,8 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
   },
 
   keyGenerators: {
-    bbs: async () => {
-      const keyPair = await generateBls12381G2KeyPair()
+    bbs: async (seed?: Buffer) => {
+      const keyPair = await generateBls12381G2KeyPair(seed)
 
       return {
         keyFormat: 'base58',

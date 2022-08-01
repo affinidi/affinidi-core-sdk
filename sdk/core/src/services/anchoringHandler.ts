@@ -70,13 +70,13 @@ const computePreparedPolygonParams = async ({ did, keysService, didMethod, regis
 }
 
 const computePreparedSolParams = async ({ did, keysService, didMethod, registry }: AnchoringParams) => {
-  const network = didMethod.replace('sol', '') as 'testnet' | 'devnet' // and ''
+  const network = didMethod.replace('sol:', '') as 'testnet' | 'devnet' | 'sol'
   keysService.getOwnPrivateKey()
   const didService = new SolDidDocumentService(new LocalKeyVault(keysService), {
-    network: network ?? 'mainnet',
+    network: network === 'sol' ? 'mainnet' : network,
   })
   const publicKeyBase58 = didService.getMyPubKeyBase58()
-  const didDocument = didService.buildDidDocumentForRegister()
+  const { didDocument } = await didService.buildDidDocumentForRegister()
   const {
     body: { digestHex, serializedTransaction },
   } = await registry.createAnchorTransaction({ did, publicKeyBase58, didDocument })

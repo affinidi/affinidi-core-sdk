@@ -10,7 +10,7 @@ describe('didTools', () => {
     cryptoTools = {
       keyGenerators: {
         rsa: () => Promise.resolve({ keyFormat: 'pem', privateKey: 'privatersa', publicKey: 'publicrsa' }),
-        bbs: () => Promise.resolve({ keyFormat: 'pem', privateKey: 'privatebbs', publicKey: 'publicbbs' }),
+        bbs: () => Promise.resolve({ keyFormat: 'base58', privateKey: 'privatebbs', publicKey: 'publicbbs' }),
       },
     } as any
   })

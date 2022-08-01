@@ -2,7 +2,7 @@ import base64url from 'base64url'
 const cryptoRandomString = require('crypto-random-string')
 
 import { randomBytes } from '../../src/shared/randomBytes'
-import { KeysService, DidDocumentService, DidResolver } from '../../'
+import { KeysService, DidDocumentService, DidResolver } from '../../src'
 
 export const generateTestDIDs = async () => {
   let keysService

@@ -6,7 +6,7 @@ type KeyData = {
   keyFormat: 'pem' | 'base58'
 }
 
-type KeyGenerator = () => Promise<KeyData>
+type KeyGenerator = (seed?: Buffer) => Promise<KeyData>
 
 export type IPlatformCryptographyTools = ICommonCryptographyTools & {
   decryptByPrivateKey(privateKeyBuffer: Buffer, encryptedDataString: string): Promise<any>

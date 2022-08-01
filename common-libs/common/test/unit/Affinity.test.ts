@@ -540,7 +540,6 @@ describe('Affinity', () => {
 
   it('#validatePresentation (polygon) (new presentations)', async () => {
     const unsignedCredential = createUnsignedCredential(testDids.polygon.did)
-    console.dir({ unsignedCredential }, { depth: null })
     const createdCredential = await affinity.signCredential(
       unsignedCredential,
       testDids.polygon.encryptedSeed,

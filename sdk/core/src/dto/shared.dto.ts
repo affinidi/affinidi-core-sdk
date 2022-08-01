@@ -144,11 +144,11 @@ export class KeyParams {
   password: string
 }
 
-export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'
+export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa' | 'eddsa'
 
 export class KeyOptions {
   @IsArray()
-  @IsIn(['rsa', 'bbs', 'ecdsa'], { each: true })
+  @IsIn(['rsa', 'bbs', 'ecdsa', 'eddsa'], { each: true })
   keyTypes: KeyAlgorithmType[]
 }
 

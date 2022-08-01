@@ -59,7 +59,15 @@ type KeyData = {
   keyFormat: 'pem' | 'base58'
 }
 
-type KeyGenerator = () => Promise<KeyData>
+type KeyGenerator = (seed?: Buffer) => Promise<KeyData>
+
+export type ExternalKey = {
+  type: 'bbs' | 'rsa'
+  format: 'base58' | 'pem'
+  permissions: string[]
+  private: 'string'
+  public: 'string'
+}
 
 export type IPlatformCryptographyTools = Readonly<{
   keyGenerators: Record<'rsa' | 'bbs', KeyGenerator>
