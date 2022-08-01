@@ -1,3 +1,5 @@
+# release 6.4.1 (2022-08-01)
+* updated `@affinidi/vc-common` and `@affinidi/vc-data`
 # release 6.4.0 (2022-07-08)
 * add support of new did method "polygon"
 # release 6.3.1 (2022-06-30)
