@@ -5,19 +5,27 @@ export interface FreeFormObject {
   [key: string]: any
 }
 
+/**
+ * Find latest spec https://www.w3.org/TR/did-spec-registries/#did-document-properties
+ */
 export type DidDocument = {
-  '@context': string | Record<string, any> | Record<string, any>[]
+  '@context': string | { [k: string]: any } | { [k: string]: any }[]
   id: string
   verificationMethod?: {
     id: string
     type: string
     controller: string
-    publicKeyBase58: string
+    publicKeyJwk?: any
+    publicKeyMultibase?: string
+    publicKeyHex?: string
+    publicKeyPem?: string
+    publicKeyBase58?: string
   }[]
   publicKey?: {
     id: string
-    usage: 'signing' | 'recovery' | string
     type: string
+    controller?: string
+    usage?: 'signing' | 'recovery' | string
     publicKeyHex?: string
     publicKeyPem?: string
     publicKeyBase58?: string
