@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -34,7 +34,7 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/vc-data": "^1.3.3",
+    "@affinidi/vc-data": "^1.5.0",
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^3.10.1",
     "@typescript-eslint/parser": "^3.10.1",
@@ -51,7 +51,7 @@
     "typescript": "^4.3.2"
   },
   "dependencies": {
-    "@affinidi/vc-common": "^1.3.0",
+    "@affinidi/vc-common": "^1.5.0",
     "ajv": "^6.12.3",
     "fastify": "^2.15.1",
     "fastify-cors": "^4.0.0",

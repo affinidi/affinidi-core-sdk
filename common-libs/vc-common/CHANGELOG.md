@@ -1,3 +1,6 @@
+## 1.5.0 (2022-08-01)
+* added `LegacyVCV1Subject`
+
 ## 1.4.2 (2021-08-30)
 
 Improved types
