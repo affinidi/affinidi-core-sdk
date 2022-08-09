@@ -24,7 +24,16 @@ export default class RegistryApiService {
   }
 
   async anchorDid(params: GetParams<typeof clientMethods.AnchorDid>) {
-    return this.client.AnchorDid({ params })
+    const originFromEnv = process.env.REGISTRY_ORIGIN
+    const paramsExtended: GetParams<typeof clientMethods.AnchorDid> =
+      !params.origin && originFromEnv
+        ? {
+            ...params,
+            origin: originFromEnv,
+          }
+        : params
+
+    return this.client.AnchorDid({ params: paramsExtended })
   }
 
   async resolveDid(params: GetParams<typeof clientMethods.ResolveDid>) {
