@@ -2,25 +2,25 @@
 
 ## Usage:
 
-This library allows to prove that the client/user is the owner of provided `DID`. Based on this prove App builders can give to the client/user access to the appropriate resources.
+This library allows proving that the client/user is the owner of provided `DID`. Based on this proof App builders can give the client/user access to the appropriate resources.
 
 `Did-Auth` flow is similar to the `Sharing VC` flow, but without `VC` exchanges, since `DID` itself should be enough info from the client/user to authenticate.
 
-High level perspective of `Did-Auth` flow looks like `request` → `response` → `validation of response`, where a response is a response(signed with the private key) to the challenge from request.
+The high-level perspective of `Did-Auth` flow looks like `request` → `response` → `validation of response`, where a response is a response(signed with the private key) to the challenge from the request.
 
-For the simplicity DID methods provided by SDK can be use for implementation `Did-Auth` flow:
+For simplicity DID methods provided by SDK can be used for the implementation `Did-Auth` flow:
 
 ### Implementation of DID Auth flow using `AffinidiDidAuthService` class
 
-Implementation might be consists of two parts - client side and service side.
-Service side should provide some endpoints or trigger methods for client to start the auth flow.
+Implementation might be consists of two parts - the client side and the service side.
+The service side should provide some endpoints or trigger methods for the client to start the auth flow.
 [Flow diagram](https://swimlanes.io/u/GolxCmVL0)
 
 #### Initiate `AffinidiDidAuthService` class (service side)
 
 `Did auth` flow should be implemented e.g. on the service side on which the user wants to log in.
 Simplest way is to initialize `AffinidiDidAuthService` class with `encryptedSeed` and `encryptionKey` options.
-For client side could be used same approach, but with the client `encryptedSeed` and `encryptionKey`.
+For the client-side could be used the same approach, but with the client `encryptedSeed` and `encryptionKey`.
 
 ```ts
 /**
@@ -34,7 +34,7 @@ const affinidiDidAuthService = new AffinidiDidAuthService({
 ```
 
 Also `AffinidiDidAuthService` could be created using `did`, `keyId`, `keyVault` as options.
-This approach is for batter backward compatability. If needed more low level implementation could be created with `DidAuthServerService` class for service side and `DidAuthClientService` class for client side.
+This approach is for batter backward compatibility. If needed more low-level implementation could be created with the `DidAuthServerService` class for the service side and the `DidAuthClientService` class for the client side.
 
 ```ts
 import { KeysService, KeyVault, DidDocumentService, LocalKeyVault } from '@affinidi/common'
@@ -55,7 +55,7 @@ const affinidiDidAuthService = new AffinidiDidAuthService({
 
 #### Creation of the request token(service side)
 
-Client DID(ownership of which client is proved) might be provided. Use `createDidAuthRequestToken` method to create `Did-Auth` request token. That request token is a JWT signed with service's public key.
+Client DID(ownership of which client is proved) might be provided. Use `createDidAuthRequestToken` method to create `Did-Auth` request token. That request token is a JWT signed with the service's public key.
 It should be sent back to the client for further steps.
 
 ```ts
@@ -68,8 +68,8 @@ const authDidRequestToken = await affinidiDidAuthService.createDidAuthRequestTok
 
 #### Building of the response token(client side)
 
-To create a response token it is recommended to initialize `AffinidiDidAuthService` class with `encryptedSeed` and `encryptionKey` options on the client side in the same way as for the service side.
-Use `createDidAuthResponseToken` method to create `Did-Auth` response token. It is necessary to have fresh request token from the service.
+To create a response token it is recommended to initialize the `AffinidiDidAuthService` class with `encryptedSeed` and `encryptionKey` options on the client side in the same way as for the service side.
+Use `createDidAuthResponseToken` method to create `Did-Auth` response token. It is necessary to have a fresh request token from the service.
 
 ```ts
 /**
@@ -80,9 +80,9 @@ Use `createDidAuthResponseToken` method to create `Did-Auth` response token. It 
 const responseToken = await affinidiDidAuthService.createDidAuthResponseToken(authDidRequestToken, options)
 ```
 
-Response token (JWT) should be used to authenticate the user at the service side. 
+A Response token (JWT) should be used to authenticate the user at the service side. 
 
-As a best practice it is recommended to use `LocalExpiringDidAuthResponseToken` utility class that can encapsulate a `responseToken`.
+As a best practice, it is recommended to use the `LocalExpiringDidAuthResponseToken` utility class that can encapsulate a `responseToken`.
 And keep track of its expiry time according to the local time of the client. This is needed in case the local time of the client can diverge from the service time.
 
 ```ts
@@ -96,8 +96,8 @@ auth.isExpiredAt(Date.now())
 ```
 #### Validating of the response token(service side)
 
-It is recommended to implement the `Authorization` header for every endpoint and expect receive the response token from the client side.
-Each time given response token might be validated by the service using `verifyDidAuthResponseToken` method
+It is recommended to implement the `Authorization` header for every endpoint and expect to receive the response token from the client side.
+Each time given response token might be validated by the service using the `verifyDidAuthResponseToken` method
 
 ```ts
 /**
@@ -112,16 +112,16 @@ const isValid = await affinidiDidAuthService.verifyDidAuthResponseToken(response
 ```
 
 [Generate accessApiKey](https://apikey.affinidi.com/).
-If response token is not valid service should throw an error, otherwise the request should proceed.
+If the response token is not valid service should throw an error, otherwise, the request should proceed.
 
 ### Implementation of the *service* side part of `DID Auth` flow using `DidAuthServerService` class
 
-`DidAuthServerService` is introduced for implementation of `DID-Auth` flow on the *service* side.
-Benefit of using `DidAuthServerService` is - it provides only two methods that might be in use for the *service*:
- - to crete request token to challenge client App (`createDidAuthRequestToken`)
- - to validate response token during authentication process (`verifyDidAuthResponseToken`).
+`DidAuthServerService` is introduced for implementation of the `DID-Auth` flow on the *service* side.
+The benefit of using `DidAuthServerService` is - it provides only two methods that might be in use for the *service*:
+ - to create a request token to challenge the client App (`createDidAuthRequestToken`)
+ - to validate the response token during the authentication process (`verifyDidAuthResponseToken`).
 
-This class could be useful if you would like to implement own `did-auth service` as an additional layer at `api-gateway`.
+This class could be useful if you would like to implement your own `did-auth service` as an additional layer at `api-gateway`.
 
 Example:
 ```ts
@@ -150,8 +150,8 @@ const authDidRequestToken = await serverService.createDidAuthRequestToken(audien
 ### Using `DidAuthClientService` class to implement the *client* side part of `DID Auth` flow 
 
 `DidAuthClientService` is introduced for implementation of `DID-Auth` flow on the *client* side.
-This class provides only `createDidAuthResponseToken`(create response token) which might be used only with `LocalExpiringDidAuthResponseToken` to prevent time inconsistent issue between service and client.
-It could be used as an alternative to `AffinidiDidAuthService` class.
+This class provides only `createDidAuthResponseToken`(create response token) which might be used only with `LocalExpiringDidAuthResponseToken` to prevent time inconsistent issues between service and client.
+It could be used as an alternative to the `AffinidiDidAuthService` class.
 
 Example:
 ```ts
