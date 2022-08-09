@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/affinidi-did-auth-lib",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Affinidi Did Auth Helpers",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -26,18 +26,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib.git"
+    "url": "git+https://github.com/affinityproject/affinidi-core-sdk.git",
+    "directory": "common-libs/did-auth-lib"
   },
   "keywords": [
+    "lib",
     "affinidi",
-    "didAuth"
+    "didAuth",
+    "did"
   ],
   "author": "Denis Popov <denys.p@affinidi.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib/issues"
+    "url": "https://github.com/affinityproject/affinidi-core-sdk/issues"
   },
-  "homepage": "https://gitlab.com/affinidi/foundational/affinidi-did-auth-lib#readme",
+  "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/common": "^2.2.1",
     "@affinidi/internal-api-clients": "^1.4.0",
