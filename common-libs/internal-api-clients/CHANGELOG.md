@@ -1,3 +1,5 @@
+# release 1.5.2 (2022-07-22)
+* Added `origin` to `CreateAnchorTransactionInput`
 # release 1.5.1 (2022-07-22)
 * Updated `tools-openapi` version
 # release 1.5.0 (2022-07-08)
