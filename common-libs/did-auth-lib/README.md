@@ -91,7 +91,7 @@ And keep track of its expiry time according to the local time of the client. Thi
  * responseToken {String} - response token (JWT) built on the client side
  */
 const auth = LocalExpiringDidAuthResponseToken.initialize(tokenRequestTime, responseToken)
-// check if token is expired
+// Check if token is expired.
 auth.isExpiredAt(Date.now())
 ```
 #### Validating of the response token(service side)
@@ -125,24 +125,24 @@ This class could be useful if you would like to implement your own `did-auth ser
 
 Example:
 ```ts
-import { DidAuthServerService } from '@affinidi/affinidi-did-auth-lib'
+import { DidAuthServerService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import { KeysService, DidDocumentService, LocalKeyVault } from '@affinidi/common'
 import { parse } from 'did-resolver'
 
-// `serviceEncryptedSeed` and `serviceEncryptionKey` should be taken from the wallet
+// `serviceEncryptedSeed` and `serviceEncryptionKey` should be taken from the wallet.
 const keyService = new KeysService(serviceEncryptedSeed, serviceEncryptionKey)
 const documentService = DidDocumentService.createDidDocumentService(keyService)
-// initialize `Signer` class instance
+// Initialize `Signer` class instance.
 const signer = new Signer({
   did: documentService.getMyDid(),
   keyId: documentService.getKeyId(),
   keyVault: new LocalKeyVault(keyService),
 })
-// parsing the service DID
+// Parsing the service DID.
 const verifierDid = parse(documentService.getMyDid()).did
-// initialize `DidAuthServerService` class
+// Initialize `DidAuthServerService` class.
 const serverService = new DidAuthServerService(verifierDid, signer, null)
-// parsing the client DID (might come inside the client request as e.g. `audienceLongDid`)
+// Parsing the client DID (might come inside the client request as e.g. `audienceLongDid`).
 const audienceDid = parse(audienceLongDid).did
 const authDidRequestToken = await serverService.createDidAuthRequestToken(audienceDid, expiresAt)
 ```
@@ -155,31 +155,32 @@ It could be used as an alternative to the `AffinidiDidAuthService` class.
 
 Example:
 ```ts
-import { LocalExpiringDidAuthResponseToken, DidAuthClientService } from '@affinidi/affinidi-did-auth-lib'
+import { LocalExpiringDidAuthResponseToken, DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import { KeysService, DidDocumentService, LocalKeyVault } from '@affinidi/common'
 
-// `clientEncryptedSeed` and `clientEncryptionKey` should be taken from the wallet
+// `clientEncryptedSeed` and `clientEncryptionKey` should be taken from the wallet.
 const keyService = new KeysService(clientEncryptedSeed, clientEncryptionKey)
 const documentService = DidDocumentService.createDidDocumentService(keyService)
-// initialize `Signer` class instance
+// Initialize `Signer` class instance.
 const signer = new Signer({
   did: documentService.getMyDid(),
   keyId: documentService.getKeyId(),
   keyVault: new LocalKeyVault(keyService),
 })
-// initialize `DidAuthClientService` class instance
+// Initialize `DidAuthClientService` class instance.
 const didAuthClientService = new DidAuthClientService(signer)
 
 let auth: LocalExpiringDidAuthResponseToken
-// example of the method that could be implemented to prepare response token
-// to athenticate client on the service side using Did-Auth flow
+// Example of the method that could be implemented to prepare a response token
+// to authenticate clients on the service side using the `Did-Auth` flow.
 const getAuth = async (maxTokenValidInMs: number): Promise<LocalExpiringDidAuthResponseToken> => {
+  // Check if the token exists and if the token is expired.
   if (auth && !auth.isExpiredAt(Date.now())) {
     return auth
   }
-  // setting token request time
+  // Setting token request time.
   const tokenRequestTime = Date.now()
-  // example of method that pulls request token from the service side
+  // Example of method that pulls request token from the service side.
   const requestToken = await pullDidAuthRequestToken({})
   const responseToken = await didAuthClientService.createDidAuthResponseToken(requestToken, { maxTokenValidInMs })
   
