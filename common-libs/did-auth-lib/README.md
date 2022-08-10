@@ -1,4 +1,4 @@
-# Affinidi Did Auth Helpers (PUBLIC)
+# Affinidi Did Auth Helpers
 
 ## Usage:
 
@@ -55,7 +55,7 @@ const affinidiDidAuthService = new AffinidiDidAuthService({
 
 #### Creation of the request token(service side)
 
-Client DID(ownership of which client is proved) might be provided. Use `createDidAuthRequestToken` method to create `Did-Auth` request token. That request token is a JWT signed with the service's public key.
+Client DID(ownership of which client is proved) might be provided. Use `createDidAuthRequestToken` method to create `Did-Auth` request token(expires in 1 minute by default). That request token is a JWT signed with the service's public key.
 It should be sent back to the client for further steps.
 
 ```ts
@@ -69,13 +69,13 @@ const authDidRequestToken = await affinidiDidAuthService.createDidAuthRequestTok
 #### Building of the response token(client side)
 
 To create a response token it is recommended to initialize the `AffinidiDidAuthService` class with `encryptedSeed` and `encryptionKey` options on the client side in the same way as for the service side.
-Use `createDidAuthResponseToken` method to create `Did-Auth` response token. It is necessary to have a fresh request token from the service.
+Use `createDidAuthResponseToken` method to create `Did-Auth` response token(expires in 12 hours by default). It is necessary to have a fresh request token from the service.
 
 ```ts
 /**
  * authDidRequestToken {String} - signed JWT request token from the service
  * options {Object} (optional) - key value object with additional options
- * options.maxTokenValidInMs {Number} (optional) - maximum token validity period(im milliseconds)
+ * options.maxTokenValidInMs {Number} (optional) - maximum token validity period in milliseconds(12 hours by default)
  */
 const responseToken = await affinidiDidAuthService.createDidAuthResponseToken(authDidRequestToken, options)
 ```
@@ -111,7 +111,7 @@ const isValid = await affinidiDidAuthService.verifyDidAuthResponseToken(response
 })
 ```
 
-[Generate accessApiKey](https://apikey.affinidi.com/).
+[Generate accessApiKey](https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key).
 If the response token is not valid service should throw an error, otherwise, the request should proceed.
 
 ### Implementation of the *service* side part of `DID Auth` flow using `DidAuthServerService` class
