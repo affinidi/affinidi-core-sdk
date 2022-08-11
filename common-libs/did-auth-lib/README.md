@@ -4,7 +4,7 @@
 
 This library allows proving that the client/user is the owner of provided `DID`. Based on this proof App builders can give the client/user access to the appropriate resources.
 
-`Did-Auth` flow is similar to the `Sharing VC` flow, but without `VC` exchanges, since `DID` itself should be enough info from the client/user to authenticate.
+`Did-Auth` flow is similar to the `Sharing VC` flow, but without `VC` exchanges, since `DID` itself should be enough info from the client/user to authenticate. [Flow diagram.](https://www.planttext.com/api/plantuml/png/dLHBRzf04BxlhnZHIoAHY4Gz8RK9ITMeLNefKNE8E2nuY4TPTjtTCS6j-j-xwnT-WT9oi0pCzvXlF_lQiRISRfHWOeNmYIAOfHp3PsLUXLYQ7Onk5Q7c4Roxf-UOxooY5k0_YKVIYXAf6KOry9wMLjfi1D91H97qlwro0e0-QfOaYbQIoUWSK4-YZi2B5mRcQBTeAmCtAiK-KvYX5UOihhZ_DvErfD264OnNh8Z6fQyft263nPyfEWOsBwZFHMdvx6CrFOMLHSdenOBMzsBy8KoV5CF-dzCXbTB956vpWgxICKHE3xXBoA83qd016zAf1ompY70jKyNdeiG5ipNo3MR75V6Chqv5YMnjF6TB-Xc-FZx0asrmBFQIVhnAyN8owOprd3TiD_PkzMb_AdLSBZ7QOJ-l0xX-Q9SGczIwLcZL0Uz3g_2Tw0hr8hlcTcFu3Hkvo-z_I4NH5_tDNS6VEig6GaNT3hJ1l3XMptdeiDHPtPnNyWV5SJURK7lfhrxRMFgLFtyGeupG3XOwS9RLUFICOTsJumtEznmwbA4AUWfQPmToR7mBGQBUZa4cTFQ2MOXGAeRM46o3TFxi3pNrnYZqgpzj2uD-SI_epna-0DiK5pcmORAAjYfjkOtamKmM0fN3ZY7I_srfBJtTOK_l9nTlygGZ8QxzDRpd_m80)
 
 The high-level perspective of `Did-Auth` flow looks like `request` → `response` → `validation of response`, where a response is a response(signed with the private key) to the challenge from the request.
 
@@ -14,7 +14,7 @@ For simplicity DID methods provided by SDK can be used for the implementation `D
 
 Implementation might be consists of two parts - the client side and the service side.
 The service side should provide some endpoints or trigger methods for the client to start the auth flow.
-[Flow diagram](https://swimlanes.io/u/GolxCmVL0)
+Both clients and service can set a token timeout, during validation min(service token timeout, client token timeout) will be used.
 
 #### Initiate `AffinidiDidAuthService` class (service side)
 
