@@ -1,3 +1,5 @@
+# release 2.1.6 (2022-08-09)
+* updated `README.md`, added code examples and up-to-date explanations
 # release 2.1.5 (2022-08-01)
 * updated `@affinidi/common` with updated `vc-data` and `vc-common`
 # release 2.1.4 (2022-06-30)

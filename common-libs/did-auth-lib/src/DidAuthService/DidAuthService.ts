@@ -40,7 +40,7 @@ export interface OptionsWithKeyVault {
 }
 
 /**
- * @deprecated use AffinidiDidAuthClientService, CloudService or ServerService
+ * Wrapper for DidAuthServerService, DidAuthClientService and DidAuthCloudService
  */
 export default class AffinidiDidAuthService {
   private readonly _did: string
