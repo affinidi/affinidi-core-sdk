@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/affinidi-did-auth-lib",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "Affinidi Did Auth Helpers",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
