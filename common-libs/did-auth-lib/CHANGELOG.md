@@ -1,3 +1,5 @@
+# release 2.1.7 (2022-08-15)
+* did equality uses short dids
 # release 2.1.6 (2022-08-09)
 * updated `README.md`, added code examples and up-to-date explanations
 # release 2.1.5 (2022-08-01)

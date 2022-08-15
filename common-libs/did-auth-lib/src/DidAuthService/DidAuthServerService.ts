@@ -3,6 +3,7 @@ import { JwtService } from '@affinidi/tools-common'
 import { DidAuthResponseToken } from './DidAuthResponseToken'
 import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from '../shared/constants'
 import Signer from '../shared/Signer'
+import { parse } from 'did-resolver'
 
 export default class DidAuthServerService {
   constructor(
@@ -32,7 +33,7 @@ export default class DidAuthServerService {
     await this._affinidi.validateJWT(didAuthRequestToken.toString())
     await this._affinidi.validateJWT(didAuthResponseToken.toString(), didAuthRequestToken.toString())
 
-    if (didAuthRequestToken.iss !== this._verifierDid) {
+    if (parse(didAuthRequestToken.iss).did !== parse(this._verifierDid).did) {
       throw new Error('Issuer of request is not valid')
     }
 

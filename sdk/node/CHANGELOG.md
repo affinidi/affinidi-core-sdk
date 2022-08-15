@@ -1,3 +1,5 @@
+# release 6.4.2 (2022-08-15)
+* updated `@affinidi/affinidi-did-auth-lib` (did equality check uses short form)
 # release 6.4.1 (2022-08-01)
 * updated `@affinidi/vc-common` and `@affinidi/vc-data`
 # release 6.4.0 (2022-07-08)

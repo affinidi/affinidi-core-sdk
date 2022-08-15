@@ -1,3 +1,5 @@
+# release 6.3.2 (2022-08-15)
+* updated `@affinidi/affinidi-did-auth-lib` (did equality check uses short form)
 # release 6.3.1 (2022-08-01)
 * updated `@affinidi/common` and `@affinidi/wallet-core-sdk`
 # release 6.3.0 (2022-07-08)
