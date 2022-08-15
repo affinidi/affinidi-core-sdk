@@ -20,9 +20,16 @@ type AnchoringParams = {
     didDocument: any
     seedHex: string
   }
+  origin?: string
 }
 
-const computePreparedJoloParams = async ({ registry, keysService, nonce, additionalJoloParams }: AnchoringParams) => {
+const computePreparedJoloParams = async ({
+  registry,
+  keysService,
+  nonce,
+  additionalJoloParams,
+  origin,
+}: AnchoringParams) => {
   if (!additionalJoloParams) {
     throw new Error('missing jolo params')
   }
@@ -37,7 +44,7 @@ const computePreparedJoloParams = async ({ registry, keysService, nonce, additio
 
   const {
     body: { digestHex },
-  } = await registry.createAnchorTransaction({ nonce, did, didDocumentAddress })
+  } = await registry.createAnchorTransaction({ nonce, did, didDocumentAddress, origin })
 
   const transactionSignatureJson = digestHex ? await keysService.createTransactionSignature(digestHex, seedHex) : ''
 
@@ -51,14 +58,14 @@ const computePreparedElemParams = async ({ did }: AnchoringParams) => {
   return { did, didDocumentAddress: '', ethereumPublicKeyHex: '', transactionSignatureJson: '' }
 }
 
-const computePreparedPolygonParams = async ({ did, keysService, didMethod, registry }: AnchoringParams) => {
+const computePreparedPolygonParams = async ({ did, keysService, didMethod, registry, origin }: AnchoringParams) => {
   const didService = new PolygonDidDocumentService(new LocalKeyVault(keysService), {
     isTestnet: didMethod === 'polygon:testnet',
   })
   const publicKeyBase58 = didService.getMyPubKeyBase58()
   const {
     body: { digestHex },
-  } = await registry.createAnchorTransaction({ did, publicKeyBase58 })
+  } = await registry.createAnchorTransaction({ did, publicKeyBase58, origin })
 
   const transactionSignatureJson = await keysService.createTransactionSignature(digestHex)
 
@@ -88,6 +95,7 @@ export const anchorDid = async (params: AnchoringParams): Promise<{ did: string 
     ...preparedParams,
     nonce,
     anchoredDidElem,
+    origin: params.origin,
   })
 
   return { did: response.body.did }
