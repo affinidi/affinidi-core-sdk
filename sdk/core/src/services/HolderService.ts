@@ -58,7 +58,7 @@ export default class HolderService {
     return offerResponse
   }
 
-  async buildCredentialResponse(credentialRequestToken: string, suppliedCredentials: any) {
+  async buildCredentialResponse(credentialRequestToken: string, suppliedCredentials: any, expiresAt?: string) {
     const credentialRequest = JwtService.fromJWT(credentialRequestToken)
     const { callbackURL } = credentialRequest.payload.interactionToken
 
@@ -71,6 +71,7 @@ export default class HolderService {
       interactionToken,
       'credentialResponse',
       credentialRequest,
+      expiresAt,
     )
 
     return credentialResponse

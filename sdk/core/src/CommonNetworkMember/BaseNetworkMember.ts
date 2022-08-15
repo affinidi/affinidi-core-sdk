@@ -433,10 +433,10 @@ export abstract class BaseNetworkMember {
     return JwtService.encodeObjectToJWT(signedObject)
   }
 
-  async createDidAuthResponse(didAuthRequestToken: string): Promise<string> {
+  async createDidAuthResponse(didAuthRequestToken: string, expiresAt: string): Promise<string> {
     await ParametersValidator.validate([{ isArray: false, type: 'jwt', isRequired: true, value: didAuthRequestToken }])
 
-    return this.createCredentialShareResponseToken(didAuthRequestToken, [])
+    return this.createCredentialShareResponseToken(didAuthRequestToken, [], expiresAt)
   }
 
   // NOTE: to be removed after support of legacy credentials is dropped
@@ -484,22 +484,37 @@ export abstract class BaseNetworkMember {
    * @description Creates JWT of credential share response
    * @param credentialShareRequestToken - JWT with the requested VCs
    * @param suppliedCredentials - array of signed credentials
+   * @param expiresAt (isoString) - optional, expire date-time of generated token
    * @returns JWT
    */
   async createCredentialShareResponseToken(
     credentialShareRequestToken: string,
     suppliedCredentials: SignedCredential[],
+    expiresAt?: string,
   ): Promise<string> {
     await ParametersValidator.validate([
       { isArray: false, type: 'jwt', isRequired: true, value: credentialShareRequestToken },
       { isArray: true, type: SignedCredential, isRequired: true, value: suppliedCredentials },
+      { isArray: false, type: 'string', isRequired: false, value: expiresAt },
     ])
 
     this._validateSignedCredentialsSupportedStructures(suppliedCredentials)
+    let tokenDecoded: any
+    try {
+      tokenDecoded = JwtService.fromJWT(credentialShareRequestToken)
+    } catch (error) {
+      throw new Error(`Token can't be decoded`)
+    }
+
+    const { exp } = tokenDecoded.payload
+    if (!exp || (expiresAt && exp > expiresAt)) {
+      throw new Error('expiresAt of response token should be greater than expiresAt of request token')
+    }
 
     const credentialResponse = await this._holderService.buildCredentialResponse(
       credentialShareRequestToken,
       suppliedCredentials,
+      expiresAt,
     )
 
     const signedObject = this._keysService.signJWT(credentialResponse, this.didDocumentKeyId)
