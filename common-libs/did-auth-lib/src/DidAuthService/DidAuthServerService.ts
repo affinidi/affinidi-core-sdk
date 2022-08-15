@@ -17,7 +17,7 @@ export default class DidAuthServerService {
     const NOW = Date.now()
 
     const jwtObject: any = await JwtService.buildJWTInteractionToken(null, jwtType, null)
-    jwtObject.payload.aud = parse(audienceDid).did
+    jwtObject.payload.aud = audienceDid
     jwtObject.payload.exp = expiresAt > NOW ? expiresAt : NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
     jwtObject.payload.createdAt = NOW
 
@@ -33,7 +33,7 @@ export default class DidAuthServerService {
     await this._affinidi.validateJWT(didAuthRequestToken.toString())
     await this._affinidi.validateJWT(didAuthResponseToken.toString(), didAuthRequestToken.toString())
 
-    if (didAuthRequestToken.iss !== this._verifierDid) {
+    if (parse(didAuthRequestToken.iss).did !== parse(this._verifierDid).did) {
       throw new Error('Issuer of request is not valid')
     }
 
