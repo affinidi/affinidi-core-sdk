@@ -3,6 +3,7 @@ import { JwtService } from '@affinidi/tools-common'
 import { DidAuthResponseToken } from './DidAuthResponseToken'
 import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from '../shared/constants'
 import Signer from '../shared/Signer'
+import { parse } from 'did-resolver'
 
 export default class DidAuthServerService {
   constructor(
@@ -16,7 +17,7 @@ export default class DidAuthServerService {
     const NOW = Date.now()
 
     const jwtObject: any = await JwtService.buildJWTInteractionToken(null, jwtType, null)
-    jwtObject.payload.aud = audienceDid
+    jwtObject.payload.aud = parse(audienceDid).did
     jwtObject.payload.exp = expiresAt > NOW ? expiresAt : NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
     jwtObject.payload.createdAt = NOW
 
