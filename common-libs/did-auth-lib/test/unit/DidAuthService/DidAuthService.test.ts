@@ -2,12 +2,16 @@ import nock from 'nock'
 import { expect } from 'chai'
 
 import { JwtService } from '@affinidi/tools-common'
-import { Env } from '@affinidi/url-resolver'
+import { Env, resolveUrl, Service } from '@affinidi/url-resolver'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
 import { mockVerifierElemDidDocument } from './../../factory/mockVerifierElemDidDocument'
 import { mockHolderElemDidDocument } from './../../factory/mockHolderElemDidDocument'
 import { verifierDid, verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid } from './../../factory/verifier'
-import { holderDid, holderEncryptedSeed, holderEncryptionKey } from './../../factory/holder'
+import { holderDid, holderEncryptedSeed, holderEncryptionKey, holderFullDid } from './../../factory/holder'
+import DidAuthServerService from '../../../src/DidAuthService/DidAuthServerService'
+import Signer from '../../../src/shared/Signer'
+import { Affinidi, KeysService, LocalKeyVault } from '@affinidi/common'
+import DidAuthClientService from '../../../src/DidAuthService/DidAuthClientService'
 
 const env = {
   environment: <Env>'dev',
@@ -16,6 +20,35 @@ const env = {
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function createServerService(environment: Env, accessApiKey: string): DidAuthServerService {
+  const signerOptions = {
+    did: verifierFullDid,
+    keyId: `${verifierDid}#primary`,
+    keyVault: new LocalKeyVault(new KeysService(verifierEncryptedSeed, verifierEncryptionKey)),
+  }
+
+  const verifierSigner = new Signer(signerOptions)
+
+  const affinidiOptions = {
+    registryUrl: resolveUrl(Service.REGISTRY, environment),
+    apiKey: accessApiKey,
+  }
+  const affinidi = new Affinidi(affinidiOptions, null as any)
+  return new DidAuthServerService(verifierFullDid, verifierSigner, affinidi)
+}
+
+function createClientService(): DidAuthClientService {
+  const signerOptions = {
+    did: holderFullDid,
+    keyId: `${holderDid}#primary`,
+    keyVault: new LocalKeyVault(new KeysService(holderEncryptedSeed, holderEncryptionKey)),
+  }
+
+  const clientSigner = new Signer(signerOptions)
+
+  return new DidAuthClientService(clientSigner)
 }
 
 describe('AffinidiDidAuthService', () => {
@@ -120,6 +153,30 @@ describe('AffinidiDidAuthService', () => {
     const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken)
 
     const result = await verifierDidAuthService.verifyDidAuthResponseToken(didAuthResponseToken, verifierOptions)
+
+    expect(result).to.equal(true)
+    nock.cleanAll()
+  })
+
+  it('#verifyDidAuthResponse (new way)', async () => {
+    const { environment, accessApiKey } = env
+
+    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+      .post('/api/v1/did/resolve-did', /elem/gi)
+      .reply(200, mockVerifierElemDidDocument)
+
+    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+      .post('/api/v1/did/resolve-did', /elem/gi)
+      .reply(200, mockHolderElemDidDocument)
+
+    const clientService = createClientService()
+    const serverService = createServerService(environment, accessApiKey)
+
+    const didAuthRequestToken = await serverService.createDidAuthRequestToken(holderDid)
+
+    const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken)
+
+    const result = await serverService.verifyDidAuthResponseToken(didAuthResponseToken)
 
     expect(result).to.equal(true)
     nock.cleanAll()
