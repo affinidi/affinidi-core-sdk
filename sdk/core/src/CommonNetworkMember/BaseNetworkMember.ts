@@ -433,7 +433,7 @@ export abstract class BaseNetworkMember {
     return JwtService.encodeObjectToJWT(signedObject)
   }
 
-  async createDidAuthResponse(didAuthRequestToken: string, expiresAt: string): Promise<string> {
+  async createDidAuthResponse(didAuthRequestToken: string, expiresAt?: string): Promise<string> {
     await ParametersValidator.validate([{ isArray: false, type: 'jwt', isRequired: true, value: didAuthRequestToken }])
 
     return this.createCredentialShareResponseToken(didAuthRequestToken, [], expiresAt)
