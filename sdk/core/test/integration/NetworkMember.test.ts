@@ -1037,8 +1037,6 @@ describe('CommonNetworkMember', () => {
 
   it('#createCredentialShareResponseToken with expiresAt 5min', async () => {
     const suppliedCredentials = [signedCredential]
-    console.log('password', password)
-    console.log('encryptedSeed', encryptedSeedElem)
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeedElem, options)
     const customNonce = '1231sdfd23123s'
     const audienceDid = commonNetworkMember.did
