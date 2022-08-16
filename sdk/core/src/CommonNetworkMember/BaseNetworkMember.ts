@@ -507,8 +507,8 @@ export abstract class BaseNetworkMember {
     }
 
     const { exp } = tokenDecoded.payload
-    if (!exp || (expiresAt && exp > expiresAt)) {
-      throw new Error('expiresAt of response token should be greater than expiresAt of request token')
+    if (!exp || (expiresAt && exp > new Date(expiresAt).getTime())) {
+      throw new Error('expiresAt of response token should be greater than expiresAt of request token.')
     }
 
     const credentialResponse = await this._holderService.buildCredentialResponse(
