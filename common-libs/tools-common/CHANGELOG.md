@@ -1,3 +1,5 @@
+# release 1.1.0 (2022-08-16)
+* added `expiresAt` field as an additional option for building token
 # release 1.0.4 (2022-06-22)
 * fixed `jsontokens` version to 3.0.0 for avoid BigInt error on react native
 # release 1.0.1 (2021-11-23)

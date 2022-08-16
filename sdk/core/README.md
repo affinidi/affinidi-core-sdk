@@ -844,10 +844,15 @@ const vp = await wallet.createPresentationFromChallenge(
 const responseToken = await wallet.createCredentialShareResponseToken(
   credentialShareRequestToken,
   suppliedCredentials,
+  expiresAt,
 )
 ```
 
+`credentialShareRequestToken` (jwt) - previously generated request token.
+
 `suppliedCredentials` - credentials which Holder providing for Verifier.
+
+`expiresAt` (isoString) - (optional) expires of created token.
 
 
 #### Create Response on credential offer request
