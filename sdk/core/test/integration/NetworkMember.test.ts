@@ -20,6 +20,7 @@ import { SignedCredential, SdkOptions } from '../../src/dto'
 import { testPlatformTools } from '../helpers/testPlatformTools'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { createUserManagementService } from '../../src/shared/createUserManagementService'
+import signedCredential from '../factory/signedCredential'
 
 const {
   PASSWORD,
@@ -877,14 +878,31 @@ describe('CommonNetworkMember', () => {
     expect(requestPayload.aud).to.be.equal(audienceDid)
     expect(requestPayload.jti).to.be.equal(customNonce)
 
-    const responseToken = await commonNetworkMember.createDidAuthResponse(requestToken)
-    expect(responseToken).to.exist
-    const responseTokenObject = AffinidiWallet.fromJWT(responseToken)
+    {
+      const responseToken = await commonNetworkMember.createDidAuthResponse(requestToken)
+      expect(responseToken).to.exist
+      const responseTokenObject = AffinidiWallet.fromJWT(responseToken)
 
-    expect(responseTokenObject.payload.jti).to.be.equal(customNonce)
+      expect(responseTokenObject.payload.jti).to.be.equal(customNonce)
 
-    const { isValid } = await commonNetworkMember.verifyDidAuthResponse(responseToken, requestToken)
-    expect(isValid).to.be.equal(true)
+      const { isValid } = await commonNetworkMember.verifyDidAuthResponse(responseToken, requestToken)
+      expect(isValid).to.be.equal(true)
+    }
+
+    {
+      const twentyMinsInMilliseconds = 20 * 60 * 1000
+      const expiration = Date.now() + twentyMinsInMilliseconds
+      const expiresAt = new Date(expiration).toISOString()
+      const responseToken = await commonNetworkMember.createDidAuthResponse(requestToken, expiresAt)
+      expect(responseToken).to.exist
+      const responseTokenObject = AffinidiWallet.fromJWT(responseToken)
+
+      expect(responseTokenObject.payload.jti).to.be.equal(customNonce)
+      expect(responseTokenObject.payload.exp).to.be.equal(expiration)
+
+      const { isValid } = await commonNetworkMember.verifyDidAuthResponse(responseToken, requestToken)
+      expect(isValid).to.be.equal(true)
+    }
   })
 
   it('#signUp when user registers with arbitrary username', async () => {
@@ -1015,6 +1033,30 @@ describe('CommonNetworkMember', () => {
     expect(message).to.eql('Invalid operation parameters.')
     expect(contextMessage1).to.eql('Required parameter at index [0] is missing.')
     expect(httpStatusCode).to.eql(400)
+  })
+
+  it('#createCredentialShareResponseToken with expiresAt 5min', async () => {
+    const suppliedCredentials = [signedCredential]
+    const commonNetworkMember = new AffinidiWallet(password, encryptedSeedElem, options)
+    const customNonce = '1231sdfd23123s'
+    const audienceDid = commonNetworkMember.did
+    const jwtOptions = { audienceDid, nonce: customNonce, callbackUrl }
+
+    const requestToken = await commonNetworkMember.generateDidAuthRequest(jwtOptions)
+    expect(requestToken).to.exist
+    const twentyMinsInMilliseconds = 5 * 60 * 1000
+    const expiration = Date.now() + twentyMinsInMilliseconds
+    const expiresAt = new Date(expiration).toISOString()
+    let validationError
+    try {
+      await commonNetworkMember.createCredentialShareResponseToken(requestToken, suppliedCredentials, expiresAt)
+    } catch (error) {
+      validationError = error
+    }
+
+    const { message } = validationError
+
+    expect(message).to.eql('expiresAt of response token should be greater than expiresAt of request token.')
   })
 
   it('#getSignupCredentials', async () => {

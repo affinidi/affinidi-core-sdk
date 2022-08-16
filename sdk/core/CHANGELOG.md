@@ -1,3 +1,5 @@
+# release 6.4.0 (2022-08-16)
+* added `expiresAt` field as an additional optional field for the `createCredentialShareResponseToken` to help to manage the token expiration period
 # release 6.3.2 (2022-08-15)
 * updated `@affinidi/affinidi-did-auth-lib` (did equality check uses short form)
 # release 6.3.1 (2022-08-01)

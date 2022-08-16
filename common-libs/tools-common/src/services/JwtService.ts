@@ -41,8 +41,15 @@ const JwtService = {
     ].join('.')
   },
 
-  buildJWTInteractionToken: async (interactionToken: any, type: string, receivedToken: any) => {
-    const expiration = Date.now() + JwtService.DEFAULT_JWT_EXPIRY_MS
+  buildJWTInteractionToken: async (interactionToken: any, type: string, receivedToken: any, expiresAt?: string) => {
+    let expiration = Date.now() + JwtService.DEFAULT_JWT_EXPIRY_MS
+    if (expiresAt) {
+      expiration = new Date(expiresAt).getTime()
+    }
+
+    if (expiration < Date.now()) {
+      throw new Error('ExpiresAt parameter should be in future.')
+    }
 
     const jwt = {
       header: {

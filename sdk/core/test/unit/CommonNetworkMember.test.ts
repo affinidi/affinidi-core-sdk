@@ -490,6 +490,22 @@ describe('CommonNetworkMember', () => {
     expect(token).to.exist
   })
 
+  it('#createCredentialShareResponseToken with expiresAt 20min', async () => {
+    const suppliedCredentials = [signedCredential]
+    const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
+    const twentyMinsInMilliseconds = 20 * 60 * 1000
+    const expiration = Date.now() + twentyMinsInMilliseconds
+    const expiresAt = new Date(expiration).toISOString()
+
+    const token = await commonNetworkMember.createCredentialShareResponseToken(
+      credentialShareRequestToken,
+      suppliedCredentials,
+      expiresAt,
+    )
+
+    expect(token).to.exist
+  })
+
   it('#createCredentialOfferResponseToken', async () => {
     const commonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
 
