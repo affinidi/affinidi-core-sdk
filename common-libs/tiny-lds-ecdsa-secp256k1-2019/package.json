@@ -1,10 +1,9 @@
 {
   "name": "@affinidi/tiny-lds-ecdsa-secp256k1-2019",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "tiny version of lds-ecdsa-secp256k1-2019",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "module": "dist/tiny-lds-ecdsa-secp256k1-2019.esm.js",
   "files": [
     "dist"
   ],

@@ -1,3 +1,6 @@
+## 1.5.1 (2022-08-18)
+* fixed `package.json` module after refactored build process
+
 # 1.5.0 (2022-08-01)
 * added `LegacyVCV1Subject`
 
