@@ -1,8 +1,7 @@
 {
   "name": "@affinidi/vc-common",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "main": "dist/index.js",
-  "module": "dist/vc-common.esm.js",
   "typings": "dist/index.d.ts",
   "description": "Shared types and utilities for credential related libraries",
   "repository": {
@@ -35,7 +34,7 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.1",
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.2",
     "@mattrglobal/jsonld-signatures-bbs": "^0.10.0",
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^3.10.1",
