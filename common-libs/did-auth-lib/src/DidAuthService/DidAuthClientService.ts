@@ -25,7 +25,7 @@ export default class DidAuthClientService {
       )
     }
 
-    const jwtObject = await buildResponseJwtObject(didAuthRequestTokenStr)
+    const jwtObject = await buildResponseJwtObject(didAuthRequestTokenStr, options)
 
     await this._signer.fillSignature(jwtObject)
 
