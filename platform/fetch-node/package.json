@@ -38,7 +38,7 @@
   "dependencies": {
     "@affinidi/platform-fetch": "^1.0.0",
     "node-fetch": "^2.6.0",
-    "undici": "^4.9.5"
+    "undici": "^5.10.0"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
@@ -51,7 +51,7 @@
     "license-checker": "25.0.1",
     "prettier": "2.0.5",
     "ts-node": "8.10.2",
-    "typedoc": "0.16.11",
+    "typedoc": "^0.23.11",
     "typescript": "^4.4.3"
   },
   "gitHead": "5420b34bac444d42d16b336a7ae95f47741d150c"
