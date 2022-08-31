@@ -21,7 +21,7 @@ jobs:
             mkdir -p tmp/
             curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./tmp/cc-test-reporter
             chmod +x ./tmp/cc-test-reporter
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         with:
           name: test-reporter
           path: ./tmp/cc-test-reporter
@@ -39,7 +39,7 @@ jobs:
         run: npm run build
       - name: Lint packages
         run: npm run lint
-      - uses: paambaati/codeclimate-action@v2.6.0
+      - uses: paambaati/codeclimate-action@v3.0.0
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
