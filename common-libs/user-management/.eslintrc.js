@@ -7,5 +7,8 @@ module.exports = {
     'commonjs': true,
     'node': true,
     'mocha': true
-  }
+  },
+  rules: {
+    'no-unused-vars': 'off',
+  },
 }
