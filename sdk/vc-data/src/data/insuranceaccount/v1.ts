@@ -41,7 +41,7 @@ export type VCSInsuranceAccountPatientV1 = LegacyVCV1Subject<FHIRPatientE>
 export type VCSInsuranceAccountPersonV1 = [
   VCSInsuranceAccountCoverageV1,
   VCSInsuranceAccountPatientV1,
-  ...VCSInsuranceAccountPatientV1[]
+  ...VCSInsuranceAccountPatientV1[],
 ]
 
 export type VCInsuranceAccountPersonV1 = VCV1<VCSInsuranceAccountPersonV1, Type<'InsuranceAccountCredentialPersonV1'>>
