@@ -10,14 +10,14 @@ jobs:
     name: SonarQube Trigger
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           registry-url: https://npm.pkg.github.com/
           scope: '@affinityproject'
-      - name: Install npm v7
-        run: npm install -g npm@7
+      - name: Install npm v8
+        run: npm install -g npm@8
       - name: Install dependencies
         run: npm install
         env:
