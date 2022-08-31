@@ -44,13 +44,13 @@ export const genValidateFn = <T>(validations: Validations<T>): ValidateFn<T> => 
           if (outcome !== true) {
             errors.push({
               kind: 'invalid_param',
-              message: `Invalid value for field "${fieldName}": ${outcome.message}`,
+              message: `Invalid value for field "${String(fieldName)}": ${outcome.message}`,
             })
           }
         } catch (err) {
           errors.push({
             kind: 'validation_error',
-            message: `Error while validating field "${fieldName}": ${err}`,
+            message: `Error while validating field "${String(fieldName)}": ${err}`,
           })
         }
       }
