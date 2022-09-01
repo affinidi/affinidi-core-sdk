@@ -43,7 +43,7 @@ jobs:
         run: npm run build
       - name: Lint packages
         run: npm run lint
-      - uses: paambaati/codeclimate-action@v2.7.1
+      - uses: paambaati/codeclimate-action@v2.7.5
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
