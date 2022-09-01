@@ -2,7 +2,7 @@
   "name": "affinidi-core-sdk",
   "private": true,
   "devDependencies": {
-    "lerna": "^4.0.0"
+    "lerna": "^5.5.0"
   },
   "scripts": {
     "ci": "lerna exec npm ci",
