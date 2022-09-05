@@ -81,5 +81,8 @@
     "typedoc": "0.16.11",
     "typescript": "^4.3.2"
   },
-  "gitHead": "39b8ae64eb5e37ddae2f80438b320adaefae8ef6"
+  "gitHead": "39b8ae64eb5e37ddae2f80438b320adaefae8ef6",
+  "overrides": {
+    "node-forge": "1.3.0"
+  }
 }
