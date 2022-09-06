@@ -42,8 +42,8 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/platform-fetch": "^1.0.0",
-    "@affinidi/tools-common": "^1.1.0",
+    "@affinidi/platform-fetch": "^1.1.0",
+    "@affinidi/tools-common": "^1.2.0",
     "lodash.keyby": "^4.6.0",
     "lodash.mapvalues": "^4.6.0"
   },

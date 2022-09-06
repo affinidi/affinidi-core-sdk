@@ -34,7 +34,7 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.1.2",
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.2.0",
     "@mattrglobal/jsonld-signatures-bbs": "^0.10.0",
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^3.10.1",

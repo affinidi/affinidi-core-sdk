@@ -42,15 +42,15 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/common": "^2.2.2",
-    "@affinidi/internal-api-clients": "^1.5.2",
-    "@affinidi/tools-common": "^1.1.0",
-    "@affinidi/url-resolver": "^1.1.3",
+    "@affinidi/common": "^2.3.0",
+    "@affinidi/internal-api-clients": "^1.6.0",
+    "@affinidi/tools-common": "^1.2.0",
+    "@affinidi/url-resolver": "^1.2.0",
     "did-resolver": "^4.0.0"
   },
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
-    "@affinidi/platform-fetch-node": "^1.0.1",
+    "@affinidi/platform-fetch-node": "^1.1.0",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
     "@types/mocha": "^9.1.1",

@@ -37,8 +37,8 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@affinidi/platform-fetch-node": "^1.0.1",
-    "@affinidi/wallet-core-sdk": "^6.4.1",
+    "@affinidi/platform-fetch-node": "^1.1.0",
+    "@affinidi/wallet-core-sdk": "^6.5.0",
     "@mattrglobal/jsonld-signatures-bbs": "^1.1.0",
     "bs58": "^4.0.1",
     "crypto-ld": "^3.9.0",
@@ -48,11 +48,11 @@
     "randombytes": "^2.1.0"
   },
   "devDependencies": {
-    "@affinidi/common": "^2.2.2",
+    "@affinidi/common": "^2.3.0",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/vc-common": "^1.5.1",
-    "@affinidi/vc-data": "^1.5.1",
+    "@affinidi/vc-common": "^1.6.0",
+    "@affinidi/vc-data": "^1.6.0",
     "@types/bs58": "^4.0.1",
     "@types/chai": "4.2.12",
     "@types/chai-as-promised": "^7.1.4",
