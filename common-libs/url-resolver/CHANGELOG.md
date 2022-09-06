@@ -1,3 +1,7 @@
+# release 1.2.0 (2022-09-06)
+* upgraded to npm 8;
+* updated `ts-node` and `mocha` versions;
+* eliminated pointing to `tsconfig.json`(this file name used by ts-node by default, but for node 16+ throws error) file in tests commands.
 # release 1.1.3 (2022-04-04)
 Remove unused service 
   - user auth 

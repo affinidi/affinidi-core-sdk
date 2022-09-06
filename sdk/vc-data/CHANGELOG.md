@@ -1,3 +1,7 @@
+## release 1.6.0 (2022-09-06)
+* upgraded to npm 8;
+* fixed typing issues.
+
 ## 1.5.1 (2022-08-18)
 * fixed `package.json` module after refactored build process
 

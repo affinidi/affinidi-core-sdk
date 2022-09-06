@@ -1,3 +1,6 @@
+# release 2.3.0 (2022-09-06)
+* upgraded to npm 8;
+* updated `mocha` version.
 # release 2.2.1 (2022-08-01)
 * updated `vc-data` and `vc-common`
 # release 2.2.0 (2022-07-08)

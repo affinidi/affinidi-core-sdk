@@ -1,3 +1,6 @@
+# release 1.2.0 (2022-09-06)
+* upgraded to npm 8;
+* switched off error on `no-unused-vars` lint rule.
 # release 1.1.0 (2022-08-16)
 * added `expiresAt` field as an additional option for building token
 # release 1.0.4 (2022-06-22)

@@ -1,3 +1,6 @@
+# release 2.2.0 (2022-09-06)
+* upgraded to npm 8;
+* updated `mocha` version.
 # release 2.1.7 (2022-08-15)
 * did equality uses short dids
 # release 2.1.6 (2022-08-09)

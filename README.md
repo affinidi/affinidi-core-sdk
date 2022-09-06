@@ -7,14 +7,27 @@ The Affinidi open source monorepo has the following structure
 ```
 .
 ├── common-libs
-│   ├── common
-│   ├── tiny-lds-ecdsa-secp256k1-2019
-│   └── vc-common
+│   ├── common
+│   ├── tiny-lds-ecdsa-secp256k1-2019
+│   ├── did-auth-lib
+│   ├── internal-api-clients
+│   ├── tools-common
+│   ├── tools-openapi
+│   ├── url-resolver
+│   ├── user-management
+│   └── vc-common
+│
+└── platform
+│   ├── fetch
+│   ├── fetch-native
+│   └── fetch-node
+│
 └── sdk
     ├── browser
     ├── core
     ├── expo
     ├── issuer-kit
+    ├── node
     ├── react-native
     └── vc-data
 ```
@@ -26,6 +39,9 @@ The main entry point to this package is a class called `Affinity`. In this class
 
 ### common-libs/tiny-lds-ecdsa-secp256k1-2019
 This packages is the same as https://github.com/decentralized-identity/lds-ecdsa-secp256k1-2019.js, but uses `tiny-secp256k1` for signing.
+
+### common-libs/did-auth-lib
+The `did-auth-lib` folder contains the `@affinidi/affinidi-did-auth-lib` [npm package](https://www.npmjs.com/package/@affinidi/affinidi-did-auth-lib). This library allows proving that the client/user is the owner of provided `DID`. Based on this proof App builders can give the client/user access to the appropriate resources.
 
 ### common-libs/vc-common
 The `vc-common` folder contains the `@affinidi/vc-common` [npm package](https://www.npmjs.com/package/@affinidi/vc-common). This package implements VC and VP types and utility functions that help with type-safe credential issuance and verification. It is considered less *opinionated* because it supports a wider variety of DIDs and VCs as long as they conform to the core data model.
@@ -61,8 +77,8 @@ The `issuer-kit` folder contains the `@affinidi/issuer-kit` [npm package](https:
 ## Prerequisites
 Before we begin, make sure you have the following installed:
 
-- Node.js v10.x or later
-- npm v5.x or later
+- Node.js v16.17.0 or later
+- npm v8.15.0 or later
 
 ## API Key
 You need to to use an API Key when you initialize the SDK. Here are the steps required to generate and start using the API Key: https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key
