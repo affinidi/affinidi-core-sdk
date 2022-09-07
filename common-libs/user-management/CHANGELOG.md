@@ -1,3 +1,6 @@
+# release 1.5.0 (2022-09-06)
+* upgraded to npm 8;
+* switched off error on `no-unused-vars` lint rule.
 # release 1.4.0 (2022-06-30)
 * add logInWithRefreshToken auth method
 # release 1.3.1 (2022-06-22)

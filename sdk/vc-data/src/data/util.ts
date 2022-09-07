@@ -113,7 +113,7 @@ export const createContextEntry = <
   if (Object.keys(fields).length > 0) {
     Object.keys(fields).forEach((_key) => {
       const key = _key as keyof ExcludeAndOmitType<Extension, Base>
-      entry[type]['@context'][key] = `${vocabs[fields[key]]}${key}`
+      entry[type]['@context'][key] = `${vocabs[fields[key]]}${String(key)}`
     })
   }
 
