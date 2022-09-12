@@ -1,4 +1,5 @@
 import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity, LocalKeyVault } from '@affinidi/common'
+import { fetch } from '@affinidi/platform-fetch'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import {
   IssuerApiService,
@@ -1134,5 +1135,32 @@ export abstract class BaseNetworkMember {
 
   async signJwt(jwtObject: any) {
     return this._keysService.signJWT(jwtObject)
+  }
+
+  /**
+   * @description claim credentials from credentialOfferRequestToken
+   * @param credentialOfferRequestToken
+   * @return claimCredentials
+   */
+  async claimCredentials(credentialOfferRequestToken: string): Promise<any[]> {
+    const { isValid, errorCode, error } = await this._holderService.verifyCredentialOfferRequest(
+      credentialOfferRequestToken,
+    )
+    if (!isValid) {
+      if (errorCode) {
+        new SdkErrorFromCode(errorCode)
+      }
+
+      throw new Error(error)
+    }
+
+    const { interactionToken: callbackURL } = JwtService.fromJWT(credentialOfferRequestToken)
+    const credentialOfferResponseToken = this.createCredentialOfferResponseToken(credentialOfferRequestToken)
+    try {
+      const request = await fetch(callbackURL.replace(':token:', credentialOfferResponseToken))
+      return request.json()
+    } catch (error) {
+      throw new SdkErrorFromCode('COR-27', { callbackURL }, error)
+    }
   }
 }
