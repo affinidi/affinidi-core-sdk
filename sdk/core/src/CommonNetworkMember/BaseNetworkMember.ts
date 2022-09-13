@@ -1148,7 +1148,7 @@ export abstract class BaseNetworkMember {
     )
     if (!isValid) {
       if (errorCode) {
-        new SdkErrorFromCode(errorCode)
+        throw new SdkErrorFromCode(errorCode)
       }
 
       throw new Error(error)
