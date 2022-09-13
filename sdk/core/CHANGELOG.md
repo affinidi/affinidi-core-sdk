@@ -1,3 +1,5 @@
+# release 6.5.1 (2022-09-13)
+* add `claimCredentials` method 
 # release 6.5.0 (2022-09-06)
 * upgraded to npm 8;
 * eliminated pointing to `tsconfig.json`(this file name used by ts-node by default, but for node 16+ throws error) file in tests commands.

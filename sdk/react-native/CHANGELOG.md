@@ -1,3 +1,5 @@
+# release 6.4.1 (2022-09-13)
+* add `claimCredentials` method
 # release 6.4.0 (2022-09-06)
 * upgraded to npm 8;
 * updated vulnerable `typedoc` dependency.
