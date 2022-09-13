@@ -57,6 +57,7 @@
     - [Create Verifiable Presentation (Response on credential share request)](#create-verifiable-presentation-response-on-credential-share-request)
     - [Create Response on credential offer request](#create-response-on-credential-offer-request)
     - [Create Response on DID auth request](#create-response-on-did-auth-request)
+    - [Claim Credential from credential offer request](#claim-credential-from-credential-offer-request)
   - [Encrypted messages](#encrypted-messages)
     - [Create encrypted message](#create-encrypted-message)
     - [Read encrypted message](#read-encrypted-message)
@@ -868,6 +869,33 @@ Agree to recieve proposed credentials by the Issuer.
 ```ts
 const authDidResponseToken = await wallet.createDidAuthResponse(authDidRequestToken)
 ```
+
+#### Claim Credential from credential offer request
+Exchange `credentialOfferResponseToken` to a credentials from a callback url specified in request for offer.
+```ts
+const credentials = await wallet.claimCredentials(credentialOfferRequestToken)
+```
+
+Requirements to a callback endpoint 
+- accept `credentialOfferResponseToken` in a post body
+```json
+{
+  "credentialOfferResponseToken": "xxxxx.xxxxx.xxx"
+}
+```
+- return an array of credentials in a payload
+
+```json
+{
+  "vcs": []
+}
+```
+
+Expected errors 
+- `COR-26` & `COR-19` - `credentialOfferRequestToken` validation errors 
+- `COR-27` - failed to invoke callback url 
+- `COR-28` - unsuccessful callback invocation. 
+- `COR-29` - invalid response format. No credentials  
 
 ### Encrypted messages
 
