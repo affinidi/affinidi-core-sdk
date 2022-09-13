@@ -1155,8 +1155,11 @@ export abstract class BaseNetworkMember {
     }
 
     const {
-      interactionToken: { callbackURL },
+      payload: {
+        interactionToken: { callbackURL },
+      },
     } = JwtService.fromJWT(credentialOfferRequestToken)
+
     const credentialOfferResponseToken = this.createCredentialOfferResponseToken(credentialOfferRequestToken)
     let credentialsRequest
     let credentialsRequestBody
