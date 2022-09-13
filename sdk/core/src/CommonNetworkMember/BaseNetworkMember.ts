@@ -1052,7 +1052,7 @@ export abstract class BaseNetworkMember {
   /**
    * @description Retrieve all credentials
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
-   * @returns a single VC
+   * @returns  array of VC
    */
   async getAllCredentials(storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.getAllCredentials(storageRegion)
@@ -1062,7 +1062,7 @@ export abstract class BaseNetworkMember {
    * @description Retrieve only the credential
    * @param token (string) - specify credential share request token to filter
    * @param storageRegion (string) - (optional) specify region where credentials will be stored
-   * @returns a single VC
+   * @returns  array of VCs
    */
   async getCredentialsByShareToken(token: string, storageRegion?: string): Promise<any[]> {
     return this._walletStorageService.getCredentialsByShareToken(token, storageRegion)
@@ -1138,9 +1138,9 @@ export abstract class BaseNetworkMember {
   }
 
   /**
-   * @description claim credentials from credentialOfferRequestToken
+   * @description Claim credentials from credentialOfferRequestToken callback endpoint
    * @param credentialOfferRequestToken
-   * @return claimCredentials
+   * @return array of VCs
    */
   async claimCredentials(credentialOfferRequestToken: string): Promise<any[]> {
     const { isValid, errorCode, error } = await this._holderService.verifyCredentialOfferRequest(
@@ -1154,13 +1154,36 @@ export abstract class BaseNetworkMember {
       throw new Error(error)
     }
 
-    const { interactionToken: callbackURL } = JwtService.fromJWT(credentialOfferRequestToken)
+    const {
+      interactionToken: { callbackURL },
+    } = JwtService.fromJWT(credentialOfferRequestToken)
     const credentialOfferResponseToken = this.createCredentialOfferResponseToken(credentialOfferRequestToken)
+    let credentialsRequest
+    let credentialsRequestBody
     try {
-      const request = await fetch(callbackURL.replace(':token:', credentialOfferResponseToken))
-      return request.json()
+      credentialsRequest = await fetch(callbackURL, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Api-Key': this._options.accessApiKey,
+          'Content-Type': 'application/json',
+          'X-SDK-Version': extractSDKVersion(),
+        },
+        body: JSON.stringify({ credentialOfferResponseToken }),
+      })
+      credentialsRequestBody = await credentialsRequest.json()
     } catch (error) {
       throw new SdkErrorFromCode('COR-27', { callbackURL }, error)
     }
+
+    if (credentialsRequest.status !== 200) {
+      throw new SdkErrorFromCode('COR-28', { callbackURL, status: credentialsRequest.status }, credentialsRequestBody)
+    }
+
+    if (!(credentialsRequestBody && Array.isArray(credentialsRequestBody.vcs))) {
+      throw new SdkErrorFromCode('COR-29', { callbackURL }, credentialsRequestBody)
+    }
+
+    return credentialsRequestBody.vcs
   }
 }
