@@ -21,6 +21,8 @@ import { testPlatformTools } from '../helpers/testPlatformTools'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { createUserManagementService } from '../../src/shared/createUserManagementService'
 import signedCredential from '../factory/signedCredential'
+import { generatePassword } from '../../src/shared/generatePassword'
+import nock from 'nock'
 
 const {
   PASSWORD,
@@ -1249,5 +1251,196 @@ describe('CommonNetworkMember', () => {
     )
 
     expect(cnmByCreateWallet.did).to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
+  })
+
+  it('#claimCredentials success case', async () => {
+    const holderWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+    const issuerWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+
+    const renderInfo = {}
+    const callbackHost = 'https://test-issuer.affinidi.io'
+    const callbackPath = '/vc'
+    const callbackUrl = `${callbackHost}${callbackPath}`
+
+    const offeredCredentials = [
+      {
+        type: 'PhoneCredentialPersonV1',
+        renderInfo,
+      },
+    ]
+    const vc = await issuerWallet.signUnsignedCredential(
+      buildVCV1Unsigned({
+        skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+          credentialSubject: {
+            data: {
+              '@type': ['Person', 'PersonE', 'PhonePerson'],
+              telephone: '555 555 5555',
+            },
+          },
+          holder: { id: holderWallet.did },
+          type: 'PhoneCredentialPersonV1',
+          context: getVCPhonePersonV1Context(),
+        }),
+        issuanceDate: new Date().toISOString(),
+      }),
+    )
+    nock(callbackHost)
+      .post(callbackPath, /credentialOfferResponseToken/gi)
+      .reply(200, { vcs: [vc] })
+
+    const requestForOffer = await issuerWallet.generateCredentialOfferRequestToken(offeredCredentials, {
+      callbackUrl,
+    })
+    const claimedVcs = await holderWallet.claimCredentials(requestForOffer)
+    expect(claimedVcs).to.be.deep.equal([vc])
+    nock.cleanAll()
+  })
+
+  it('#claimCredentials. callback failure', async () => {
+    const holderWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+    const issuerWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+
+    const renderInfo = {}
+    const callbackHost = 'https://test-issuer.affinidi.io'
+    const callbackPath = '/vc'
+    const callbackUrl = `${callbackHost}${callbackPath}`
+
+    const offeredCredentials = [
+      {
+        type: 'PhoneCredentialPersonV1',
+        renderInfo,
+      },
+    ]
+
+    nock(callbackHost)
+      .post(callbackPath, /credentialOfferResponseToken/gi)
+      .reply(404, {})
+
+    const requestForOffer = await issuerWallet.generateCredentialOfferRequestToken(offeredCredentials, {
+      callbackUrl,
+    })
+    try {
+      await holderWallet.claimCredentials(requestForOffer)
+    } catch (error) {
+      const { code } = error
+      expect(code).to.eql('COR-28')
+    }
+
+    nock.cleanAll()
+  })
+
+  it('#claimCredentials. callback failure. Invalid url', async () => {
+    const holderWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+    const issuerWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+
+    const renderInfo = {}
+
+    const offeredCredentials = [
+      {
+        type: 'PhoneCredentialPersonV1',
+        renderInfo,
+      },
+    ]
+    const requestForOffer = await issuerWallet.generateCredentialOfferRequestToken(offeredCredentials, {
+      callbackUrl: 'a',
+    })
+    try {
+      await holderWallet.claimCredentials(requestForOffer)
+    } catch (error) {
+      console.log({ error })
+      const { code } = error
+      expect(code).to.eql('COR-27')
+    }
+  })
+
+  it('#claimCredentials. callback failure. no credentials ', async () => {
+    const holderWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+    const issuerWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+
+    const renderInfo = {}
+    const callbackHost = 'https://test-issuer.affinidi.io'
+    const callbackPath = '/vc'
+    const callbackUrl = `${callbackHost}${callbackPath}`
+
+    const offeredCredentials = [
+      {
+        type: 'PhoneCredentialPersonV1',
+        renderInfo,
+      },
+    ]
+
+    nock(callbackHost)
+      .post(callbackPath, /credentialOfferResponseToken/gi)
+      .reply(200, { a: {} })
+
+    const requestForOffer = await issuerWallet.generateCredentialOfferRequestToken(offeredCredentials, {
+      callbackUrl,
+    })
+    try {
+      await holderWallet.claimCredentials(requestForOffer)
+    } catch (error) {
+      const { code } = error
+      expect(code).to.eql('COR-29')
+    }
+
+    nock.cleanAll()
+  })
+
+  // long running test
+  it.skip('#claimCredentials. expired ', async () => {
+    function sleep(ms: number) {
+      return new Promise((resolve) => setTimeout(resolve, ms))
+    }
+
+    const holderWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+    const issuerWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+
+    const renderInfo = {}
+    const callbackHost = 'https://test-issuer.affinidi.io'
+    const callbackPath = '/vc'
+    const callbackUrl = `${callbackHost}${callbackPath}`
+
+    const offeredCredentials = [
+      {
+        type: 'PhoneCredentialPersonV1',
+        renderInfo,
+      },
+    ]
+    const requestForOffer = await issuerWallet.generateCredentialOfferRequestToken(offeredCredentials, {
+      callbackUrl,
+      expiresAt: new Date(new Date().getTime() + 1000).toISOString(),
+    })
+    await sleep(1500)
+    try {
+      await holderWallet.claimCredentials(requestForOffer)
+    } catch (error) {
+      const { code } = error
+      expect(code).to.eql('COR-19')
+    }
+  })
+
+  it('#claimCredentials. invalid signature ', async () => {
+    const holderWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+    const issuerWallet = await AffinidiWallet.createWallet(options, await generatePassword())
+
+    const renderInfo = {}
+
+    const offeredCredentials = [
+      {
+        type: 'PhoneCredentialPersonV1',
+        renderInfo,
+      },
+    ]
+    const requestForOffer = await issuerWallet.generateCredentialOfferRequestToken(offeredCredentials, {
+      callbackUrl: 'wwww.affinidi.io',
+    })
+    const invalidRequestForOffer = requestForOffer.slice(0, -1)
+    try {
+      await holderWallet.claimCredentials(invalidRequestForOffer)
+    } catch (error) {
+      const { code } = error
+      expect(code).to.eql('COR-26')
+    }
   })
 })

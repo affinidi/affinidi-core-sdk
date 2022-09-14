@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-core-sdk",
-  "version": "6.5.0",
+  "version": "6.5.1",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -47,6 +47,7 @@
     "@affinidi/internal-api-clients": "^1.6.0",
     "@affinidi/issuer-email-ses-client": "^0.1.1",
     "@affinidi/issuer-phone-twilio-client": "^0.1.1",
+    "@affinidi/platform-fetch": "^1.1.0",
     "@affinidi/tools-common": "^1.2.0",
     "@affinidi/url-resolver": "^1.2.0",
     "@affinidi/user-management": "^1.5.0",

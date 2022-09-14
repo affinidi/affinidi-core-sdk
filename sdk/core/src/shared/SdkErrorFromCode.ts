@@ -147,6 +147,26 @@ export default class SdkErrorFromCode extends SdkError {
         message: 'did method: {{didMethod}} not supported. Supported methods: {{supportedDidMethods}}',
         httpStatusCode: 409,
       },
+      'COR-26': {
+        type: 'InvalidParametersError',
+        message: 'Signature on token is invalid',
+        httpStatusCode: 401,
+      },
+      'COR-27': {
+        type: 'OperationError',
+        message: 'failed to claim credential via {{callbackURL}}, status code',
+        httpStatusCode: 400,
+      },
+      'COR-28': {
+        type: 'OperationError',
+        message: 'failed to claim credential via {{callbackURL}}, status code {{status}}',
+        httpStatusCode: 400,
+      },
+      'COR-29': {
+        type: 'OperationError',
+        message: 'failed to claim credential via {{callbackURL}} no credentials provided',
+        httpStatusCode: 400,
+      },
     }
   }
 }
