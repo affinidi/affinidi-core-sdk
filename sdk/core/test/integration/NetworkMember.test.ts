@@ -619,7 +619,7 @@ describe('CommonNetworkMember', () => {
     const affinity = new Affinity(affinityOptions, testPlatformTools)
     const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeed, password)
 
-    const sucessResult = await affinity.validateCredential(createdCredential)
+    const sucessResult = await commonNetworkMember.validateCredential(createdCredential)
     expect(sucessResult.result).to.equal(true)
   })
 
