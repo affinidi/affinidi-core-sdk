@@ -709,7 +709,7 @@ export abstract class BaseNetworkMember {
     return this.signUnsignedCredential(unsignedCredential, keyType)
   }
 
-  async validateCredential(signedCredential: any) {
+  async validateCredential(signedCredential: SignedCredential) {
     return this._affinity.validateCredential(signedCredential)
   }
 
