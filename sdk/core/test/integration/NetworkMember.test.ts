@@ -592,6 +592,37 @@ describe('CommonNetworkMember', () => {
     expect(suppliedCredentials).to.exist
   })
 
+  it('#validateCredential', async () => {
+    const fullOptions = getAllOptionsForEnvironment()
+    const commonNetworkMember = new AffinidiWallet(REVOCATION_PASSWORD, REVOCATION_ENCRYPTED_SEED, fullOptions)
+    const holderDid = commonNetworkMember.did
+
+    const credId = new Date().toISOString()
+    const unsignedCredential = buildVCV1Unsigned({
+      skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
+        id: `credId:${credId}`,
+        credentialSubject: {
+          data: {
+            '@type': ['Person', 'PersonE', 'PhonePerson'],
+            telephone: '+1 555 555 5555',
+          },
+        },
+        holder: { id: holderDid },
+        type: 'PhoneCredentialPersonV1',
+        context: getVCPhonePersonV1Context(),
+      }),
+      issuanceDate: new Date().toISOString(),
+      expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
+    })
+
+    const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
+    const affinity = new Affinity(affinityOptions, testPlatformTools)
+    const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeed, password)
+
+    const sucessResult = await affinity.validateCredential(createdCredential)
+    expect(sucessResult.result).to.equal(true)
+  })
+
   it('#verifyCredentialShareResponseToken function to pull request token passed', async () => {
     const credentialShareRequestToken =
       'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJpbnRlcmFjdGlvblRva2VuIjp7ImNyZWRlbnRpYWxSZXF1aXJlbWVudHMiOlt7InR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJOYW1lQ3JlZGVudGlhbFBlcnNvblYxIl0sImNvbnN0cmFpbnRzIjpbeyI9PSI6W3sidmFyIjoiaXNzdWVyIn0sImRpZDplbGVtOkVpQmJmRXJyZ3FTU3ZBa19sM2pESXhXcUhhRWJDQUlKT2Uxb2JLMHB5ZmpqUnc7ZWxlbTppbml0aWFsLXN0YXRlPWV5SndjbTkwWldOMFpXUWlPaUpsZVVwMlkwZFdlVmxZVW5CaU1qUnBUMmxLYW1OdFZtaGtSMVZwVEVOS2NtRlhVV2xQYVVscVkwaEtjR0pYUm5sbFUwbHpTVzFHYzFwNVNUWkphMVpVVFdwVk1sTjVTamtpTENKd1lYbHNiMkZrSWpvaVpYbEtRVmt5T1hWa1IxWTBaRU5KTmtsdGFEQmtTRUo2VDJrNGRtUjZUbkJhUXpWMlkyMWpkbHBIYkd0TU0xbDRTV2wzYVdOSVZtbGlSMnhxVXpKV05VbHFjR0psZVVwd1drTkpOa2xwVG5kamJXeDBXVmhLTlVscGQybGtXRTVvV2pKVmFVOXBTbnBoVjJSMVlWYzFia2xwZDJsa1NHeDNXbE5KTmtsc1RteFpNMEY1VGxSYWNrMVdXbXhqYld4dFlWZE9hR1JIYkhaaWEzUnNaVlJKZDAxVVoybE1RMHAzWkZkS2MyRlhUa3hhV0d4SldsaG5hVTlwU1hkTk1sbDRUVWRPYkZsdFdUQlpha1V3VG1wQmVFMVVSWGxPYW1kNVdYcE9iVTVFVVhsTk1sVjRXVmRhYkU5WFNUQlpNa1YzV2xSTmVrMXFVWGhPYlVwdFdWUmpkMDVFVm1wT2VrSnBXa1JHYVU1SFNUVlpha1ZwWmxONE4wbHRiR3RKYW05cFNUTktiRmt5T1RKYVdFbzFTV2wzYVdSWVRtaGFNbFZwVDJsS2VWcFhUblprYlZaNVpWTkpjMGx1VWpWalIxVnBUMmxLVkZwWFRuZE5hbFV5WVhwR1YxcFlTbkJhYld4cVdWaFNjR0l5TlV4YVdHdDVUVVJGTkVscGQybGpTRlpwWWtkc2FsTXlWalZUUjFZMFNXcHZhVTFFVFRGTk1rMDFUMVJHYUU0eVdUUk5NbHBwV1ZkU2JWcHFVWGxaTWxac1QxUldiRnBxVVRST1IwbDNUMVJrYlU1VVJURmFWRXByV2tkVk1VMVVWWGRPYW14clRsUkJNbGxYVFhoTlZFazFUVVJhYUZsWFVUVkpiakZrWmxFaUxDSnphV2R1WVhSMWNtVWlPaUpVTVU1aVVpMVhhemRhWjNaTk5GWjJRVTlxTjB0SFpVOU9ZVWx4YTIxa1J6QkRkMVUyWDBOUVlqVkpXV3czYkRGNVZUQXhRbmh3VVZoemJVNURhV0l6Y2xCeFZFWlRhSFJGWHpKTVQyWmliMjFCV1U5VFVTSjkiXX1dfV0sImNhbGxiYWNrVVJMIjoiIn0sImV4cCI6MTYwMzEzMTkyMzgxNywidHlwIjoiY3JlZGVudGlhbFJlcXVlc3QiLCJqdGkiOiI4MWFhMzEwMzBkNjQ1YWYwIiwiaXNzIjoiZGlkOmVsZW06RWlCOVIwd2JRR3JMaTNwRWVIYnBROXVMcVZiSm5Va0UxMkRQaGcySEpHd2JqQTtlbGVtOmluaXRpYWwtc3RhdGU9ZXlKd2NtOTBaV04wWldRaU9pSmxlVXAyWTBkV2VWbFlVbkJpTWpScFQybEthbU50Vm1oa1IxVnBURU5LY21GWFVXbFBhVWxxWTBoS2NHSlhSbmxsVTBselNXMUdjMXA1U1RaSmExWlVUV3BWTWxONVNqa2lMQ0p3WVhsc2IyRmtJam9pWlhsS1FWa3lPWFZrUjFZMFpFTkpOa2x0YURCa1NFSjZUMms0ZG1SNlRuQmFRelYyWTIxamRtTXlWbXBrV0Vwd1pFaHJkbVJxU1dsTVEwcDNaRmRLYzJGWFRreGFXR3RwVDJ4ME4wbHRiR3RKYW05cFNUTkNlV0ZYTVdoamJtdHBURU5LTVdNeVJtNWFVMGsyU1c1T2NGb3lOWEJpYldOcFRFTktNR1ZZUW14SmFtOXBWVEpXYW1ORVNURk9iWE40Vm0xV2VXRlhXbkJaTWtZd1lWYzVkVk15VmpWTmFrRjRUME5KYzBsdVFqRlpiWGh3V1RCMGJHVlZhR3hsUTBrMlNXcEJlbHBxUlhkWk1sWnBXbXBTYVUxVVVUSk5SRVY0VFZSSk1rOUVTbXBOTWxrd1RrUkplbHBVUm1oYWJWVTFXV3BTYWxsVVFteE5lazE1VGtSRk1sbHRXbWhPZWtFd1RsZE5NMDFIU210TlYwa3dXV3BzYVUxVFNqbE1TSE5wWVZkUmFVOXBTV3BqYlZacVlqTmFiR051YTJsTVEwb3hZekpHYmxwVFNUWkpia3BzV1RJNU1scFlTalZKYVhkcFpFaHNkMXBUU1RaSmJFNXNXVE5CZVU1VVduSk5WbHBzWTIxc2JXRlhUbWhrUjJ4MlltdDBiR1ZVU1hkTlZHZHBURU5LZDJSWFNuTmhWMDVNV2xoc1NWcFlaMmxQYVVsM1RYcFZlbGw2YXpWTlYwVXpXbXBuZWxwdFNtaGFSMXB0VGtSS2FscFhWVFZPVjFadFRrUm5NRmxxUVRWT01sa3hUVlJXYkUxdFVtdGFWRlY0VGxSQk1rOVhVVEZOUkZwb1dYcEZlRTFxYTNkT2JVWm9Xa1JyYVdaV01ITkpiVVl4WkVkb2JHSnVVbkJaTWtZd1lWYzVkVWxxY0dKSmFVNTNZMjFzZEZsWVNqVkpiREJ6U1cxR2VtTXlWbmxrUjJ4Mlltc3hiR1JIYUhaYVEwazJWM2xKYW1OSVNuQmlWMFo1WlZOS1pHWlJJaXdpYzJsbmJtRjBkWEpsSWpvaWJuWk9UMTl4WWxKUGRqSlJhREJmZVY5ek1WWTRkRzVIWHpsamJYRlhaakpVU0RONWJ6TnRWRlZNV1RScVJYVnFWVVZHTW5GdU9YWkpiVXhpTW1aeWFHNW9NRWRxV2t0c09FWkZSSGN3YTNwVGRIUk1UR2NpZlEjcHJpbWFyeSJ9.64e3ac5723d78409890770baa2e98f1ccdfdd8b8b41a94c4720aa5b4d909911909df4c4815767bf5e0f9d3f1d98ef9efce982a228d81039989a3456aa0af3a14'
