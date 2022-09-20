@@ -595,8 +595,31 @@ describe('CommonNetworkMember', () => {
   it('#validateCredential', async () => {
     const fullOptions = getAllOptionsForEnvironment()
     const commonNetworkMember = new AffinidiWallet(REVOCATION_PASSWORD, REVOCATION_ENCRYPTED_SEED, fullOptions)
+    const holderDid = commonNetworkMember.did
 
-    const sucessResult = await commonNetworkMember.validateCredential(signedCredential)
+    const credId = new Date().toISOString()
+    const unsignedCredential = buildVCV1Unsigned({
+      skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
+        id: `credId:${credId}`,
+        credentialSubject: {
+          data: {
+            '@type': ['Person', 'PersonE', 'PhonePerson'],
+            telephone: '+1 555 555 5555',
+          },
+        },
+        holder: { id: holderDid },
+        type: 'PhoneCredentialPersonV1',
+        context: getVCPhonePersonV1Context(),
+      }),
+      issuanceDate: new Date().toISOString(),
+      expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
+    })
+
+    const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
+    const affinity = new Affinity(affinityOptions, testPlatformTools)
+    const signedCredential = await affinity.signCredential(unsignedCredential, encryptedSeed, password)
+
+    const sucessResult = await commonNetworkMember.validateCredential(signedCredential as SignedCredential)
     expect(sucessResult.result).to.equal(true)
   })
 
