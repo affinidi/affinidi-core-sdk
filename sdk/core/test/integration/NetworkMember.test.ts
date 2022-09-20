@@ -617,7 +617,12 @@ describe('CommonNetworkMember', () => {
 
     const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
     const affinity = new Affinity(affinityOptions, testPlatformTools)
-    const signedCredential = await affinity.signCredential(unsignedCredential, encryptedSeed, password)
+    const signedCredential = await affinity.signCredential(
+      unsignedCredential,
+      REVOCATION_ENCRYPTED_SEED,
+      REVOCATION_PASSWORD,
+    )
+    console.log(signedCredential)
 
     const sucessResult = await commonNetworkMember.validateCredential(signedCredential as SignedCredential)
     expect(sucessResult.result).to.equal(true)
