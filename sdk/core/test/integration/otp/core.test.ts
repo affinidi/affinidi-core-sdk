@@ -606,12 +606,7 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     it('allows to change email after password was reset for user registered with email', async () => {
       const { inbox, originalNetworkMember } = await createUser()
-      try {
-        await originalNetworkMember.logOut()
-      } catch (e) {
-        console.warn('first logout')
-        console.warn(e)
-      }
+      await originalNetworkMember.logOut()
 
       const newInbox = createInbox()
       const newPassword = COGNITO_PASSWORD
@@ -630,12 +625,7 @@ parallel('CommonNetworkMember [OTP]', () => {
         const changeUsernameOtp = await waitForOtpCode(newInbox)
 
         await commonNetworkMember.completeChangeEmailOrPhone(changeToken, changeUsernameOtp)
-        try {
-          await commonNetworkMember.logOut()
-        } catch (e) {
-          console.warn('second logout')
-          console.warn(e)
-        }
+        await commonNetworkMember.logOut()
       }
 
       {
