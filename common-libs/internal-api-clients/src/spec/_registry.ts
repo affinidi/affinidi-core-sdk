@@ -60,9 +60,6 @@ export default {
           },
           "publicKeyBase58": {
             "type": "string"
-          },
-          "origin": {
-            "type": "string"
           }
         },
         "required": [
