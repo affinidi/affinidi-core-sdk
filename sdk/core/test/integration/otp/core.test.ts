@@ -609,7 +609,8 @@ parallel('CommonNetworkMember [OTP]', () => {
       try {
         await originalNetworkMember.logOut()
       } catch (e) {
-        console.log('first', e)
+        console.warn('first logout')
+        console.warn(e)
       }
 
       const newInbox = createInbox()
@@ -632,7 +633,8 @@ parallel('CommonNetworkMember [OTP]', () => {
         try {
           await commonNetworkMember.logOut()
         } catch (e) {
-          console.log('second', e)
+          console.warn('second logout')
+          console.warn(e)
         }
       }
 
