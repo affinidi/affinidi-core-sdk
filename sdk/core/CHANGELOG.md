@@ -1,3 +1,8 @@
+# release 6.5.1 (2022-09-13)
+* add `claimCredentials` method 
+# release 6.5.0 (2022-09-06)
+* upgraded to npm 8;
+* eliminated pointing to `tsconfig.json`(this file name used by ts-node by default, but for node 16+ throws error) file in tests commands.
 # release 6.4.0 (2022-08-16)
 * added `expiresAt` field as an additional optional field for the `createCredentialShareResponseToken` to help to manage the token expiration period
 # release 6.3.2 (2022-08-15)

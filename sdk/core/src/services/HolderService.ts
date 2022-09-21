@@ -223,4 +223,21 @@ export default class HolderService {
       throw new Error('Token expired')
     }
   }
+  async verifyCredentialOfferRequest(credentialOfferRequestToken: string) {
+    try {
+      await this._affinityService.validateJWT(credentialOfferRequestToken)
+    } catch (error) {
+      if (error.message === 'Token expired') {
+        return { isValid: false, errorCode: 'COR-19', error: error.message }
+      }
+
+      if (error.message === 'Signature on token is invalid') {
+        return { isValid: false, errorCode: 'COR-26', error: error.message }
+      }
+
+      return { isValid: false, errorCode: '', error: error.message }
+    }
+
+    return { isValid: true, error: '', errorCode: '' }
+  }
 }

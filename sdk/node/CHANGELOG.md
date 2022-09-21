@@ -1,3 +1,9 @@
+# release 6.5.1 (2022-09-13)
+* add `claimCredentials` method
+# release 6.5.0 (2022-09-06)
+* upgraded to npm 8;
+* updated vulnerable `@mattrglobal/jsonld-signatures-bbs` dependency;
+* added `overrides` field to override vulnerable `node-forge` sub dependency(npm version >= 8.10.x).
 # release 6.4.2 (2022-08-15)
 * updated `@affinidi/affinidi-did-auth-lib` (did equality check uses short form)
 # release 6.4.1 (2022-08-01)

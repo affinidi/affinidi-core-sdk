@@ -1,5 +1,7 @@
-# release 1.5.2 (2022-07-22)
-* Added `origin` to `CreateAnchorTransactionInput`
+# release 1.6.0 (2022-09-06)
+* upgraded to npm 8;
+* updated `ts-node` and `typedoc` versions;
+* switched off error on `no-unused-vars` lint rule.
 # release 1.5.1 (2022-07-22)
 * Updated `tools-openapi` version
 # release 1.5.0 (2022-07-08)

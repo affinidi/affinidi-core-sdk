@@ -1,3 +1,6 @@
+# release 1.2.0 (2022-09-06)
+* upgraded to npm 8;
+* updated `typedoc` version.
 # release 1.1.3 (2022-07-22)
 * added `text/html` and unexpected content-type error handling
 # release 1.1.2 (2022-06-22)
