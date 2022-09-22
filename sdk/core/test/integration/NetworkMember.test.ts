@@ -622,7 +622,6 @@ describe('CommonNetworkMember', () => {
       REVOCATION_ENCRYPTED_SEED,
       REVOCATION_PASSWORD,
     )
-    console.log(signedCredential)
 
     const sucessResult = await commonNetworkMember.validateCredential(signedCredential as SignedCredential)
     expect(sucessResult.result).to.equal(true)
