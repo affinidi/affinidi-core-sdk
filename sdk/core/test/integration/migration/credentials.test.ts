@@ -40,7 +40,7 @@ const createMigrationHelper = () => {
   })
 }
 
-describe('Bloom vault when migration server is UP', () => {
+describe.skip('Bloom vault when migration server is UP', () => {
   let randomCredentials: SignedCredential[]
 
   before(async () => {
