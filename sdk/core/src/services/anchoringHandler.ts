@@ -20,6 +20,7 @@ type AnchoringParams = {
     didDocument: any
     seedHex: string
   }
+  origin?: string
 }
 
 const computePreparedJoloParams = async ({ registry, keysService, nonce, additionalJoloParams }: AnchoringParams) => {
@@ -88,6 +89,7 @@ export const anchorDid = async (params: AnchoringParams): Promise<{ did: string 
     ...preparedParams,
     nonce,
     anchoredDidElem,
+    origin: params.origin,
   })
 
   return { did: response.body.did }

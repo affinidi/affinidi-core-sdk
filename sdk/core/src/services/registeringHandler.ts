@@ -12,6 +12,7 @@ export const register = async (
   platformCryptographyTools: IPlatformCryptographyTools,
   password: string,
   keyOptions?: KeyOptions,
+  origin?: string,
 ) => {
   const isAnchoredSeed = didMethod === ELEM_ANCHORED_DID_METHOD
 
@@ -32,6 +33,7 @@ export const register = async (
       didDocument,
       seedHex: parseDecryptedSeed(seedWithMethod).seed.toString('hex'),
     },
+    origin,
   })
 
   if (isAnchoredSeed) {
