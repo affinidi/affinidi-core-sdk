@@ -1160,7 +1160,7 @@ export abstract class BaseNetworkMember {
       },
     } = JwtService.fromJWT(credentialOfferRequestToken)
 
-    const credentialOfferResponseToken = this.createCredentialOfferResponseToken(credentialOfferRequestToken)
+    const credentialOfferResponseToken = await this.createCredentialOfferResponseToken(credentialOfferRequestToken)
     let credentialsRequest
     let credentialsRequestBody
     try {
