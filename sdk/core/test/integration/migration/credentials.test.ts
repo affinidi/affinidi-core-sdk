@@ -178,14 +178,14 @@ describe('Bloom vault when migration server is UP', () => {
     await commonNetworkMember.deleteAllCredentials()
   })
 
-  it('should getAllCredentials if migration not started and migration service is up', async () => {
+  it.skip('should getAllCredentials if migration not started and migration service is up', async () => {
     const commonNetworkMember = new AffinidiWallet(password, encryptedSeedElem, options)
     const result = await commonNetworkMember.getAllCredentials()
 
     expect(result).to.eql(randomCredentials)
   })
 
-  it('should getAllCredentials on v6 wallet', async () => {
+  it.skip('should getAllCredentials on v6 wallet', async () => {
     const commonNetworkMember = await AffinidiWalletV6.openWalletByEncryptedSeed(options, encryptedSeedElem, password)
     const result = await commonNetworkMember.getAllCredentials()
 
@@ -205,7 +205,7 @@ describe('Migration helper works properly', () => {
     reqheaders['X-SDK-Version'] = extractSDKVersion()
   })
 
-  it('should return actions', async () => {
+  it.skip('should return actions', async () => {
     const migrationHelper = createMigrationHelper()
     const actions = await migrationHelper.getMigrationActions()
 
@@ -220,7 +220,7 @@ describe('Migration helper works properly', () => {
     expect(actions.shouldFetchCredentials).to.be.oneOf([true, false])
   })
 
-  it('should check migrateCredentials fails with dummy bloomDid', async () => {
+  it.skip('should check migrateCredentials fails with dummy bloomDid', async () => {
     const migrationHelper = createMigrationHelper()
     try {
       await migrationHelper.migrateCredentials(
