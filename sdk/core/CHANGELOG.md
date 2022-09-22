@@ -1,3 +1,5 @@
+# release 6.7.0 (2022-09-21)
+* Expose `validateCredential method` to `BaseNetworkMember`
 # release 6.6.0 (2022-09-21)
 * Added `origin` to `AnchorDidInput`
 # release 6.5.2 (2022-09-21)
