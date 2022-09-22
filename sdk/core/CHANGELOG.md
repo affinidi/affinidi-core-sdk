@@ -1,3 +1,7 @@
+# release 6.6.0 (2022-09-21)
+* Added `origin` to `AnchorDidInput`
+# release 6.5.2 (2022-09-21)
+* fix `credentialOfferResponseToken` method 
 # release 6.5.1 (2022-09-13)
 * add `claimCredentials` method 
 # release 6.5.0 (2022-09-06)

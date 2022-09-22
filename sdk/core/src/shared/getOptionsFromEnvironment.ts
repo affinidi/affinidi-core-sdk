@@ -119,6 +119,7 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
     clientId,
     userPoolId,
     region,
+    origin,
     ...otherOptions
   } = options
 
@@ -144,11 +145,12 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
     },
     storageRegion,
     otherOptions,
+    origin,
   }
 }
 
 export const getOptionsFromEnvironment = (options: SdkOptions) => {
-  const { region, accessApiKeyOptions, environmentOptions, storageRegion, otherOptions } = splitOptions(options)
+  const { region, accessApiKeyOptions, environmentOptions, storageRegion, otherOptions, origin } = splitOptions(options)
 
   return {
     region: region || DEFAULT_COGNITO_REGION,
@@ -156,6 +158,7 @@ export const getOptionsFromEnvironment = (options: SdkOptions) => {
     accessApiKey: getAccessApiKeyFromOptions(accessApiKeyOptions),
     storageRegion,
     otherOptions,
+    origin,
   }
 }
 

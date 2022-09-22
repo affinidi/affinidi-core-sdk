@@ -219,7 +219,7 @@ export abstract class BaseNetworkMember {
     } = options
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
-    return register(api, didMethod, dependencies.platformCryptographyTools, password, keyOptions)
+    return register(api, didMethod, dependencies.platformCryptographyTools, password, keyOptions, options.origin)
   }
 
   protected static async _anchorDid(
@@ -227,7 +227,7 @@ export abstract class BaseNetworkMember {
     password: string,
     didDocument: any,
     nonce: number,
-    { basicOptions: { registryUrl }, accessApiKey }: ParsedOptions,
+    { basicOptions: { registryUrl }, accessApiKey, origin }: ParsedOptions,
   ) {
     const registry = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const keysService = new KeysService(encryptedSeed, password)
@@ -244,6 +244,7 @@ export abstract class BaseNetworkMember {
         didDocument,
         seedHex: seed.toString('hex'),
       },
+      origin: origin || '',
     })
   }
 

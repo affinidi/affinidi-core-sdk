@@ -122,6 +122,10 @@ export class SdkOptions {
   @IsString()
   @IsOptional()
   region?: string
+
+  @IsString()
+  @IsOptional()
+  origin?: string
 }
 
 export class MessageParameters {
