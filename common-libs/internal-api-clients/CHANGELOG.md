@@ -1,4 +1,4 @@
-# release 1.6.1 (2022-09-21)
+# release 1.7.0 (2022-09-21)
 * Added `origin` to `AnchorDidInput`
 # release 1.6.0 (2022-09-06)
 * upgraded to npm 8;
