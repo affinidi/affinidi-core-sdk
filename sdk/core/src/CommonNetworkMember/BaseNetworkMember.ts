@@ -104,18 +104,8 @@ export abstract class BaseNetworkMember {
       throw new Error('`did`, `didDocumentKeyId`, `encryptedSeed` and `password` must be provided!')
     }
 
-    const { accessApiKey, basicOptions, storageRegion, otherOptions } = options
-    const {
-      issuerUrl,
-      revocationUrl,
-      metricsUrl,
-      registryUrl,
-      verifierUrl,
-      bloomVaultUrl,
-      affinidiVaultUrl,
-      migrationUrl,
-    } = basicOptions
-    const queryBloomVault = otherOptions.queryBloomVault === false ? false : true
+    const { accessApiKey, basicOptions, storageRegion } = options
+    const { issuerUrl, revocationUrl, metricsUrl, registryUrl, verifierUrl, affinidiVaultUrl } = basicOptions
     const keysService = new KeysService(encryptedSeed, password)
     const keyVault = new LocalKeyVault(keysService)
     const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault })
@@ -141,13 +131,10 @@ export abstract class BaseNetworkMember {
       didAuthAdapter,
     })
     this._walletStorageService = new WalletStorageService(keysService, platformCryptographyTools, {
-      bloomVaultUrl,
       affinidiVaultUrl,
       accessApiKey,
       storageRegion,
       didAuthAdapter,
-      migrationUrl,
-      queryBloomVault,
     })
     this._holderService = new HolderService(
       { registryUrl, metricsUrl, accessApiKey },

@@ -23,7 +23,6 @@ export const getAllOptionsForEnvironment = () => {
   const env = environment
 
   const urls = {
-    bloomVaultUrl: resolveUrl(Service.BLOOM_VAUlT, env),
     affinidiVaultUrl: resolveUrl(Service.VAULT, env),
     registryUrl: resolveUrl(Service.REGISTRY, env),
     revocationUrl: resolveUrl(Service.REVOCATION, env),

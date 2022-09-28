@@ -7,9 +7,7 @@ import { DidAuthAdapter } from '../shared/DidAuthAdapter'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import AffinidiVaultStorageService from './AffinidiVaultStorageService'
-import BloomVaultStorageService from './BloomVaultStorageService'
 import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
-import { CredentialLike } from '../dto/internal'
 
 const createHash = require('create-hash')
 
@@ -18,20 +16,15 @@ const sha256 = (data: unknown) => {
 }
 
 type ConstructorOptions = {
-  bloomVaultUrl: string
   affinidiVaultUrl: string
-  migrationUrl: string
   storageRegion: string
   accessApiKey: string
   didAuthAdapter: DidAuthAdapter
-  queryBloomVault: boolean
 }
 
 @profile()
 export default class WalletStorageService {
   private _storageRegion
-  private _queryBloomVault
-  private _bloomVaultStorageService
   private _affinidiVaultStorageService
 
   constructor(
@@ -40,7 +33,6 @@ export default class WalletStorageService {
     options: ConstructorOptions,
   ) {
     this._storageRegion = options.storageRegion
-    this._queryBloomVault = options.queryBloomVault
 
     const encryptionService = new AffinidiVaultEncryptionService(keysService, platformCryptographyTools)
 
@@ -48,14 +40,6 @@ export default class WalletStorageService {
       didAuthAdapter: options.didAuthAdapter,
       accessApiKey: options.accessApiKey,
       vaultUrl: options.affinidiVaultUrl,
-    })
-
-    this._bloomVaultStorageService = new BloomVaultStorageService(keysService, platformCryptographyTools, {
-      accessApiKey: options.accessApiKey,
-      vaultUrl: options.bloomVaultUrl,
-      didAuthAdapter: options.didAuthAdapter,
-      encryptionService,
-      migrationUrl: options.migrationUrl,
     })
   }
 
@@ -102,29 +86,7 @@ export default class WalletStorageService {
   private async _getCredentialsByTypes(storageRegion?: string, types?: string[][]) {
     storageRegion = storageRegion || this._storageRegion
 
-    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion, types)
-    let bloomCredentials: CredentialLike[] = []
-    // should be deleted during migration to affinidi-vault Phase #2
-    if (this._queryBloomVault) {
-      bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion, types)
-    }
-
-    return this._uniqueCredentials([...credentials, ...bloomCredentials])
-  }
-
-  private async _uniqueCredentials(credentials: any[]) {
-    const uniqueMap = new Map()
-    const uniqueCredentials = credentials.filter((credential) => {
-      const jsonCredentials = JSON.stringify(credential)
-      if (uniqueMap.has(jsonCredentials)) {
-        return false
-      }
-
-      uniqueMap.set(jsonCredentials, {})
-      return true
-    })
-
-    return uniqueCredentials
+    return this._affinidiVaultStorageService.searchCredentials(storageRegion, types)
   }
 
   public async saveCredentials(credentials: any[], storageRegion?: string) {
@@ -138,15 +100,7 @@ export default class WalletStorageService {
   public async getAllCredentials(storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
-    const credentials = await this._affinidiVaultStorageService.searchCredentials(storageRegion)
-
-    // should be deleted during migration to affinidi-vault Phase #2
-    let bloomCredentials: CredentialLike[] = []
-    if (this._queryBloomVault) {
-      bloomCredentials = await this._bloomVaultStorageService.searchCredentials(storageRegion)
-    }
-
-    return this._uniqueCredentials([...credentials, ...bloomCredentials])
+    return await this._affinidiVaultStorageService.searchCredentials(storageRegion)
   }
 
   public async getCredentialsByShareToken(token: string, storageRegion?: string) {
@@ -177,31 +131,13 @@ export default class WalletStorageService {
   public async getCredentialById(credentialId: string, storageRegion?: string): Promise<any> {
     storageRegion = storageRegion || this._storageRegion
 
-    try {
-      return await this._affinidiVaultStorageService.getCredentialById(credentialId, storageRegion)
-    } catch (error) {
-      // should be deleted during migration to affinidi-vault Phase #2
-      if (error.code === 'AVT-2' && this._queryBloomVault) {
-        return await this._bloomVaultStorageService.getCredentialById(credentialId, storageRegion)
-      }
-
-      throw error
-    }
+    return await this._affinidiVaultStorageService.getCredentialById(credentialId, storageRegion)
   }
 
   public async deleteCredentialById(credentialId: string, storageRegion?: string) {
     storageRegion = storageRegion || this._storageRegion
 
-    try {
-      await this._affinidiVaultStorageService.deleteCredentialById(credentialId, storageRegion)
-    } catch (error) {
-      if (error.code === 'AVT-2' && this._queryBloomVault) {
-        // should be deleted during migration to affinidi-vault Phase #2
-        return await this._bloomVaultStorageService.deleteCredentialById(credentialId, storageRegion)
-      }
-
-      throw error
-    }
+    await this._affinidiVaultStorageService.deleteCredentialById(credentialId, storageRegion)
   }
 
   public async deleteAllCredentials(storageRegion?: string): Promise<void> {
@@ -211,14 +147,6 @@ export default class WalletStorageService {
       await this._affinidiVaultStorageService.deleteAllCredentials(storageRegion)
     } catch (error) {
       throw new SdkErrorFromCode('COR-0', {}, error)
-    }
-
-    if (this._queryBloomVault) {
-      try {
-        await this._bloomVaultStorageService.deleteAllCredentials(storageRegion)
-      } catch (error) {
-        throw new SdkErrorFromCode('COR-0', {}, error)
-      }
     }
   }
 }

@@ -41,7 +41,6 @@ type EnvironmentOptions = {
   issuerUrl?: string
   registryUrl?: string
   verifierUrl?: string
-  bloomVaultUrl?: string
   affinidiVaultUrl?: string
   keyStorageUrl?: string
   phoneIssuerBasePath?: string
@@ -58,7 +57,6 @@ function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
     issuerUrl: resolveUrl(Service.ISSUER, env, options.issuerUrl),
     registryUrl: resolveUrl(Service.REGISTRY, env, options.registryUrl),
     verifierUrl: resolveUrl(Service.VERIFIER, env, options.verifierUrl),
-    bloomVaultUrl: resolveUrl(Service.BLOOM_VAUlT, env, options.bloomVaultUrl),
     affinidiVaultUrl: resolveUrl(Service.VAULT, env, options.affinidiVaultUrl),
     keyStorageUrl: resolveUrl(Service.KEY_STORAGE, env, options.keyStorageUrl),
     revocationUrl: resolveUrl(Service.REVOCATION, env, options.revocationUrl),
@@ -109,7 +107,6 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
     issuerUrl,
     registryUrl,
     verifierUrl,
-    bloomVaultUrl,
     affinidiVaultUrl,
     keyStorageUrl,
     phoneIssuerBasePath,
@@ -134,7 +131,6 @@ const splitOptions = <TOptions extends SdkOptions>(options: TOptions) => {
       issuerUrl,
       registryUrl,
       verifierUrl,
-      bloomVaultUrl,
       affinidiVaultUrl,
       keyStorageUrl,
       phoneIssuerBasePath,

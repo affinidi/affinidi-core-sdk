@@ -324,7 +324,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(result.commonNetworkMember.did).to.exist
     })
 
-    it('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
+    it.only('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
       const { inbox } = await createUser()
       const timestamp = String(Date.now())
       await AffinidiWallet.passwordlessLogin(inbox.email, options, {
