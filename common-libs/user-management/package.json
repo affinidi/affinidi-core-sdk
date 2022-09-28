@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/user-management",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "User Management implementation for AWS Cognito",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -46,7 +46,7 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/internal-api-clients": "^1.6.0",
+    "@affinidi/internal-api-clients": "^2.0.0",
     "@affinidi/tools-common": "^1.2.0",
     "aws-sdk": "^2.1161.0",
     "create-hash": "^1.2.0"

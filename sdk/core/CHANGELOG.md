@@ -1,3 +1,6 @@
+# release 7.0.0 (2022-09-28)
+Breaking changes: 
+* removed `Bloom Vault` usage and `Vault Migration Service` logic
 # release 6.7.0 (2022-09-21)
 * Expose `validateCredential method` to `BaseNetworkMember`
 # release 6.6.0 (2022-09-21)
