@@ -1,3 +1,5 @@
+# release 1.6.0 (2022-09-28)
+* updated `internal-api-clients`
 # release 1.5.0 (2022-09-06)
 * upgraded to npm 8;
 * switched off error on `no-unused-vars` lint rule.

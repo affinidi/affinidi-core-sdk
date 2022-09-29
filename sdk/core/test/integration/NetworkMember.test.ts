@@ -1152,7 +1152,7 @@ describe('CommonNetworkMember', () => {
     try {
       await commonNetworkMember.getCredentialById('fake_id')
     } catch (error) {
-      expect(error.code).to.eql('COR-23')
+      expect(error.code).to.eql('AVT-2')
     }
   })
 

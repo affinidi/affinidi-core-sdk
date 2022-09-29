@@ -7,6 +7,7 @@
 > With Affinidi SDK v6.0.4 onwards, we have also introduced automatic trigger of migration to Affinidi Vault and that is why we ask you to upgrade to that version or above.  
 > Otherwise your credentials will never be migrated. The migration will not anyhow impact SDK performance negatively.  
 > Furthermore, if you have more than 100 credentials in Bloom Vault the performance should be increased after migration.
+> Bloom Vault is no longer supported with Affinidi SDK v7.
 
 Expo SDK extends CORE SDK. Make sure to check the [CORE SDK documentation](https://www.npmjs.com/package/@affinidi/wallet-core-sdk).
 

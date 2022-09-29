@@ -2,7 +2,6 @@ export enum Service {
   METRICS = 'affinity-metrics',
   REGISTRY = 'affinity-registry',
   VAULT = 'affinidi-vault',
-  BLOOM_VAUlT = 'bloom-vault',
   CLOUD_WALLET_API = 'cloud-wallet-api',
   ISSUER = 'affinity-issuer',
   KEY_STORAGE = 'affinity-wallet-backend',

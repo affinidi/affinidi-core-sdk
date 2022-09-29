@@ -28,14 +28,4 @@ describe('getOptionsFromEnvironment', () => {
     expect(resultOptions.basicOptions.userPoolId).to.exist
     expect(resultOptions.region).to.exist
   })
-
-  it('should accept queryBloomVault', () => {
-    const queryBloomVault = false
-    const resultOptions = getOptionsFromEnvironment({
-      env: 'prod',
-      apiKey,
-      queryBloomVault,
-    })
-    expect(resultOptions.otherOptions.queryBloomVault).to.equal(queryBloomVault)
-  })
 })
