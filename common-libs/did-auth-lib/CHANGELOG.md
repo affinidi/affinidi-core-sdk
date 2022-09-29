@@ -1,6 +1,5 @@
-# release 3.0.0 (2022-09-28)
-Breaking changes:
-* removed `Bloom Vault` usage and `Vault Migration Service` logic for `internal-api-clients` and `url-resolver`
+# release 2.3.0 (2022-09-28)
+* updated `@affinidi/common`, `internal-api-clients` and `url-resolver`
 # release 2.2.0 (2022-09-06)
 * upgraded to npm 8;
 * updated `mocha` version.

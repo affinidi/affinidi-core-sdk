@@ -45,7 +45,7 @@
     "vm-browserify": "^1.1.2"
   },
   "devDependencies": {
-    "@affinidi/common": "^3.0.0",
+    "@affinidi/common": "^2.4.0",
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
     "@types/chai": "4.2.12",
