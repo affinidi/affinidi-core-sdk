@@ -125,6 +125,8 @@ export class UserManagementService {
         throw new SdkErrorFromCode('COR-5', { username: normalizedUsername, confirmationCode })
       case CompleteSignUpResult.UserNotFound:
         throw new SdkErrorFromCode('COR-4', { username: normalizedUsername })
+      case CompleteSignUpResult.DoubleConfirmation:
+        throw new SdkErrorFromCode('UM-1', { username: normalizedUsername, confirmationCode })
       default:
         throw new DefaultResultError(result)
     }
