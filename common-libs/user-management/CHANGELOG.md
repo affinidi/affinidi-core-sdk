@@ -1,3 +1,6 @@
+# release 1.7.0 (2022-10-03)
+* handle double confirmation issue on confirm sign-up 
+* move common-errors to tools-common
 # release 1.6.0 (2022-09-28)
 * updated `internal-api-clients`
 # release 1.5.0 (2022-09-06)

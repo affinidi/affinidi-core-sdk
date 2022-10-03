@@ -1,3 +1,5 @@
+# release 1.3.0 (2022-10-03)
+* move common errors to one place
 # release 1.2.0 (2022-09-06)
 * upgraded to npm 8;
 * switched off error on `no-unused-vars` lint rule.
