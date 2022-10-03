@@ -4,12 +4,12 @@ const errors = {
   ...commonErrors,
   'UM-1': {
     type: 'NotAuthorizedException',
-    message: 'User cannot be confirmed. Current status is CONFIRMED',
+    message: 'User cannot be confirmed. Current status is CONFIRMED.',
     httpStatusCode: 400,
   },
   'UM-2': {
     type: 'TooManyRequestsException',
-    message: 'Too many requests for operation',
+    message: 'Too many requests for operation.',
     httpStatusCode: 400,
   },
   // NOTE: errors related to user-management only should be added here with a separate prefix UM-XXX (UM-1), not to commonErrors
