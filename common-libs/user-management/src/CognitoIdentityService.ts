@@ -390,10 +390,6 @@ export class CognitoIdentityService {
       await this.cognitoidentityserviceprovider.confirmSignUp(params).promise()
       return CompleteSignUpResult.Success
     } catch (error) {
-      console.log({
-        errorCode: error.code,
-        message: error.message,
-      })
       switch (error.code) {
         case 'UserNotFoundException':
           return CompleteSignUpResult.UserNotFound
