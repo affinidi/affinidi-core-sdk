@@ -839,6 +839,26 @@ describe('UserManagementService', () => {
 
       expect(code).to.eql(COGNITO_EXCEPTION)
     })
+
+    it('throws `UM-1 / 400` when NotAuthorizedException to confirm again as the user already confirmed', async () => {
+      const error = { code: 'NotAuthorizedException', message: 'User cannot be confirmed. Current status is CONFIRMED' }
+
+      stubMethod(CONFIRM_SIGN_UP, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      let responseError: any
+
+      try {
+        await userManagementService.completeSignUpForEmailOrPhone(email, confirmationCode)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code } = responseError
+
+      expect(code).to.eql('UM-1')
+    })
   })
 
   describe('#changeUsername', () => {

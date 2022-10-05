@@ -1,3 +1,5 @@
+# release 7.0.1 (2022-10-03)
+* move common errors to tools-common
 # release 7.0.0 (2022-09-28)
 Breaking changes: 
 * removed `Bloom Vault` usage and `Vault Migration Service` logic

@@ -86,6 +86,7 @@ export enum CompleteSignUpResult {
   UserNotFound,
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
+  DoubleConfirmation,
 }
 
 export enum InitiateChangeLoginResult {
@@ -396,6 +397,10 @@ export class CognitoIdentityService {
           return CompleteSignUpResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
           return CompleteSignUpResult.ConfirmationCodeWrong
+        case 'NotAuthorizedException':
+          if (error.message === 'User cannot be confirmed. Current status is CONFIRMED')
+            return CompleteSignUpResult.DoubleConfirmation
+          else throw error
         default:
           throw error
       }

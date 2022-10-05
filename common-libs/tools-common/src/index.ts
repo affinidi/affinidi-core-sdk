@@ -13,5 +13,5 @@ if (typeof process.version === 'undefined') {
 }
 
 export { profile, ProfileAction } from './profiler/ProfilerDecorator'
-export { default as SdkError } from './SdkError'
+export { default as SdkError, commonErrors } from './SdkError'
 export { default as JwtService } from './services/JwtService'
