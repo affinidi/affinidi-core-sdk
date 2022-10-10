@@ -1168,15 +1168,15 @@ export abstract class BaseNetworkMember {
       })
       credentialsRequestBody = await credentialsRequest.json()
     } catch (error) {
-      throw new SdkErrorFromCode('COR-27', { callbackURL }, error)
+      throw new SdkErrorFromCode('COR-29', { callbackURL }, error)
     }
 
     if (credentialsRequest.status !== 200) {
-      throw new SdkErrorFromCode('COR-28', { callbackURL, status: credentialsRequest.status }, credentialsRequestBody)
+      throw new SdkErrorFromCode('COR-30', { callbackURL, status: credentialsRequest.status }, credentialsRequestBody)
     }
 
     if (!(credentialsRequestBody && Array.isArray(credentialsRequestBody.vcs))) {
-      throw new SdkErrorFromCode('COR-29', { callbackURL }, credentialsRequestBody)
+      throw new SdkErrorFromCode('COR-31', { callbackURL }, credentialsRequestBody)
     }
 
     return credentialsRequestBody.vcs

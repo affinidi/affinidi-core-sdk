@@ -232,7 +232,7 @@ export default class HolderService {
       }
 
       if (error.message === 'Signature on token is invalid') {
-        return { isValid: false, errorCode: 'COR-26', error: error.message }
+        return { isValid: false, errorCode: 'COR-28', error: error.message }
       }
 
       return { isValid: false, errorCode: '', error: error.message }
