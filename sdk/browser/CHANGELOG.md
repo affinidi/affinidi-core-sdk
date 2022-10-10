@@ -1,3 +1,5 @@
+# release 7.0.2 (2022-10-10)
+* correct error codes for claim flow
 # release 7.0.1 (2022-10-03)
 * move common errors to tools-common
 # release 7.0.0 (2022-09-28)

@@ -1359,7 +1359,7 @@ describe('CommonNetworkMember', () => {
       await holderWallet.claimCredentials(requestForOffer)
     } catch (error) {
       const { code } = error
-      expect(code).to.eql('COR-28')
+      expect(code).to.eql('COR-30')
     }
 
     nock.cleanAll()
@@ -1385,7 +1385,7 @@ describe('CommonNetworkMember', () => {
     } catch (error) {
       console.log({ error })
       const { code } = error
-      expect(code).to.eql('COR-27')
+      expect(code).to.eql('COR-29')
     }
   })
 
@@ -1416,7 +1416,7 @@ describe('CommonNetworkMember', () => {
       await holderWallet.claimCredentials(requestForOffer)
     } catch (error) {
       const { code } = error
-      expect(code).to.eql('COR-29')
+      expect(code).to.eql('COR-31')
     }
 
     nock.cleanAll()
@@ -1475,7 +1475,7 @@ describe('CommonNetworkMember', () => {
       await holderWallet.claimCredentials(invalidRequestForOffer)
     } catch (error) {
       const { code } = error
-      expect(code).to.eql('COR-26')
+      expect(code).to.eql('COR-28')
     }
   })
 })
