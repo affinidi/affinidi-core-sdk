@@ -47,7 +47,12 @@ describe('VC Signatures', () => {
   })
 
   describe('[BBS+]', () => {
-    const { issuerEncryptionKey, unsignedCredential, unsignedCredentialWithNewCtx } = bbsFixtures
+    const {
+      issuerEncryptionKey,
+      unsignedCredential,
+      unsignedCredentialWithNewCtx,
+      unsignedCredWithoutDataField,
+    } = bbsFixtures
 
     it('should generate BBS keys, seed and did document, sign VC using BBS key and verify it', async () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
@@ -153,6 +158,111 @@ describe('VC Signatures', () => {
       segment3.credentialSubject.data.givenName = 'DenisUpdated'
       expect(await isValid(segment3)).to.be.false
     })
+
+    it('should derive segment proof and verify it (full path including root "data" field)', async () => {
+      const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
+      const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
+
+      const signedCredential = await affinidi.signCredential(
+        unsignedCredential,
+        encryptedSeed,
+        issuerEncryptionKey,
+        'bbs',
+      )
+
+      const segment = await affinidi.deriveSegmentProof(signedCredential, ['data/fullName'])
+
+      expect(segment.proof.type).to.be.equal('BbsBlsSignatureProof2020')
+      expect(segment.credentialSubject.data.fullName).to.eq('Popov')
+      expect(segment.credentialSubject.data.givenName).to.not.exist
+      expect(await isValid(segment)).to.be.true
+
+      // delete revealed field
+      const segment1 = simpleClonePlainObject(segment)
+      delete segment1.credentialSubject.data.fullName
+      expect(await isValid(segment1)).to.be.false
+
+      // change revealed field
+      const segment2 = simpleClonePlainObject(segment)
+      segment2.credentialSubject.data.fullName = 'Fake Name'
+      expect(await isValid(segment2)).to.be.false
+
+      // add unrevealed field
+      const segment3 = simpleClonePlainObject(segment)
+      segment3.credentialSubject.data.givenName = 'DenisUpdated'
+      expect(await isValid(segment3)).to.be.false
+    })
+
+    it('should derive segment proof and verify it (cred without data field)', async () => {
+      const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
+      const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
+
+      const signedCredential = await affinidi.signCredential(
+        unsignedCredWithoutDataField as any,
+        encryptedSeed,
+        issuerEncryptionKey,
+        'bbs',
+      )
+
+      const segment = await affinidi.deriveSegmentProof(signedCredential, ['Name'])
+
+      expect(segment.proof.type).to.be.equal('BbsBlsSignatureProof2020')
+      expect(segment.credentialSubject.Name).to.eq('NFS')
+      expect(segment.credentialSubject.Type).to.undefined
+      expect(await isValid(segment)).to.be.true
+
+      // delete revealed field
+      const segment1 = simpleClonePlainObject(segment)
+      delete segment1.credentialSubject.Name
+      expect(await isValid(segment1)).to.be.false
+
+      // change revealed field
+      const segment2 = simpleClonePlainObject(segment)
+      segment2.credentialSubject.Name = 'Mortal Combat'
+      expect(await isValid(segment2)).to.be.false
+
+      // add unrevealed field
+      const segment3 = simpleClonePlainObject(segment)
+      segment3.credentialSubject.Type = 'Shooter'
+      expect(await isValid(segment3)).to.be.false
+    })
+
+    it('should derive segment proof and verify it for cred with new type of jsonld context (full path including root "data" field)', async () => {
+      const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
+      const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
+
+      const signedCredential = await affinidi.signCredential(
+        unsignedCredentialWithNewCtx,
+        encryptedSeed,
+        issuerEncryptionKey,
+        'bbs',
+      )
+
+      const segment = await affinidi.deriveSegmentProof(signedCredential, ['data/name', 'data/Influence/area'])
+
+      expect(segment.proof.type).to.be.equal('BbsBlsSignatureProof2020')
+      expect(segment.credentialSubject.data.name).to.eq('Bob Belcher')
+      expect(segment.credentialSubject.data.githubLink).to.not.exist
+      expect(segment.credentialSubject.data.Influence.area).to.eq('web3')
+      expect(segment.credentialSubject.data.Influence.level).to.not.exist
+      expect(segment.credentialSubject.data.personal).to.not.exist
+      expect(await isValid(segment)).to.be.true
+
+      // delete revealed field
+      const segment1 = simpleClonePlainObject(segment)
+      delete segment1.credentialSubject.data.name
+      expect(await isValid(segment1)).to.be.false
+
+      // change revealed field
+      const segment2 = simpleClonePlainObject(segment)
+      segment2.credentialSubject.data.name = 'Fake Name'
+      expect(await isValid(segment2)).to.be.false
+
+      // add unrevealed field
+      const segment3 = simpleClonePlainObject(segment)
+      segment3.credentialSubject.data.githubLink = 'https://github.com/bobber'
+      expect(await isValid(segment3)).to.be.false
+    })
   })
 
   describe('#validateCredential', () => {
@@ -164,5 +274,3 @@ describe('VC Signatures', () => {
     })
   })
 })
-
-describe('integration', () => it.skip('skip'))
