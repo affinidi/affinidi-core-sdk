@@ -3,13 +3,23 @@ import mapValues from 'lodash.mapvalues'
 
 const NESTED_FIELDS_SEPARATOR = '/'
 
-export const buildObjectSkeletonFromPaths = (paths: string[] = [], credentialData: any): Record<string, any> => {
-  const pathsAsObjects = paths.map(buildPathAsObject(credentialData))
+export const buildObjectSkeletonFromPaths = (paths: string[] = [], credentialSubject: any): Record<string, any> => {
+  // NOTE: for legacy implementation compatibility (when field "data" in credentialSubject was only one root field)
+  const isLegacy = hasOnlyDataField(credentialSubject) && !hasDataAsRootField(paths)
+  const pathsAsObjects = paths.map(buildPathAsObject(credentialSubject, isLegacy))
   return merge({}, ...pathsAsObjects)
 }
 
-const buildPathAsObject = (credentialData: any) => (path: string): Record<string, any> => {
+const hasOnlyDataField = (credentialSubject: any) =>
+  Object.keys(credentialSubject).length === 1 && !!credentialSubject.data
+
+const hasDataAsRootField = (paths: string[]) => !!paths[0] && paths[0].startsWith('data/')
+
+const buildPathAsObject = (credentialData: any, isLegacy: boolean) => (path: string): Record<string, any> => {
   const splitPath = path.split(NESTED_FIELDS_SEPARATOR)
+
+  if (isLegacy) splitPath.unshift('data')
+
   const credentialFieldValue = splitPath.reduce((res, field) => res?.[field], credentialData)
   if (credentialFieldValue === undefined) {
     throw new Error(`Field "${path}" not a part of credential`)

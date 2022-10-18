@@ -1,3 +1,5 @@
+# release 2.5.0 (2022-10-12)
+* updated deriveProof  to make "data" root field in credential subject not mandatory
 # release 2.4.0 (2022-09-28)
 * updated `internal-api-clients` and `url-resolver`
 # release 2.3.0 (2022-09-06)
