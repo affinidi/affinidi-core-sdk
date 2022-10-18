@@ -25,11 +25,15 @@ describe('DidResolver', () => {
   })
 
   describe('#resolveDid with cache', () => {
+    // eslint-disable-next-line prettier/prettier
     let spyOnCacheHas: sinon.SinonSpy<[key: any, options?: LRUCache.HasOptions], boolean>
-    let spyOnCacheSet: sinon.SinonSpy<[key: any, value: any, options?: LRUCache.SetOptions<any, any>], LRUCache<any, any>>
+    let spyOnCacheSet: sinon.SinonSpy<[key: any, value: any,
+      options?: LRUCache.SetOptions<any, any>], LRUCache<any, any>>
     let spyOnCacheGet: sinon.SinonSpy<[key: any, options?: LRUCache.GetOptions], unknown>
     let spyOnCacheDelete: sinon.SinonSpy<[key: any], boolean>
-    let registryStub: sinon.SinonStub<[params: { readonly did: string }], Promise<ResponseForOperation<{ pathParams: undefined; queryParams: undefined; requestBody: { readonly did: string }; responseBody: { readonly didDocument: { [x: string]: any } } }>>>
+    let registryStub: sinon.SinonStub<[params: { readonly did: string }],
+        Promise<ResponseForOperation<{ pathParams: undefined; queryParams: undefined;
+        requestBody: { readonly did: string }; responseBody: any }>>>
 
     beforeEach(() => {
       spyOnCacheHas = sinon.spy(LRUCache.prototype, 'has')
@@ -48,7 +52,6 @@ describe('DidResolver', () => {
     })
 
     it('should resolve DID that is not in cache yet', async () => {
-      // @ts-ignore
       registryStub.resolves(response)
 
       await didResolver.resolveDid(did)
@@ -59,7 +62,6 @@ describe('DidResolver', () => {
     })
 
     it('should return DID from cache', async () => {
-      // @ts-ignore
       registryStub.resolves(response)
 
       await didResolver.resolveDid(did1)
@@ -80,7 +82,6 @@ describe('DidResolver', () => {
     })
 
     it('should delete the oldest cache entry if exceed cacheMaxSize', async () => {
-      // @ts-ignore
       registryStub.resolves(response)
 
       await didResolver.resolveDid(did2)

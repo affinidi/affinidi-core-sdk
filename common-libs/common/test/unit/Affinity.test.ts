@@ -14,6 +14,7 @@ import {
 import { generateTestDIDs } from '../factory/didFactory'
 import { buildPresentation } from '../factory/presentation'
 import { credentialsV1, revocationList2020V1 } from '../factory/w3'
+import { resolvedDidDocument } from '../factory/resolveDidResponse'
 
 const options = {
   registryUrl: 'https://affinity-registry.staging.affinity-project.org',
@@ -705,8 +706,7 @@ describe('Affinity', () => {
   describe('#constructor', () => {
     it('should use options.didResolver if provided', async () => {
       const didResolver: DidResolver = {
-        // @ts-ignore
-        resolveDid: (did: string) => Promise.resolve({ id: did }),
+        resolveDid: (did: string) => Promise.resolve({ ...resolvedDidDocument, id: did }),
       }
 
       const spyOnDidResolver = sinon.spy(didResolver, 'resolveDid')
