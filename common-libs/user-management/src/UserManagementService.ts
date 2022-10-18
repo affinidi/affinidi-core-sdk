@@ -1,3 +1,4 @@
+import { v4 as generateUuid } from 'uuid'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
@@ -29,11 +30,17 @@ class DefaultResultError extends Error {
   }
 }
 
+export enum UsernameBuildingStrategy {
+  RANDOM,
+  DERIVING,
+}
+
 type ConstructorOptions = {
   region: string
   clientId: string
   userPoolId: string
   shouldDisableNameNormalisation?: boolean
+  usernameBuildingStrategy?: UsernameBuildingStrategy
 }
 
 type ConstructorDependencies = {
@@ -57,12 +64,14 @@ export class UserManagementService {
   private _keyStorageApiService
   private _sessionStorageService
   private _shouldDisableNameNormalisation
+  private _usernameBuildingStrategy
 
   constructor(options: ConstructorOptions, dependencies: ConstructorDependencies) {
     this._keyStorageApiService = dependencies.keyStorageApiService
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
     this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
+    this._usernameBuildingStrategy = options.usernameBuildingStrategy ?? UsernameBuildingStrategy.DERIVING
   }
 
   private async _signUp(
@@ -70,7 +79,7 @@ export class UserManagementService {
     password: string,
     messageParameters?: MessageParameters,
   ): Promise<void> {
-    const { normalizedUsername } = usernameWithAttributes
+    const { username } = usernameWithAttributes
     const result = await this._cognitoIdentityService.trySignUp(usernameWithAttributes, password, messageParameters)
 
     switch (result) {
@@ -79,9 +88,9 @@ export class UserManagementService {
       case SignUpResult.InvalidPassword:
         throw new SdkErrorFromCode('COR-6')
       case SignUpResult.ConfirmedUsernameExists:
-        throw new SdkErrorFromCode('COR-7', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-7', { username })
       case SignUpResult.UnconfirmedUsernameExists:
-        await this._keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizedUsername })
+        await this._keyStorageApiService.adminDeleteUnconfirmedUser({ username })
         return this._signUp(usernameWithAttributes, password, messageParameters)
       default:
         throw new DefaultResultError(result)
@@ -107,26 +116,27 @@ export class UserManagementService {
     const usernameWithAttributes = this._buildUserAttributes(login)
 
     await this._signUp(usernameWithAttributes, password, messageParameters)
-    const signUpToken = `${login}::${password}`
+    const signUpToken = `${usernameWithAttributes.username}::${password}`
 
     return signUpToken
   }
 
   private async _completeSignUp(login: string, confirmationCode: string) {
-    const usernameWithAttributes = this._buildUserAttributes(login)
-    const { normalizedUsername } = usernameWithAttributes
+    const usernameWithAttributes = this._buildUserAttributes(login, login)
     const result = await this._cognitoIdentityService.completeSignUp(usernameWithAttributes, confirmationCode)
     switch (result) {
       case CompleteSignUpResult.Success:
         return
       case CompleteSignUpResult.ConfirmationCodeExpired:
-        throw new SdkErrorFromCode('COR-2', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('COR-2', { username: login, confirmationCode })
       case CompleteSignUpResult.ConfirmationCodeWrong:
-        throw new SdkErrorFromCode('COR-5', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('COR-5', { username: login, confirmationCode })
       case CompleteSignUpResult.UserNotFound:
-        throw new SdkErrorFromCode('COR-4', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       case CompleteSignUpResult.DoubleConfirmation:
-        throw new SdkErrorFromCode('UM-1', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('UM-1', { username: login, confirmationCode })
+      case CompleteSignUpResult.AliasExistsException:
+        throw new SdkErrorFromCode('UM-3', { username: login })
       default:
         throw new DefaultResultError(result)
     }
@@ -177,7 +187,6 @@ export class UserManagementService {
 
   async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
     const { login, shortPassword } = this.parseSignUpToken(token)
-    this._loginShouldBeEmailOrPhoneNumber(login)
     await this._completeSignUp(login, confirmationCode)
     const cognitoTokens = await this._logInWithPassword(login, shortPassword, true)
     return { cognitoTokens, shortPassword }
@@ -306,15 +315,15 @@ export class UserManagementService {
 
   async resendSignUpByLogin(login: string, messageParameters?: MessageParameters): Promise<void> {
     const usernameWithAttributes = this._buildUserAttributes(login)
-    const { normalizedUsername } = usernameWithAttributes
+    const { username } = usernameWithAttributes
     const result = await this._cognitoIdentityService.resendSignUp(usernameWithAttributes, messageParameters)
     switch (result) {
       case ResendSignUpResult.Success:
         return
       case ResendSignUpResult.UserAlreadyConfirmed:
-        throw new SdkErrorFromCode('COR-8', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-8', { username })
       case ResendSignUpResult.UserNotFound:
-        throw new SdkErrorFromCode('COR-4', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-4', { username })
       default:
         throw new DefaultResultError(result)
     }
@@ -412,12 +421,22 @@ export class UserManagementService {
     }
   }
 
-  private _buildUserAttributes(login: string) {
+  /**
+   * Builds user attributes for cognito record.
+   * Result username is derived from login input parameter or random (based on usernameBuildingStrategy)
+   * OR if exactUsername provided equals to that
+   * @param login (arbitrary username, email or phone)
+   * @param exactUsername - optional parameter, if given the result username is eq to this parameter
+   * @private
+   */
+  private _buildUserAttributes(login: string, exactUsername?: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
-    const normalizedUsername = this._shouldDisableNameNormalisation ? login : normalizeUsername(login)
+    const derivedUsername = this._shouldDisableNameNormalisation ? login : normalizeUsername(login)
+    const builtUsername =
+      this._usernameBuildingStrategy === UsernameBuildingStrategy.DERIVING ? derivedUsername : generateUuid()
 
     return {
-      normalizedUsername,
+      username: exactUsername ?? builtUsername,
       login,
       emailAddress: isEmailValid ? login : undefined,
       phoneNumber: isPhoneNumberValid ? login : undefined,

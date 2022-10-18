@@ -12,6 +12,11 @@ const errors = {
     message: 'Too many requests for operation.',
     httpStatusCode: 400,
   },
+  'UM-3': {
+    type: 'AliasExistsException',
+    message: 'User with given email or phone exists. One email or phone can be attached to only one user record',
+    httpStatusCode: 400,
+  },
   // NOTE: errors related to user-management only should be added here with a separate prefix UM-XXX (UM-1), not to commonErrors
 }
 
