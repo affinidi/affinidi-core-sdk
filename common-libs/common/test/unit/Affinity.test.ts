@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import nock from 'nock'
-
+import sinon from 'sinon'
 import { KeysService } from '../../src/services'
-import { Affinity } from '../../src'
+import { Affinity, DidResolver } from '../../src'
 import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
 import {
   createUnsignedCredential,
@@ -12,7 +12,6 @@ import {
   revocationListCredentialWithRevokedVC,
 } from '../factory/credential'
 import { generateTestDIDs } from '../factory/didFactory'
-
 import { buildPresentation } from '../factory/presentation'
 import { credentialsV1, revocationList2020V1 } from '../factory/w3'
 
@@ -700,6 +699,22 @@ describe('Affinity', () => {
 
       const result = await affinity5.resolveDid('cache-test')
       expect(result).to.deep.equal(testDocument)
+    })
+  })
+
+  describe('#constructor', () => {
+    it('should use options.didResolver if provided', async () => {
+      const didResolver: DidResolver = {
+        // @ts-ignore
+        resolveDid: (did: string) => Promise.resolve({ id: did }),
+      }
+
+      const spyOnDidResolver = sinon.spy(didResolver, 'resolveDid')
+
+      const affinity6 = new Affinity({ didResolver: didResolver }, ecdsaCryptographyTools)
+      await affinity6.resolveDid(didElem)
+
+      expect(spyOnDidResolver).to.have.been.calledOnce
     })
   })
 })
