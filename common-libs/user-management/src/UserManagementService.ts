@@ -30,17 +30,11 @@ class DefaultResultError extends Error {
   }
 }
 
-export enum UsernameBuildingStrategy {
-  RANDOM,
-  DERIVING,
-}
-
 type ConstructorOptions = {
   region: string
   clientId: string
   userPoolId: string
   shouldDisableNameNormalisation?: boolean
-  usernameBuildingStrategy?: UsernameBuildingStrategy
 }
 
 type ConstructorDependencies = {
@@ -64,14 +58,12 @@ export class UserManagementService {
   private _keyStorageApiService
   private _sessionStorageService
   private _shouldDisableNameNormalisation
-  private _usernameBuildingStrategy
 
   constructor(options: ConstructorOptions, dependencies: ConstructorDependencies) {
     this._keyStorageApiService = dependencies.keyStorageApiService
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
     this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
-    this._usernameBuildingStrategy = options.usernameBuildingStrategy ?? UsernameBuildingStrategy.DERIVING
   }
 
   private async _signUp(
@@ -193,11 +185,13 @@ export class UserManagementService {
   }
 
   async doesUnconfirmedUserExist(username: string) {
+    // replace with a call to KeysService
     const normalizedUsername = normalizeUsername(username)
     return this._cognitoIdentityService.doesUnconfirmedUserExist(normalizedUsername)
   }
 
   async doesConfirmedUserExist(login: string) {
+    // replace with a call to KeysService
     return this._cognitoIdentityService.doesConfirmedUserExist(login)
   }
 
@@ -431,9 +425,7 @@ export class UserManagementService {
    */
   private _buildUserAttributes(login: string, exactUsername?: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
-    const derivedUsername = this._shouldDisableNameNormalisation ? login : normalizeUsername(login)
-    const builtUsername =
-      this._usernameBuildingStrategy === UsernameBuildingStrategy.DERIVING ? derivedUsername : generateUuid()
+    const builtUsername = generateUuid()
 
     return {
       username: exactUsername ?? builtUsername,
