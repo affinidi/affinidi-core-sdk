@@ -1,13 +1,14 @@
+import LRUCache from 'lru-cache'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { DidDocument } from './interfaces'
-import LRUCache from 'lru-cache'
 
 type ServiceWithCache = {
   service: RegistryApiService
-  cache: LRUCache<string, Promise<DidDocument>>
+  cache?: LRUCache<string, Promise<DidDocument>>
 }
 
 type ConstructorOptions = ConstructorParameters<typeof RegistryApiService>[0] & {
+  useCache: boolean
   cacheMaxSize?: number
   cacheTtlInMin?: number
 }
@@ -23,11 +24,13 @@ const getService = (options: ConstructorOptions) => {
   if (!services.has(cacheKey)) {
     services.set(cacheKey, {
       service: new RegistryApiService(options),
-      cache: new LRUCache({
-        max: options.cacheMaxSize ?? DEFAULT_CACHE_MAX_SIZE,
-        ttl: (options.cacheTtlInMin ?? DEFAULT_CACHE_TTL_IN_MIN) * 60 * 1000,
-        allowStale: true,
-      }),
+      cache: options.useCache
+        ? new LRUCache({
+            max: options.cacheMaxSize ?? DEFAULT_CACHE_MAX_SIZE,
+            ttl: (options.cacheTtlInMin ?? DEFAULT_CACHE_TTL_IN_MIN) * 60 * 1000,
+            allowStale: true,
+          })
+        : undefined,
     })
   }
 
@@ -56,15 +59,32 @@ const resolveDid = ({ service, cache }: ServiceWithCache, did: string) => {
   return cache.get(did)
 }
 
+const resolveDidWithoutCache = ({ service }: ServiceWithCache, did: string) => {
+  const promise = new Promise((resolve, reject) => {
+    service
+      .resolveDid({ did })
+      .then(({ body }) => {
+        const { didDocument } = body
+        resolve(didDocument)
+      })
+      .catch((reason) => {
+        reject(reason)
+      })
+  })
+  return promise as Promise<DidDocument>
+}
+
 export class LocalDidResolver {
   private readonly _service: ServiceWithCache
+  private readonly _useCache: boolean
 
   constructor(options: ConstructorOptions) {
+    this._useCache = options.useCache ?? true
     this._service = getService(options)
   }
 
   resolveDid(did: string) {
-    return resolveDid(this._service, did)
+    return this._useCache ? resolveDid(this._service, did) : resolveDidWithoutCache(this._service, did)
   }
 }
 
