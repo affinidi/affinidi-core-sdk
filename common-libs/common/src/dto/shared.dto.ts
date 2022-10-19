@@ -7,6 +7,7 @@ export class AffinityOptions {
   metricsUrl?: string
   component?: EventComponent
   didResolver?: DidResolver
+  useCache?: boolean
   cacheMaxSize?: number
   cacheTtlInMin?: number
 }

@@ -30,6 +30,7 @@ export class Affinity {
       new LocalDidResolver({
         registryUrl: options.registryUrl ?? resolveUrl(Service.REGISTRY, 'staging'),
         accessApiKey: options.apiKey,
+        useCache: options.useCache ?? true,
         cacheMaxSize: options.cacheMaxSize,
         cacheTtlInMin: options.cacheTtlInMin,
       })

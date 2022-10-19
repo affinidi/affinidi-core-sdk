@@ -2,11 +2,11 @@ import { expect, use } from 'chai'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
 import LRUCache from 'lru-cache'
-import { LocalDidResolver } from '../../../src/shared/DidResolver'
 import { resolveUrl, Service } from '@affinidi/url-resolver'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
-import {did, did1, did2, response} from '../../factory/resolveDidResponse'
 import { ResponseForOperation } from '@affinidi/tools-openapi/dist/types/request'
+import { LocalDidResolver } from '../../../src/shared/DidResolver'
+import {did, did1, did2, response} from '../../factory/resolveDidResponse'
 
 use(sinonChai)
 
@@ -16,10 +16,11 @@ const {STAGING_API_KEY_HASH} = JSON.parse(TEST_SECRETS)
 const DEFAULT_CACHE_MAX_SIZE = 3
 const DEFAULT_CACHE_TTL_IN_MIN = 1440
 
-describe('DidResolver', () => {
+describe('LocalDidResolver with cache', () => {
   const didResolver = new LocalDidResolver({
     registryUrl: resolveUrl(Service.REGISTRY, 'staging'),
     accessApiKey: STAGING_API_KEY_HASH,
+    useCache: true,
     cacheMaxSize: DEFAULT_CACHE_MAX_SIZE,
     cacheTtlInMin: DEFAULT_CACHE_TTL_IN_MIN * 60 * 1000,
   })
@@ -96,6 +97,38 @@ describe('DidResolver', () => {
       expect(spyOnCacheHas).to.have.been.calledOnce
       expect(spyOnCacheSet).to.have.been.calledOnce
       expect(spyOnCacheGet).to.have.been.calledOnce
+    })
+  })
+})
+
+describe('LocalDidResolver without cache', () => {
+  const didResolver1 = new LocalDidResolver({
+    registryUrl: resolveUrl(Service.REGISTRY, 'staging'),
+    accessApiKey: STAGING_API_KEY_HASH,
+    useCache: false,
+  })
+
+  describe('#resolveDid without cache', () => {
+    // eslint-disable-next-line prettier/prettier
+    let registryStub: sinon.SinonStub<[params: { readonly did: string }],
+        Promise<ResponseForOperation<{ pathParams: undefined; queryParams: undefined;
+          requestBody: { readonly did: string }; responseBody: any }>>>
+
+    beforeEach(() => {
+      registryStub = sinon.stub(RegistryApiService.prototype, 'resolveDid')
+    })
+
+    afterEach(() => {
+      registryStub.restore()
+    })
+
+    it('should call RegistryApiService.resolveDid each time', async () => {
+      registryStub.resolves(response)
+
+      await didResolver1.resolveDid(did)
+      await didResolver1.resolveDid(did)
+
+      expect(registryStub).to.have.been.calledTwice
     })
   })
 })
