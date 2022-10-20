@@ -12,7 +12,7 @@
     "lint": "eslint src test",
     "lint:fix": "eslint src test --fix",
     "test": "npm run test:unit && npm run test:integration",
-    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/**/*.test.ts  --timeout 8000",
+    "test:unit": "cross-env NODE_ENV=test mocha -r ts-node/register test/unit/**/*.test.ts  -p --timeout 8000",
     "test:integration": "cross-env NODE_ENV=test mocha -r ts-node/register test/integration/index.test.ts -p --timeout 10000 --exit",
     "test:coverage": "cross-env NODE_ENV=test nyc --reporter=lcov mocha -r ts-node/register test/unit/**/*.test.ts -p --timeout 8000",
     "test:coverage:codeclimate": "npm run test:coverage && [[ -s ./coverage/lcov.info ]] && $GITHUB_WORKSPACE/tmp/cc-test-reporter format-coverage -t lcov -o $GITHUB_WORKSPACE/tmp/codeclimate.common_li.json coverage/lcov.info --add-prefix $(pwd | rev | cut -d'/' -f-2 | rev) || echo \"lcov file is empty. There is no tests\"",
