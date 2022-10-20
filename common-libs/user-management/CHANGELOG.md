@@ -1,3 +1,8 @@
+# release 2.0.0 (2022-10-20)
+BREAKING CHANGES:
+* username building strategy was changed to use uuidV4 as username  
+  when email or phone is used for passwordless flow.  
+  Before the username was derived from email / phone by replacing '@' for email or '+' for phone with '_'
 # release 1.7.0 (2022-10-03)
 * handle double confirmation issue on confirm sign-up 
 * move common-errors to tools-common
