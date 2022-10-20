@@ -97,3 +97,26 @@ export const issuerDidDocument = {
   ],
   id: 'did:elem:EiA9Te5KbXXHTVi1UrfZg9EDAizjl804aUUYESuyainKzQ',
 }
+
+export const unsignedCredWithoutDataField = {
+  '@context': [
+    'https://www.w3.org/2018/credentials/v1',
+    'https://schema.affinidi.com/@did:elem:EiD3GDELzIOjJHssvmyyqsaUFFIRWgkhlRX9F5_6IXVaAg/GameV1-1.jsonld',
+  ],
+  id: 'claimId:183226f0eee46557',
+  type: ['VerifiableCredential', 'Game'],
+  holder: {
+    id: 'did:elem:EiCSxNTKYUlVlg81JDDuFhQFxb6Xp56sgl5pwX9xyO5oaw',
+  },
+  credentialSubject: {
+    Name: 'NFS',
+    Type: 'Races',
+  },
+  credentialSchema: {
+    id: 'https://schema.affinidi.com/@did:elem:EiD3GDELzIOjJHssvmyyqsaUFFIRWgkhlRX9F5_6IXVaAg/GameV1-1.json',
+    type: 'JsonSchemaValidator2018',
+  },
+  issuanceDate: '2022-09-27T13:50:11.795Z',
+  issuer:
+    'did:elem:EiBj9IrhHVfJsnvISi76iq3YUnTkrzmMsh4mtc_vTBgW5g;elem:initial-state=eyJwcm90ZWN0ZWQiOiJleUp2Y0dWeVlYUnBiMjRpT2lKamNtVmhkR1VpTENKcmFXUWlPaUlqY0hKcGJXRnllU0lzSW1Gc1p5STZJa1ZUTWpVMlN5SjkiLCJwYXlsb2FkIjoiZXlKQVkyOXVkR1Y0ZENJNkltaDBkSEJ6T2k4dmR6TnBaQzV2Y21jdmMyVmpkWEpwZEhrdmRqSWlMQ0p3ZFdKc2FXTkxaWGtpT2x0N0ltbGtJam9pSTNCeWFXMWhjbmtpTENKMWMyRm5aU0k2SW5OcFoyNXBibWNpTENKMGVYQmxJam9pVTJWamNESTFObXN4Vm1WeWFXWnBZMkYwYVc5dVMyVjVNakF4T0NJc0luQjFZbXhwWTB0bGVVaGxlQ0k2SWpBeU1HSTBabU01TURnMk1HSm1OMlZsWTJKaE9UVXhZbU5tTWpSaU5UWmtZamN5TVdFeE9ETXpNakF4TUdSaE9EaG1Oamc0T1Raa1kyVmlZVFZrWkdSbU9TSjlMSHNpYVdRaU9pSWpjbVZqYjNabGNua2lMQ0oxYzJGblpTSTZJbkpsWTI5MlpYSjVJaXdpZEhsd1pTSTZJbE5sWTNBeU5UWnJNVlpsY21sbWFXTmhkR2x2Ymt0bGVUSXdNVGdpTENKd2RXSnNhV05MWlhsSVpYZ2lPaUl3TWpRM01EVXdPREEyTVRKbU5XVTNaakZsWXpsak5XRTRNMkptTlRBeE0yTXpNR0kzWWpJek5UZzJOVGczWldNME56TmlOR0k1WTJFMlpEa3daalE0T1RnaWZWMHNJbUYxZEdobGJuUnBZMkYwYVc5dUlqcGJJaU53Y21sdFlYSjVJbDBzSW1GemMyVnlkR2x2YmsxbGRHaHZaQ0k2V3lJamNISnBiV0Z5ZVNKZGZRIiwic2lnbmF0dXJlIjoiV1hvNlFaU1h4amdUNGFUWXRvRVYxTjR2WGphaTRvN2xnNmVMckhEb1NZUk9IN3N1U2NBZ25waEhJak1SUTYxRHVDTmRSYkp1N0ljSU1CZERtZmI1bncifQ',
+}

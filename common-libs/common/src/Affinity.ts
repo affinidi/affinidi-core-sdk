@@ -645,18 +645,14 @@ export class Affinity {
       throw new Error('credentialSubject can not be an array')
     }
 
-    const skeleton = buildObjectSkeletonFromPaths(paths, credential.credentialSubject.data)
+    const skeleton = buildObjectSkeletonFromPaths(paths, credential.credentialSubject)
     const dataFields = injectFieldForAllParentRoots(skeleton, '@explicit', true)
 
     const fragment = {
       '@context': credential['@context'],
       type: credential.type,
       credentialSubject: {
-        data: {
-          '@type': credential.credentialSubject.data['@type'],
-          '@explicit': true,
-          ...dataFields,
-        },
+        ...dataFields,
       },
     }
 
