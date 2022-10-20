@@ -60,7 +60,6 @@ let didElemShortForm: string
 let didElemAlt: string
 
 const confirmationCode = '123456'
-const signUpResponseToken = `${username}::${walletPassword}`
 const signUpWithEmailResponseToken = `${email}::${walletPassword}`
 const signInResponseToken =
   `${email}::eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1Nksif` +
