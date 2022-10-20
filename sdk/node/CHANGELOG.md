@@ -1,3 +1,5 @@
+# release 7.1.1 (2022-10-20)
+* updated `common` to update DidResolver to have optional caching
 # release 7.1.0 (2022-10-12)
 * updated `common` to update deriveProof  to make "data" root field in credential subject not mandatory
 # release 7.0.2 (2022-10-10)
