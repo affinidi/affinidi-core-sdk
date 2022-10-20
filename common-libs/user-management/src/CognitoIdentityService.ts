@@ -224,9 +224,6 @@ export class CognitoIdentityService {
       Session,
     }
 
-    // const res = await this.cognitoidentityserviceprovider.
-    // res.
-
     try {
       const result = await this.cognitoidentityserviceprovider.respondToAuthChallenge(params).promise()
       //NOTE : successful OTP return a undefined session . wrong code return a new session
