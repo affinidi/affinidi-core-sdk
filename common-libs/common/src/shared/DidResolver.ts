@@ -59,19 +59,9 @@ const resolveDid = ({ service, cache }: ServiceWithCache, did: string) => {
   return cache.get(did)
 }
 
-const resolveDidWithoutCache = ({ service }: ServiceWithCache, did: string) => {
-  const promise = new Promise((resolve, reject) => {
-    service
-      .resolveDid({ did })
-      .then(({ body }) => {
-        const { didDocument } = body
-        resolve(didDocument)
-      })
-      .catch((reason) => {
-        reject(reason)
-      })
-  })
-  return promise as Promise<DidDocument>
+const resolveDidWithoutCache = async ({ service }: ServiceWithCache, did: string) => {
+  const response = await service.resolveDid({ did })
+  return response.body.didDocument as Promise<DidDocument>
 }
 
 export class LocalDidResolver {
