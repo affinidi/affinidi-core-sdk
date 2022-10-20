@@ -1,3 +1,5 @@
+# release 2.6.1 (2022-10-20)
+* added `@affinidi/tools-openapi` dev dependency
 # release 2.6.0 (2022-10-20)
 * updated DidResolver to have optional caching
 # release 2.5.0 (2022-10-12)
