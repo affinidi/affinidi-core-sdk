@@ -224,7 +224,9 @@ describe('CommonNetworkMember', () => {
 
     const token = await AffinidiWallet.signUp(username, cognitoPassword, options)
 
-    expect(token).to.equal(`${username}::${cognitoPassword}`)
+    // '90e85a8e-9f26-4dba-a16d-8a7be45e06bf'.length = 36, username is uuid
+    const isRightToken = new RegExp(`^.{36}::${cognitoPassword}$`).test(token as string)
+    expect(isRightToken).to.be.true
   })
 
   it('.register (default did method)', async () => {

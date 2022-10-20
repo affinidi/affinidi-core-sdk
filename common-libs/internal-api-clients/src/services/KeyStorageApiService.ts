@@ -31,6 +31,11 @@ type Env = 'dev' | 'staging' | 'prod'
 
 type ConstructorOptions = ClientOptions & { keyStorageUrl: string }
 
+type DoesUserExistInput = {
+  field: 'username' | 'email' | 'phone_number'
+  value: string
+}
+
 const clientMethods = createClientMethods(keyStorageSpec)
 
 @profile()
@@ -67,6 +72,11 @@ export default class KeyStorageApiService {
 
   async adminLogOutUser({ accessToken }: { accessToken: string }) {
     return this.client.AdminLogOutUser({ authorization: accessToken })
+  }
+
+  async doesUserExist({ field, value }: DoesUserExistInput): Promise<{ isUnconfirmed: boolean; userExists: boolean }> {
+    const result = await this.client.DoesUserExist({ queryParams: { field, value } })
+    return result.body
   }
 
   async getCredentialOffer({ accessToken, env }: { accessToken: string; env: Env }) {

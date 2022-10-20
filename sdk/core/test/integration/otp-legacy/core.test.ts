@@ -189,7 +189,7 @@ parallel('CommonNetworkMember [OTP]', () => {
     checkIsString(signUpToken)
     await waitForOtpCode(inbox) // skip first OTP code
 
-    await AffinidiWallet.resendSignUpConfirmationCode(inbox.email, options, messageParameters)
+    await AffinidiWallet.resendSignUp(options, signUpToken, messageParameters)
     const newSignUpCode = await waitForOtpCode(inbox)
 
     const commonNetworkMember = await AffinidiWallet.confirmSignUp(signUpToken, newSignUpCode, options)

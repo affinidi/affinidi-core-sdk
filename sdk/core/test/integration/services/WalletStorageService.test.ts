@@ -104,9 +104,10 @@ describe('WalletStorageService', () => {
   it('#adminDeleteUnconfirmedUser', async () => {
     const email = 'different_test_user_to_delete@example.com'
 
-    await userManagementService.initiateSignUpWithEmailOrPhone(email, password, null)
+    const token = await userManagementService.initiateSignUpWithEmailOrPhone(email, password, null)
+    const [username] = token.split('::')
     const keyStorageApiService = createKeyStorageApiService()
-    await keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizeUsername(email) })
+    await keyStorageApiService.adminDeleteUnconfirmedUser({ username })
     let responseError
 
     try {

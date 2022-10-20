@@ -361,7 +361,7 @@ export class CognitoIdentityService {
   ): Promise<ResendSignUpResult> {
     const params = {
       ClientId: this.clientId,
-      Username: usernameWithAttributes.username,
+      Username: usernameWithAttributes.login,
       ...getAdditionalParameters(messageParameters),
     }
 
@@ -552,6 +552,7 @@ export class CognitoIdentityService {
 
   private async _logInWithInvalidPassword(username: string) {
     try {
+      // username also could be email or phone, cognito works with aliases
       const response = await this.tryLogInWithPassword(username, INVALID_PASSWORD)
       switch (response.result) {
         case LogInWithPasswordResult.UserNotFound:

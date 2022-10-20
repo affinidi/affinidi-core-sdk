@@ -5,7 +5,6 @@ import { profile } from '@affinidi/tools-common'
 import { CognitoUserTokens, MessageParameters } from './dto'
 import { validateUsername } from './validateUsername'
 import SdkErrorFromCode from './SdkErrorFromCode'
-import { normalizeUsername } from './normalizeUsername'
 import { SessionStorageService } from './SessionStorageService'
 import {
   CognitoIdentityService,
@@ -71,6 +70,16 @@ export class UserManagementService {
     password: string,
     messageParameters?: MessageParameters,
   ): Promise<void> {
+    const { login } = usernameWithAttributes
+    // to keep backward compatibility, we check if confirmed user exists (throw COR-7) or not before sending otp
+    // in previous implementation, when usernames were derived from alias (email / phone),
+    // it happens on SignUpResult.ConfirmedUsernameExists (from one email one username)
+    const isConfirmedUserExist = await this.doesConfirmedUserExist(login)
+
+    if (isConfirmedUserExist) {
+      throw new SdkErrorFromCode('COR-7', { username: login })
+    }
+
     const { username } = usernameWithAttributes
     const result = await this._cognitoIdentityService.trySignUp(usernameWithAttributes, password, messageParameters)
 
@@ -91,7 +100,7 @@ export class UserManagementService {
 
   async signUpWithUsernameAndConfirm(username: string, password: string) {
     this._loginShouldBeUsername(username)
-    const usernameWithAttributes = this._buildUserAttributes(username)
+    const usernameWithAttributes = this._buildUserAttributes(username, username)
 
     if (!password) {
       throw new Error(`Expected non-empty password for '${username}'`)
@@ -156,6 +165,12 @@ export class UserManagementService {
     return response.cognitoTokens
   }
 
+  private async doesUserExist(value: string) {
+    const { isEmailValid, isPhoneNumberValid } = validateUsername(value)
+    const field = isEmailValid ? 'email' : isPhoneNumberValid ? 'phone_number' : 'username'
+    return this._keyStorageApiService.doesUserExist({ field, value })
+  }
+
   async logInWithPassword(login: string, password: string) {
     return this._logInWithPassword(login, password, false)
   }
@@ -184,14 +199,21 @@ export class UserManagementService {
     return { cognitoTokens, shortPassword }
   }
 
-  async doesUnconfirmedUserExist(username: string) {
-    // replace with a call to KeysService
-    const normalizedUsername = normalizeUsername(username)
-    return this._cognitoIdentityService.doesUnconfirmedUserExist(normalizedUsername)
+  /**
+   * Uses an ep on KeysService to check if record exists or not for given username or alias (email / phone)
+   * @param login
+   */
+  async doesUnconfirmedUserExist(login: string) {
+    const { userExists, isUnconfirmed } = await this.doesUserExist(login)
+
+    return userExists && isUnconfirmed
   }
 
+  /**
+   * Uses login with wrong password approach, due to for login we can use aliases (email / phone)
+   * @param login
+   */
   async doesConfirmedUserExist(login: string) {
-    // replace with a call to KeysService
     return this._cognitoIdentityService.doesConfirmedUserExist(login)
   }
 
@@ -309,15 +331,14 @@ export class UserManagementService {
 
   async resendSignUpByLogin(login: string, messageParameters?: MessageParameters): Promise<void> {
     const usernameWithAttributes = this._buildUserAttributes(login)
-    const { username } = usernameWithAttributes
     const result = await this._cognitoIdentityService.resendSignUp(usernameWithAttributes, messageParameters)
     switch (result) {
       case ResendSignUpResult.Success:
         return
       case ResendSignUpResult.UserAlreadyConfirmed:
-        throw new SdkErrorFromCode('COR-8', { username })
+        throw new SdkErrorFromCode('COR-8', { username: login })
       case ResendSignUpResult.UserNotFound:
-        throw new SdkErrorFromCode('COR-4', { username })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
     }

@@ -323,6 +323,7 @@ describe('CommonNetworkMember', () => {
 
   it('#signUp with username (with default SDK options)', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
+    sinon.stub(CognitoIdentityService.prototype, 'doesConfirmedUserExist').resolves(false)
 
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
@@ -391,19 +392,6 @@ describe('CommonNetworkMember', () => {
     expect(response.did).to.exist
     expect(markRegistrationComplete).to.be.calledOnce
     checkIsWallet(response)
-  })
-
-  it('#confirmSignUp with arbitrary username', async () => {
-    await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
-
-    sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
-
-    try {
-      await AffinidiWallet.confirmSignUp(signUpResponseToken, confirmationCode, options)
-      expect.fail()
-    } catch (err) {
-      expect(err.code).to.equal('COR-3')
-    }
   })
 
   it('#confirmSignIn signUp scenario', async () => {
@@ -772,7 +760,7 @@ describe('CommonNetworkMember', () => {
 
   it("doesn't retry storeEncryptedSeed method when a known error occurs during confirm signup", async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
-
+    sinon.stub(CognitoIdentityService.prototype, 'doesConfirmedUserExist').resolves(false)
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
     saveSeedStub.onCall(0).throws({ code: 'COR-1' })
@@ -792,7 +780,7 @@ describe('CommonNetworkMember', () => {
 
   it('retries storeEncryptedSeed method until successful when an unkown error occurs during confirm signup', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
-
+    sinon.stub(CognitoIdentityService.prototype, 'doesConfirmedUserExist').resolves(false)
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
     saveSeedStub.onCall(0).throws('UNKNOWN')
@@ -806,7 +794,7 @@ describe('CommonNetworkMember', () => {
 
   it('retries storeEncryptedSeed method until successful when an unkown error occurs during confirm signup, but only 3 times', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
-
+    sinon.stub(CognitoIdentityService.prototype, 'doesConfirmedUserExist').resolves(false)
     sinon.stub(KeyStorageApiService.prototype, 'adminConfirmUser')
 
     saveSeedStub.onCall(0).throws('UNKNOWN')
