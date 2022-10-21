@@ -51,7 +51,6 @@ const USER_NOT_FOUND_EXCEPTION = 'UserNotFoundException'
 const USERNAME_EXISTS_EXCEPTION = 'UsernameExistsException'
 const INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException'
 const INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException'
-const USER_NOT_CONFIRMED_EXCEPTION = 'UserNotConfirmedException'
 const NOT_AUTHORIZED_EXCEPTION = 'NotAuthorizedException'
 
 const options = {
@@ -541,10 +540,8 @@ describe('UserManagementService', () => {
   })
 
   describe('#isUserUnconfirmed', () => {
-    it('returns true when cognito.signIn returns UserNotConfirmedException', async () => {
-      const error = { code: USER_NOT_CONFIRMED_EXCEPTION }
-
-      stubMethod(INITIATE_AUTH, null, error)
+    it('returns true when keyService returns user exists and unconfirmed', async () => {
+      dependencies.keyStorageApiService.doesUserExist = () => Promise.resolve({ userExists: true, isUnconfirmed: true })
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.doesUnconfirmedUserExist(email)
@@ -552,10 +549,9 @@ describe('UserManagementService', () => {
       expect(response).to.be.true
     })
 
-    it('returns false when cognito.signIn returns COR-4', async () => {
-      const error = { code: 'COR-4' }
-
-      stubMethod(INITIATE_AUTH, null, error)
+    it('returns false when keyService returns user does not exist', async () => {
+      dependencies.keyStorageApiService.doesUserExist = () =>
+        Promise.resolve({ userExists: false, isUnconfirmed: false })
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.doesUnconfirmedUserExist(email)
@@ -563,10 +559,9 @@ describe('UserManagementService', () => {
       expect(response).to.be.false
     })
 
-    it('returns false when cognito.signIn returns UserNotFoundException', async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
-
-      stubMethod(INITIATE_AUTH, null, error)
+    it('returns false when keyService returns user exists and confirmed', async () => {
+      dependencies.keyStorageApiService.doesUserExist = () =>
+        Promise.resolve({ userExists: true, isUnconfirmed: false })
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.doesUnconfirmedUserExist(email)
@@ -576,7 +571,7 @@ describe('UserManagementService', () => {
   })
 
   describe('#resendSignUp', () => {
-    it(successPathTestName, async () => {
+    it('success path', async () => {
       stubMethod(RESEND_CONFIRMATION_CODE, {})
 
       const userManagementService = new UserManagementService(options, dependencies)
@@ -584,7 +579,7 @@ describe('UserManagementService', () => {
       expect(response).to.not.exist
     })
 
-    it(userNotFoundErrorTestName, async () => {
+    it('throws `COR-4 / 404` when UserNotFoundException', async () => {
       const error = { code: USER_NOT_FOUND_EXCEPTION }
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
@@ -602,10 +597,8 @@ describe('UserManagementService', () => {
       const { code, httpStatusCode, context } = responseError
       const { username } = context
 
-      const normalizedUsername = normalizeUsername(email)
-
       expect(code).to.eql('COR-4')
-      expect(username).to.eql(normalizedUsername)
+      expect(username).to.eql(email)
       expect(httpStatusCode).to.eql(404)
     })
 
@@ -627,10 +620,8 @@ describe('UserManagementService', () => {
       const { code, httpStatusCode, context } = responseError
       const { username } = context
 
-      const normalizedUsername = normalizeUsername(email)
-
       expect(code).to.eql('COR-8')
-      expect(username).to.eql(normalizedUsername)
+      expect(username).to.eql(email)
       expect(httpStatusCode).to.eql(409)
     })
 
@@ -656,8 +647,9 @@ describe('UserManagementService', () => {
   })
 
   describe('#signUp', () => {
-    it(successPathTestName, async () => {
+    it('success path', async () => {
       stubMethod(SIGN_UP, {})
+      stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password')
@@ -684,16 +676,15 @@ describe('UserManagementService', () => {
       const { code, httpStatusCode, context } = responseError
       const { username } = context
 
-      const normalizedUsername = normalizeUsername(username)
-
       expect(code).to.eql('COR-7')
-      expect(username).to.eql(normalizedUsername)
+      expect(username).to.eql(email)
       expect(httpStatusCode).to.eql(409)
     })
 
     it('throws `COR-6 / 400` when password requirements are not met', async () => {
       const error = { code: INVALID_PASSWORD_EXCEPTION }
 
+      stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
       stubMethod(SIGN_UP, null, error)
 
       const userManagementService = new UserManagementService(options, dependencies)
@@ -715,6 +706,7 @@ describe('UserManagementService', () => {
     it(cognitoErrorTestName, async () => {
       const error = { code: COGNITO_EXCEPTION }
 
+      stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
       stubMethod(SIGN_UP, null, error)
 
       const userManagementService = new UserManagementService(options, dependencies)
@@ -763,10 +755,8 @@ describe('UserManagementService', () => {
       const { code, httpStatusCode, context } = responseError
       const { username } = context
 
-      const normalizedUsername = normalizeUsername(email)
-
       expect(code).to.eql('COR-4')
-      expect(username).to.eql(normalizedUsername)
+      expect(username).to.eql(email)
       expect(httpStatusCode).to.eql(404)
     })
 
@@ -788,10 +778,8 @@ describe('UserManagementService', () => {
       const { code, httpStatusCode, context } = responseError
       const { username, confirmationCode: otp } = context
 
-      const normalizedUsername = normalizeUsername(email)
-
       expect(code).to.eql('COR-2')
-      expect(username).to.eql(normalizedUsername, otp)
+      expect(username).to.eql(email)
       expect(httpStatusCode).to.eql(400)
     })
 
@@ -811,12 +799,10 @@ describe('UserManagementService', () => {
       }
 
       const { code, httpStatusCode, context } = responseError
-      const { username, confirmationCode: otp } = context
-
-      const normalizedUsername = normalizeUsername(email)
+      const { username } = context
 
       expect(code).to.eql('COR-5')
-      expect(username).to.eql(normalizedUsername, otp)
+      expect(username).to.eql(email)
       expect(httpStatusCode).to.eql(400)
     })
 

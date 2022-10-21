@@ -6,7 +6,7 @@ import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 
 import KeyManagementService from '../../../src/services/KeyManagementService'
 import WalletStorageService from '../../../src/services/WalletStorageService'
-import { UserManagementService, normalizeUsername } from '@affinidi/user-management'
+import { UserManagementService } from '@affinidi/user-management'
 
 import { getAllOptionsForEnvironment, testSecrets } from '../../helpers'
 import { AffinidiWallet } from '../../helpers/AffinidiWallet'
@@ -104,9 +104,10 @@ describe('WalletStorageService', () => {
   it('#adminDeleteUnconfirmedUser', async () => {
     const email = 'different_test_user_to_delete@example.com'
 
-    await userManagementService.initiateSignUpWithEmailOrPhone(email, password, null)
+    const token = await userManagementService.initiateSignUpWithEmailOrPhone(email, password, null)
+    const [username] = token.split('::')
     const keyStorageApiService = createKeyStorageApiService()
-    await keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizeUsername(email) })
+    await keyStorageApiService.adminDeleteUnconfirmedUser({ username })
     let responseError
 
     try {

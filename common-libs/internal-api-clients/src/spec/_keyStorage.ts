@@ -188,14 +188,14 @@ export default {
 	},
 	"info": {
 		"title": "affinity-wallet-backend",
-		"version": "1.14.0",
+		"version": "1.35.0",
 		"description": "Backend for Affinity SaaS Wallet",
 		"license": {
 			"name": "ISC"
 		},
 		"contact": {
-			"name": "Denis Popov ",
-			"email": "denis.p@affinity-project.org"
+			"name": "The Engineering Team",
+			"email": "nucleus.team@affinidi.com"
 		}
 	},
 	"openapi": "3.0.0",
@@ -208,6 +208,7 @@ export default {
 						"description": "No content"
 					}
 				},
+				"description": "Store custom message template for passwordless auth flow.",
 				"tags": [
 					"MessageTemplate"
 				],
@@ -233,6 +234,7 @@ export default {
 						"description": "No content"
 					}
 				},
+				"description": "Delete custom message template for passwordless auth flow.",
 				"tags": [
 					"MessageTemplate"
 				],
@@ -265,6 +267,7 @@ export default {
 						}
 					}
 				},
+				"description": "Initiate request to the issuer for provide a credential offer request token (offerToken).",
 				"tags": [
 					"Issuer"
 				],
@@ -316,6 +319,7 @@ export default {
 						}
 					}
 				},
+				"description": "Route used by SDK for getting users email & phone number signed credentials.",
 				"tags": [
 					"Issuer"
 				],
@@ -361,6 +365,7 @@ export default {
 						}
 					}
 				},
+				"description": "Read my encrypted key from a key storage",
 				"tags": [
 					"Key"
 				],
@@ -396,6 +401,7 @@ export default {
 						}
 					}
 				},
+				"description": "Store my encrypted key on a key storage",
 				"tags": [
 					"Key"
 				],
@@ -434,6 +440,7 @@ export default {
 						"description": "No content"
 					}
 				},
+				"description": "This endpoint should be used to confirm user creation.",
 				"tags": [
 					"UserManagement"
 				],
@@ -459,6 +466,7 @@ export default {
 						"description": "No content"
 					}
 				},
+				"description": "This endpoint should be used to delete unconfirmed user.",
 				"tags": [
 					"UserManagement"
 				],
@@ -529,6 +537,62 @@ export default {
 						"required": true,
 						"schema": {
 							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/userManagement/doesUserExist": {
+			"get": {
+				"operationId": "DoesUserExist",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"isUnconfirmed": {
+											"type": "boolean"
+										},
+										"userExists": {
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"isUnconfirmed",
+										"userExists"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+				},
+				"tags": [
+					"UserManagement"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "value",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "field",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"username",
+								"email",
+								"phone_number"
+							]
 						}
 					}
 				]

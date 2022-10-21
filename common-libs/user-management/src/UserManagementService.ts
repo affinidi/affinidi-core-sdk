@@ -1,10 +1,10 @@
+import { v4 as generateUuid } from 'uuid'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 
 import { CognitoUserTokens, MessageParameters } from './dto'
 import { validateUsername } from './validateUsername'
 import SdkErrorFromCode from './SdkErrorFromCode'
-import { normalizeUsername } from './normalizeUsername'
 import { SessionStorageService } from './SessionStorageService'
 import {
   CognitoIdentityService,
@@ -70,7 +70,17 @@ export class UserManagementService {
     password: string,
     messageParameters?: MessageParameters,
   ): Promise<void> {
-    const { normalizedUsername } = usernameWithAttributes
+    const { login } = usernameWithAttributes
+    // to keep backward compatibility, we check if confirmed user exists (throw COR-7) or not before sending otp
+    // in previous implementation, when usernames were derived from alias (email / phone),
+    // it happens on SignUpResult.ConfirmedUsernameExists (from one email one username)
+    const isConfirmedUserExist = await this.doesConfirmedUserExist(login)
+
+    if (isConfirmedUserExist) {
+      throw new SdkErrorFromCode('COR-7', { username: login })
+    }
+
+    const { username } = usernameWithAttributes
     const result = await this._cognitoIdentityService.trySignUp(usernameWithAttributes, password, messageParameters)
 
     switch (result) {
@@ -79,9 +89,9 @@ export class UserManagementService {
       case SignUpResult.InvalidPassword:
         throw new SdkErrorFromCode('COR-6')
       case SignUpResult.ConfirmedUsernameExists:
-        throw new SdkErrorFromCode('COR-7', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-7', { username })
       case SignUpResult.UnconfirmedUsernameExists:
-        await this._keyStorageApiService.adminDeleteUnconfirmedUser({ username: normalizedUsername })
+        await this._keyStorageApiService.adminDeleteUnconfirmedUser({ username })
         return this._signUp(usernameWithAttributes, password, messageParameters)
       default:
         throw new DefaultResultError(result)
@@ -90,7 +100,7 @@ export class UserManagementService {
 
   async signUpWithUsernameAndConfirm(username: string, password: string) {
     this._loginShouldBeUsername(username)
-    const usernameWithAttributes = this._buildUserAttributes(username)
+    const usernameWithAttributes = this._buildUserAttributes(username, username)
 
     if (!password) {
       throw new Error(`Expected non-empty password for '${username}'`)
@@ -107,26 +117,27 @@ export class UserManagementService {
     const usernameWithAttributes = this._buildUserAttributes(login)
 
     await this._signUp(usernameWithAttributes, password, messageParameters)
-    const signUpToken = `${login}::${password}`
+    const signUpToken = `${usernameWithAttributes.username}::${password}`
 
     return signUpToken
   }
 
   private async _completeSignUp(login: string, confirmationCode: string) {
-    const usernameWithAttributes = this._buildUserAttributes(login)
-    const { normalizedUsername } = usernameWithAttributes
+    const usernameWithAttributes = this._buildUserAttributes(login, login)
     const result = await this._cognitoIdentityService.completeSignUp(usernameWithAttributes, confirmationCode)
     switch (result) {
       case CompleteSignUpResult.Success:
         return
       case CompleteSignUpResult.ConfirmationCodeExpired:
-        throw new SdkErrorFromCode('COR-2', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('COR-2', { username: login, confirmationCode })
       case CompleteSignUpResult.ConfirmationCodeWrong:
-        throw new SdkErrorFromCode('COR-5', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('COR-5', { username: login, confirmationCode })
       case CompleteSignUpResult.UserNotFound:
-        throw new SdkErrorFromCode('COR-4', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       case CompleteSignUpResult.DoubleConfirmation:
-        throw new SdkErrorFromCode('UM-1', { username: normalizedUsername, confirmationCode })
+        throw new SdkErrorFromCode('UM-1', { username: login, confirmationCode })
+      case CompleteSignUpResult.AliasExistsException:
+        throw new SdkErrorFromCode('UM-3', { username: login })
       default:
         throw new DefaultResultError(result)
     }
@@ -154,6 +165,12 @@ export class UserManagementService {
     return response.cognitoTokens
   }
 
+  private async doesUserExist(value: string) {
+    const { isEmailValid, isPhoneNumberValid } = validateUsername(value)
+    const field = isEmailValid ? 'email' : isPhoneNumberValid ? 'phone_number' : 'username'
+    return this._keyStorageApiService.doesUserExist({ field, value })
+  }
+
   async logInWithPassword(login: string, password: string) {
     return this._logInWithPassword(login, password, false)
   }
@@ -177,17 +194,25 @@ export class UserManagementService {
 
   async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
     const { login, shortPassword } = this.parseSignUpToken(token)
-    this._loginShouldBeEmailOrPhoneNumber(login)
     await this._completeSignUp(login, confirmationCode)
     const cognitoTokens = await this._logInWithPassword(login, shortPassword, true)
     return { cognitoTokens, shortPassword }
   }
 
-  async doesUnconfirmedUserExist(username: string) {
-    const normalizedUsername = normalizeUsername(username)
-    return this._cognitoIdentityService.doesUnconfirmedUserExist(normalizedUsername)
+  /**
+   * Uses an ep on KeysService to check if record exists or not for given username or alias (email / phone)
+   * @param login
+   */
+  async doesUnconfirmedUserExist(login: string) {
+    const { userExists, isUnconfirmed } = await this.doesUserExist(login)
+
+    return userExists && isUnconfirmed
   }
 
+  /**
+   * Uses login with wrong password approach, due to for login we can use aliases (email / phone)
+   * @param login
+   */
   async doesConfirmedUserExist(login: string) {
     return this._cognitoIdentityService.doesConfirmedUserExist(login)
   }
@@ -306,15 +331,14 @@ export class UserManagementService {
 
   async resendSignUpByLogin(login: string, messageParameters?: MessageParameters): Promise<void> {
     const usernameWithAttributes = this._buildUserAttributes(login)
-    const { normalizedUsername } = usernameWithAttributes
     const result = await this._cognitoIdentityService.resendSignUp(usernameWithAttributes, messageParameters)
     switch (result) {
       case ResendSignUpResult.Success:
         return
       case ResendSignUpResult.UserAlreadyConfirmed:
-        throw new SdkErrorFromCode('COR-8', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-8', { username: login })
       case ResendSignUpResult.UserNotFound:
-        throw new SdkErrorFromCode('COR-4', { username: normalizedUsername })
+        throw new SdkErrorFromCode('COR-4', { username: login })
       default:
         throw new DefaultResultError(result)
     }
@@ -412,12 +436,20 @@ export class UserManagementService {
     }
   }
 
-  private _buildUserAttributes(login: string) {
+  /**
+   * Builds user attributes for cognito record.
+   * Result username is derived from login input parameter or random (based on usernameBuildingStrategy)
+   * OR if exactUsername provided equals to that
+   * @param login (arbitrary username, email or phone)
+   * @param exactUsername - optional parameter, if given the result username is eq to this parameter
+   * @private
+   */
+  private _buildUserAttributes(login: string, exactUsername?: string) {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
-    const normalizedUsername = this._shouldDisableNameNormalisation ? login : normalizeUsername(login)
+    const builtUsername = generateUuid()
 
     return {
-      normalizedUsername,
+      username: exactUsername ?? builtUsername,
       login,
       emailAddress: isEmailValid ? login : undefined,
       phoneNumber: isPhoneNumberValid ? login : undefined,

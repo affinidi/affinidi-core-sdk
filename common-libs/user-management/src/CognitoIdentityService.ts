@@ -87,6 +87,7 @@ export enum CompleteSignUpResult {
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
   DoubleConfirmation,
+  AliasExistsException,
 }
 
 export enum InitiateChangeLoginResult {
@@ -112,7 +113,7 @@ export enum RegistrationStatus {
 }
 
 export type UsernameWithAttributes = {
-  normalizedUsername: string
+  username: string
   login: string
   phoneNumber?: string
   emailAddress?: string
@@ -324,7 +325,7 @@ export class CognitoIdentityService {
     const params = {
       ClientId: this.clientId,
       Password: password,
-      Username: usernameWithAttributes.normalizedUsername,
+      Username: usernameWithAttributes.username,
       UserAttributes: this._buildUserAttributes({
         ...usernameWithAttributes,
         registrationStatus: RegistrationStatus.Incomplete,
@@ -338,7 +339,7 @@ export class CognitoIdentityService {
     } catch (error) {
       switch (error.code) {
         case 'UsernameExistsException': {
-          const isUserUnconfirmed = await this.doesUnconfirmedUserExist(usernameWithAttributes.normalizedUsername)
+          const isUserUnconfirmed = await this.doesUnconfirmedUserExist(usernameWithAttributes.username)
           return isUserUnconfirmed ? SignUpResult.UnconfirmedUsernameExists : SignUpResult.ConfirmedUsernameExists
         }
 
@@ -357,7 +358,7 @@ export class CognitoIdentityService {
   ): Promise<ResendSignUpResult> {
     const params = {
       ClientId: this.clientId,
-      Username: usernameWithAttributes.normalizedUsername,
+      Username: usernameWithAttributes.login,
       ...getAdditionalParameters(messageParameters),
     }
 
@@ -382,7 +383,7 @@ export class CognitoIdentityService {
   ): Promise<CompleteSignUpResult> {
     const params = {
       ClientId: this.clientId,
-      Username: usernameWithAttributes.normalizedUsername,
+      Username: usernameWithAttributes.username,
       ConfirmationCode: confirmationCode,
     }
 
@@ -397,6 +398,8 @@ export class CognitoIdentityService {
           return CompleteSignUpResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
           return CompleteSignUpResult.ConfirmationCodeWrong
+        case 'AliasExistsException':
+          return CompleteSignUpResult.AliasExistsException
         case 'NotAuthorizedException':
           if (error.message === 'User cannot be confirmed. Current status is CONFIRMED')
             return CompleteSignUpResult.DoubleConfirmation
@@ -418,7 +421,7 @@ export class CognitoIdentityService {
     usernameWithAttributes: UsernameWithAttributes,
     messageParameters?: MessageParameters,
   ): Promise<InitiateChangeLoginResult> {
-    const usernameExists = await this._userExists(usernameWithAttributes.normalizedUsername)
+    const usernameExists = await this._userExists(usernameWithAttributes.username)
     const loginExists = await this._userExists(usernameWithAttributes.login)
 
     if (usernameExists || loginExists) {
@@ -546,6 +549,7 @@ export class CognitoIdentityService {
 
   private async _logInWithInvalidPassword(username: string) {
     try {
+      // username also could be email or phone, cognito works with aliases
       const response = await this.tryLogInWithPassword(username, INVALID_PASSWORD)
       switch (response.result) {
         case LogInWithPasswordResult.UserNotFound:
