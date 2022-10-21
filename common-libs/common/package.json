@@ -71,6 +71,7 @@
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/platform-fetch-node": "^1.1.0",
     "@affinidi/prettier-config": "1.0.1",
+    "@affinidi/tools-openapi": "^1.2.0",
     "@affinidi/vc-data": "^1.6.0",
     "@types/chai": "4.2.12",
     "@types/create-hash": "^1.2.2",
