@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai'
 import LRUCache from 'lru-cache'
 import { resolveUrl, Service } from '@affinidi/url-resolver'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
-import { ResponseForOperation } from '@affinidi/tools-openapi/dist/types/request'
+import { ResponseForOperation } from '@affinidi/tools-openapi'
 import { LocalDidResolver } from '../../../src/shared/DidResolver'
 import {did, did1, did2, response} from '../../factory/resolveDidResponse'
 
