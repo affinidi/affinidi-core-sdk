@@ -1,3 +1,7 @@
+# release 7.2.0 (2022-10-20)
+* updated to use usermanagement@2.x.x with random username generation during passwordless registration
+# release 7.1.1 (2022-10-20)
+* updated `common` to update DidResolver to have optional caching
 # release 7.1.0 (2022-10-12)
 * updated `common` to update deriveProof  to make "data" root field in credential subject not mandatory
 # release 7.0.2 (2022-10-10)

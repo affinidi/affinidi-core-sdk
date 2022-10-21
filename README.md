@@ -103,3 +103,17 @@ Workflow to publish npm packages is:
 4. `npm run publish`.
 
 Note that `prepare` command is not required as the projects are built on step 2 anyway, and `prepare` command is run for all projects during step 1, making it unnecessary long.
+
+## Auto update of versions and changelogs
+
+After merge of PR, the github actions publish all libs that have increased version.  
+To make it easier when you are updating one of lib and all SDK packages you can use ./utils/pre-publish-update.js  
+The flow is:
+* if libs without internal dependencies were updated - process them first
+* if libs with internal dependencies were updated - update libs they are depend on and update them
+* if SDK should be update - update all libs sdk depend on and then update SDK  
+
+All libs are updated one by one, when all SDKs are updated by one iteration.  
+The script updates in package.json / dependencies all internal dependencies of the lib (or sdks) that were updated, before so no need to manually do it.   
+More details in the code.
+

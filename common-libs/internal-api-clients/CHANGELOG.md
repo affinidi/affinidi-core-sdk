@@ -1,3 +1,5 @@
+# release 2.1.0 (2022-10-20)
+* updated api of KeysService
 # release 2.0.0 (2022-09-28)
 Breaking changes: 
   * removed `Bloom Vault` usage and `Vault Migration Service` logic

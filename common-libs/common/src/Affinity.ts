@@ -10,7 +10,7 @@ import { AffinityOptions, EventOptions } from './dto/shared.dto'
 import { DidDocumentService, KeysService, DigestService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
-import { DidResolver } from './shared/DidResolver'
+import { LocalDidResolver } from './shared/DidResolver'
 import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots } from './utils/objectUtil'
 
 const revocationList = require('vc-revocation-list')
@@ -25,10 +25,15 @@ export class Affinity {
   private readonly _platformCryptographyTools
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
-    this._didResolver = new DidResolver({
-      registryUrl: options.registryUrl ?? resolveUrl(Service.REGISTRY, 'staging'),
-      accessApiKey: options.apiKey,
-    })
+    this._didResolver =
+      options.didResolver ??
+      new LocalDidResolver({
+        registryUrl: options.registryUrl ?? resolveUrl(Service.REGISTRY, 'staging'),
+        accessApiKey: options.apiKey,
+        useCache: options.useCache ?? true,
+        cacheMaxSize: options.cacheMaxSize,
+        cacheTtlInMin: options.cacheTtlInMin,
+      })
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
       metricsUrl: options.metricsUrl ?? resolveUrl(Service.METRICS, 'staging'),

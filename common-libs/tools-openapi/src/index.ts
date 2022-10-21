@@ -6,3 +6,4 @@ export {
   wrapWithDidAuth,
 } from './helpers/didAuthClientWrapper'
 export { createDidAuthSession } from './helpers/didAuthSession'
+export { ResponseForOperation } from './types/request'
