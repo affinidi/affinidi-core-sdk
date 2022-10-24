@@ -24,7 +24,7 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         context: ${{ env.DOCKERFILE_CONTEXT }}
-        tags: ${{env.REGISTRY_HOST}}/${{ env.IMAGE_NAME }}:$GITHUB_SHA
+        tags: ${{env.REGISTRY_HOST}}/${{ env.IMAGE_NAME }}:$ {{env.GITHUB_SHA}}
         load: true
     
     - name: Setup cache
