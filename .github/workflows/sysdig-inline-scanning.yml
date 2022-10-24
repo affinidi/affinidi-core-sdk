@@ -8,8 +8,8 @@ env:
 name: sysdig-inline-scanning
 
 on:
-    push:
-        branches: [master]
+  push:
+    branches: [master]
     
 
 jobs:
