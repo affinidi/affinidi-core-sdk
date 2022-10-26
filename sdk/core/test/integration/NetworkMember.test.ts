@@ -1,6 +1,8 @@
 'use strict'
 
 import { expect } from 'chai'
+import nock from 'nock'
+import sinon from 'sinon'
 import { decode as jwtDecode } from 'jsonwebtoken'
 import { Affinity, KeysService } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
@@ -22,8 +24,6 @@ import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { createUserManagementService } from '../../src/shared/createUserManagementService'
 import signedCredential from '../factory/signedCredential'
 import { generatePassword } from '../../src/shared/generatePassword'
-import nock from 'nock'
-import sinon from 'sinon'
 import * as AnchoringHandler from '../../src/services/anchoringHandler'
 
 const {
