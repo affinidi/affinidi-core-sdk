@@ -22,7 +22,7 @@ import {
 import { parse } from 'did-resolver'
 
 import { extractSDKVersion, isW3cCredential } from '../_helpers'
-import { DEFAULT_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
+import { DEFAULT_DID_METHOD, ELEM_DID_METHOD, SUPPORTED_DID_METHODS } from '../_defaultConfig'
 
 import {
   ClaimMetadata,
@@ -206,7 +206,15 @@ export abstract class BaseNetworkMember {
     } = options
     const api = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const didMethod = options.otherOptions.didMethod || DEFAULT_DID_METHOD
-    return register(api, didMethod, dependencies.platformCryptographyTools, password, keyOptions, options.origin)
+    return register(
+      api,
+      didMethod,
+      dependencies.platformCryptographyTools,
+      password,
+      keyOptions,
+      options.origin,
+      options.otherOptions.skipAnchoringForElemMethod,
+    )
   }
 
   protected static async _anchorDid(
@@ -214,25 +222,32 @@ export abstract class BaseNetworkMember {
     password: string,
     didDocument: any,
     nonce: number,
-    { basicOptions: { registryUrl }, accessApiKey, origin }: ParsedOptions,
+    {
+      basicOptions: { registryUrl },
+      accessApiKey,
+      origin,
+      otherOptions: { skipAnchoringForElemMethod },
+    }: ParsedOptions,
   ) {
     const registry = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion: extractSDKVersion() })
     const keysService = new KeysService(encryptedSeed, password)
     const { seed, didMethod } = keysService.decryptSeed()
     const didService = DidDocumentService.createDidDocumentService(keysService)
-    return anchorDid({
-      registry,
-      anchoredDidElem: false,
-      did: didService.getMyDid(),
-      didMethod: didMethod as DidMethod,
-      keysService,
-      nonce,
-      additionalJoloParams: {
-        didDocument,
-        seedHex: seed.toString('hex'),
-      },
-      origin: origin || '',
-    })
+    return didMethod == ELEM_DID_METHOD && (skipAnchoringForElemMethod ?? false)
+      ? { did: didService.getMyDid() }
+      : anchorDid({
+          registry,
+          anchoredDidElem: false,
+          did: didService.getMyDid(),
+          didMethod: didMethod as DidMethod,
+          keysService,
+          nonce,
+          additionalJoloParams: {
+            didDocument,
+            seedHex: seed.toString('hex'),
+          },
+          origin: origin || '',
+        })
   }
 
   /**

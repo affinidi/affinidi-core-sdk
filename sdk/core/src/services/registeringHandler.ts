@@ -1,6 +1,6 @@
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { DidMethod, KeyOptions } from '../dto/shared.dto'
-import { ELEM_ANCHORED_DID_METHOD } from '../_defaultConfig'
+import { ELEM_ANCHORED_DID_METHOD, ELEM_DID_METHOD } from '../_defaultConfig'
 import { DidDocumentService, extendSeedWithDid, generateFullSeed, KeysService } from '@affinidi/common'
 import { anchorDid } from './anchoringHandler'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
@@ -13,6 +13,7 @@ export const register = async (
   password: string,
   keyOptions?: KeyOptions,
   origin?: string,
+  skipAnchoringForElemMethod?: boolean,
 ) => {
   const isAnchoredSeed = didMethod === ELEM_ANCHORED_DID_METHOD
 
@@ -22,19 +23,24 @@ export const register = async (
   const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const { did: builtDid, didDocument, keyId } = await didDocumentService.buildDidDocumentForRegister()
 
-  const { did: anchoredInBlockchainDid } = await anchorDid({
-    registry,
-    keysService,
-    didMethod,
-    did: builtDid,
-    anchoredDidElem: isAnchoredSeed,
-    nonce: 0,
-    additionalJoloParams: {
-      didDocument,
-      seedHex: parseDecryptedSeed(seedWithMethod).seed.toString('hex'),
-    },
-    origin,
-  })
+  let anchoredInBlockchainDid
+
+  if (didMethod != ELEM_DID_METHOD || !(skipAnchoringForElemMethod ?? false)) {
+    const response = await anchorDid({
+      registry,
+      keysService,
+      didMethod,
+      did: builtDid,
+      anchoredDidElem: isAnchoredSeed,
+      nonce: 0,
+      additionalJoloParams: {
+        didDocument,
+        seedHex: parseDecryptedSeed(seedWithMethod).seed.toString('hex'),
+      },
+      origin,
+    })
+    anchoredInBlockchainDid = response.did
+  }
 
   if (isAnchoredSeed) {
     const anchoredSeed = extendSeedWithDid(seedWithMethod, anchoredInBlockchainDid)

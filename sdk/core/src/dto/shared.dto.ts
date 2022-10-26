@@ -117,6 +117,9 @@ export class SdkOptions {
   @IsString()
   @IsOptional()
   origin?: string
+
+  @IsOptional()
+  skipAnchoringForElemMethod?: boolean
 }
 
 export class MessageParameters {
