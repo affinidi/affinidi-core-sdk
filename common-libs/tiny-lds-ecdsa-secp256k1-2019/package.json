@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/tiny-lds-ecdsa-secp256k1-2019",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "tiny version of lds-ecdsa-secp256k1-2019",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -71,6 +71,7 @@
     "access": "public"
   },
   "overrides": {
-    "node-forge": "1.3.0"
+    "node-forge": "1.3.0",
+    "xmldom": "@xmldom/xmldom@0.8.3"
   }
 }
