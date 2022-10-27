@@ -1,5 +1,7 @@
 # release 7.3.0 (2022-10-26)
 * updated `@affinidi/wallet-core-sdk` to have an option to skip call to Regisrty `anchorDid` for didMethod `elem`
+# release 7.2.1 (2022-10-27)
+* Fix Security Vulnerabilities by patching `xmldom`
 # release 7.2.0 (2022-10-20)
 * updated to use usermanagement@2.x.x with random username generation during passwordless registration
 # release 7.1.1 (2022-10-20)

@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/vc-common",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "description": "Shared types and utilities for credential related libraries",
@@ -34,8 +34,8 @@
   "devDependencies": {
     "@affinidi/eslint-config": "1.0.1",
     "@affinidi/prettier-config": "1.0.1",
-    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.2.0",
-    "@mattrglobal/jsonld-signatures-bbs": "^0.10.0",
+    "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.2.1",
+    "@mattrglobal/jsonld-signatures-bbs": "^1.1.0",
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^3.10.1",
     "@typescript-eslint/parser": "^3.10.1",
@@ -67,6 +67,7 @@
     "access": "public"
   },
   "overrides": {
-    "node-forge": "1.3.0"
+    "node-forge": "1.3.0",
+    "xmldom": "@xmldom/xmldom@0.8.3"
   }
 }
