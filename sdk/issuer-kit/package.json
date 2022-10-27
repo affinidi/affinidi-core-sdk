@@ -50,7 +50,7 @@
     "typescript": "^4.3.2"
   },
   "dependencies": {
-    "@affinidi/vc-common": "^1.6.0",
+    "@affinidi/vc-common": "^1.6.1",
     "ajv": "^6.12.3",
     "fastify": "^2.15.1",
     "fastify-cors": "^4.0.0",

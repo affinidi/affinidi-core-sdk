@@ -1,3 +1,5 @@
+# release 1.6.1 (2022-10-27)
+* Fix Security Vulnerabilities by patching `xmldom`
 ## release 1.6.0 (2022-09-06)
 * upgraded to npm 8;
 * added `overrides` field to override vulnerable `node-forge` sub dependency(npm version >= 8.10.x);
