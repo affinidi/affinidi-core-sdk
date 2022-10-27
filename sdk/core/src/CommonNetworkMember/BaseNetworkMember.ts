@@ -233,7 +233,7 @@ export abstract class BaseNetworkMember {
     const keysService = new KeysService(encryptedSeed, password)
     const { seed, didMethod } = keysService.decryptSeed()
     const didService = DidDocumentService.createDidDocumentService(keysService)
-    return didMethod == ELEM_DID_METHOD && (skipAnchoringForElemMethod ?? false)
+    return didMethod == ELEM_DID_METHOD && skipAnchoringForElemMethod
       ? { did: didService.getMyDid() }
       : anchorDid({
           registry,
