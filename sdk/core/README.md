@@ -23,6 +23,7 @@
 * [Set Up Integration Tests](#setup-Integration-Tests)
 * [Initialize](#initialize)
   - [Create API-KEY](#create-api-key)
+  - [Set up SDK options](#set-up-sdk-options)
   - [Initialize from seed](#initialize-from-seed)
   - [Sign DID document](#sign-did-document)
 * [Interface](#interface)
@@ -125,6 +126,24 @@ const wallet = AffinidiWallet.openWalletByEncryptedSeed(options, encryptedSeed, 
 ```
 
 [Issuer / Holder / Verifier interface examples](#interface)
+
+### Set up SDK options
+
+`options` is a required parameter for wallet initialization.
+You can specify optional field `didMethod` and `skipAnchoringForElemMethod` in `options`
+
+```ts
+const options = {
+  env: 'staging',
+  apiKey: 'YOUR API KEY',
+  didMethod: '...',   // 'elem' (default),  'jolo' or 'elem-anchored'
+  skipAnchoringForElemMethod: true  
+}
+```
+
+If `skipAnchoringForElemMethod` is set to `true` and `didMethod` is `elem`, DID anchoring will be skipped.
+By default, `didMethod` is `elem` and `skipAnchoringForElemMethod` is `false`, so anchoring will not be skipped unless explicitly specified.
+
 
 ### Create a new wallet
 

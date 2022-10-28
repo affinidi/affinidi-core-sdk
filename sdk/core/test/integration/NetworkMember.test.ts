@@ -1,6 +1,8 @@
 'use strict'
 
 import { expect } from 'chai'
+import nock from 'nock'
+import sinon from 'sinon'
 import { decode as jwtDecode } from 'jsonwebtoken'
 import { Affinity, KeysService } from '@affinidi/common'
 import { buildVCV1Unsigned, buildVCV1Skeleton } from '@affinidi/vc-common'
@@ -22,7 +24,7 @@ import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { createUserManagementService } from '../../src/shared/createUserManagementService'
 import signedCredential from '../factory/signedCredential'
 import { generatePassword } from '../../src/shared/generatePassword'
-import nock from 'nock'
+import * as AnchoringHandler from '../../src/services/anchoringHandler'
 
 const {
   PASSWORD,
@@ -1479,5 +1481,81 @@ describe('CommonNetworkMember', () => {
       const { code } = error
       expect(code).to.eql('COR-28')
     }
+  })
+
+  describe('skipAnchoringForElemMethod option enabled', () => {
+    const sdkOptions = { skipAnchoringForElemMethod: true, ...options }
+    let spyOnAnchor: any
+
+    beforeEach(() => {
+      spyOnAnchor = sinon.spy(AnchoringHandler, 'anchorDid')
+    })
+
+    afterEach(() => {
+      spyOnAnchor.restore()
+    })
+
+    it('.register (elem did method) should not call anchorDid()', async () => {
+      const optionsWithElemDid = Object.assign({}, sdkOptions, { didMethod: elemDidMethod } as const)
+
+      const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithElemDid)
+
+      expect(did).to.exist
+      expect(encryptedSeed).to.exist
+      const [, didMethod] = did.split(':')
+      expect(didMethod).to.be.equal(elemDidMethod)
+      expect(spyOnAnchor.callCount).to.be.equal(0)
+    })
+
+    it('.register (elem-anchored did method) should call anchorDid() once', async () => {
+      const optionsWithElemAnchoredDid = Object.assign({}, sdkOptions, { didMethod: elemAnchoredDidMethod } as const)
+
+      const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithElemAnchoredDid)
+      const [, didMethod] = did.split(':')
+      const decrypted = KeysService.decryptSeed(encryptedSeed, password)
+
+      const resolvedDidResponse = await new RegistryApiService({
+        registryUrl: getAllOptionsForEnvironment().registryUrl,
+        accessApiKey: sdkOptions.accessApiKey,
+      }).resolveDid({ did })
+
+      expect(didMethod).to.be.equal(elemDidMethod)
+      expect(decrypted.didMethod).to.equal(elemAnchoredDidMethod)
+      expect(decrypted.metadata.anchoredDid).to.equal(did)
+      expect(decrypted.metadata.anchoredDid).to.equal(resolvedDidResponse.body.didDocument.id)
+      expect(spyOnAnchor.callCount).to.be.equal(1)
+    })
+
+    it('#createWallet should return wallet with resolvable did (elem) and not call anchorDid()', async () => {
+      const commonNetworkMember = await AffinidiWallet.createWallet(
+        {
+          ...sdkOptions,
+          didMethod: 'elem',
+        },
+        password,
+      )
+
+      const resolvedDidDocument = await commonNetworkMember.resolveDid(commonNetworkMember.did)
+
+      expect(commonNetworkMember.did.includes(resolvedDidDocument.id)).to.be.eql(true)
+      expect(resolvedDidDocument.publicKey.length).to.be.gte(1)
+      expect(spyOnAnchor.callCount).to.be.equal(0)
+    })
+
+    it('#createWallet should return wallet with resolvable did (elem-anchored) and call anchorDid() once', async () => {
+      const commonNetworkMember = await AffinidiWallet.createWallet(
+        {
+          ...sdkOptions,
+          didMethod: 'elem-anchored',
+        },
+        password,
+      )
+
+      const resolvedDidDocument = await commonNetworkMember.resolveDid(commonNetworkMember.did)
+
+      expect(commonNetworkMember.did.includes(resolvedDidDocument.id)).to.be.eql(true)
+      expect(resolvedDidDocument.publicKey.length).to.be.gte(1)
+      expect(spyOnAnchor.callCount).to.be.equal(1)
+    })
   })
 })
