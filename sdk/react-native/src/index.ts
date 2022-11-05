@@ -33,3 +33,7 @@ import type * as Types from '@affinidi/wallet-core-sdk'
 export { Util } from '@affinidi/wallet-core-sdk'
 export { AffinidiWallet, AffinidiWallet as AffinityWallet, AffinidiWalletV6 } from './AffinityWallet'
 export { Types }
+
+import PlatformCryptographyTools from './PlatformCryptographyTools'
+
+export const platformCryptographyTools = PlatformCryptographyTools
