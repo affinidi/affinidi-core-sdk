@@ -1,3 +1,5 @@
+# release 7.3.1 (2022-11-05)
+* export crypto tools
 # release 7.3.0 (2022-10-26)
 * updated `@affinidi/wallet-core-sdk` to have an option to skip call to Regisrty `anchorDid` for didMethod `elem`
 # release 7.2.1 (2022-10-27)
