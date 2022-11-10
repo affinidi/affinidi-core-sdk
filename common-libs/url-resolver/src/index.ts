@@ -1,11 +1,18 @@
-import { defaultTemplate, predefinedTemplates, defaultInternalTemplate } from './templates'
+import {
+  defaultTemplate,
+  defaultDevTemplate,
+  predefinedTemplates,
+  defaultInternalTemplate,
+} from './templates'
 import { envSetupUrls, predefinedUrls } from './urls'
 import { Service } from './services'
 
 export type Env = 'dev' | 'staging' | 'prod'
 
 const pickPublicTemplate = (service: Service, env: Env) =>
-  predefinedUrls[service]?.[env] ?? predefinedTemplates[service] ?? defaultTemplate
+  predefinedUrls[service]?.[env] ??
+  predefinedTemplates[service] ??
+  (env === 'dev' ? defaultDevTemplate : defaultTemplate)
 
 const pickInternalTemplate = () => defaultInternalTemplate
 
