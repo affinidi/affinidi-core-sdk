@@ -14,7 +14,7 @@ import { Affinidi, KeysService, LocalKeyVault } from '@affinidi/common'
 import DidAuthClientService from '../../../src/DidAuthService/DidAuthClientService'
 
 const env = {
-  environment: <Env>'dev',
+  environment: <Env>'staging',
   accessApiKey: 'mockAccessApiKeyToAffinidiRegistry1',
 }
 

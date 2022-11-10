@@ -1,3 +1,5 @@
+# release 7.4.0 (2022-11-10)
+* updated `url-resolver` to move to new dev environment
 # release 7.3.0 (2022-10-26)
 * updated `@affinidi/wallet-core-sdk` to have an option to skip call to Regisrty `anchorDid` for didMethod `elem`
 # release 7.2.0 (2022-10-20)
