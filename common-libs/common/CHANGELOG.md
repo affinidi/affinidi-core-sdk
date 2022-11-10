@@ -1,3 +1,5 @@
+# release 2.7.0 (2022-11-10)
+* updated `url-resolver` to move to new dev environment
 # release 2.6.0 (2022-10-20)
 * updated DidResolver to have optional caching
 # release 2.5.0 (2022-10-12)
