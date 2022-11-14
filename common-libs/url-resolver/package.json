@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/url-resolver",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "description": "Url resolver for Affinidi services",
