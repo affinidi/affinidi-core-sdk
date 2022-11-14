@@ -1,3 +1,5 @@
+# release 7.5.0 (2022-11-14)
+* updated `url-resolver` with internal URLs for new dev environment
 # release 7.4.0 (2022-11-10)
 * updated `url-resolver` to move to new dev environment
 # release 7.3.0 (2022-10-26)
