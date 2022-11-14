@@ -58,6 +58,18 @@ export default class KeyStorageApiService {
     return this.client.StoreMyKey({ authorization: accessToken, params })
   }
 
+  async adminCreateConfirmedUser({
+    profileTrueCaller,
+    password,
+    username,
+  }: {
+    profileTrueCaller: any
+    password: string
+    username: string
+  }) {
+    return this.client.AdminCreateConfirmedUser({ params: { profileTrueCaller, password, username } })
+  }
+
   async adminConfirmUser(params: GetParams<typeof clientMethods.AdminConfirmUser>) {
     return this.client.AdminConfirmUser({ params })
   }

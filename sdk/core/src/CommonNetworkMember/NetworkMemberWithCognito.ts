@@ -1,4 +1,5 @@
 import { profile } from '@affinidi/tools-common'
+import { v4 as generateUuid } from 'uuid'
 
 import WalletStorageService from '../services/WalletStorageService'
 import { withDidData } from '../shared/getDidData'
@@ -9,6 +10,7 @@ import {
   KeyOptions,
   MessageParameters,
   SdkOptions,
+  TokenTrueCaller,
 } from '../dto/shared.dto'
 import { ParametersValidator } from '../shared/ParametersValidator'
 import { getOptionsFromEnvironment, ParsedOptions } from '../shared/getOptionsFromEnvironment'
@@ -536,6 +538,54 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
         }
       default:
         throw new Error(`Incorrect token type '${token.signInType}'`)
+    }
+  }
+
+  /**
+   * @description Initiates login of an existing user with `Truecaller` token,
+   * or signs up a new one, if user was not registered
+   * @param inputOptions - optional parameters with specified environment
+   * @param profileTrueCaller - phone number
+   * @param dependencies - static dependencies(cryptographic tools and data to format events logging)
+   * @returns wallet
+   */
+  public static async signInWithProfile(
+    inputOptions: SdkOptions,
+    profileTrueCaller: TokenTrueCaller,
+    dependencies: StaticDependencies,
+  ): Promise<{ isNew: boolean; wallet: NetworkMemberWithCognito }> {
+    await ParametersValidator.validate([
+      { isArray: false, type: TokenTrueCaller, isRequired: true, value: profileTrueCaller },
+      { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
+    ])
+
+    const options = getOptionsFromEnvironment(inputOptions)
+    const userManagementService = createUserManagementService(options)
+    const keyManagementService = createKeyManagementService(options)
+
+    await userManagementService.validateProfile(profileTrueCaller)
+    const { phoneNumber } = await userManagementService.parseAndValidatePayload(profileTrueCaller)
+
+    const userExists = await userManagementService.doesConfirmedUserExist(phoneNumber)
+    if (userExists) {
+      // logIn
+      const cognitoUserTokens = await userManagementService.logInWithProfile(phoneNumber, profileTrueCaller)
+      const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
+
+      return {
+        isNew: false,
+        wallet: new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options),
+      }
+    } else {
+      // signup
+      const newUsername = generateUuid()
+      const password = normalizeShortPassword(await generatePassword(), newUsername)
+      const cognitoTokens = await userManagementService.signUpWithProfile(newUsername, password, profileTrueCaller)
+
+      return {
+        isNew: true,
+        wallet: await NetworkMemberWithCognito._confirmSignUp(dependencies, options, cognitoTokens, password),
+      }
     }
   }
 

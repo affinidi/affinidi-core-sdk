@@ -2,6 +2,7 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
+import nock from 'nock'
 import { SdkError } from '@affinidi/tools-common'
 import {
   AffinidiWalletV6 as AffinidiWallet,
@@ -14,6 +15,7 @@ import { SdkOptions } from '../../../src/dto/shared.dto'
 import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
 import { TestmailInbox } from '../../../src/test-helpers'
+import { trueCallerTestProfile } from '../../factory/trueCallerProfile'
 
 const parallel = require('mocha.parallel')
 
@@ -300,7 +302,7 @@ parallel('CommonNetworkMember [OTP]', () => {
     checkIsWallet(commonNetworkMember)
   })
 
-  describe('for confirmed user registered with email and no password', () => {
+  describe.only('for confirmed user registered with email and no password', () => {
     const createUser = async () => {
       const inbox = createInbox()
 
@@ -601,6 +603,21 @@ parallel('CommonNetworkMember [OTP]', () => {
       const token = await AffinidiWallet.initiateSignInPasswordless(options, newInbox.email)
       const signInOtp = await waitForOtpCode(newInbox)
       const { wallet } = await AffinidiWallet.completeSignInPasswordless(options, token, signInOtp)
+      checkIsWallet(wallet)
+    })
+
+    it.only('sign up with truecaller token/profile', async () => {
+      nock('https://api4.truecaller.com')
+        .persist()
+        .get('/v1/key')
+        .reply(200, [
+          {
+            keyType: 'RSA',
+            key: process.env.TEST_PUBLIC_KEY_STR,
+          },
+        ])
+
+      const { wallet } = await AffinidiWallet.signInWithProfile(options, trueCallerTestProfile)
       checkIsWallet(wallet)
     })
 

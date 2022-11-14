@@ -13,3 +13,8 @@ export function validateUsername(username: string) {
 
   return { isUsername, isEmailValid, isPhoneNumberValid }
 }
+
+export function validatePhoneNumber(phoneNumber: string) {
+  const isPhoneNumberValid = phoneNumber && !!phoneNumber.match(PHONE_NUMBER_REGEX)
+  return { isPhoneNumberValid }
+}
