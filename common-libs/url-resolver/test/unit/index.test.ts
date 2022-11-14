@@ -47,7 +47,22 @@ describe('resolveUrl', () => {
   })
 
   it(
-    'should return internal link',
+    'should return internal link - staging',
+    withEnvOverrides(
+      {
+        AFFINIDI_INTERNAL_SERVICE: 'true',
+        NODE_ENV: 'staging',
+      },
+      () => {
+        const service = Service.METRICS
+        const url = resolveUrl(service, 'staging')
+        expect(url).to.be.equal(`http://${service}.default.svc.cluster.local`)
+      },
+    ),
+  )
+
+  it(
+    'should return internal link - dev',
     withEnvOverrides(
       {
         AFFINIDI_INTERNAL_SERVICE: 'true',
@@ -56,7 +71,7 @@ describe('resolveUrl', () => {
       () => {
         const service = Service.METRICS
         const url = resolveUrl(service, 'dev')
-        expect(url).to.be.equal(`http://${service}.default.svc.cluster.local`)
+        expect(url).to.be.equal(`http://${service}.foundational.svc.cluster.local`)
       },
     ),
   )
