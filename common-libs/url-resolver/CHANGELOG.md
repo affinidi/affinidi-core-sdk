@@ -1,3 +1,9 @@
+# release 4.0.0 (2022-11-14)
+Breaking change:
+* updated internal URLs for new dev environment
+# release 3.0.0 (2022-11-10)
+Breaking change:
+* moved to new dev environment `https://{{service}}.apse1.dev.affinidi.io`
 # release 2.0.0 (2022-09-28)
 Breaking changes: 
 * removed `Bloom Vault` usage and `Vault Migration Service` logic

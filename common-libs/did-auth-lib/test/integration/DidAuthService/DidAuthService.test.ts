@@ -6,8 +6,8 @@ import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService
 import { verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid, verifierDid } from './../../factory/verifier'
 import { holderEncryptedSeed, holderEncryptionKey, holderDid } from './../../factory/holder'
 const env = {
-  environment: <Env>'dev',
-  accessApiKey: '66ca5670a5578937c25eab723374bfe41f153829e69fb87b39849b5118bcfece',
+  environment: <Env>'staging',
+  accessApiKey: '92856d9a1dbe5eeb4517c813990fff8c8bffc3dc75226bfd66f091ccd45e002d',
 }
 
 module.exports = function () {

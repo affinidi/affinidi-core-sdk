@@ -16,9 +16,16 @@ describe('resolveUrl', () => {
     expect(url).to.be.equal(`https://schema.stg.affinidi.com`)
   })
 
-  it("should replace template's $service and $env variables with values", () => {
+  it("should replace template's $service and $env variables with values - dev", () => {
     const service = Service.METRICS
     const env = 'dev'
+    const url = resolveUrl(service, env)
+    expect(url).to.be.equal(`https://${service}.apse1.${env}.affinidi.io`)
+  })
+
+  it("should replace template's $service and $env variables with values - staging", () => {
+    const service = Service.METRICS
+    const env = 'staging'
     const url = resolveUrl(service, env)
     expect(url).to.be.equal(`https://${service}.${env}.affinity-project.org`)
   })
@@ -40,7 +47,22 @@ describe('resolveUrl', () => {
   })
 
   it(
-    'should return internal link',
+    'should return internal link - staging',
+    withEnvOverrides(
+      {
+        AFFINIDI_INTERNAL_SERVICE: 'true',
+        NODE_ENV: 'staging',
+      },
+      () => {
+        const service = Service.METRICS
+        const url = resolveUrl(service, 'staging')
+        expect(url).to.be.equal(`http://${service}.default.svc.cluster.local`)
+      },
+    ),
+  )
+
+  it(
+    'should return internal link - dev',
     withEnvOverrides(
       {
         AFFINIDI_INTERNAL_SERVICE: 'true',
@@ -49,7 +71,7 @@ describe('resolveUrl', () => {
       () => {
         const service = Service.METRICS
         const url = resolveUrl(service, 'dev')
-        expect(url).to.be.equal(`http://${service}.default.svc.cluster.local`)
+        expect(url).to.be.equal(`http://${service}.foundational.svc.cluster.local`)
       },
     ),
   )

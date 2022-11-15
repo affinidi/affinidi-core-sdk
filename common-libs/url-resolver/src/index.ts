@@ -1,13 +1,22 @@
-import { defaultTemplate, predefinedTemplates, defaultInternalTemplate } from './templates'
+import {
+  defaultTemplate,
+  defaultDevTemplate,
+  predefinedTemplates,
+  defaultInternalTemplate,
+  defaultInternalDevTemplate,
+} from './templates'
 import { envSetupUrls, predefinedUrls } from './urls'
 import { Service } from './services'
 
 export type Env = 'dev' | 'staging' | 'prod'
 
 const pickPublicTemplate = (service: Service, env: Env) =>
-  predefinedUrls[service]?.[env] ?? predefinedTemplates[service] ?? defaultTemplate
+  predefinedUrls[service]?.[env] ??
+  predefinedTemplates[service] ??
+  (env === 'dev' ? defaultDevTemplate : defaultTemplate)
 
-const pickInternalTemplate = () => defaultInternalTemplate
+const pickInternalTemplate = (env: Env) =>
+  env === 'dev' ? defaultInternalDevTemplate : defaultInternalTemplate
 
 function resolveUrl(service: Service, env: Env, userTemplate?: string): string {
   const isAffinidiInternalService =
@@ -19,7 +28,7 @@ function resolveUrl(service: Service, env: Env, userTemplate?: string): string {
   const template =
     userTemplate ??
     envSetupUrls[service] ??
-    (isAffinidiInternalService ? pickInternalTemplate() : pickPublicTemplate(service, env))
+    (isAffinidiInternalService ? pickInternalTemplate(env) : pickPublicTemplate(service, env))
 
   return template.replace(/{{service}}/, service).replace(/{{env}}/, env)
 }
