@@ -4,6 +4,9 @@ import '../env'
 import { expect } from 'chai'
 import nock from 'nock'
 import { SdkError } from '@affinidi/tools-common'
+
+import { TrueCallerService } from '@affinidi/user-management'
+import { CognitoIdentityServiceProvider } from 'aws-sdk'
 import {
   AffinidiWalletV6 as AffinidiWallet,
   AffinidiWallet as LegacyAffinidiWallet,
@@ -12,10 +15,16 @@ import {
 } from '../../helpers/AffinidiWallet'
 import { SdkOptions } from '../../../src/dto/shared.dto'
 
-import { generateUsername, getBasicOptionsForEnvironment, testSecrets } from '../../helpers'
+import {
+  generateUsername,
+  getAllOptionsForEnvironment,
+  getBasicOptionsForEnvironment,
+  testSecrets,
+} from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
 import { TestmailInbox } from '../../../src/test-helpers'
 import { trueCallerTestProfile } from '../../factory/trueCallerProfile'
+import { getOptionsFromEnvironment } from '../../../src/shared/getOptionsFromEnvironment'
 
 const parallel = require('mocha.parallel')
 
@@ -23,6 +32,9 @@ const { COGNITO_PASSWORD } = testSecrets
 
 const options = getBasicOptionsForEnvironment()
 const { env } = options
+
+const allOptions = getAllOptionsForEnvironment()
+const allEnvOptions = getOptionsFromEnvironment(allOptions)
 
 const messageParameters: MessageParameters = {
   message: `Your verification code is: {{CODE}}`,
@@ -616,6 +628,36 @@ parallel('CommonNetworkMember [OTP]', () => {
             key: process.env.TEST_PUBLIC_KEY_STR,
           },
         ])
+
+      const trueCaller = new TrueCallerService()
+      const { phoneNumber } = trueCaller.parsePayloadProfileTrueCaller(trueCallerTestProfile)
+
+      const userPoolId = allOptions.userPoolId
+      const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
+        region: allEnvOptions.region,
+        apiVersion: '2016-04-18',
+      })
+
+      const params = {
+        UserPoolId: userPoolId,
+        Limit: 1,
+        Filter: `phone_number = "${phoneNumber}"`,
+      }
+
+      const result = await cognitoidentityserviceprovider.listUsers(params).promise()
+
+      const userExists = result.Users.length > 0
+      if (userExists) {
+        const username = userExists && result.Users[0]?.Username
+
+        const deleteResult = await cognitoidentityserviceprovider
+          .adminDeleteUser({
+            UserPoolId: userPoolId,
+            Username: username,
+          })
+          .promise()
+        console.log('deleteResult', deleteResult)
+      }
 
       const { wallet } = await AffinidiWallet.signInWithProfile(options, trueCallerTestProfile)
       checkIsWallet(wallet)
