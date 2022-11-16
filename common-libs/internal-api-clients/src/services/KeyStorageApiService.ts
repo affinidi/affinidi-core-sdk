@@ -74,6 +74,10 @@ export default class KeyStorageApiService {
     return this.client.AdminLogOutUser({ authorization: accessToken })
   }
 
+  async adminGetUserInfo({ accessToken }: { accessToken: string }) {
+    return this.client.AdminGetUserInfo({ authorization: accessToken })
+  }
+
   async doesUserExist({ field, value }: DoesUserExistInput): Promise<{ isUnconfirmed: boolean; userExists: boolean }> {
     const result = await this.client.DoesUserExist({ queryParams: { field, value } })
     return result.body
