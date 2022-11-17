@@ -416,6 +416,10 @@ export class UserManagementService {
     })
   }
 
+  public async getInfo() {
+    return this._keyStorageApiService.adminGetUserInfo()
+  }
+
   public readUserTokensFromSessionStorage() {
     return this._sessionStorageService.readUserTokens()
   }

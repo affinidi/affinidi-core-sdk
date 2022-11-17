@@ -24,20 +24,17 @@ import { normalizeShortPassword } from '../shared/normalizeShortPassword'
 
 type UserDataWithCognito = ConstructorUserData & {
   cognitoUserTokens: CognitoUserTokens
-  createdDate: string
 }
 
 @profile()
 export class NetworkMemberWithCognito extends BaseNetworkMember {
   private readonly _userManagementService
   protected cognitoUserTokens: CognitoUserTokens
-  readonly createdDate: string
 
   constructor(userData: UserDataWithCognito, dependencies: StaticDependencies, options: ParsedOptions) {
     super(userData, dependencies, options)
     this._userManagementService = createUserManagementService(options)
     this.cognitoUserTokens = userData.cognitoUserTokens
-    this.createdDate = userData?.createdDate
   }
 
   private static _isKeyParams(keyParamsOrOptions?: KeyParamsOrOptions): keyParamsOrOptions is KeyParams {
@@ -131,6 +128,13 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
   public async logOut(): Promise<void> {
     const newTokens = await this._userManagementService.logOut(this.cognitoUserTokens)
     this.cognitoUserTokens = newTokens
+  }
+
+  /**
+   * @description Get user metadata info
+   */
+  public async getInfo() {
+    return this._userManagementService.getInfo()
   }
 
   /**

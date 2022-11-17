@@ -330,7 +330,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(result.isNew).to.be.false
       checkIsWallet(result.wallet)
       expect(result.wallet.did).to.exist
-      expect(result.wallet.createdDate).to.exist
     })
 
     it('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
@@ -359,7 +358,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, loginToken, loginCode)
       checkIsWallet(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
-      expect(commonNetworkMember.createdDate).to.exist
     })
 
     it.skip('throws COR-13 at attempt to call #completeLoginChallenge with expired confirmation code', async function () {
@@ -409,7 +407,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, loginToken, loginCode)
       checkIsWallet(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
-      expect(commonNetworkMember.createdDate).to.exist
     })
 
     it('user get COR-13 on 3 wrong otp codes ', async function () {
@@ -450,7 +447,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, newLoginToken, loginCode)
       checkIsWallet(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
-      expect(commonNetworkMember.createdDate).to.exist
     })
 
     it('use newToken session from error for existing OTP', async function () {
@@ -480,7 +476,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, newToken, loginCode)
       checkIsWallet(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
-      expect(commonNetworkMember.createdDate).to.exist
     })
 
     it('OTP code expire after use ', async function () {
@@ -491,7 +486,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, loginToken, loginCode)
       checkIsWallet(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
-      expect(commonNetworkMember.createdDate).to.exist
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, loginCode)
         expect.fail('COR-5 error expected')
@@ -507,7 +501,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       const newNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, newLoginToken, newloginCode)
       checkIsWallet(newNetworkMember)
       expect(newNetworkMember.did).to.exist
-      expect(newNetworkMember.createdDate).to.exist
     })
 
     // NUC-269
@@ -530,7 +523,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       const commonNetworkMember = await AffinidiWallet.completeLogInPasswordless(options, newLoginToken, newLoginCode)
       checkIsWallet(commonNetworkMember)
       expect(commonNetworkMember.did).to.exist
-      expect(commonNetworkMember.createdDate).to.exist
     })
 
     it('throws "COR-7" at attempt to call #signUp with the same email and some password', async () => {

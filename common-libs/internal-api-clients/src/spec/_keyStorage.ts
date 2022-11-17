@@ -1013,16 +1013,6 @@ export default {
 							}
 						}
 					},
-					"404": {
-						"description": "User {{username}} not found.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
 					"405": {
 						"description": "Method Not Allowed",
 						"content": {
@@ -1048,17 +1038,12 @@ export default {
 				"tags": [
 					"UserManagement"
 				],
-				"security": [],
-				"parameters": [
+				"security": [
 					{
-						"in": "header",
-						"name": "Authorization",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
+						"bearerAuth": []
 					}
-				]
+				],
+				"parameters": []
 			}
 		},
 		"/userManagement/doesUserExist": {

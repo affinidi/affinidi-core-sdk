@@ -74,8 +74,7 @@ export default class KeyManagementService {
 
   public async pullUserData(accessToken: string) {
     const { encryptionKey, encryptedSeed } = await this.pullKeyAndSeed(accessToken)
-    const createdDate = await this._pullUserInfo(accessToken)
-    return withDidData({ encryptedSeed, password: encryptionKey, createdDate })
+    return withDidData({ encryptedSeed, password: encryptionKey })
   }
 
   public async pullEncryptionKeyAndStoreEncryptedSeed(accessToken: string, seedHexWithMethod: string) {
