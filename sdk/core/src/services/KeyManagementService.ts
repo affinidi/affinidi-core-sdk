@@ -54,11 +54,6 @@ export default class KeyManagementService {
     return encryptionKey
   }
 
-  private async _pullUserInfo(accessToken: string): Promise<string> {
-    const { userCreateDate } = await this._keyStorageApiService.adminGetUserInfo({ accessToken })
-    return userCreateDate
-  }
-
   private async _storeEncryptedSeed(accessToken: string, seedHex: string, encryptionKey: string): Promise<void> {
     const encryptionKeyBuffer = Buffer.from(encryptionKey, 'hex')
     const encryptedSeed = await KeysService.encryptSeed(seedHex, encryptionKeyBuffer)
