@@ -132,9 +132,10 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
 
   /**
    * @description Get user metadata info
+   * @returns userCreateDate
    */
   public async getInfo() {
-    return this._userManagementService.getInfo()
+    return this._userManagementService.getInfo(this.cognitoUserTokens)
   }
 
   /**

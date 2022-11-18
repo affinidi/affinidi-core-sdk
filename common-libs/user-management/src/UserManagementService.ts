@@ -416,8 +416,10 @@ export class UserManagementService {
     })
   }
 
-  public async getInfo() {
-    return this._keyStorageApiService.adminGetUserInfo()
+  public async getInfo(cognitoTokens: CognitoUserTokens) {
+    await this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
+      return this._keyStorageApiService.adminGetUserInfo({ accessToken })
+    })
   }
 
   public readUserTokensFromSessionStorage() {
