@@ -7,44 +7,6 @@ export default {
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"ErrorObject": {
-				"properties": {
-					"serviceName": {
-						"type": "string"
-					},
-					"code": {
-						"type": "string"
-					},
-					"fields": {
-						"properties": {},
-						"additionalProperties": {},
-						"type": "object"
-					},
-					"httpStatusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"message": {
-						"type": "string"
-					},
-					"context": {},
-					"originalError": {},
-					"inputParams": {},
-					"endpointUrl": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"serviceName",
-					"code",
-					"httpStatusCode",
-					"message",
-					"inputParams",
-					"endpointUrl"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"CreateMessageTemplateInput": {
 				"properties": {
 					"username": {
