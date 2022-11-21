@@ -215,36 +215,6 @@ export default {
 				"responses": {
 					"204": {
 						"description": "No content"
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "Store custom message template for passwordless auth flow.",
@@ -271,36 +241,6 @@ export default {
 				"responses": {
 					"204": {
 						"description": "No content"
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "Delete custom message template for passwordless auth flow.",
@@ -331,36 +271,6 @@ export default {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/GetCredentialOfferOutput"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
 								}
 							}
 						}
@@ -416,36 +326,6 @@ export default {
 								}
 							}
 						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "Route used by SDK for getting users email & phone number signed credentials.",
@@ -492,36 +372,6 @@ export default {
 								}
 							}
 						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "Read my encrypted key from a key storage",
@@ -555,46 +405,6 @@ export default {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/KeyOutput"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"409": {
-						"description": "Key for this user already exists",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
 								}
 							}
 						}
@@ -637,66 +447,6 @@ export default {
 				"responses": {
 					"204": {
 						"description": "No content"
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User {{username}} not found.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"409": {
-						"description": "User {{username}} already confirmed.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"422": {
-						"description": "Missing configuration for AWS in environment variables.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "This endpoint should be used to confirm user creation.",
@@ -723,66 +473,6 @@ export default {
 				"responses": {
 					"204": {
 						"description": "No content"
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User {{username}} not found.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"409": {
-						"description": "User {{username}} must be UNCONFIRMED (current status is {{userStatus}}).",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"422": {
-						"description": "Missing configuration for AWS in environment variables.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "This endpoint should be used to delete unconfirmed user.",
@@ -809,46 +499,6 @@ export default {
 				"responses": {
 					"204": {
 						"description": "No content"
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"422": {
-						"description": "Missing configuration for AWS in environment variables.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "This endpoint should be used as a fallback in case user creation hangs,\nand it should delete the user from cognito, to allow retries.",
@@ -878,46 +528,6 @@ export default {
 				"responses": {
 					"204": {
 						"description": "No content"
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"422": {
-						"description": "Missing configuration for AWS in environment variables.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
 					}
 				},
 				"description": "Signs out a user from all devices.\nIt also invalidates all refresh tokens that Amazon Cognito has issued to a user.\nThe user's current access and ID tokens remain valid until they expire.\nBy default, access and ID tokens expire one hour after they're issued.\nA user can still use a hosted UI cookie to retrieve new tokens for the duration of the cookie validity period of 1 hour.",
@@ -951,46 +561,6 @@ export default {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/AdminGetUserInfoOutput"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"422": {
-						"description": "Missing configuration for AWS in environment variables.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
 								}
 							}
 						}
@@ -1030,46 +600,6 @@ export default {
 										"userExists"
 									],
 									"type": "object"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"405": {
-						"description": "Method Not Allowed",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
-								}
-							}
-						}
-					},
-					"422": {
-						"description": "Missing configuration for AWS in environment variables.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ErrorObject"
 								}
 							}
 						}
