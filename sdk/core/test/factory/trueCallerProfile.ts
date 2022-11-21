@@ -1,4 +1,6 @@
-export const trueCallerTestProfile = {
+import { ProfileTrueCaller } from '@affinidi/user-management'
+
+export const trueCallerTestProfile: ProfileTrueCaller = {
   payload:
     'eyJyZXF1ZXN0Tm9uY2UiOiIyNzQ3NzY5Ni0yYzI3LTQ4NTAtYjBmMy1mMmE5YjdmYzYwMmYiLCJyZXF1ZXN0VGltZSI6MTY2ODIwMDAwMjEzMiwicGhvbmVOdW1iZXIiOiIrOTE5NzgxNjExMDAwIiwiZmlyc3ROYW1lIjoiRm9yYXYiLCJsYXN0TmFtZSI6Ikt1YmFyIiwiZ2VuZGVyIjoiTiIsImNvdW50cnlDb2RlIjoiSU4iLCJ0cnVlTmFtZSI6dHJ1ZSwiYW1iYXNzYWRvciI6ZmFsc2UsImlzQnVzaW5lc3MiOmZhbHNlLCJ2ZXJpZmllciI6IjJhbGl2QWtIakpEL1M1T1owWDloSFpiM1BNZWRVWW5qOTZ6NnFLOXI2eW89In0=',
   signature:

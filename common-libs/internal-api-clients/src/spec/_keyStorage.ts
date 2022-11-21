@@ -244,6 +244,25 @@ export default {
 				"type": "object",
 				"additionalProperties": {}
 			},
+			"TruecallerUserListInput": {
+				"properties": {
+					"profileTrueCaller": {
+						"$ref": "#/components/schemas/ProfileTrueCaller"
+					},
+					"expiredAt": {
+						"type": "string"
+					},
+					"env": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"profileTrueCaller"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"AdminCreateUserInput": {
 				"properties": {
 					"profileTrueCaller": {
@@ -733,6 +752,46 @@ export default {
 				}
 			}
 		},
+		"/truecaller/storeUserInList": {
+			"post": {
+				"operationId": "StoreInTruecallerUserList",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					}
+				},
+				"description": "Store `Truecaller` user in DDB for further use in Cognito lambdas.",
+				"tags": [
+					"StoreTruecallerUserInList"
+				],
+				"security": [
+					{
+						"truecallerAuth": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TruecallerUserListInput"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/userManagement/adminCreateConfirmedUser": {
 			"post": {
 				"operationId": "AdminCreateConfirmedUser",
@@ -1133,9 +1192,6 @@ export default {
 							"application/json": {
 								"schema": {
 									"properties": {
-										"username": {
-											"type": "string"
-										},
 										"isUnconfirmed": {
 											"type": "boolean"
 										},
@@ -1144,7 +1200,6 @@ export default {
 										}
 									},
 									"required": [
-										"username",
 										"isUnconfirmed",
 										"userExists"
 									],

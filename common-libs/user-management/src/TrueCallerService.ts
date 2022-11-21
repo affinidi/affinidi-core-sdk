@@ -10,6 +10,7 @@ export const ALGO_MAP: { [key: string]: any } = {
 }
 
 const TRUE_CALLER_PUBLIC_KEY_URL = 'https://api4.truecaller.com/v1/key'
+const { TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER } = process.env
 
 /**
  * Service contains logic that helps to inject
@@ -76,6 +77,22 @@ export class TrueCallerService {
     verifier.update(payload)
 
     return verifier.verify(keyBytes, signature)
+  }
+
+  /**
+   * Validation of payload timestamp.
+   * NOTE: Expiration buffer is 12 hours. Could be decrease after providing user timezone in token/profile.
+   * @param profileTrueCaller
+   */
+  validatePayloadTimestamp(profileTrueCaller: ProfileTrueCaller): boolean {
+    const { timeStamp } = this.parsePayloadProfileTrueCaller(profileTrueCaller)
+    if (timeStamp) {
+      const expiryBuffer = Number(TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER) || 12 * 60 * 1000
+      const expiredAt = timeStamp + expiryBuffer
+      return expiredAt > Date.now()
+    }
+
+    return false
   }
 
   /**

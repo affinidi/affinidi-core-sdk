@@ -147,13 +147,8 @@ export class UserManagementService {
     }
   }
 
-  private async _logInWithPassword(
-    login: string,
-    password: string,
-    isSignUpFlow: boolean,
-    authParameters?: { auth: string },
-  ) {
-    const response = await this._cognitoIdentityService.tryLogInWithPassword(login, password, authParameters)
+  private async _logInWithPassword(login: string, password: string, isSignUpFlow: boolean) {
+    const response = await this._cognitoIdentityService.tryLogInWithPassword(login, password)
     if (response.result !== LogInWithPasswordResult.Success) {
       switch (response.result) {
         case LogInWithPasswordResult.UserNotConfirmed:
@@ -278,17 +273,18 @@ export class UserManagementService {
   }
 
   /**
-   * Log in with true caller profile.
-   * https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
+   * Truecaller flow. Store user in truecaller users list and initiate custom auth flow.
+   * Trigger Cognito to properly handle truecaller flow.
    * @param login
    * @param profileTrueCaller
+   * @param env
    */
-  async logInWithProfile(login: string, profileTrueCaller: ProfileTrueCaller): Promise<CognitoUserTokens> {
+  async initiateLoginWithProfile(login: string, profileTrueCaller: ProfileTrueCaller, env?: string): Promise<string> {
     let token: string
 
-    const response = await this._cognitoIdentityService.initiateLogInPasswordless(login, undefined, {
-      auth: 'truecaller',
-    })
+    await this._keyStorageApiService.storeInTruecallerUserList({ profileTrueCaller, env })
+
+    const response = await this._cognitoIdentityService.initiateLogInPasswordless(login)
 
     switch (response.result) {
       case InitiateLoginPasswordlessResult.Success:
@@ -300,7 +296,48 @@ export class UserManagementService {
         throw new DefaultResultError(response)
     }
 
-    return this.completeLogInPasswordless(token, JSON.stringify(profileTrueCaller))
+    return token
+  }
+
+  /**
+   * Log in with true caller profile.
+   * https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
+   * @param login
+   * @param profileTrueCaller
+   * @param env
+   * @param isSignUpFlow
+   */
+  async logInWithProfile(
+    login: string,
+    profileTrueCaller: ProfileTrueCaller,
+    env?: string,
+    isSignUpFlow?: boolean,
+  ): Promise<CognitoUserTokens> {
+    const token = await this.initiateLoginWithProfile(login, profileTrueCaller, env)
+    const response = await this._cognitoIdentityService.completeLogInPasswordless(
+      token,
+      JSON.stringify(profileTrueCaller),
+    )
+    if (response.result !== CompleteLoginPasswordlessResult.Success) {
+      switch (response.result) {
+        case CompleteLoginPasswordlessResult.AttemptsExceeded:
+          throw new SdkErrorFromCode('COR-13')
+        case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
+          throw new SdkErrorFromCode('COR-17', { confirmationCode: JSON.stringify(profileTrueCaller) })
+        case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
+          throw new SdkErrorFromCode('COR-5', { newToken: response.token })
+        default:
+          throw new DefaultResultError(response as never)
+      }
+    }
+
+    if (!isSignUpFlow && response.registrationStatus === RegistrationStatus.Incomplete) {
+      await this.adminDeleteIncompleteUser(response.cognitoTokens)
+      throw new SdkErrorFromCode('COR-26')
+    }
+
+    this._sessionStorageService.saveUserTokens(response.cognitoTokens)
+    return response.cognitoTokens
   }
 
   /**
@@ -309,15 +346,17 @@ export class UserManagementService {
    * @param login
    * @param password
    * @param profileTrueCaller
+   * @param env
    */
   async signUpWithProfile(
     login: string,
     password: string,
     profileTrueCaller: ProfileTrueCaller,
+    env?: string,
   ): Promise<CognitoUserTokens> {
     await this._keyStorageApiService.adminCreateConfirmedUser({ profileTrueCaller, password, username: login })
 
-    return this._logInWithPassword(login, password, true, { auth: 'truecaller' })
+    return this.logInWithProfile(login, profileTrueCaller, env, true)
   }
 
   private async refreshUserSessionTokens(refreshToken: string) {
@@ -492,8 +531,12 @@ export class UserManagementService {
     }
   }
 
-  private _validatePhoneNumber(phoneNumber: string) {
-    const { isPhoneNumberValid } = validatePhoneNumber(phoneNumber)
+  private _validateTruecallerPhoneNumber(phoneNumberFromPayload: string, phoneNumberFromTokenBody: string) {
+    const { isPhoneNumberValid } = validatePhoneNumber(phoneNumberFromPayload)
+
+    if (phoneNumberFromTokenBody && phoneNumberFromTokenBody !== phoneNumberFromPayload) {
+      throw new SdkErrorFromCode('UM-8')
+    }
 
     if (!isPhoneNumberValid) {
       throw new SdkErrorFromCode('UM-7')
@@ -532,7 +575,7 @@ export class UserManagementService {
     const { timeStamp, verifier, phoneNumber } =
       this._trueCallerService.parsePayloadProfileTrueCaller(profileTrueCaller)
 
-    this._validatePhoneNumber(phoneNumber)
+    this._validateTruecallerPhoneNumber(phoneNumber, profileTrueCaller.phoneNumber)
 
     return { timeStamp, verifier, phoneNumber }
   }

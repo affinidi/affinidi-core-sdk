@@ -169,15 +169,10 @@ export class CognitoIdentityService {
     })
   }
 
-  async tryLogInWithPassword(
-    login: string,
-    password: string,
-    authParameters?: { auth: string },
-  ): Promise<LogInWithPasswordResponse> {
+  async tryLogInWithPassword(login: string, password: string): Promise<LogInWithPasswordResponse> {
     try {
       const params = {
         ...this._getCognitoAuthParametersObject(AuthFlow.UserPassword, { login, password }),
-        ...getAdditionalParameters(undefined, authParameters),
       }
 
       const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
@@ -203,11 +198,10 @@ export class CognitoIdentityService {
   async initiateLogInPasswordless(
     login: string,
     messageParameters?: MessageParameters,
-    authParameters?: { auth: string },
   ): Promise<InitiateLoginPasswordlessResponse> {
     const params = {
       ...this._getCognitoAuthParametersObject(AuthFlow.Custom, { login }),
-      ...getAdditionalParameters(messageParameters, authParameters),
+      ...getAdditionalParameters(messageParameters),
     }
 
     try {

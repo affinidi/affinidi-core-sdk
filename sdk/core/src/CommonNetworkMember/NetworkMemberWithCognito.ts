@@ -563,13 +563,22 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
 
-    await userManagementService.validateProfile(profileTrueCaller)
+    const isValid = await userManagementService.validateProfile(profileTrueCaller)
+    if (!isValid) {
+      throw new Error(`Token is not valid!`)
+    }
+
     const { phoneNumber } = await userManagementService.parseAndValidatePayload(profileTrueCaller)
 
     const userExists = await userManagementService.doesConfirmedUserExist(phoneNumber)
     if (userExists) {
       // logIn
-      const cognitoUserTokens = await userManagementService.logInWithProfile(phoneNumber, profileTrueCaller)
+      const cognitoUserTokens = await userManagementService.logInWithProfile(
+        phoneNumber,
+        profileTrueCaller,
+        inputOptions.env,
+        false,
+      )
       const userData = await keyManagementService.pullUserData(cognitoUserTokens.accessToken)
 
       return {
@@ -580,7 +589,12 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       // signup
       const newUsername = generateUuid()
       const password = normalizeShortPassword(await generatePassword(), newUsername)
-      const cognitoTokens = await userManagementService.signUpWithProfile(newUsername, password, profileTrueCaller)
+      const cognitoTokens = await userManagementService.signUpWithProfile(
+        newUsername,
+        password,
+        profileTrueCaller,
+        inputOptions.env,
+      )
 
       return {
         isNew: true,
