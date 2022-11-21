@@ -417,8 +417,8 @@ export class UserManagementService {
   }
 
   public async getInfo(cognitoTokens: CognitoUserTokens) {
-    await this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
-      return this._keyStorageApiService.adminGetUserInfo({ accessToken })
+    return this._withStoredTokens(cognitoTokens, async ({ accessToken }) => {
+      await this._keyStorageApiService.adminGetUserInfo({ accessToken })
     })
   }
 
