@@ -367,7 +367,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
-      options.accessApiKey
+      options.accessApiKey,
     )
     return NetworkMemberWithCognito._confirmSignUp(
       dependencies,
