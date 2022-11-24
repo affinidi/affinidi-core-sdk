@@ -69,6 +69,6 @@ export class EncryptionService {
 
     const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, passwordBuffer, iv)
     const decryptedBuffer = Buffer.concat([decipher.update(encryptedDataWtihoutVector), decipher.final()])
-    return decryptedBuffer.toString('hex')
+    return decryptedBuffer.toString()
   }
 }
