@@ -43,7 +43,7 @@ const normalizeKey = (key: string): Buffer | undefined => {
   }
 
   if (keyBuffer.length !== KEY_LENGTH) {
-    return createHash('sha256').update(key).digest()
+    return createHash('sha256').update(keyBuffer).digest()
   }
 
   return keyBuffer
@@ -52,7 +52,7 @@ const normalizeKey = (key: string): Buffer | undefined => {
 export class EncryptionService {
   static async encrypt(data: string, key: string) {
     const keyBuffer = normalizeKey(key)
-    const dataBuffer = Buffer.from(data, 'hex')
+    const dataBuffer = Buffer.from(data, undefined)
     const iv = await randomBytes(IV_LENGTH)
 
     const cipher = createCipheriv(ENCRYPTION_ALGORITHM, keyBuffer, iv)
