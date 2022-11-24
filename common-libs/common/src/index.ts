@@ -16,10 +16,12 @@ if (typeof process.version === 'undefined') {
 
 export { JwtService } from '@affinidi/tools-common'
 
+
 export { Affinity, Affinity as Affinidi } from './Affinity'
 
 export {
   KeyVault,
+  EncryptionService,
   LocalKeyVault,
   DidDocumentService,
   DigestService,
