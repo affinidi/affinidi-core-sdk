@@ -198,7 +198,7 @@ export const createCognitoWalletFactories = (
      * or signs up a new one, if user was not registered
      * @param inputOptions - optional parameters with specified environment
      * @param profileTrueCaller - `Truecaller` token/profile
-     * @returns token
+     * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
      */
     signInWithProfile: (inputOptions: SdkOptions, profileTrueCaller: TokenTrueCaller) => {
       return Wallet.signInWithProfile(inputOptions, profileTrueCaller, dependencies)
