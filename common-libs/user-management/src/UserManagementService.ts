@@ -1,7 +1,7 @@
 import { v4 as generateUuid } from 'uuid'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
-import { KeysService } from '@affinidi/common'
+import { EncryptionService } from '@affinidi/common'
 import { CognitoUserTokens, MessageParameters } from './dto'
 import { validateUsername } from './validateUsername'
 import SdkErrorFromCode from './SdkErrorFromCode'
@@ -22,6 +22,7 @@ import {
   SignUpResult,
   UsernameWithAttributes,
 } from './CognitoIdentityService'
+import {EncryptionService} from "./EncryptionService";
 
 class DefaultResultError extends Error {
   constructor(result: never) {
@@ -120,7 +121,7 @@ export class UserManagementService {
   ) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
-    const _password = key ? await KeysService.encryptSeed(password, key) : password
+    const _password = key ? await EncryptionService.encrypt(password, key) : password
 
     await this._signUp(usernameWithAttributes, _password, messageParameters)
     const signUpToken = `${usernameWithAttributes.username}::${_password}`
@@ -200,7 +201,7 @@ export class UserManagementService {
 
   async completeSignUpForEmailOrPhone(token: string, confirmationCode: string, key?: string) {
     const { login, shortPassword } = this.parseSignUpToken(token)
-    const password = key ? KeysService.decryptSeed(shortPassword, key) : shortPassword
+    const password = key ? EncryptionService.decrypt(shortPassword, key) : shortPassword
     await this._completeSignUp(login, confirmationCode)
     const cognitoTokens = await this._logInWithPassword(login, password, true)
     return { cognitoTokens, shortPassword }
