@@ -50,24 +50,25 @@ const normalizeKey = (key: string): Buffer | undefined => {
 }
 
 export class EncryptionService {
-  static async encrypt(seedHexWithMethod: string, key: string) {
+  static async encrypt(data: string, key: string) {
     const keyBuffer = normalizeKey(key)
-    const seedBuffer = Buffer.from(seedHexWithMethod, 'hex')
+    const dataBuffer = Buffer.from(data, 'hex')
     const iv = await randomBytes(IV_LENGTH)
 
     const cipher = createCipheriv(ENCRYPTION_ALGORITHM, keyBuffer, iv)
-    const encryptedSeed = Buffer.concat([cipher.update(seedBuffer), cipher.final()])
+    const encryptedData = Buffer.concat([cipher.update(dataBuffer), cipher.final()])
 
-    return Buffer.concat([iv, encryptedSeed]).toString('hex')
+    return Buffer.concat([iv, encryptedData]).toString('hex')
   }
 
   static decrypt(data: string, key: string) {
     const dataBuffer = Buffer.from(data, 'hex')
+    const passwordBuffer = normalizeKey(key)
     const iv = dataBuffer.slice(0, IV_LENGTH)
-    const encryptedSeedWtihoutVector = dataBuffer.slice(IV_LENGTH)
+    const encryptedDataWtihoutVector = dataBuffer.slice(IV_LENGTH)
 
-    const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, normalizeKey(key), iv)
-    const decryptedBuffer = Buffer.concat([decipher.update(encryptedSeedWtihoutVector), decipher.final()])
+    const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, passwordBuffer, iv)
+    const decryptedBuffer = Buffer.concat([decipher.update(encryptedDataWtihoutVector), decipher.final()])
     return decryptedBuffer.toString('hex')
   }
 }

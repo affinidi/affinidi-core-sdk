@@ -39,7 +39,6 @@ type ConstructorOptions = {
 type ConstructorDependencies = {
   keyStorageApiService: KeyStorageApiService
 }
-
 /**
  * @internal
  * Terminology:
@@ -122,7 +121,7 @@ export class UserManagementService {
     const usernameWithAttributes = this._buildUserAttributes(login)
     const _password = key ? await EncryptionService.encrypt(password, key) : password
 
-    await this._signUp(usernameWithAttributes, _password, messageParameters)
+    await this._signUp(usernameWithAttributes, password, messageParameters)
     const signUpToken = `${usernameWithAttributes.username}::${_password}`
 
     return signUpToken
