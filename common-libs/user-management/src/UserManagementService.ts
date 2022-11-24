@@ -1,7 +1,7 @@
 import { v4 as generateUuid } from 'uuid'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
-
+import { KeysService } from '@affinidi/common'
 import { CognitoUserTokens, MessageParameters } from './dto'
 import { validateUsername } from './validateUsername'
 import SdkErrorFromCode from './SdkErrorFromCode'
@@ -112,12 +112,18 @@ export class UserManagementService {
     return cognitoTokens
   }
 
-  async initiateSignUpWithEmailOrPhone(login: string, password: string, messageParameters?: MessageParameters) {
+  async initiateSignUpWithEmailOrPhone(
+    login: string,
+    password: string,
+    messageParameters?: MessageParameters,
+    key?: string,
+  ) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
+    const _password = key ? await KeysService.encryptSeed(password, key) : password
 
-    await this._signUp(usernameWithAttributes, password, messageParameters)
-    const signUpToken = `${usernameWithAttributes.username}::${password}`
+    await this._signUp(usernameWithAttributes, _password, messageParameters)
+    const signUpToken = `${usernameWithAttributes.username}::${_password}`
 
     return signUpToken
   }
@@ -192,10 +198,11 @@ export class UserManagementService {
     return { login, shortPassword }
   }
 
-  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
+  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string, key?: string) {
     const { login, shortPassword } = this.parseSignUpToken(token)
+    const password = key ? KeysService.decryptSeed(shortPassword, key) : shortPassword
     await this._completeSignUp(login, confirmationCode)
-    const cognitoTokens = await this._logInWithPassword(login, shortPassword, true)
+    const cognitoTokens = await this._logInWithPassword(login, password, true)
     return { cognitoTokens, shortPassword }
   }
 

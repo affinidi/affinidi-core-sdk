@@ -21,6 +21,7 @@ import {
 import { createUserManagementService } from '../shared/createUserManagementService'
 import { generatePassword } from '../shared/generatePassword'
 import { normalizeShortPassword } from '../shared/normalizeShortPassword'
+import { KeysService } from '@affinidi/common'
 
 type UserDataWithCognito = ConstructorUserData & {
   cognitoUserTokens: CognitoUserTokens
@@ -367,6 +368,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
+      options.accessApiKey
     )
     return NetworkMemberWithCognito._confirmSignUp(
       dependencies,
@@ -496,9 +498,15 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       })
     } else {
       const password = normalizeShortPassword(await generatePassword(), login)
+
       return JSON.stringify({
         signInType: 'signUp',
-        signUpToken: await userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters),
+        signUpToken: await userManagementService.initiateSignUpWithEmailOrPhone(
+          login,
+          password,
+          messageParameters,
+          options.accessApiKey,
+        ),
       })
     }
   }
