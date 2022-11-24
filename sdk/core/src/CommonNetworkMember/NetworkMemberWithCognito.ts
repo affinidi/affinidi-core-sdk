@@ -21,7 +21,6 @@ import {
 import { createUserManagementService } from '../shared/createUserManagementService'
 import { generatePassword } from '../shared/generatePassword'
 import { normalizeShortPassword } from '../shared/normalizeShortPassword'
-import { KeysService } from '@affinidi/common'
 
 type UserDataWithCognito = ConstructorUserData & {
   cognitoUserTokens: CognitoUserTokens
