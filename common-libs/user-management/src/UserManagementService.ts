@@ -22,7 +22,6 @@ import {
   SignUpResult,
   UsernameWithAttributes,
 } from './CognitoIdentityService'
-import {EncryptionService} from "./EncryptionService";
 
 class DefaultResultError extends Error {
   constructor(result: never) {
