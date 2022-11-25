@@ -2,11 +2,11 @@ import 'mocha'
 import '../env'
 
 import { expect } from 'chai'
-import nock from 'nock'
+// import nock from 'nock'
 import { SdkError } from '@affinidi/tools-common'
 
-import { TrueCallerService } from '@affinidi/user-management'
-import { CognitoIdentityServiceProvider } from 'aws-sdk'
+// import { TrueCallerService } from '@affinidi/user-management'
+// import { CognitoIdentityServiceProvider } from 'aws-sdk'
 import {
   AffinidiWalletV6 as AffinidiWallet,
   AffinidiWallet as LegacyAffinidiWallet,
@@ -17,15 +17,15 @@ import { SdkOptions } from '../../../src/dto/shared.dto'
 
 import {
   generateUsername,
-  getAllOptionsForEnvironment,
+  // getAllOptionsForEnvironment,
   getBasicOptionsForEnvironment,
   testSecrets,
 } from '../../helpers'
 import { MessageParameters } from '../../../dist/dto'
 import { TestmailInbox } from '../../../src/test-helpers'
-import { trueCallerTestProfile } from '../../factory/trueCallerProfile'
-import { getOptionsFromEnvironment } from '../../../src/shared/getOptionsFromEnvironment'
-import { URL } from 'url'
+// import { trueCallerTestProfile } from '../../factory/trueCallerProfile'
+// import { getOptionsFromEnvironment } from '../../../src/shared/getOptionsFromEnvironment'
+// import { URL } from 'url'
 
 const parallel = require('mocha.parallel')
 
@@ -34,8 +34,8 @@ const { COGNITO_PASSWORD } = testSecrets
 const options = getBasicOptionsForEnvironment()
 const { env } = options
 
-const allOptions = getAllOptionsForEnvironment()
-const allEnvOptions = getOptionsFromEnvironment(allOptions)
+// const allOptions = getAllOptionsForEnvironment()
+// const allEnvOptions = getOptionsFromEnvironment(allOptions)
 
 const messageParameters: MessageParameters = {
   message: `Your verification code is: {{CODE}}`,
