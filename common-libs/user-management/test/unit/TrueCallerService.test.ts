@@ -5,7 +5,7 @@ import { generateTrueCallerToken, testPayload } from '../helpers/generateTrueCal
 
 const token = generateTrueCallerToken()
 
-describe.only('Truecaller service', () => {
+describe('Truecaller service', () => {
   it('should successfully verify `Truecaller` token', async () => {
     const trucallerService = new TrueCallerService()
 
