@@ -120,7 +120,6 @@ export class UserManagementService {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
     const _password = key ? await EncryptionService.encrypt(password, key) : password
-
     await this._signUp(usernameWithAttributes, password, messageParameters)
     const signUpToken = `${usernameWithAttributes.username}::${_password}`
 
@@ -199,7 +198,11 @@ export class UserManagementService {
 
   async completeSignUpForEmailOrPhone(token: string, confirmationCode: string, key?: string) {
     const { login, shortPassword } = this.parseSignUpToken(token)
-    const password = key ? EncryptionService.decrypt(shortPassword, key) : shortPassword
+    let password = shortPassword
+    if (key) {
+      password = EncryptionService.decrypt(shortPassword, key)
+    }
+
     await this._completeSignUp(login, confirmationCode)
     const cognitoTokens = await this._logInWithPassword(login, password, true)
     return { cognitoTokens, shortPassword }

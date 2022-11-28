@@ -39,7 +39,7 @@ function checkIsString(value: string | unknown): asserts value is string {
   expect(value).to.be.a('string')
 }
 
-parallel('CommonNetworkMember [OTP]', () => {
+describe('CommonNetworkMember [OTP]', () => {
   it('sends email with OTP code using the provided template (message parameters) when #signIn is called', async () => {
     const inbox = createInbox()
 
