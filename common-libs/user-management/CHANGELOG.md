@@ -1,3 +1,5 @@
+# release 2.1.0 (2022-11-28)
+feat: add getInfo
 # release 2.0.0 (2022-10-20)
 BREAKING CHANGES:
 * username building strategy was changed to use uuidV4 as username  
