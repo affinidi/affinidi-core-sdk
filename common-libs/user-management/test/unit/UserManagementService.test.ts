@@ -6,14 +6,14 @@ import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
 import { expect, use as chaiUse } from 'chai'
 
-import { UserManagementService } from '../../src/UserManagementService'
-import { normalizeUsername } from '../../src/normalizeUsername'
+import { normalizeUsername, UserManagementService } from '../../src'
 import { MessageParameters } from '../../src/dto'
 
 import { cognitoAccessToken } from '../factory/cognitoAccessToken'
 import { cognitoAuthSuccessResponse } from '../factory/cognitoAuthSuccessResponse'
 import { cognitoInitiateCustomAuthResponse } from '../factory/cognitoInitiateCustomAuthResponse'
 import { cognitoSignInWithUsernameResponseToken } from '../factory/cognitoSignInWithUsernameResponseToken'
+import { profileTrueCaller } from '../factory/cognitoUserTokens'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import {
   cognitoUserWithCompleteRegistration,
@@ -25,6 +25,7 @@ chaiUse(sinonChai)
 
 const email = 'user@email.com'
 const username = 'test_username'
+const password = 'Dummy_pass123!'
 const confirmationCode = '123456'
 
 const successPathTestName = 'success path'
@@ -70,6 +71,9 @@ describe('UserManagementService', () => {
     dependencies = {
       keyStorageApiService: sinon.createStubInstance(KeyStorageApiService, {
         adminDeleteIncompleteUser: undefined,
+        adminConfirmUser: undefined,
+        adminCreateConfirmedUser: undefined,
+        doesUserExist: undefined,
       }),
     }
   })
@@ -870,7 +874,7 @@ describe('UserManagementService', () => {
         }
 
         AWSMock.mock('CognitoIdentityServiceProvider', UPDATE_USER_ATTRIBUTES, (params: any, callback: any) => {
-          expect(params.ClientMetadata).to.equal(messageParameters)
+          expect(params.ClientMetadata).to.deep.equal(messageParameters)
           callback(null, {})
         })
 
@@ -1000,6 +1004,57 @@ describe('UserManagementService', () => {
       await userManagementService.adminDeleteIncompleteUser(cognitoTokens)
 
       expect(dependencies.keyStorageApiService.adminDeleteIncompleteUser).to.be.calledOnce
+    })
+  })
+
+  describe('#logInWithProfile', () => {
+    it('should successfully pass `logInWithProfile` method call', async () => {
+      const username = normalizeUsername(profileTrueCaller.phoneNumber)
+      stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
+      stubMethod(GET_USER, cognitoUserWithoutRegistrationStatus)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      const response = await userManagementService.logInWithProfile(username, profileTrueCaller)
+
+      expect(response).to.exist
+    })
+
+    it('should throws `COR-4 / 404` when user not found', async () => {
+      const error = { code: USER_NOT_FOUND_EXCEPTION }
+
+      stubMethod(INITIATE_AUTH, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      let responseError: any
+
+      try {
+        await userManagementService.logInWithProfile(username, profileTrueCaller)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code, httpStatusCode } = responseError
+
+      expect(code).to.eql('COR-4')
+      expect(httpStatusCode).to.eql(404)
+    })
+  })
+
+  describe('#signUpWithProfile', () => {
+    it('should successfully pass `signUpWithProfile` method call', async () => {
+      const username = normalizeUsername(profileTrueCaller.phoneNumber)
+      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoInitiateCustomAuthResponse)
+      stubMethod(GET_USER, cognitoUserWithoutRegistrationStatus)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      const response = await userManagementService.signUpWithProfile(username, password, profileTrueCaller)
+
+      expect(response).to.exist
     })
   })
 })

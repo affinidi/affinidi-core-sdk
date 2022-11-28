@@ -1,5 +1,7 @@
-# release 7.5.0  (2022-11-24)
+# release 7.7.0 (2022-11-28)
 * add security fix for signIn passwordless flow
+# release 7.6.0 (2022-11-22)
+* Added `signInWithProfile` which initiates `Truecaller flow` sign in.
 # release 7.5.0 (2022-11-14)
 * updated `url-resolver` with internal URLs for new dev environment
 # release 7.4.0 (2022-11-10)

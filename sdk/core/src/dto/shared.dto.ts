@@ -3,6 +3,10 @@ import {
   IsDefined,
   IsOptional,
   IsISO8601,
+  IsBase64,
+  IsEmail,
+  IsMobilePhone,
+  IsPostalCode,
   IsUrl,
   IsNumber,
   IsObject,
@@ -20,6 +24,7 @@ import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig
 export type Env = 'dev' | 'staging' | 'prod'
 export type DidMethod = typeof SUPPORTED_DID_METHODS[number]
 export const DID_METHOD = /^(jolo|elem|polygon|polygon:testnet)$/
+export const SIGNATURE_ALGO = /^(SHA512withRSA)$/
 export const DID = /^did:[\w\d]{2,}:[\w\d:;\-=]{10,}/
 export const PASSWORD = /^.{6,}$/
 export const JWT = /^[A-Za-z0-9_=-]+\.[A-Za-z0-9_=-]+\.?[A-Za-z0-9_.+/=-]*$/
@@ -365,4 +370,85 @@ export class FetchCredentialsPaginationOptions {
   @IsInt()
   @Min(1)
   limit?: number
+}
+
+export class TokenTrueCaller {
+  @IsDefined()
+  @IsBase64()
+  payload: string
+
+  @IsDefined()
+  @IsBase64()
+  signature: string
+
+  @IsDefined()
+  @Matches(SIGNATURE_ALGO)
+  signatureAlgorithm: string
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  @IsUrl({ require_tld: false })
+  @IsOptional()
+  avatarUrl?: string | null
+
+  @IsOptional()
+  city?: string | null
+
+  @IsOptional()
+  companyName?: string | null
+
+  @IsOptional()
+  countryCode?: string | null
+
+  @IsOptional()
+  @IsEmail()
+  email?: string | null
+
+  @IsOptional()
+  facebookId?: string | null
+
+  @IsOptional()
+  firstName?: string
+
+  @IsOptional()
+  gender?: string
+
+  @IsOptional()
+  isAmbassador?: boolean
+
+  @IsOptional()
+  isBusiness?: boolean
+
+  @IsOptional()
+  isVerified?: boolean
+
+  @IsOptional()
+  jobTitle?: string | null
+
+  @IsOptional()
+  lastName?: string
+
+  @IsOptional()
+  @IsMobilePhone()
+  phoneNumber?: string
+
+  @IsOptional()
+  requestNonce?: string
+
+  @IsOptional()
+  street?: string | null
+
+  @IsOptional()
+  successful?: boolean
+
+  @IsOptional()
+  twitterId?: string | null
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  @IsUrl({ require_tld: false })
+  @IsOptional()
+  url?: string | null
+
+  @IsOptional()
+  @IsPostalCode()
+  zipcode?: string | null
 }

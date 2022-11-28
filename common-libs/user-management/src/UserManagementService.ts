@@ -2,8 +2,9 @@ import { v4 as generateUuid } from 'uuid'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 import { EncryptionService } from '@affinidi/common'
-import { CognitoUserTokens, MessageParameters } from './dto'
-import { validateUsername } from './validateUsername'
+
+import { CognitoUserTokens, MessageParameters, ProfileTrueCaller } from './dto'
+import { validatePhoneNumber, validateUsername } from './validateUsername'
 import SdkErrorFromCode from './SdkErrorFromCode'
 import { SessionStorageService } from './SessionStorageService'
 import {
@@ -23,6 +24,8 @@ import {
   UsernameWithAttributes,
 } from './CognitoIdentityService'
 
+import { TrueCallerService } from './TrueCallerService'
+
 class DefaultResultError extends Error {
   constructor(result: never) {
     super(`Result '${result}' cannot be handled`)
@@ -39,6 +42,7 @@ type ConstructorOptions = {
 type ConstructorDependencies = {
   keyStorageApiService: KeyStorageApiService
 }
+
 /**
  * @internal
  * Terminology:
@@ -56,12 +60,14 @@ export class UserManagementService {
   private _keyStorageApiService
   private _sessionStorageService
   private _shouldDisableNameNormalisation
+  private _trueCallerService
 
   constructor(options: ConstructorOptions, dependencies: ConstructorDependencies) {
     this._keyStorageApiService = dependencies.keyStorageApiService
     this._cognitoIdentityService = new CognitoIdentityService(options)
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
     this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
+    this._trueCallerService = new TrueCallerService()
   }
 
   private async _signUp(
@@ -169,9 +175,13 @@ export class UserManagementService {
     return response.cognitoTokens
   }
 
-  private async doesUserExist(value: string) {
-    const { isEmailValid, isPhoneNumberValid } = validateUsername(value)
-    const field = isEmailValid ? 'email' : isPhoneNumberValid ? 'phone_number' : 'username'
+  async doesUserExist(value: string, loginField?: 'username' | 'email' | 'phone_number') {
+    let field = loginField
+    if (!loginField) {
+      const { isEmailValid, isPhoneNumberValid } = validateUsername(value)
+      field = isEmailValid ? 'email' : isPhoneNumberValid ? 'phone_number' : 'username'
+    }
+
     return this._keyStorageApiService.doesUserExist({ field, value })
   }
 
@@ -271,6 +281,93 @@ export class UserManagementService {
 
     this._sessionStorageService.saveUserTokens(response.cognitoTokens)
     return response.cognitoTokens
+  }
+
+  /**
+   * Truecaller flow. Store user in truecaller users list and initiate custom auth flow.
+   * Trigger Cognito to properly handle truecaller flow.
+   * @param login
+   * @param profileTrueCaller
+   * @param env
+   */
+  async initiateLoginWithProfile(login: string, profileTrueCaller: ProfileTrueCaller, env?: string): Promise<string> {
+    let token: string
+
+    await this._keyStorageApiService.storeInTruecallerUserList({ profileTrueCaller, env })
+
+    const response = await this._cognitoIdentityService.initiateLogInPasswordless(login)
+
+    switch (response.result) {
+      case InitiateLoginPasswordlessResult.Success:
+        token = response.token
+        break
+      case InitiateLoginPasswordlessResult.UserNotFound:
+        throw new SdkErrorFromCode('COR-4', { username: login })
+      default:
+        throw new DefaultResultError(response)
+    }
+
+    return token
+  }
+
+  /**
+   * Log in with true caller profile.
+   * https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
+   * @param login
+   * @param profileTrueCaller
+   * @param env
+   * @param isSignUpFlow
+   */
+  async logInWithProfile(
+    login: string,
+    profileTrueCaller: ProfileTrueCaller,
+    env?: string,
+    isSignUpFlow?: boolean,
+  ): Promise<CognitoUserTokens> {
+    const token = await this.initiateLoginWithProfile(login, profileTrueCaller, env)
+    const response = await this._cognitoIdentityService.completeLogInPasswordless(
+      token,
+      JSON.stringify(profileTrueCaller),
+    )
+    if (response.result !== CompleteLoginPasswordlessResult.Success) {
+      switch (response.result) {
+        case CompleteLoginPasswordlessResult.AttemptsExceeded:
+          throw new SdkErrorFromCode('COR-13')
+        case CompleteLoginPasswordlessResult.ConfirmationCodeExpired:
+          throw new SdkErrorFromCode('COR-17', { confirmationCode: JSON.stringify(profileTrueCaller) })
+        case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
+          throw new SdkErrorFromCode('COR-5', { newToken: response.token })
+        default:
+          throw new DefaultResultError(response as never)
+      }
+    }
+
+    if (!isSignUpFlow && response.registrationStatus === RegistrationStatus.Incomplete) {
+      await this.adminDeleteIncompleteUser(response.cognitoTokens)
+      throw new SdkErrorFromCode('COR-26')
+    }
+
+    this._sessionStorageService.saveUserTokens(response.cognitoTokens)
+    return response.cognitoTokens
+  }
+
+  /**
+   * Sign up new user with `Truecaller` profile.
+   * https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
+   * @param login
+   * @param password
+   * @param profileTrueCaller
+   * @param env
+   */
+  async signUpWithProfile(
+    login: string,
+    password: string,
+    profileTrueCaller: ProfileTrueCaller,
+    env?: string,
+  ): Promise<CognitoUserTokens> {
+    await this._keyStorageApiService.adminCreateConfirmedUser({ profileTrueCaller, password, username: login })
+
+    return this.logInWithProfile(login, profileTrueCaller, env, true)
   }
 
   private async refreshUserSessionTokens(refreshToken: string) {
@@ -445,6 +542,18 @@ export class UserManagementService {
     }
   }
 
+  private _validateTruecallerPhoneNumber(phoneNumberFromPayload: string, phoneNumberFromTokenBody: string) {
+    const { isPhoneNumberValid } = validatePhoneNumber(phoneNumberFromPayload)
+
+    if (phoneNumberFromTokenBody && phoneNumberFromTokenBody !== phoneNumberFromPayload) {
+      throw new SdkErrorFromCode('UM-8')
+    }
+
+    if (!isPhoneNumberValid) {
+      throw new SdkErrorFromCode('UM-7')
+    }
+  }
+
   /**
    * Builds user attributes for cognito record.
    * Result username is derived from login input parameter or random (based on usernameBuildingStrategy)
@@ -463,5 +572,22 @@ export class UserManagementService {
       emailAddress: isEmailValid ? login : undefined,
       phoneNumber: isPhoneNumberValid ? login : undefined,
     }
+  }
+
+  public async validateProfile(profileTrueCaller: ProfileTrueCaller) {
+    return this._trueCallerService.verifyProfile(profileTrueCaller)
+  }
+
+  /**
+   * Parse and validate signed `payload` of `Truecaller` profile/token.
+   * @param profileTrueCaller
+   */
+  public parseAndValidatePayload(profileTrueCaller: ProfileTrueCaller) {
+    const { timeStamp, verifier, phoneNumber } =
+      this._trueCallerService.parsePayloadProfileTrueCaller(profileTrueCaller)
+
+    this._validateTruecallerPhoneNumber(phoneNumber, profileTrueCaller.phoneNumber)
+
+    return { timeStamp, verifier, phoneNumber }
   }
 }

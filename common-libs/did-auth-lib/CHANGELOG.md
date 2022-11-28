@@ -1,3 +1,5 @@
+# release 2.5.1 (2022-11-28)
+* updated `internal-api-clients`
 # release 2.5.0 (2022-11-14)
 * updated `url-resolver` with internal URLs for new dev environment
 # release 2.4.0 (2022-11-10)
