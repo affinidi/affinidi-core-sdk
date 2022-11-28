@@ -17,6 +17,31 @@ const errors = {
     message: 'User with given email or phone exists. One email or phone can be attached to only one user record',
     httpStatusCode: 400,
   },
+  'UM-4': {
+    type: 'OperationError',
+    message: 'Invalid response while fetching `Truecaller` public key.',
+    httpStatusCode: 400,
+  },
+  'UM-5': {
+    type: 'OperationError',
+    message: 'URL could not be dereferenced, an error occurred. {{error}}',
+    httpStatusCode: 400,
+  },
+  'UM-6': {
+    type: 'OperationError',
+    message: 'Validation failed. Invalid `TrueCaller` profile.',
+    httpStatusCode: 400,
+  },
+  'UM-7': {
+    type: 'OperationError',
+    message: 'Phone number should exists and be valid.',
+    httpStatusCode: 400,
+  },
+  'UM-8': {
+    type: 'OperationError',
+    message: 'Truecaller token/profile contains mismatched phone numbers.',
+    httpStatusCode: 400,
+  },
   // NOTE: errors related to user-management only should be added here with a separate prefix UM-XXX (UM-1), not to commonErrors
 }
 

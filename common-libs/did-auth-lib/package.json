@@ -43,7 +43,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/common": "^2.8.0",
-    "@affinidi/internal-api-clients": "^2.1.0",
+    "@affinidi/internal-api-clients": "^2.2.0",
     "@affinidi/tools-common": "^1.3.0",
     "@affinidi/url-resolver": "^4.0.0",
     "did-resolver": "^4.0.0"

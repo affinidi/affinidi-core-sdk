@@ -45,7 +45,7 @@ export enum CompleteLoginPasswordlessResult {
   ConfirmationCodeWrong,
 }
 
-type CompleteLoginPasswordlessResponse = Response<
+export type CompleteLoginPasswordlessResponse = Response<
   CompleteLoginPasswordlessResult,
   CompleteLoginPasswordlessResult.Success | CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
   { cognitoTokens: CognitoUserTokens; token: string; registrationStatus: RegistrationStatus }
@@ -130,8 +130,15 @@ type GetCognitoAuthParametersObjectInput = {
 
 export const REGISTRATION_STATUS_ATTRIBUTE = 'gender'
 
-const getAdditionalParameters = (messageParameters?: MessageParameters) => {
-  return messageParameters ? { ClientMetadata: messageParameters as Record<string, any> } : {}
+const getAdditionalParameters = (messageParameters?: MessageParameters, authParameters?: { auth: string }) => {
+  if (!messageParameters && !authParameters) {
+    return {}
+  }
+
+  const messageParams = messageParameters ? messageParameters : {}
+  const authParams = authParameters ? authParameters : {}
+
+  return { ClientMetadata: { ...messageParams, ...authParams } as Record<string, any> }
 }
 const sha256 = (data: string): string =>
   createHash('sha256')
@@ -164,7 +171,10 @@ export class CognitoIdentityService {
 
   async tryLogInWithPassword(login: string, password: string): Promise<LogInWithPasswordResponse> {
     try {
-      const params = this._getCognitoAuthParametersObject(AuthFlow.UserPassword, { login, password })
+      const params = {
+        ...this._getCognitoAuthParametersObject(AuthFlow.UserPassword, { login, password }),
+      }
+
       const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
       const registrationStatus = await this._getRegistrationStatus(cognitoTokens.accessToken)

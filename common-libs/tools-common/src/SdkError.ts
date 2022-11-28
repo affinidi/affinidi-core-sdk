@@ -72,7 +72,7 @@ export const commonErrors = {
   },
   'COR-3': {
     type: 'InvalidParametersError',
-    message: 'Username should be valid email or phone number.',
+    message: 'Username should be valid email or phone number. {{username}}',
     httpStatusCode: 400,
   },
   'COR-4': {
