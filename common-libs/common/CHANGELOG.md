@@ -1,3 +1,5 @@
+# release 2.9.1 (2022-11-29)
+* add security fix for signIn passwordless flow
 # release 2.9.0 (2022-11-28)
 * updated `internal-api-clients`
 # release 2.8.0 (2022-11-14)
