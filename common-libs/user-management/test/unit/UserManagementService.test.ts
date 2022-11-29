@@ -74,6 +74,7 @@ describe('UserManagementService', () => {
         adminConfirmUser: undefined,
         adminCreateConfirmedUser: undefined,
         doesUserExist: undefined,
+        storeInTruecallerUserList: undefined,
       }),
     }
   })
@@ -1046,8 +1047,8 @@ describe('UserManagementService', () => {
   describe('#signUpWithProfile', () => {
     it('should successfully pass `signUpWithProfile` method call', async () => {
       const username = normalizeUsername(profileTrueCaller.phoneNumber)
-      stubMethod(INITIATE_AUTH, cognitoAuthSuccessResponse)
-      stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoInitiateCustomAuthResponse)
+      stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, cognitoAuthSuccessResponse)
       stubMethod(GET_USER, cognitoUserWithoutRegistrationStatus)
 
       const userManagementService = new UserManagementService(options, dependencies)
