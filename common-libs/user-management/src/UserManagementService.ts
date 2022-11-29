@@ -215,6 +215,7 @@ export class UserManagementService {
 
     await this._completeSignUp(login, confirmationCode)
     const cognitoTokens = await this._logInWithPassword(login, password, true)
+    await this._keyStorageApiService.confirmPasswordlessSignUp({ accessToken: cognitoTokens.accessToken })
     return { cognitoTokens, shortPassword }
   }
 

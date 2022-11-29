@@ -86,6 +86,10 @@ export default class KeyStorageApiService {
     const result = await this.client.AdminGetUserInfo({ authorization: accessToken })
     return result.body
   }
+  async confirmPasswordlessSignUp({ accessToken }: { accessToken: string }) {
+    const result = await this.client.ConfirmPasswordlessSignUp({ authorization: accessToken })
+    return result.body
+  }
 
   async doesUserExist({ field, value }: DoesUserExistInput): Promise<{ isUnconfirmed: boolean; userExists: boolean }> {
     const result = await this.client.DoesUserExist({ queryParams: { field, value } })
