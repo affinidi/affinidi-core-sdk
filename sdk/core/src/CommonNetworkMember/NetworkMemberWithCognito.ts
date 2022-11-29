@@ -552,7 +552,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       case 'signUp':
         return {
           isNew: true,
-          wallet: await this.completeSignUp(dependencies, options, token.signUpToken, confirmationCode),
+          wallet: await this.completeSignUp(dependencies, options, token.signUpToken, confirmationCode, null, true),
         }
       default:
         throw new Error(`Incorrect token type '${token.signInType}'`)
