@@ -125,4 +125,12 @@ describe('UserManagementService', () => {
 
     expect(isUserUnconfirmed).to.equal(false)
   })
+
+  it('#isUserUnconfirmed returns `false` WHEN user not UNCONFIRMED', async () => {
+    const cognitoUsername = existingConfirmedCognitoUser
+    const userManagementService = new UserManagementService(options, dependencies)
+    const isUserUnconfirmed = await userManagementService.doesUnconfirmedUserExist(cognitoUsername)
+
+    expect(isUserUnconfirmed).to.equal(false)
+  })
 })

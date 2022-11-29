@@ -1,5 +1,5 @@
-# release 2.2.0 (2022-11-28)
-feat: add adminGetUserInfo
+# release 2.2.0 (2022-11-22)
+* Added new endpoints `storeInTruecallerUserList` and `adminCreateConfirmedUser` for Keystorage service.
 # release 2.1.0 (2022-10-20)
 * updated api of KeysService
 # release 2.0.0 (2022-09-28)

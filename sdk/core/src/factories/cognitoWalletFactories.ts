@@ -1,7 +1,7 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import { NetworkMemberWithCognito as Wallet } from '../CommonNetworkMember/NetworkMemberWithCognito'
-import { KeyParamsOrOptions, MessageParameters, SdkOptions } from '../dto/shared.dto'
+import { KeyParamsOrOptions, MessageParameters, SdkOptions, TokenTrueCaller } from '../dto/shared.dto'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 
 export const createCognitoWalletFactories = (
@@ -191,6 +191,17 @@ export const createCognitoWalletFactories = (
      */
     completeSignInPasswordless: (options: SdkOptions, signInToken: string, confirmationCode: string) => {
       return Wallet.completeSignInPasswordless(dependencies, options, signInToken, confirmationCode)
+    },
+
+    /**
+     * @description Initiates sign in of an existing user with `Truecaller` token,
+     * or signs up a new one, if user was not registered
+     * @param inputOptions - optional parameters with specified environment
+     * @param profileTrueCaller - `Truecaller` token/profile
+     * @returns an object with a flag, identifying whether new account was created, and initialized instance of SDK
+     */
+    signInWithProfile: (inputOptions: SdkOptions, profileTrueCaller: TokenTrueCaller) => {
+      return Wallet.signInWithProfile(inputOptions, profileTrueCaller, dependencies)
     },
 
     /**
