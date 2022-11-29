@@ -495,6 +495,8 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     signUpToken: string,
     confirmationCode: string,
     inputOptions: SdkOptions,
+    key?: string,
+    passwordless?: boolean,
   ) {
     await ParametersValidator.validate([
       { isArray: false, type: 'string', isRequired: true, value: signUpToken },
@@ -507,6 +509,8 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
+      key,
+      passwordless,
     )
     const result = await LegacyNetworkMemberWithFactories._confirmSignUp(
       dependencies,
@@ -575,7 +579,13 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
       return userManagementService.initiateLogInPasswordless(login, messageParameters)
     } else {
       const password = normalizeShortPassword(await generatePassword(), login)
-      return userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters)
+      return userManagementService.initiateSignUpWithEmailOrPhone(
+        login,
+        password,
+        messageParameters,
+        options.accessApiKey,
+        true,
+      )
     }
   }
 
@@ -608,6 +618,8 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
         token,
         confirmationCode,
         options,
+        options.accessApiKey,
+        true,
       )
 
       return { isNew: true, commonNetworkMember }
