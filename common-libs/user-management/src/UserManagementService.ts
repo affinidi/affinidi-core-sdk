@@ -122,10 +122,11 @@ export class UserManagementService {
     password: string,
     messageParameters?: MessageParameters,
     key?: string,
+    passwordlessFlow?: boolean,
   ) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
-    const _password = key ? await EncryptionService.encrypt(password, key) : password
+    const _password = (passwordlessFlow && key) ? await EncryptionService.encrypt(password, key) : password
     await this._signUp(usernameWithAttributes, password, messageParameters)
     const signUpToken = `${usernameWithAttributes.username}::${_password}`
 
@@ -206,16 +207,19 @@ export class UserManagementService {
     return { login, shortPassword }
   }
 
-  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string, key?: string) {
+  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string, key?: string, passwordLess?: boolean) {
     const { login, shortPassword } = this.parseSignUpToken(token)
     let password = shortPassword
-    if (key) {
+    if (passwordLess && key) {
       password = EncryptionService.decrypt(shortPassword, key)
     }
 
     await this._completeSignUp(login, confirmationCode)
     const cognitoTokens = await this._logInWithPassword(login, password, true)
-    await this._keyStorageApiService.confirmPasswordlessSignUp({ accessToken: cognitoTokens.accessToken })
+    if (passwordLess) {
+      await this._keyStorageApiService.confirmPasswordlessSignUp({ accessToken: cognitoTokens.accessToken })
+    }
+
     return { cognitoTokens, shortPassword }
   }
 

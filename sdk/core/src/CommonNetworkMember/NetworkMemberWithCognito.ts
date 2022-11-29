@@ -362,6 +362,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     signUpToken: string,
     confirmationCode: string,
     keyParamsOrOptions?: KeyParamsOrOptions,
+    passwordLess?: boolean,
   ) {
     ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -378,6 +379,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       signUpToken,
       confirmationCode,
       options.accessApiKey,
+      passwordLess,
     )
     return NetworkMemberWithCognito._confirmSignUp(
       dependencies,
@@ -515,6 +517,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
           password,
           messageParameters,
           options.accessApiKey,
+          true,
         ),
       })
     }
