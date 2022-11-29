@@ -306,6 +306,15 @@ export default {
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"AdminGetUserInfoOutput": {
+				"properties": {
+					"userCreateDate": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {
@@ -1180,6 +1189,33 @@ export default {
 						}
 					}
 				]
+			}
+		},
+		"/userManagement/adminGetUserInfo": {
+			"post": {
+				"operationId": "AdminGetUserInfo",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AdminGetUserInfoOutput"
+								}
+							}
+						}
+					}
+				},
+				"description": "This endpoint should be used to get user metadata info. Currently only userCreateDate is returned.",
+				"tags": [
+					"UserManagement"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": []
 			}
 		},
 		"/userManagement/doesUserExist": {

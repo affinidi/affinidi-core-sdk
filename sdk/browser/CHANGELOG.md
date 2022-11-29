@@ -1,3 +1,5 @@
+# release 7.6.0 (2022-11-29)
+feat: add getInfo to NetworkMemberWithCognito
 # release 7.5.1 (2022-11-25)
 * bumped `core` version
 # release 7.5.0 (2022-11-14)

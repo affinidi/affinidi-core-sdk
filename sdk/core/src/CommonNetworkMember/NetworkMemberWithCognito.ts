@@ -133,6 +133,14 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
   }
 
   /**
+   * @description Get user metadata info
+   * @returns userCreateDate
+   */
+  public async getInfo() {
+    return this._userManagementService.getInfo(this.cognitoUserTokens)
+  }
+
+  /**
    * @description Initiates reset password flow
    * @param options - parameters with specified environment
    * @param login - email/phoneNumber, registered in Cognito

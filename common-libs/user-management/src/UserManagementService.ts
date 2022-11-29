@@ -511,6 +511,10 @@ export class UserManagementService {
     })
   }
 
+  public async getInfo(cognitoTokens: CognitoUserTokens) {
+    return this._keyStorageApiService.adminGetUserInfo({ accessToken: cognitoTokens.accessToken })
+  }
+
   public readUserTokensFromSessionStorage() {
     return this._sessionStorageService.readUserTokens()
   }
