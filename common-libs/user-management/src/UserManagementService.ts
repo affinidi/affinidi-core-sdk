@@ -126,7 +126,7 @@ export class UserManagementService {
   ) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
-    const _password = (passwordlessFlow && key) ? await EncryptionService.encrypt(password, key) : password
+    const _password = passwordlessFlow && key ? await EncryptionService.encrypt(password, key) : password
     await this._signUp(usernameWithAttributes, password, messageParameters)
     const signUpToken = `${usernameWithAttributes.username}::${_password}`
 
