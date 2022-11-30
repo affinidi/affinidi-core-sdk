@@ -13,6 +13,7 @@ import * as AnchoringHandler from '../../src/services/anchoringHandler'
 
 import { AffinidiWalletWithEncryption as AffinityWallet, checkIsWallet } from '../helpers/AffinidiWallet'
 import { generateTestDIDs } from '../factory/didFactory'
+import { EncryptionService } from '@affinidi/common'
 
 chaiUse(sinonChai)
 
@@ -23,7 +24,7 @@ let walletPassword: string
 const email = 'user@email.com'
 let encryptedSeed: string
 const confirmationCode = '123456'
-const signUpWithEmailResponseToken = `${email}::${walletPassword}`
+const signUpWithEmailResponseToken = `${email}::${EncryptionService.encrypt(walletPassword, 'testskey')}`
 
 const accessToken = 'dummy_token'
 const idToken = 'dummy_token'
