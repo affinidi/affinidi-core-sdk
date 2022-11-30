@@ -1,7 +1,7 @@
 import nock from 'nock'
 import sinon from 'sinon'
 import { expect } from 'chai'
-import { Affinity, JwtService, KeysService, DidDocumentService } from '@affinidi/common'
+import { Affinity, JwtService, KeysService, DidDocumentService, EncryptionService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { SdkError } from '@affinidi/tools-common'
 import { buildVCV1Skeleton, buildVCV1Unsigned } from '@affinidi/vc-common'
@@ -60,11 +60,6 @@ let didElemShortForm: string
 let didElemAlt: string
 
 const confirmationCode = '123456'
-const signUpWithEmailResponseToken = `${email}::${walletPassword}`
-const signInResponseToken =
-  `${email}::eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1Nksif` +
-  'G9zX29mZmVyaW5nLyJ9LCJleHAiOjE2MTI5NjE5NTY3NzAsInR5cCI6ImNyZWRlbnRpYWxSZX' +
-  'c44eac73f350b739ac0e5eb4add1961c88d9f0486b37be928bccf2b19fb5a1d2b7c9bbe'
 
 const credentialOfferToken =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJpbnR' +
@@ -120,7 +115,7 @@ let saveSeedStub: sinon.SinonStub
 let markRegistrationComplete: sinon.SinonStub
 
 const options = getAllOptionsForEnvironment()
-const { registryUrl } = options
+const { registryUrl, keyStorageUrl } = options
 
 const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string; didDocument: { id: string } }) => {
   saveSeedStub = sinon.stub(KeyStorageApiService.prototype, 'storeMyKey')
@@ -145,6 +140,7 @@ const stubConfirmAuthRequests = async (opts: { password: string; seedHex: string
   sinon.stub(KeysService, 'getAnchorTransactionPublicKey').returns(Buffer.from('publicKey'))
 
   nock(registryUrl).post('/api/v1/did/anchor-did').reply(200, {})
+  nock(keyStorageUrl).post('/api/v1/userManagement/confirmPasswordlessSignUp').reply(200, {})
 
   const mockedDecryptedSeed: ReturnType<typeof KeysService.decryptSeed> = {
     seed: Buffer.from(opts.seedHex),
@@ -386,7 +382,8 @@ describe('CommonNetworkMember', () => {
   it('#confirmSignUp when username is email (with default SDK options)', async () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
-    const response = await AffinidiWallet.confirmSignUp(signUpWithEmailResponseToken, confirmationCode, options)
+    const token = `${email}::${await EncryptionService.encrypt(walletPassword, options.accessApiKey)}`
+    const response = await AffinidiWallet.confirmSignUp(token, confirmationCode, options)
 
     expect(response.did).to.exist
     expect(markRegistrationComplete).to.be.calledOnce
@@ -397,7 +394,7 @@ describe('CommonNetworkMember', () => {
     await stubConfirmAuthRequests({ password: walletPassword, seedHex, didDocument: joloDidDocument })
 
     const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(
-      signUpWithEmailResponseToken,
+      `${email}::${await EncryptionService.encrypt(walletPassword, options.accessApiKey)}`,
       confirmationCode,
       options,
     )
@@ -422,11 +419,8 @@ describe('CommonNetworkMember', () => {
       encryptionKey: undefined,
     })
 
-    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(
-      signInResponseToken,
-      confirmationCode,
-      options,
-    )
+    const token = `${email}::${await EncryptionService.encrypt(walletPassword, options.accessApiKey)}`
+    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(token, confirmationCode, options)
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist
@@ -446,12 +440,8 @@ describe('CommonNetworkMember', () => {
       encryptedSeed: encryptedSeedJolo,
       encryptionKey: undefined,
     })
-
-    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(
-      signInResponseToken,
-      confirmationCode,
-      options,
-    )
+    const token = `${email}::${await EncryptionService.encrypt(walletPassword, options.accessApiKey)}`
+    const { isNew, commonNetworkMember } = await AffinidiWallet.confirmSignIn(token, confirmationCode, options)
 
     expect(isNew).to.be.true
     expect(commonNetworkMember.did).to.exist

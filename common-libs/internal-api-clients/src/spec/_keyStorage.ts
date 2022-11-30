@@ -1218,6 +1218,66 @@ export default {
 				"parameters": []
 			}
 		},
+		"/userManagement/confirmPasswordlessSignUp": {
+			"post": {
+				"operationId": "ConfirmPasswordlessSignUp",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method Not Allowed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Missing configuration for AWS in environment variables.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					}
+				},
+				"description": "This endpoint do post confirmation actions for signUp passwordless flow.",
+				"tags": [
+					"UserManagement"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": []
+			}
+		},
 		"/userManagement/doesUserExist": {
 			"get": {
 				"operationId": "DoesUserExist",

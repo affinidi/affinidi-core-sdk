@@ -1,6 +1,7 @@
 import { v4 as generateUuid } from 'uuid'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
+import { EncryptionService } from '@affinidi/common'
 
 import { CognitoUserTokens, MessageParameters, ProfileTrueCaller } from './dto'
 import { validatePhoneNumber, validateUsername } from './validateUsername'
@@ -116,12 +117,18 @@ export class UserManagementService {
     return cognitoTokens
   }
 
-  async initiateSignUpWithEmailOrPhone(login: string, password: string, messageParameters?: MessageParameters) {
+  async initiateSignUpWithEmailOrPhone(
+    login: string,
+    password: string,
+    messageParameters?: MessageParameters,
+    key?: string,
+    passwordlessFlow?: boolean,
+  ) {
     this._loginShouldBeEmailOrPhoneNumber(login)
     const usernameWithAttributes = this._buildUserAttributes(login)
-
+    const _password = passwordlessFlow && key ? await EncryptionService.encrypt(password, key) : password
     await this._signUp(usernameWithAttributes, password, messageParameters)
-    const signUpToken = `${usernameWithAttributes.username}::${password}`
+    const signUpToken = `${usernameWithAttributes.username}::${_password}`
 
     return signUpToken
   }
@@ -200,10 +207,19 @@ export class UserManagementService {
     return { login, shortPassword }
   }
 
-  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string) {
+  async completeSignUpForEmailOrPhone(token: string, confirmationCode: string, key?: string, passwordLess?: boolean) {
     const { login, shortPassword } = this.parseSignUpToken(token)
+    let password = shortPassword
+    if (passwordLess && key) {
+      password = EncryptionService.decrypt(shortPassword, key)
+    }
+
     await this._completeSignUp(login, confirmationCode)
-    const cognitoTokens = await this._logInWithPassword(login, shortPassword, true)
+    const cognitoTokens = await this._logInWithPassword(login, password, true)
+    if (passwordLess) {
+      await this._keyStorageApiService.confirmPasswordlessSignUp({ accessToken: cognitoTokens.accessToken })
+    }
+
     return { cognitoTokens, shortPassword }
   }
 

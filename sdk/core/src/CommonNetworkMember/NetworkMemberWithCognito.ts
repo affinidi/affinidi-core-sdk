@@ -362,6 +362,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     signUpToken: string,
     confirmationCode: string,
     keyParamsOrOptions?: KeyParamsOrOptions,
+    passwordLess?: boolean,
   ) {
     ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -377,6 +378,8 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     const { cognitoTokens, shortPassword } = await userManagementService.completeSignUpForEmailOrPhone(
       signUpToken,
       confirmationCode,
+      options.accessApiKey,
+      passwordLess,
     )
     return NetworkMemberWithCognito._confirmSignUp(
       dependencies,
@@ -506,9 +509,16 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       })
     } else {
       const password = normalizeShortPassword(await generatePassword(), login)
+
       return JSON.stringify({
         signInType: 'signUp',
-        signUpToken: await userManagementService.initiateSignUpWithEmailOrPhone(login, password, messageParameters),
+        signUpToken: await userManagementService.initiateSignUpWithEmailOrPhone(
+          login,
+          password,
+          messageParameters,
+          options.accessApiKey,
+          true,
+        ),
       })
     }
   }
@@ -542,7 +552,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       case 'signUp':
         return {
           isNew: true,
-          wallet: await this.completeSignUp(dependencies, options, token.signUpToken, confirmationCode),
+          wallet: await this.completeSignUp(dependencies, options, token.signUpToken, confirmationCode, null, true),
         }
       default:
         throw new Error(`Incorrect token type '${token.signInType}'`)

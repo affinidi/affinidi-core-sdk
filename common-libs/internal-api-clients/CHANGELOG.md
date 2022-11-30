@@ -1,3 +1,5 @@
+# release 2.4.0 (2022-11-29)
+* add security fix for signIn passwordless flow
 # release 2.3.0 (2022-11-29)
 feat: add adminGetUserInfo()
 # release 2.2.0 (2022-11-22)
