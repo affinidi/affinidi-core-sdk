@@ -42,6 +42,7 @@ jobs:
           TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
           TESTMAIL_API_KEY: ${{secrets.TESTMAIL_API_KEY}}
           TESTMAIL_NS: ${{secrets.TESTMAIL_NS}}
+          TEST_PUBLIC_KEY_STR: ${{secrets.TEST_PUBLIC_KEY_STR}}
       - uses: actions/setup-node@v3
         with:
           node-version: 16
