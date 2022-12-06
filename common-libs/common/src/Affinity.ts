@@ -33,7 +33,7 @@ export class Affinity {
         useCache: options.useCache ?? true,
         cacheMaxSize: options.cacheMaxSize,
         cacheTtlInMin: options.cacheTtlInMin,
-        resolveLegacyElemLocally:  options.resolveLegacyElemLocally,
+        resolveLegacyElemLocally: options.resolveLegacyElemLocally,
       })
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
