@@ -10,6 +10,7 @@ export class AffinityOptions {
   useCache?: boolean
   cacheMaxSize?: number
   cacheTtlInMin?: number
+  resolveLegacyElemLocally?: boolean
 }
 
 export class EventOptions {

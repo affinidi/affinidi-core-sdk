@@ -123,8 +123,13 @@ export class SdkOptions {
   @IsOptional()
   origin?: string
 
+  @IsBoolean()
   @IsOptional()
   skipAnchoringForElemMethod?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  resolveLocallyElemMethod?: boolean
 }
 
 export class MessageParameters {
