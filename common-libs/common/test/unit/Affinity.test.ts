@@ -128,6 +128,18 @@ describe('Affinity', () => {
     expect(didDocument.id).to.be.equal(didElemShortForm)
   })
 
+  it('#resolveDid (elem legacy) locally', async () => {
+    const affinityWithLocalResolver = new Affinity(
+      { resolveLegacyElemLocally: true, ...options },
+      ecdsaCryptographyTools,
+    )
+    const didDocument = await affinityWithLocalResolver.resolveDid(testDids.elem.elemDidForLocalResolving)
+
+    expect(didDocument).to.exist
+    expect(didDocument.id).to.not.be.equal(didElemShortForm)
+    expect(didDocument.id).to.be.equal('did:elem:EiA8XCSERPjEQQJkNz55d_UZDl3_uBNFDDaeowfY7-QrPQ')
+  })
+
   it('#resolveDid (polygon)', async () => {
     const didDocument = await affinity.resolveDid(testDids.polygon.did)
 
@@ -321,6 +333,16 @@ describe('Affinity', () => {
 
   it('#validateCredential (elem)', async () => {
     const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
+    const result = await affinity.validateCredential(createdCredential)
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (elem, resolved locally)', async () => {
+    const affinityWithLocalResolver = new Affinity(
+      { resolveLegacyElemLocally: true, ...options },
+      ecdsaCryptographyTools,
+    )
+    const createdCredential = await affinityWithLocalResolver.signCredential(credential, encryptedSeedElem, password)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })

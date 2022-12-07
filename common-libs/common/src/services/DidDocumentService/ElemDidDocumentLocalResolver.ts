@@ -20,7 +20,7 @@ export const verifyOperationSignature = (
   const hash = sha256(toBeVerifiedBuffer)
 
   const publicKeyBuffer = Buffer.from(publicKey, 'hex')
-  return secp256k1.verify(hash, base64url.toBuffer(signature), publicKeyBuffer)
+  return secp256k1.verify(hash, publicKeyBuffer, base64url.toBuffer(signature))
 }
 
 export const encodeJson = (payload: any) => base64url.encode(Buffer.from(JSON.stringify(payload)))
