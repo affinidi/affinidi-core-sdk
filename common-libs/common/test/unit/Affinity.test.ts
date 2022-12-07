@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import nock from 'nock'
 import sinon from 'sinon'
 import { KeysService } from '../../src/services'
-import { Affinity, DidResolver } from '../../src'
+import { Affinity, DidResolver, DocumentLoader } from '../../src'
 import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
 import {
   createUnsignedCredential,
@@ -737,6 +737,35 @@ describe('Affinity', () => {
       await affinity6.resolveDid(didElem)
 
       expect(spyOnDidResolver).to.have.been.calledOnce
+    })
+  })
+
+  describe('#createDocumentLoader', () => {
+    const beforeDocumentLoader: DocumentLoader = async (iri: string) => {
+      if (iri === 'return-result') {
+        return {
+          documentUrl: iri,
+          contextUrl: null,
+          document: { key: 'val1' },
+        }
+      }
+
+      return undefined
+    }
+    const affinityWithBeforeDocumentLoader = new Affinity({ ...options, beforeDocumentLoader }, ecdsaCryptographyTools)
+
+    it('should return value provided by beforeDocumentLoader', async () => {
+      const result = await affinityWithBeforeDocumentLoader._createDocumentLoader()('return-result')
+
+      expect(result.document).to.be.deep.eq({ key: 'val1' })
+    })
+
+    it('should return value from default DocumentLoader', async () => {
+      const result = await affinityWithBeforeDocumentLoader._createDocumentLoader()(
+        'https://www.w3.org/2018/credentials/v1',
+      )
+
+      expect(result.document['@context']).to.be.exist
     })
   })
 })

@@ -148,6 +148,7 @@ export abstract class BaseNetworkMember {
         metricsUrl: metricsUrl,
         component: eventComponent,
         resolveLegacyElemLocally: options.otherOptions?.resolveLocallyElemMethod,
+        beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
       },
       platformCryptographyTools,
     )

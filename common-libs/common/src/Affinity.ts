@@ -6,7 +6,7 @@ import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } fr
 import { resolveUrl, Service } from '@affinidi/url-resolver'
 import { parse } from 'did-resolver'
 
-import { AffinityOptions, EventOptions } from './dto/shared.dto'
+import { AffinityOptions, DocumentLoader, EventOptions } from './dto/shared.dto'
 import { DidDocumentService, KeysService, DigestService, MetricsService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
@@ -23,6 +23,7 @@ export class Affinity {
   private readonly _metricsService
   private readonly _digestService
   private readonly _platformCryptographyTools
+  private readonly _beforeDocumentLoader?: DocumentLoader
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
     this._didResolver =
@@ -42,6 +43,7 @@ export class Affinity {
       component: options.component || EventComponent.AffinidiCommon,
     })
     this._platformCryptographyTools = platformCryptographyTools
+    this._beforeDocumentLoader = options.beforeDocumentLoader
   }
 
   private async _resolveDidIfNoDidDocument(did: string, didDocument?: any): Promise<any> {
@@ -208,6 +210,8 @@ export class Affinity {
 
   _createDocumentLoader(resolvedDids: Record<string, any> = {}) {
     return async (url: string) => {
+      const beforeDocumentLoaderResult = await this._beforeDocumentLoader?.(url)
+      if (beforeDocumentLoaderResult) return beforeDocumentLoaderResult
       if (url.startsWith('did:')) {
         const did = url.includes('#') ? DidDocumentService.keyIdToDid(url) : url
 

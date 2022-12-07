@@ -20,6 +20,7 @@ import {
 } from 'class-validator'
 
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
+import { DocumentLoader } from '@affinidi/common'
 
 export type Env = 'dev' | 'staging' | 'prod'
 export type DidMethod = typeof SUPPORTED_DID_METHODS[number]
@@ -130,6 +131,14 @@ export class SdkOptions {
   @IsBoolean()
   @IsOptional()
   resolveLocallyElemMethod?: boolean
+
+  @IsOptional()
+  /**
+   * document loader invoked before the main document loader.
+   * If it returns result - the result is considered as loaded document and used as a result.
+   * If it returns an undefined - the main document Loader is invoked with the same params.
+   */
+  beforeDocumentLoader?: DocumentLoader
 }
 
 export class MessageParameters {

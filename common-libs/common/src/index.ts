@@ -46,4 +46,5 @@ export {
 } from './shared/seedTools'
 
 export { DidResolver } from './shared/DidResolver'
+export type { DocumentLoader } from './dto/shared.dto'
 export * from './shared/interfaces'
