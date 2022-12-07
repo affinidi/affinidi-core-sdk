@@ -1,3 +1,5 @@
+# release 7.10.0 (2022-12-07)
+* added an option to pass custom before hook for document loader
 # release 7.9.0 (2022-12-07)
 * added a flag to resolve legacy elem locally
 # release 7.8.0 (2022-11-29)
