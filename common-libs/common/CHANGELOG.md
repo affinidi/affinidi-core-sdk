@@ -1,3 +1,5 @@
+# release 2.10.0 (2022-12-07)
+* added a flag to resolve legacy elem locally
 # release 2.9.1 (2022-11-29)
 * add security fix for signIn passwordless flow
 # release 2.9.0 (2022-11-28)
