@@ -82,8 +82,12 @@ export default class AffinidiVaultEncryptionService {
     const credentials: CredentialLike[] = []
 
     for (const encryptedCredential of encryptedCredentials) {
-      const credential = await this.decryptCredential(encryptedCredential)
-      credentials.push(credential)
+      try {
+        const credential = await this.decryptCredential(encryptedCredential)
+        credentials.push(credential)
+      } catch (error) {
+        // ignore corrupted credentials and return valid credentials
+      }
     }
 
     return credentials
