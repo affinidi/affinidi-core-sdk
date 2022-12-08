@@ -1,6 +1,7 @@
 import LRUCache from 'lru-cache'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { DidDocument } from './interfaces'
+import { resolveLegacyDidElemLocal } from '../services/DidDocumentService/ElemDidDocumentLocalResolver'
 
 type ServiceWithCache = {
   service: RegistryApiService
@@ -11,6 +12,7 @@ type ConstructorOptions = ConstructorParameters<typeof RegistryApiService>[0] & 
   useCache: boolean
   cacheMaxSize?: number
   cacheTtlInMin?: number
+  resolveLegacyElemLocally?: boolean
 }
 
 const DEFAULT_CACHE_MAX_SIZE = 10_000
@@ -59,6 +61,8 @@ const resolveDid = ({ service, cache }: ServiceWithCache, did: string) => {
   return cache.get(did)
 }
 
+const isLegacyElemWithState = (did: string) => did.startsWith('did:elem') && did.includes('elem:initial-state=')
+
 const resolveDidWithoutCache = async ({ service }: ServiceWithCache, did: string) => {
   const response = await service.resolveDid({ did })
   return response.body.didDocument as DidDocument
@@ -67,13 +71,16 @@ const resolveDidWithoutCache = async ({ service }: ServiceWithCache, did: string
 export class LocalDidResolver {
   private readonly _service: ServiceWithCache
   private readonly _useCache: boolean
+  private readonly _resolveLegacyElemLocally: boolean
 
   constructor(options: ConstructorOptions) {
     this._useCache = options.useCache ?? true
     this._service = getService(options)
+    this._resolveLegacyElemLocally = options.resolveLegacyElemLocally
   }
 
   resolveDid(did: string) {
+    if (this._resolveLegacyElemLocally && isLegacyElemWithState(did)) return resolveLegacyDidElemLocal(did)
     return this._useCache ? resolveDid(this._service, did) : resolveDidWithoutCache(this._service, did)
   }
 }

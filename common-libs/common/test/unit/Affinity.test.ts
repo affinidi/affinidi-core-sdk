@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import nock from 'nock'
 import sinon from 'sinon'
 import { KeysService } from '../../src/services'
-import { Affinity, DidResolver } from '../../src'
+import { Affinity, DidResolver, DocumentLoader } from '../../src'
 import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
 import {
   createUnsignedCredential,
@@ -126,6 +126,18 @@ describe('Affinity', () => {
 
     expect(didDocument).to.exist
     expect(didDocument.id).to.be.equal(didElemShortForm)
+  })
+
+  it('#resolveDid (elem legacy) locally', async () => {
+    const affinityWithLocalResolver = new Affinity(
+      { resolveLegacyElemLocally: true, ...options },
+      ecdsaCryptographyTools,
+    )
+    const didDocument = await affinityWithLocalResolver.resolveDid(testDids.elem.elemDidForLocalResolving)
+
+    expect(didDocument).to.exist
+    expect(didDocument.id).to.not.be.equal(didElemShortForm)
+    expect(didDocument.id).to.be.equal('did:elem:EiA8XCSERPjEQQJkNz55d_UZDl3_uBNFDDaeowfY7-QrPQ')
   })
 
   it('#resolveDid (polygon)', async () => {
@@ -321,6 +333,16 @@ describe('Affinity', () => {
 
   it('#validateCredential (elem)', async () => {
     const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
+    const result = await affinity.validateCredential(createdCredential)
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (elem, resolved locally)', async () => {
+    const affinityWithLocalResolver = new Affinity(
+      { resolveLegacyElemLocally: true, ...options },
+      ecdsaCryptographyTools,
+    )
+    const createdCredential = await affinityWithLocalResolver.signCredential(credential, encryptedSeedElem, password)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })
@@ -715,6 +737,35 @@ describe('Affinity', () => {
       await affinity6.resolveDid(didElem)
 
       expect(spyOnDidResolver).to.have.been.calledOnce
+    })
+  })
+
+  describe('#createDocumentLoader', () => {
+    const beforeDocumentLoader: DocumentLoader = async (iri: string) => {
+      if (iri === 'return-result') {
+        return {
+          documentUrl: iri,
+          contextUrl: null,
+          document: { key: 'val1' },
+        }
+      }
+
+      return undefined
+    }
+    const affinityWithBeforeDocumentLoader = new Affinity({ ...options, beforeDocumentLoader }, ecdsaCryptographyTools)
+
+    it('should return value provided by beforeDocumentLoader', async () => {
+      const result = await affinityWithBeforeDocumentLoader._createDocumentLoader()('return-result')
+
+      expect(result.document).to.be.deep.eq({ key: 'val1' })
+    })
+
+    it('should return value from default DocumentLoader', async () => {
+      const result = await affinityWithBeforeDocumentLoader._createDocumentLoader()(
+        'https://www.w3.org/2018/credentials/v1',
+      )
+
+      expect(result.document['@context']).to.be.exist
     })
   })
 })

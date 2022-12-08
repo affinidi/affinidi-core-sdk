@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/common",
-  "version": "2.9.1",
+  "version": "2.11.0",
   "description": "Common utilities and types for Affinidi SDKs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
