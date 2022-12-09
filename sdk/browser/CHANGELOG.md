@@ -1,5 +1,3 @@
-# release 7.9.0 (2022-12-09)
-fix: filter corrupted credentials from getCredentials()
 # release 7.8.0 (2022-12-07)
 * added an option to pass custom before hook for document loader
 # release 7.7.0 (2022-12-07)
