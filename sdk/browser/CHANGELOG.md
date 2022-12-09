@@ -1,3 +1,5 @@
+# release 7.8.1 (2022-12-09)
+updated `getCredentials` to filter corrupted credentials without throwing exception
 # release 7.8.0 (2022-12-07)
 * added an option to pass custom before hook for document loader
 # release 7.7.0 (2022-12-07)
