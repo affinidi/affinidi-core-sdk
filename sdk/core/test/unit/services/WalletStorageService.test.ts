@@ -169,10 +169,8 @@ describe('WalletStorageService', () => {
       expect(response).to.be.an('array')
       expect(response).to.length(1)
     })
-  })
 
-  describe('#getAllCredentialsWithBadEncryption', () => {
-    it('should filter bad credential from Affinidi Vault without throwing error', async () => {
+    it('should filter corrupted credentials without throwing exception', async () => {
       sinon
         .stub(AffinidiVaultApiService.prototype, 'searchCredentials')
         .withArgs(region)
