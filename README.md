@@ -1,4 +1,16 @@
-# Affinidi SDK Monorepo
+<h1 align="center">
+🦄 Affinidi Core SDK
+</h1>
+
+<h3 align="center">
+Build Self Sovereign Identity (SSI) applications using our JS/TS based platform SDKs
+</h3>
+
+<p align="center">
+    <a href="https://discord.com/invite/ffV5ctBMXr"><img src="https://img.shields.io/discord/806805256314028082?logo=discord?colorB=fedcba"/></a>
+    <img src="https://shields.io/badge/PRs-welcome-brightgreen"/>
+</p>
+<hr/>
 
 The open-source [Affinidi Library](https://github.com/affinityproject/affinidi-core-sdk) provides easy-to-use Typescript packages that enable developers to create and manage true certificate-enabled Digital Identities (DID) on the Affinidi Network.
 
