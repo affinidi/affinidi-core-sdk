@@ -81,7 +81,7 @@ Before we begin, make sure you have the following installed:
 - npm v8.15.0 or later
 
 ## API Key
-You need to to use an API Key when you initialize the SDK. Here are the steps required to generate and start using the API Key: https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key
+You need to use an API Key when you initialize the SDK. Here are the steps required to generate and start using the API Key: https://github.com/affinityproject/affinidi-core-sdk/tree/master/sdk/core#create-api-key
 
 ## npm commands
 
