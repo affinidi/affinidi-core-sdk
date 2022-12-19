@@ -137,9 +137,15 @@ export abstract class BaseNetworkMember {
       didAuthAdapter,
     })
     this._holderService = new HolderService(
-      { registryUrl, metricsUrl, accessApiKey },
+      {
+        registryUrl,
+        metricsUrl,
+        accessApiKey,
+      },
       platformCryptographyTools,
       eventComponent,
+      options.otherOptions?.resolveLocallyElemMethod,
+      options.otherOptions?.beforeDocumentLoader,
     )
     this._affinity = new Affinity(
       {
