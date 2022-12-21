@@ -1558,4 +1558,56 @@ describe('CommonNetworkMember', () => {
       expect(spyOnAnchor.callCount).to.be.equal(1)
     })
   })
+
+  describe('resolveLegacyElemLocally option enabled', () => {
+    it('#resolveDid (elem)', async () => {
+      const optionsWithElemDid = Object.assign({}, options, {
+        didMethod: elemDidMethod,
+        resolveLegacyElemLocally: true,
+      } as const)
+
+      const commonNetworkMember = new AffinidiWallet(password, encryptedSeedElem, optionsWithElemDid)
+      const didDocument = await commonNetworkMember.resolveDid(didElem)
+
+      expect(didDocument).to.exist
+      expect(didDocument.id).to.be.equal(didElemShort)
+    })
+
+    it('#validateCredential', async () => {
+      const fullOptions = Object.assign({}, getAllOptionsForEnvironment(), {
+        resolveLegacyElemLocally: true,
+      } as const)
+      const commonNetworkMember = new AffinidiWallet(REVOCATION_PASSWORD, REVOCATION_ENCRYPTED_SEED, fullOptions)
+      const holderDid = commonNetworkMember.did
+
+      const credId = new Date().toISOString()
+      const unsignedCredential = buildVCV1Unsigned({
+        skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
+          id: `credId:${credId}`,
+          credentialSubject: {
+            data: {
+              '@type': ['Person', 'PersonE', 'PhonePerson'],
+              telephone: '+1 555 555 5555',
+            },
+          },
+          holder: { id: holderDid },
+          type: 'PhoneCredentialPersonV1',
+          context: getVCPhonePersonV1Context(),
+        }),
+        issuanceDate: new Date().toISOString(),
+        expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
+      })
+
+      const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
+      const affinity = new Affinity(affinityOptions, testPlatformTools)
+      const signedCredential = await affinity.signCredential(
+        unsignedCredential,
+        REVOCATION_ENCRYPTED_SEED,
+        REVOCATION_PASSWORD,
+      )
+
+      const sucessResult = await commonNetworkMember.validateCredential(signedCredential as SignedCredential)
+      expect(sucessResult.result).to.equal(true)
+    })
+  })
 })
