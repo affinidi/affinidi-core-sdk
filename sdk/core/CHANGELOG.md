@@ -1,3 +1,5 @@
+# release 7.11.0 (2022-12-19)
+* added an option for HolderService to resolve legacy elem locally
 # release 7.10.1 (2022-12-09)
 updated `getCredentials` to filter corrupted credentials without throwing exception
 # release 7.10.0 (2022-12-07)
