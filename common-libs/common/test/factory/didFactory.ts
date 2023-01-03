@@ -4,6 +4,24 @@ const cryptoRandomString = require('crypto-random-string')
 import { randomBytes } from '../../src/shared/randomBytes'
 import { KeysService, DidDocumentService, DidResolver } from '../../'
 
+const elemDidForLocalResolving =
+  'did:elem:EiA8XCSERPjEQQJkNz55d_UZDl3_uBNFDDaeowfY7-QrPQ;elem:' +
+  'initial-state=eyJwcm90ZWN0ZWQiOiJleUp2Y0dWeVlYUnBiMjRpT2lKamNtVmhkR1VpTENK' +
+  'cmFXUWlPaUlqY0hKcGJXRnllU0lzSW1Gc1p5STZJa1ZUTWpVMlN5SjkiLCJwYXlsb2FkIjoiZX' +
+  'lKQVkyOXVkR1Y0ZENJNkltaDBkSEJ6T2k4dmR6TnBaQzV2Y21jdmMyVmpkWEpwZEhrdmRqSWlM' +
+  'Q0p3ZFdKc2FXTkxaWGtpT2x0N0ltbGtJam9pSTNCeWFXMWhjbmtpTENKMWMyRm5aU0k2SW5OcF' +
+  'oyNXBibWNpTENKMGVYQmxJam9pVTJWamNESTFObXN4Vm1WeWFXWnBZMkYwYVc5dVMyVjVNakF4' +
+  'T0NJc0luQjFZbXhwWTB0bGVVaGxlQ0k2SWpBeVpXTmpPRFZpT1dSbVl6aGtZMk0yWVdSaU1XRT' +
+  'JOR1V6TVdVeVkyRTJaVEprTUdJeVlqSTRPR0l6WkRBMk9XVTJObVExWTJWaE5XSmpOell4TjJS' +
+  'aE5TSjlMSHNpYVdRaU9pSWpjbVZqYjNabGNua2lMQ0oxYzJGblpTSTZJbkpsWTI5MlpYSjVJaX' +
+  'dpZEhsd1pTSTZJbE5sWTNBeU5UWnJNVlpsY21sbWFXTmhkR2x2Ymt0bGVUSXdNVGdpTENKd2RX' +
+  'SnNhV05MWlhsSVpYZ2lPaUl3TWpZMk1tWTVaVFpoWkRVM1lqVTRNRE0wT1dObU16UmxOelpsTm' +
+  '1ZeU1qSXhZVGxtTnprMk9XVTRaV001TXpFeE56a3paRGt6T1RJek9ERTRaVEk0T0RZaWZWMHNJ' +
+  'bUYxZEdobGJuUnBZMkYwYVc5dUlqcGJJaU53Y21sdFlYSjVJbDBzSW1GemMyVnlkR2x2YmsxbG' +
+  'RHaHZaQ0k2V3lJamNISnBiV0Z5ZVNKZGZRIiwic2lnbmF0dXJlIjoiSDZ4Y3VPU1A2bnp1MGho' +
+  'ZUlsRm9YejhJQ09UUkVoak01NlItb3FFMDNaSXhoOS04emFUT0x3bXhNVlJZbndSR3I1aGI0bU' +
+  'VkU2JrTjNpVnRVWWRteHcifQ'
+
 export const generateTestDIDs = async () => {
   let keysService
   let didDocumentService
@@ -159,6 +177,7 @@ export const generateTestDIDs = async () => {
       did: elemDid,
       didDocument: elemDidDocument,
       publicKey: elemPublicKey,
+      elemDidForLocalResolving,
     },
     polygon: {
       seed: polygonSeed,

@@ -15,12 +15,15 @@ import { generateTestDIDs } from '../../factory/didFactory'
 import { testPlatformTools } from '../../helpers/testPlatformTools'
 
 import signedCredential from '../../factory/signedCredential'
+import encryptedBadCredential from '../../factory/encryptedBadCredential'
 
 import credentialShareRequestToken from '../../factory/credentialShareRequestToken'
 import parsedCredentialShareRequestToken from '../../factory/parsedCredentialShareRequestToken'
 import AffinidiVaultStorageService from '../../../src/services/AffinidiVaultStorageService'
+import { AffinidiVaultApiService } from '@affinidi/internal-api-clients'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 import { extractSDKVersion } from '../../../src/_helpers'
+import { testPlatformToolsWithBadEncryption } from '../../helpers/testPlatformToolsWithBadEncryption'
 
 const affinidiVaultUrl = resolveUrl(Service.VAULT, 'staging')
 const keyStorageUrl = resolveUrl(Service.KEY_STORAGE, 'staging')
@@ -43,6 +46,25 @@ const createWalletStorageService = () => {
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter('', didAuthService)
   return new WalletStorageService(keysService, testPlatformTools, {
+    affinidiVaultUrl,
+    accessApiKey: undefined,
+    storageRegion: region,
+    didAuthAdapter,
+  })
+}
+
+const createWalletStorageServiceWithBadEncryption = () => {
+  const keysService = new KeysService(encryptedSeed, walletPassword)
+  const documentService = DidDocumentService.createDidDocumentService(keysService)
+  const keyVault = new LocalKeyVault(keysService)
+  const signer = new Signer({
+    did: documentService.getMyDid(),
+    keyId: documentService.getKeyId(),
+    keyVault,
+  })
+  const didAuthService = new DidAuthClientService(signer)
+  const didAuthAdapter = new DidAuthAdapter('', didAuthService)
+  return new WalletStorageService(keysService, testPlatformToolsWithBadEncryption, {
     affinidiVaultUrl,
     accessApiKey: undefined,
     storageRegion: region,
@@ -146,6 +168,20 @@ describe('WalletStorageService', () => {
       const response = await walletStorageService.getAllCredentials()
       expect(response).to.be.an('array')
       expect(response).to.length(1)
+    })
+
+    it('should filter corrupted credentials without throwing exception', async () => {
+      sinon
+        .stub(AffinidiVaultApiService.prototype, 'searchCredentials')
+        .withArgs(region)
+        .callsFake(function anon(): any {
+          return { body: { credentials: [encryptedBadCredential] } }
+        })
+
+      const walletStorageService = createWalletStorageServiceWithBadEncryption()
+      const response = await walletStorageService.getAllCredentials()
+      expect(response).to.be.an('array')
+      expect(response).to.length(0)
     })
   })
 
