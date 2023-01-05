@@ -20,5 +20,8 @@
     "exec": "lerna exec",
     "list-packages": "lerna list --json",
     "checkLicenses": "lerna run --no-bail --parallel checkLicenses"
+  },
+  "overrides": {
+    "parse-url": "8.1.0"
   }
 }
