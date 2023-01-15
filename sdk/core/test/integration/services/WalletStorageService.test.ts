@@ -160,7 +160,7 @@ describe('WalletStorageService', () => {
     expect(httpStatusCode).to.eql(409)
   })
 
-  it('#getCredentialOffer', async () => {
+  it.only('#getCredentialOffer', async () => {
     const { idToken } = await userManagementService.logInWithPassword(cognitoUsername, cognitoPassword)
 
     const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)

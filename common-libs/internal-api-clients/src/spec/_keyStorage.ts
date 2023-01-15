@@ -106,6 +106,9 @@ export default {
 						"nullable": true
 					}
 				},
+				"required": [
+					"accessApiKey"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -124,7 +127,8 @@ export default {
 					}
 				},
 				"required": [
-					"credentialOfferResponseToken"
+					"credentialOfferResponseToken",
+					"options"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -327,7 +331,7 @@ export default {
 	},
 	"info": {
 		"title": "affinity-wallet-backend",
-		"version": "1.39.0",
+		"version": "1.45.2",
 		"description": "Backend for Affinity SaaS Wallet",
 		"license": {
 			"name": "ISC"
@@ -1201,6 +1205,46 @@ export default {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/AdminGetUserInfoOutput"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method Not Allowed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Missing configuration for AWS in environment variables.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorObject"
 								}
 							}
 						}
