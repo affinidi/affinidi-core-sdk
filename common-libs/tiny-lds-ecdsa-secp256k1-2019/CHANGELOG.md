@@ -1,3 +1,5 @@
+# release 1.2.2 (2023-01-05)
+* fix security vulnerabilities by patching `lodash`
 # release 1.2.1 (2022-10-27)
 * Fix Security Vulnerabilities by patching `xmldom`
 # release 1.2.0 (2022-09-06)

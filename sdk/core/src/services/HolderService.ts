@@ -1,7 +1,7 @@
 import uniq from 'lodash.uniq'
 
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
-import { Affinity, JwtService, DidDocumentService, DigestService, KeysService } from '@affinidi/common'
+import { Affinity, JwtService, DidDocumentService, DigestService, KeysService, DocumentLoader } from '@affinidi/common'
 import { profile } from '@affinidi/tools-common'
 
 import { stripParamsFromDidUrl } from '../_helpers'
@@ -24,6 +24,8 @@ export default class HolderService {
     { registryUrl, metricsUrl, accessApiKey }: ConstructorOptions,
     platformCryptographyTools: IPlatformCryptographyTools,
     component: EventComponent,
+    resolveLegacyElemLocally?: boolean,
+    beforeDocumentLoader?: DocumentLoader,
   ) {
     this._affinityService = new Affinity(
       {
@@ -31,6 +33,8 @@ export default class HolderService {
         registryUrl,
         metricsUrl,
         component,
+        resolveLegacyElemLocally,
+        beforeDocumentLoader,
       },
       platformCryptographyTools,
     )
