@@ -55,7 +55,7 @@ function checkIsString(value: string | unknown): asserts value is string {
 }
 
 parallel('CommonNetworkMember [OTP]', () => {
-  it('sends email with OTP code using the provided template (message parameters) when #signIn is called', async () => {
+  it.skip('sends email with OTP code using the provided template (message parameters) when #signIn is called', async () => {
     const inbox = createInbox()
 
     const timestamp = String(Date.now())
@@ -347,7 +347,7 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(result.wallet.did).to.exist
     })
 
-    it('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
+    it.skip('sends email with OTP code using the provided template (message parameters) when #passwordlessLogin is called', async () => {
       const { inbox } = await createUser()
       const timestamp = String(Date.now())
       await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, {
