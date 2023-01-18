@@ -119,6 +119,8 @@ export default class KeysService {
       case 'polygon':
       case 'polygon:testnet':
         return etheriumIdentityKey
+      case 'web':
+        return elemIdentityPrimaryKey
     }
   }
 

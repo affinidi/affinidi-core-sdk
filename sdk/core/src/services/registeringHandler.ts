@@ -1,6 +1,6 @@
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { DidMethod, KeyOptions } from '../dto/shared.dto'
-import { ELEM_ANCHORED_DID_METHOD, ELEM_DID_METHOD } from '../_defaultConfig'
+import { ELEM_ANCHORED_DID_METHOD, ELEM_DID_METHOD, WEB_DID_METHOD } from '../_defaultConfig'
 import { DidDocumentService, extendSeedWithDid, generateFullSeed, KeysService } from '@affinidi/common'
 import { anchorDid } from './anchoringHandler'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
@@ -14,10 +14,21 @@ export const register = async (
   keyOptions?: KeyOptions,
   origin?: string,
   skipAnchoringForElemMethod?: boolean,
+  webDomain?: string
 ) => {
   const isAnchoredSeed = didMethod === ELEM_ANCHORED_DID_METHOD
 
-  const seedWithMethod = await generateFullSeed(platformCryptographyTools, didMethod, keyOptions)
+  let seedMetadata
+  // TODO: figure out to use proper SDK error (not regular Error)
+  if (didMethod && didMethod === 'web') {
+    if (!webDomain) {
+      throw Error('webDomain option should be provided to register did:web')
+    }
+
+    seedMetadata = { webDomain }
+  }
+
+  const seedWithMethod = await generateFullSeed(platformCryptographyTools, didMethod, keyOptions, seedMetadata)
   const { keysService, encryptedSeed } = await KeysService.fromSeedAndPassword(seedWithMethod, password)
 
   const didDocumentService = DidDocumentService.createDidDocumentService(keysService)
@@ -25,7 +36,7 @@ export const register = async (
 
   let anchoredInBlockchainDid
 
-  if (didMethod != ELEM_DID_METHOD || !skipAnchoringForElemMethod) {
+  if (didMethod !== WEB_DID_METHOD && (didMethod != ELEM_DID_METHOD || !skipAnchoringForElemMethod)) {
     const response = await anchorDid({
       registry,
       keysService,
@@ -56,5 +67,5 @@ export const register = async (
   }
 
   const didDocumentKeyId = keyId
-  return { did: didDocumentService.getMyDid(), didDocumentKeyId, encryptedSeed }
+  return { did: didDocumentService.getMyDid(), didDocumentKeyId, encryptedSeed, didDocument }
 }

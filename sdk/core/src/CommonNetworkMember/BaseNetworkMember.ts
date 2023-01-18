@@ -68,6 +68,7 @@ export type StaticDependencies = {
 }
 
 export type ConstructorUserData = {
+  didDocument?: any
   did: string
   didDocumentKeyId: string
   encryptedSeed: string
@@ -76,6 +77,7 @@ export type ConstructorUserData = {
 
 @profile()
 export abstract class BaseNetworkMember {
+  readonly didDocument?: any
   private readonly _did: string
   private readonly _encryptedSeed: string
   private readonly _password: string
@@ -95,7 +97,7 @@ export abstract class BaseNetworkMember {
   protected readonly _platformCryptographyTools
 
   constructor(
-    { did, didDocumentKeyId, encryptedSeed, password }: ConstructorUserData,
+    { didDocument, did, didDocumentKeyId, encryptedSeed, password }: ConstructorUserData,
     { platformCryptographyTools, eventComponent }: StaticDependencies,
     options: ParsedOptions,
   ) {
@@ -167,6 +169,8 @@ export abstract class BaseNetworkMember {
     this._did = did
     this._didDocumentKeyId = didDocumentKeyId
     this._platformCryptographyTools = platformCryptographyTools
+
+    this.didDocument = didDocument
   }
 
   /**
@@ -222,6 +226,7 @@ export abstract class BaseNetworkMember {
       keyOptions,
       options.origin,
       options.otherOptions.skipAnchoringForElemMethod,
+      options.otherOptions.webDomain,
     )
   }
 

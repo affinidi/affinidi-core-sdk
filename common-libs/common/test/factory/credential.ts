@@ -221,6 +221,10 @@ export const signedCredentialWithPolygon = {
   },
 }
 
+export const signedCredentialWithWeb = {
+
+}
+
 export const createUnsignedCredential = (
   holderId = 'did:polygon:testnet:0xb83cf29e1029313c20537b04f9b598e1f9cb3df5',
 ) => {

@@ -133,6 +133,23 @@ export const generateTestDIDs = async () => {
 
   const elemRSAPublicKey = KeysService.getPublicKey(elemRSASeedHex, 'elem').toString('hex')
 
+  const webRSASeed = await randomBytes(32)
+  const webRSASeedHex = webRSASeed.toString('hex')
+  // TODO: add metadata section
+  const webRSASeedWithMethod = `${webRSASeedHex}++${'web'}++${keysBase64}`
+  const webRSAPasswordBuffer = KeysService.normalizePassword(password)
+  const webRSAEncryptedSeed = await KeysService.encryptSeed(webRSASeedWithMethod, webRSAPasswordBuffer)
+
+  keysService = new KeysService(webRSAEncryptedSeed, password)
+  const webRSAPublicKeyRSA = keysService.getExternalPublicKey('rsa').toString()
+
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const webRSADidDocument = await didDocumentService.getDidDocument(didResolverMock)
+  const webRSADid = await didDocumentService.getMyDid()
+
+  const elemRSAPublicKey = KeysService.getPublicKey(webRSASeedHex, 'web').toString('hex')
+
+
   const bbsKeys = [
     {
       type: 'bbs',
@@ -186,6 +203,15 @@ export const generateTestDIDs = async () => {
       did: polygonDid,
       didDocument: polygonDidDocument,
       publicKey: polygonPublicKey,
+    },
+    web: {
+      seed: webRSASeed,
+      encryptedSeed: webRSAEncryptedSeed,
+      seedHex: webRSASeedHex,
+      did: webRSADid,
+      didDocument: webRSADidDocument,
+      publicKey: webRSAPublicKey,
+      publicRSAKey: webRSAPublicKeyRSA,
     },
     elemWithRSA: {
       seed: elemRSASeed,

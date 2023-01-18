@@ -66,6 +66,9 @@ export class SdkOptions {
   @IsIn(SUPPORTED_DID_METHODS)
   didMethod?: DidMethod
 
+  @IsOptional()
+  webDomain?: string
+
   @IsIn(SUPPORTED_ENVIRONMENTS)
   env: Env
 

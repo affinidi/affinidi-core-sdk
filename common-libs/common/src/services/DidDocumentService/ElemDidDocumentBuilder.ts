@@ -78,7 +78,7 @@ export default class ElemDidDocumentBuilder {
     }
   }
 
-  private _buildDIDDocModel(externalKeys: any = null) {
+  public buildDIDDocModel(externalKeys: any = null) {
     if (!this._keyVault.primaryPublicKey) {
       throw new Error('Primary Public Key is mandatory')
     }
@@ -101,7 +101,7 @@ export default class ElemDidDocumentBuilder {
   }
 
   private _getDid(externalKeys?: any) {
-    const didDocumentModel = this._buildDIDDocModel(externalKeys)
+    const didDocumentModel = this.buildDIDDocModel(externalKeys)
 
     const createPayload = this.createPayload(didDocumentModel)
     const didUniqueSuffix = func.getDidUniqueSuffix(createPayload)
@@ -119,8 +119,7 @@ export default class ElemDidDocumentBuilder {
     return this._getDid(this._keyVault.externalKeys)
   }
 
-  async buildDidDocumentInfo() {
-    const { did, didDocModel, shortFormDid } = this._getDid(this._keyVault.externalKeys)
+  async buildDidDocumentInfoFromParams(did: string, didDocModel: any, shortFormDid: string) {
     const { did: parsedDid } = parse(did)
 
     const prependBaseDID = (field: any) => {
@@ -154,6 +153,11 @@ export default class ElemDidDocumentBuilder {
       didDocument,
       shortFormDid,
     }
+  }
+
+  async buildDidDocumentInfo() {
+    const { did, didDocModel, shortFormDid } = this._getDid(this._keyVault.externalKeys)
+    return buildDidDocumentInfoFromParams(did, didDocModel, shortFormDid)
   }
 
   private createPayload(didDocumentModel: any) {
