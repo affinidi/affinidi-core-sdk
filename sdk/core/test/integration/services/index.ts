@@ -1,2 +1,2 @@
 require('./WalletStorageService.test')
-// require('./UserManagementService.test')
+require('./UserManagementService.test')
