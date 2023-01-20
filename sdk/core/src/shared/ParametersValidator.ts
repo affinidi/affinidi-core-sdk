@@ -13,7 +13,7 @@ import Ajv from 'ajv'
 import S from 'fluent-schema'
 
 import { DID, DID_METHOD, JWT, COGNITO_CONFIRMATION_CODE, PASSWORD } from '../dto/shared.dto'
-import SdkErrorFromCode from './SdkErrorFromCode'
+// import SdkErrorFromCode from './SdkErrorFromCode'
 
 const did = 'did'
 const didMethod = 'didMethod'
