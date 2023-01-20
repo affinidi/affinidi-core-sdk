@@ -1,3 +1,5 @@
+# release 2.5.3 (2023-01-20)
+* bumped `internal-api-clients`, `common` versions
 # release 2.5.2 (2022-11-29)
 * add security fix for signIn passwordless flow
 # release 2.5.1 (2022-11-28)

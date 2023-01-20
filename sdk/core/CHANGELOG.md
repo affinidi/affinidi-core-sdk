@@ -1,3 +1,8 @@
+# release 7.11.0 (2023-01-20)
+* changed default Cognito config to `dev`;
+* changed default environment for tests to `dev`;
+* adjusted OTP tests flows to new custom message whitelist approach;
+* bumped `internal-api-clients`, `affinidi-did-auth-lib`, `user-management`, `common` versions.
 # release 7.11.0 (2022-12-19)
 * added an option for HolderService to resolve legacy elem locally
 # release 7.10.1 (2022-12-09)
