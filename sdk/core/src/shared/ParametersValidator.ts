@@ -84,7 +84,7 @@ export class ParametersValidator {
     }
 
     if (allErrors.length > 0) {
-      throw new Error(allErrors)
+      throw new Error(JSON.stringify(allErrors))
       // throw new SdkErrorFromCode('COR-1', { errors: allErrors })
     }
   }
