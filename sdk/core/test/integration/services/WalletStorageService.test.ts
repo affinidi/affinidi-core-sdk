@@ -1,7 +1,7 @@
 'use strict'
 
 import { expect } from 'chai'
-import { decode as jwtDecode } from 'jsonwebtoken'
+import { decode as jwtDecode, JwtPayload } from 'jsonwebtoken'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 
 import KeyManagementService from '../../../src/services/KeyManagementService'
@@ -165,7 +165,7 @@ describe('WalletStorageService', () => {
 
     const offerToken = await WalletStorageService.getCredentialOffer(idToken, keyStorageUrl, options)
 
-    const decoded = jwtDecode(offerToken, { complete: true })
+    const decoded: JwtPayload = jwtDecode(offerToken, { complete: true })
 
     expect(offerToken).to.exist
 
