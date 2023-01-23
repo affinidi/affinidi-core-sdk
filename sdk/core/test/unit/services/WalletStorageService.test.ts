@@ -349,6 +349,7 @@ describe('WalletStorageService', () => {
 
     const returnedOffer = await WalletStorageService.getSignedCredentials(idToken, credentialOfferResponse, {
       keyStorageUrl,
+      accessApiKey: 'test-api-key-hash',
     })
 
     expect(returnedOffer[0]).to.eq('signedCredential')

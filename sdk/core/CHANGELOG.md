@@ -1,3 +1,8 @@
+# release 7.11.0 (2023-01-20)
+* changed default Cognito config to `dev`;
+* changed default environment for tests to `dev`;
+* adjusted OTP tests flows to new custom message whitelist approach;
+* bumped `internal-api-clients`, `affinidi-did-auth-lib`, `user-management`, `common` versions.
 # release 7.11.0 (2022-12-19)
 * added an option for HolderService to resolve legacy elem locally
 # release 7.10.1 (2022-12-09)
@@ -64,7 +69,7 @@ Breaking changes:
  - `userPoolId` & `clientId` configure custom cognito pool & client. use environment specific settings by default
 # release 6.1.7 (2022-06-22)
 * updated `affinidi-did-auth-lib`, `common`, `internal-api-clients` with BigInt fix for react native
-* # release 6.1.6 (2022-06-10)
+# release 6.1.6 (2022-06-10)
 * fix handling of user registration status incomplete
 # release 6.1.5 (2022-06-06)
 * update README to notify users use the latest versions with affinidi-vault support

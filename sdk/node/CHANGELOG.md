@@ -1,3 +1,6 @@
+# release 7.10.1 (2023-01-20)
+* fixed `jsonld-signatures-bbs` version to `1.1.0` because of lib breaking changes;
+* bumped `core` version. bumped `common` lib version in dev dependencies
 # release 7.10.0 (2022-12-19)
 * added an option for HolderService to resolve legacy elem locally
 # release 7.9.1 (2022-12-09)

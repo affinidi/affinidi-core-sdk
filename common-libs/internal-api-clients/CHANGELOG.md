@@ -1,3 +1,5 @@
+# release 2.5.0 (2023-01-20)
+* Updated `getSignedCredential` endpoint for Keystorage service.
 # release 2.4.0 (2022-11-29)
 * add security fix for signIn passwordless flow
 # release 2.3.0 (2022-11-29)
