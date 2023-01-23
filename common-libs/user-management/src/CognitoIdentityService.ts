@@ -43,12 +43,20 @@ export enum CompleteLoginPasswordlessResult {
   AttemptsExceeded,
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
+  VerifyAuthLambdaCustomError,
 }
 
 export type CompleteLoginPasswordlessResponse = Response<
   CompleteLoginPasswordlessResult,
-  CompleteLoginPasswordlessResult.Success | CompleteLoginPasswordlessResult.ConfirmationCodeWrong,
-  { cognitoTokens: CognitoUserTokens; token: string; registrationStatus: RegistrationStatus }
+  | CompleteLoginPasswordlessResult.Success
+  | CompleteLoginPasswordlessResult.ConfirmationCodeWrong
+  | CompleteLoginPasswordlessResult.VerifyAuthLambdaCustomError,
+  {
+    cognitoTokens?: CognitoUserTokens
+    token?: string
+    registrationStatus?: RegistrationStatus
+    initialErrorMessage?: string
+  }
 >
 
 export enum InitiateLoginPasswordlessResult {
@@ -266,6 +274,15 @@ export class CognitoIdentityService {
       } else if (error.code === 'NotAuthorizedException') {
         // Throw when OTP is expired (3 min)
         return { result: CompleteLoginPasswordlessResult.ConfirmationCodeExpired }
+      } else if (
+        error.message?.includes('VerifyAuthChallengeResponse') &&
+        error.code === 'UserLambdaValidationException'
+      ) {
+        const initialErrorMessage = error.message.match('{{(.*)}}', 'gm')?.[1] || 'No correct error message.'
+        return {
+          result: CompleteLoginPasswordlessResult.VerifyAuthLambdaCustomError,
+          initialErrorMessage,
+        }
       } else {
         throw error
       }
