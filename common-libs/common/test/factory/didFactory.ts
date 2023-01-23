@@ -136,7 +136,9 @@ export const generateTestDIDs = async () => {
   const webRSASeed = await randomBytes(32)
   const webRSASeedHex = webRSASeed.toString('hex')
   // TODO: add metadata section
-  const webRSASeedWithMethod = `${webRSASeedHex}++${'web'}++${keysBase64}`
+  const metadataBase64 =
+    ';additionalDataJson:eyJtZXRhIjp7IndlYkRvbWFpbiI6ImRpZC5hY3RvcjphbGljZSJ9LCJrZXlzIjpbeyJ0eXBlIjoicnNhIiwiZm9ybWF0IjoicGVtIiwicHJpdmF0ZSI6InByaXZhdGVyc2EiLCJwdWJsaWMiOiJwdWJsaWNyc2EiLCJwZXJtaXNzaW9ucyI6WyJhdXRoZW50aWNhdGlvbiIsImFzc2VydGlvbk1ldGhvZCJdfSx7InR5cGUiOiJiYnMiLCJmb3JtYXQiOiJwZW0iLCJwcml2YXRlIjoicHJpdmF0ZWJicyIsInB1YmxpYyI6InB1YmxpY2JicyIsInBlcm1pc3Npb25zIjpbImF1dGhlbnRpY2F0aW9uIiwiYXNzZXJ0aW9uTWV0aG9kIl19XX0'
+  const webRSASeedWithMethod = `${webRSASeedHex}++${'web'}++${keysBase64}++${metadataBase64}`
   const webRSAPasswordBuffer = KeysService.normalizePassword(password)
   const webRSAEncryptedSeed = await KeysService.encryptSeed(webRSASeedWithMethod, webRSAPasswordBuffer)
 
@@ -147,8 +149,7 @@ export const generateTestDIDs = async () => {
   const webRSADidDocument = await didDocumentService.getDidDocument(didResolverMock)
   const webRSADid = await didDocumentService.getMyDid()
 
-  const elemRSAPublicKey = KeysService.getPublicKey(webRSASeedHex, 'web').toString('hex')
-
+  const webRSAPublicKey = KeysService.getPublicKey(webRSASeedHex, 'web').toString('hex')
 
   const bbsKeys = [
     {

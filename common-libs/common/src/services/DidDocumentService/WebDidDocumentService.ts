@@ -3,7 +3,8 @@ import ElemDidDocumentBuilder from './ElemDidDocumentBuilder'
 
 export default class WebDidDocumentService {
   private readonly _signingKey
-  private readonly _builder
+  private readonly _elemBuilder
+  private _keyProvider
 
   constructor(keyProvider: KeyVault) {
     this._signingKey = 'primary'
@@ -12,7 +13,7 @@ export default class WebDidDocumentService {
   }
 
   getMyDid(): string {
-    const { metadata } = this._keyProvide.metadata
+    const { metadata } = this._keyProvider
     const { webDomain } = metadata
 
     return `did:web:${webDomain}`

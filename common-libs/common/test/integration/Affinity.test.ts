@@ -5,6 +5,7 @@ import { signedPresentation, signedPresentationWithPolygon } from '../factory/si
 import { Affinity } from '../../src'
 import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
 import { signedCredentialWithPolygon, signedCredentialWithWeb } from '../factory/credential'
+import { webDidDocument } from '../factory/didDocument'
 
 const { TEST_SECRETS } = process.env
 const { STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
@@ -43,7 +44,7 @@ describe('Validation Snapshots', () => {
   })
 
   it('#validateCredential (existing cred) (web)', async () => {
-    const result = await affinity.validateCredential(signedCredentialWithWeb)
+    const result = await affinity.validateCredential(signedCredentialWithWeb, null, webDidDocument)
 
     expect(result.result).to.be.true
   })

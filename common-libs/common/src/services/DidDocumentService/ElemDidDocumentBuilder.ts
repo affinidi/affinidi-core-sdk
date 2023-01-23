@@ -157,7 +157,7 @@ export default class ElemDidDocumentBuilder {
 
   async buildDidDocumentInfo() {
     const { did, didDocModel, shortFormDid } = this._getDid(this._keyVault.externalKeys)
-    return buildDidDocumentInfoFromParams(did, didDocModel, shortFormDid)
+    return this.buildDidDocumentInfoFromParams(did, didDocModel, shortFormDid)
   }
 
   private createPayload(didDocumentModel: any) {

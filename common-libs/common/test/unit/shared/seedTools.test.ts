@@ -32,17 +32,19 @@ describe('didTools', () => {
     })
 
     it('should generate simple seed with method and additional info (keys) for DID WEB', async () => {
-      const seed = await generateFullSeed(cryptoTools as IPlatformCryptographyTools, 'web',
+      const seed = await generateFullSeed(
+        cryptoTools as IPlatformCryptographyTools,
+        'web',
         {
           keyTypes: ['rsa', 'bbs'],
         },
         {
-          webDomain: 'did.actor:alice'
-        }
+          webDomain: 'did.actor:alice',
+        },
       )
 
       expect(seed).to.be.exist
-      expect(seed.includes(`++elem${ADDITIONAL_DATA_SEPARATOR}`)).to.be.true
+      expect(seed.includes(`++web${ADDITIONAL_DATA_SEPARATOR}`)).to.be.true
     })
 
     it('should generate simple seed with method and additional info (meta)', async () => {

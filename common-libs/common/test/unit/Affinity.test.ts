@@ -106,7 +106,7 @@ describe('Affinity', () => {
       .reply(200, { didDocument: testDids.polygon.didDocument })
 
     nock('https://affinity-registry.staging.affinity-project.org')
-      .post('/api/v1/did/resolve-did', /polygon/gi)
+      .post('/api/v1/did/resolve-did', /web/gi)
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: testDids.web.didDocument })
 
@@ -338,8 +338,7 @@ describe('Affinity', () => {
 
   it('#signCredential (web)', async () => {
     const createdCredential = await affinity.signCredential(credential, testDids.web.encryptedSeed, password)
-
-    const keyId = `${testDids.web.did}#key-1`
+    const keyId = `${testDids.web.did}#primary`
     expect(createdCredential).to.exist
     expect(createdCredential.proof).to.exist
     expect(createdCredential['@context']).to.exist
