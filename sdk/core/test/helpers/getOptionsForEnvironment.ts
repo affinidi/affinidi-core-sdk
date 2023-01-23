@@ -13,9 +13,9 @@ import { TEST_AGAINST, testSecrets } from './testSecrets'
 
 const { DEV_API_KEY_HASH, PROD_API_KEY_HASH, STAGING_API_KEY_HASH } = testSecrets
 
-let environment: Env = 'staging'
+let environment: Env = 'dev'
 
-if (TEST_AGAINST === 'dev' || TEST_AGAINST === 'prod') {
+if (TEST_AGAINST === 'staging' || TEST_AGAINST === 'prod') {
   environment = TEST_AGAINST
 }
 

@@ -40,7 +40,8 @@ const messageParameters: MessageParameters = {
 
 const waitForOtpCode = async (inbox: TestmailInbox): Promise<string> => {
   const { body } = await inbox.waitForNewEmail()
-  return body.replace('Your verification code is: ', '')
+  // return 6 digits from the message or message itself if there is no digits
+  return (body.match(/\d{6}/) || [body])[0]
 }
 
 const createInbox = () => new TestmailInbox({ prefix: env, suffix: 'otp.browser' })

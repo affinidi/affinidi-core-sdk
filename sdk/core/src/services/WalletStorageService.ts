@@ -68,7 +68,7 @@ export default class WalletStorageService {
   static async getSignedCredentials(
     accessToken: string,
     credentialOfferResponseToken: string,
-    options: { env?: Env; keyStorageUrl?: string; issuerUrl?: string; accessApiKey?: string; apiKey?: string },
+    options: { env?: Env; keyStorageUrl?: string; issuerUrl?: string; accessApiKey: string; apiKey?: string },
   ): Promise<SignedCredential[]> {
     const keyStorageUrl = options.keyStorageUrl
     const { env, issuerUrl, accessApiKey, apiKey } = options

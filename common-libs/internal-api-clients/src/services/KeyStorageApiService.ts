@@ -10,7 +10,7 @@ type GetSignedCredentialOptions = {
   // For remote IssuerApiService (used by networkMember.verifyCredentialOfferResponseToken)
   env?: Env
   issuerUrl?: string
-  accessApiKey?: string
+  accessApiKey: string
   apiKey?: string
   // Remote networkMember.signCredentials calls Affinity.signCredential.
   // It only uses metrics service which only needs metricsUrl and component,

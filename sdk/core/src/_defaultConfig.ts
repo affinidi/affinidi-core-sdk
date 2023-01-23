@@ -1,7 +1,7 @@
 export const DEFAULT_COGNITO_REGION = 'ap-southeast-1'
 
-export const DEV_COGNITO_CLIENT_ID = '2vq1demqifrhjkk17jsdm2orbv'
-export const DEV_COGNITO_USER_POOL_ID = 'ap-southeast-1_H5EHQKlg2'
+export const DEV_COGNITO_CLIENT_ID = '7v04j8pn0niv1fv5an59i59k91'
+export const DEV_COGNITO_USER_POOL_ID = 'ap-southeast-1_wL9liixv9'
 export const DEV_PHONE_ISSUER_BASE_PATH = 'https://issuer-phone-twillio.dev.affinity-project.org'
 export const DEV_EMAIL_ISSUER_BASE_PATH = 'https://issuer-email-ses.dev.affinity-project.org'
 

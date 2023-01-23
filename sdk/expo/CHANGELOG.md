@@ -1,3 +1,7 @@
+# release 7.10.2 (2023-01-23)
+* fix security vulnerabilities by upgrading jsonwebtoken and class-validator
+# release 7.10.1 (2023-01-20)
+* bumped `core` version. bumped `common` lib version in dev dependencies
 # release 7.10.0 (2022-12-19)
 * added an option for HolderService to resolve legacy elem locally
 # release 7.9.1 (2022-12-09)
@@ -59,7 +63,7 @@ Breaking changes:
 - `userPoolId` & `clientId` configure custom cognito pool & client. use environment specific settings by default
 # release 6.1.7 (2022-06-22)
 * updated `wallet-expo-sdk`, `common` with BigInt fix for react native
-* # release 6.1.6 (2022-06-10)
+# release 6.1.6 (2022-06-10)
 * fix handling of user registration status incomplete
 # release 6.1.5 (2022-06-06)
 * update README to notify users use the latest versions with affinidi-vault support
