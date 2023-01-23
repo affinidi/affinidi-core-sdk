@@ -1,3 +1,5 @@
+# release 7.9.2 (2023-01-23)
+* fix security vulnerabilities by upgrading jsonwebtoken and class-validator
 # release 7.9.1 (2023-01-20)
 * bumped `core` version. bumped `common` lib version in dev dependencies
 # release 7.9.0 (2022-12-19)
