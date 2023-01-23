@@ -1,4 +1,6 @@
-# release 7.11.0 (2023-01-20)
+# release 7.12.1 (2023-01-23)
+* fix security vulnerabilities by upgrading jsonwebtoken and class-validator
+# release 7.12.0 (2023-01-20)
 * changed default Cognito config to `dev`;
 * changed default environment for tests to `dev`;
 * adjusted OTP tests flows to new custom message whitelist approach;
