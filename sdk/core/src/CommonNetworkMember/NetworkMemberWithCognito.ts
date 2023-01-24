@@ -412,7 +412,12 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
 
-    { password, encryptedSeed, didDocument } = await NetworkMemberWithCognito._createKeyParams(dependencies, options, shortPassword, inputKeyParamsOrOptions)
+    const { password, encryptedSeed, didDocument } = await NetworkMemberWithCognito._createKeyParams(
+      dependencies,
+      options,
+      shortPassword,
+      inputKeyParamsOrOptions,
+    )
 
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       cognitoUserTokens.accessToken,

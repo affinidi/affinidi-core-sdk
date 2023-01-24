@@ -136,7 +136,7 @@ You can specify optional field `didMethod` and `skipAnchoringForElemMethod` in `
 const options = {
   env: 'staging',
   apiKey: 'YOUR API KEY',
-  didMethod: '...',   // 'elem' (default),  'jolo' or 'elem-anchored'
+  didMethod: '...',   // 'elem' (default),  'jolo', 'elem-anchored', 'did:web' and 'did:polygon'
   skipAnchoringForElemMethod: true  
 }
 ```
@@ -160,7 +160,7 @@ uploaded or generated during your interactions with the Testnet can and will be 
 const options = {
   env: 'staging',
   apiKey: '....',
-  didMethod: '....' // 'elem' (default),  'jolo' or 'elem-anchored'
+  didMethod: '....' // 'elem' (default),  'jolo' or 'elem-anchored', 'did:web' and 'did:polygon'
 }
 
 const wallet = await AffinidiWallet.createWallet(options, password)

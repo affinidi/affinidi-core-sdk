@@ -162,6 +162,9 @@ export class KeyParams {
 
   @IsString()
   password: string
+
+  @IsOptional()
+  didDocument?: any
 }
 
 export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'

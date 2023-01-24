@@ -832,7 +832,7 @@ describe('CommonNetworkMember', () => {
     expect(contextMessage1).to.eql('Parameter "12345678" should be a string.')
     expect(contextMessage2).to.eql('Required parameter at index [1] is missing.')
     expect(isIn).to.eql(
-      'didMethod must be one of the following values: jolo, elem, elem-anchored, polygon, polygon:testnet',
+      'didMethod must be one of the following values: jolo, elem, elem-anchored, polygon, polygon:testnet, web',
     )
   })
 
