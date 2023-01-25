@@ -14,7 +14,7 @@ export const register = async (
   keyOptions?: KeyOptions,
   origin?: string,
   skipAnchoringForElemMethod?: boolean,
-  webDomain?: string
+  webDomain?: string,
 ) => {
   const isAnchoredSeed = didMethod === ELEM_ANCHORED_DID_METHOD
 
