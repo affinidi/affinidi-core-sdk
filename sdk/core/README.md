@@ -160,10 +160,16 @@ uploaded or generated during your interactions with the Testnet can and will be 
 const options = {
   env: 'staging',
   apiKey: '....',
-  didMethod: '....' // 'elem' (default),  'jolo' or 'elem-anchored', 'did:web' and 'did:polygon'
+  webDomain: 'identity.actor:alice' // required parameter in case `web` is passed as didMethod
+  didMethod: '....' // 'elem' (default),  'jolo' or 'elem-anchored', 'web' and 'polygon'
 }
 
 const wallet = await AffinidiWallet.createWallet(options, password)
+const { didDocument } = wallet // for web did method didDocument is returned
+// In case of web did method for others to be able to resolve this did - need to host it 
+// at your domain which was provided as webDomain
+// `:` using as path (replacing to the `/` at url), 
+// e.g. webDomain: 'identity.actor:alice' should hosted at https://identity.actor/alice/did.json
 ```
 
 ### Sign DID document
@@ -709,7 +715,7 @@ SDK Support Issuing Revocable Credential based on [Revocation List 2020 W3C stan
 
 [Revocation Flow](http://plant-uml.dev.affinity-project.org/png/jLPDRzj64BtpLmpSWoL391Nd9jG1tAG1X0PjO2NjmIMGrUwGt7h5tUw7L3VeV-yiIOkaR1q2j3vHtDcPD--z6TfBhn1kor8sKiWL_FeMBEurPrxg1cQZPoMTX-lbzN8Ew-0SMd1IOCAurnRWOkrSe7TSIMmyBC29XmjWhd-H66QzvD8mEhou6x9kqEubHxY_hxqtRfNd5I5YsuphNSvwM7cfGoFQ2qpb0wQK6KbmZIwAHP-14apFCu7xh4la7rDZzH_8VQPjbTDXAZHtET1JKRHehOFavWPkWw_XvYRfkqdVqC4Ak4Nc4OGKm6A0nJy3Ef_G9OheOrVTcTSFs9pS7rrqHZVKTQpL4jUJlYKjI06gt6YgnBZLZYw-jte7laQePLM3mZqgC6YTeLRa7e47QsETKka3bDAtiGEZXzSyvRpAYDawR3EfyprFdMS-kDIgD6gQVrTXWvRQIvcgjAN87PoAt_OlcmgE8KMH9J1kajhV1gd4eF07khbfQys-nWo2OYLJQn6zbab1JWdRgCaxsRtgVy8_yp49oQqVut6TRLR9gmpMvRVsohN5b4S5Z8UNB5uK83Gw8020VyMtZ-WNG4QN_j916PGYdfL20Ub0oqkPW3MYe-HRGGxPOhBuRc1lL2ho-_PuGC1dQ-z6HCEXbhm6R3WpBYXIs3q36Z6wMWS2kKK8Zjho6dYD_65gp0uZiDAZpU1Zjid8Qd9IRiZZPDLGffZSX2qLgb7Ci-GwWmqZqz96O3i7ix4dncOWPYDQMYaJO3Iaieql9Kr0n1aHFaHubFnr1Z_yDsJthGxeEXD7WjaJ3nsrGyTCY8uwre5gQHio43uaCgAhJtV6zN89zwUr5kFzEzKPlYUaZmG06sZmqCbuOAxVKUBDl9Yka9z_-VJZ2gwkrk-lhjeR8mzyEBdSIZQDEQa-j7nK5cO2InQK9zt_Hj3bCvUHJxwyMiQ_BwIpxft37BPZve8ncfw9lPePWusZ71uR8erHqij7T9Sd-xIlVNS6vQmpuBdZ-KI3Le8eJrp9Tq-EUluDwCmsAl8LujuwJibmGhijxh2f3F0R6O8r48o8dnAbAyax3tD9Qtra_qMhGkzjHlj6nk-4852qVsWHERqxXcU_Dz0EZ9oC_bhq3etQTiFZpwzdCZMQATfRGzzBOsM4UghcWTPVEvHj9oA3pzt3UTFC3ZI1J_5n8McQbXWpFoQpw8EDIwFjaEHhlpR30g6VoNFPxizkmvTcO4DfpuCaXhhC-URTJzr_EF-pwVu5)
 
-#### issuance of Revocable credential 
+#### issuance of Revocable credential
 
 ```ts
    const unsignedCredential = buildVCV1Unsigned({
