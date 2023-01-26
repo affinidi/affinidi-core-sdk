@@ -1,3 +1,5 @@
+# release 7.12.2 (2023-01-24)
+* add new `did:web` method support
 # release 7.12.1 (2023-01-23)
 * fix security vulnerabilities by upgrading jsonwebtoken and class-validator
 # release 7.12.0 (2023-01-20)

@@ -2,6 +2,7 @@ import { JwtService } from '@affinidi/tools-common'
 import KeysService from '../KeysService'
 import JoloDidDocumentService from './JoloDidDocumentService'
 import ElemDidDocumentService from './ElemDidDocumentService'
+import WebDidDocumentService from './WebDidDocumentService'
 import ElemAnchoredDidDocumentService from './ElemAnchoredDidDocumentService'
 import { parse } from 'did-resolver'
 import { LocalKeyVault } from './LocalKeyVault'
@@ -29,6 +30,7 @@ export default class DidDocumentService {
       'elem-anchored': new ElemAnchoredDidDocumentService(new LocalKeyVault(keysService)),
       polygon: new PolygonDidDocumentService(new LocalKeyVault(keysService), { isTestnet: false }),
       'polygon:testnet': new PolygonDidDocumentService(new LocalKeyVault(keysService), { isTestnet: true }),
+      web: new WebDidDocumentService(new LocalKeyVault(keysService)),
     }[didMethod]
   }
 

@@ -398,8 +398,8 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
   ) {
     const passwordHash = WalletStorageService.hashFromString(shortPassword)
     const registerResult = await NetworkMemberWithCognito._register(dependencies, options, passwordHash, keyOptions)
-    const encryptedSeed = registerResult.encryptedSeed
-    return { password: passwordHash, encryptedSeed }
+    const { encryptedSeed, didDocument } = registerResult
+    return { password: passwordHash, encryptedSeed, didDocument }
   }
 
   private static async _confirmSignUp(
@@ -411,15 +411,24 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
   ) {
     const userManagementService = createUserManagementService(options)
     const keyManagementService = createKeyManagementService(options)
+
+    const { password, encryptedSeed, didDocument } = await NetworkMemberWithCognito._createKeyParams(
+      dependencies,
+      options,
+      shortPassword,
+      inputKeyParamsOrOptions,
+    )
+
     const { encryptionKey, updatedEncryptedSeed } = await keyManagementService.reencryptSeed(
       cognitoUserTokens.accessToken,
-      await NetworkMemberWithCognito._createKeyParams(dependencies, options, shortPassword, inputKeyParamsOrOptions),
+      { password, encryptedSeed },
       !options.otherOptions.skipBackupEncryptedSeed,
     )
 
     const userData = withDidData({
       encryptedSeed: updatedEncryptedSeed,
       password: encryptionKey,
+      didDocument,
     })
 
     const result = new NetworkMemberWithCognito({ ...userData, cognitoUserTokens }, dependencies, options)

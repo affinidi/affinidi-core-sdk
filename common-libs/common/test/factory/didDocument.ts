@@ -83,3 +83,39 @@ export const didDocument = {
     },
   ],
 }
+
+export const webDidDocument = {
+  id: 'did:web:did.actor:alice',
+  '@context': 'https://w3id.org/security/v2',
+  publicKey: [
+    {
+      id: 'did:web:did.actor:alice#primary',
+      usage: 'signing',
+      type: 'Secp256k1VerificationKey2018',
+      publicKeyHex: '034837024ba864c75fb722b856534093b5ec76d21128579c886a001fd9678fe651',
+    },
+    {
+      id: 'did:web:did.actor:alice#recovery',
+      usage: 'recovery',
+      type: 'Secp256k1VerificationKey2018',
+      publicKeyHex: '02c30e2368d4ecd6d618cb3c13b1fb43269e6c8ec3346b2abce15e697152c6865c',
+    },
+    {
+      id: 'did:web:did.actor:alice#secondary',
+      usage: 'signing',
+      type: 'RsaVerificationKey2018',
+      publicKeyPem: 'publicrsa',
+    },
+    { id: 'did:web:did.actor:alice#bbs', type: 'Bls12381G2Key2020', usage: 'signing', publicKeyBase58: 'publicbbs' },
+  ],
+  authentication: [
+    'did:web:did.actor:alice#primary',
+    'did:web:did.actor:alice#secondary',
+    'did:web:did.actor:alice#bbs',
+  ],
+  assertionMethod: [
+    'did:web:did.actor:alice#primary',
+    'did:web:did.actor:alice#secondary',
+    'did:web:did.actor:alice#bbs',
+  ],
+}

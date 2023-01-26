@@ -1,3 +1,5 @@
+# release 2.12.0 (2023-01-24)
+* add new `did:web` method support
 # release 2.11.1 (2023-01-20)
 * bumped `internal-api-clients` version
 # release 2.11.0 (2022-12-07)

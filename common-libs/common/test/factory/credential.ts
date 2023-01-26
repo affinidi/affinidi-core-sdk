@@ -221,6 +221,96 @@ export const signedCredentialWithPolygon = {
   },
 }
 
+export const signedCredentialWithWeb = {
+  '@context': [
+    'https://www.w3.org/2018/credentials/v1',
+    {
+      NameCredentialPersonV1: {
+        '@id': 'https://schema.affinity-project.org/NameCredentialPersonV1',
+        '@context': { '@version': 1.1, '@protected': true },
+      },
+      data: {
+        '@id': 'https://schema.affinity-project.org/data',
+        '@context': [
+          null,
+          {
+            '@version': 1.1,
+            '@protected': true,
+            '@vocab': 'https://schema.org/',
+            NamePerson: {
+              '@id': 'https://schema.affinity-project.org/NamePerson',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                name: 'https://schema.org/name',
+                givenName: 'https://schema.org/givenName',
+                fullName: 'https://schema.org/fullName',
+              },
+            },
+            PersonE: {
+              '@id': 'https://schema.affinity-project.org/PersonE',
+              '@context': { '@version': 1.1, '@protected': true, '@vocab': 'https://schema.org/' },
+            },
+            OrganizationE: {
+              '@id': 'https://schema.affinity-project.org/OrganizationE',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                hasCredential: 'https://schema.org/hasCredential',
+                industry: 'https://schema.affinity-project.org/industry',
+                identifiers: 'https://schema.affinity-project.org/identifiers',
+              },
+            },
+            Credential: {
+              '@id': 'https://schema.affinity-project.org/Credential',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                dateRevoked: 'https://schema.affinity-project.org/dateRevoked',
+                recognizedBy: 'https://schema.affinity-project.org/recognizedBy',
+              },
+            },
+            OrganizationalCredential: {
+              '@id': 'https://schema.affinity-project.org/OrganizationalCredential',
+              '@context': {
+                '@version': 1.1,
+                '@protected': true,
+                '@vocab': 'https://schema.org/',
+                credentialCategory: 'https://schema.affinity-project.org/credentialCategory',
+                organizationType: 'https://schema.affinity-project.org/organizationType',
+                goodStanding: 'https://schema.affinity-project.org/goodStanding',
+                active: 'https://schema.affinity-project.org/active',
+                primaryJurisdiction: 'https://schema.affinity-project.org/primaryJurisdiction',
+                identifier: 'https://schema.org/identifier',
+              },
+            },
+          },
+        ],
+      },
+    },
+  ],
+  id: 'claimId:63b5d11c0d1b5566',
+  type: ['VerifiableCredential', 'NameCredentialPersonV1'],
+  holder: { id: 'did:jolo:6df6fd4a876dcd375fbc5d630e64e7529f27e9612aecbbbf3213861a2b0b7e9d' },
+  credentialSubject: {
+    data: { '@type': ['Person', 'PersonE', 'NamePerson'], givenName: 'DenisUpdated', familyName: 'Popov' },
+  },
+  issuanceDate: '2023-01-22T18:21:47.982Z',
+  expirationDate: '2024-01-23T18:21:47.982Z',
+  issuer: 'did:web:did.actor:alice',
+  proof: {
+    type: 'EcdsaSecp256k1Signature2019',
+    created: '2023-01-23T18:21:53Z',
+    verificationMethod: 'did:web:did.actor:alice#primary',
+    proofPurpose: 'assertionMethod',
+    jws:
+      'eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..x6ribWDOC1WXfchuq0I7Hcq_72m_uTS8fqkm_29m7XoEFz59n3jacVvY11h9b21O3eLFBfFHUYqnQhFK5PwzUg',
+  },
+}
+
 export const createUnsignedCredential = (
   holderId = 'did:polygon:testnet:0xb83cf29e1029313c20537b04f9b598e1f9cb3df5',
 ) => {
