@@ -1,9 +1,9 @@
 import { profile } from '@affinidi/tools-common'
-import { fetch } from '@affinidi/platform-fetch'
 import { pki } from 'node-forge'
 import crypto from 'crypto'
 import { ProfileTrueCaller, ProfileTrueCallerPayload } from './dto'
 import SdkErrorFromCode from './SdkErrorFromCode'
+import { TrueCallerPublicKeyManager } from './TrueCallerPublicKeyManager'
 
 export const ALGO_MAP: { [key: string]: any } = {
   SHA512withRSA: 'RSA-SHA512',
@@ -19,6 +19,7 @@ const { TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER } = process.env
 @profile()
 export class TrueCallerService {
   private readonly trueCallerUrl
+  private trueCallerPublicKeyManager: TrueCallerPublicKeyManager
 
   constructor() {
     this.trueCallerUrl = TRUE_CALLER_PUBLIC_KEY_URL
@@ -28,32 +29,32 @@ export class TrueCallerService {
     return this.trueCallerUrl
   }
 
-  /**
-   * Fetch `Truecaller` public key.
-   * See docs https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
-   * @param url
-   */
-  async fetchTrueCallerPublicKey(url: string) {
-    let result: Array<{ keyType: string; key: string }>
-    try {
-      const resp = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/ld+json, application/json',
-        },
-      })
-
-      result = await resp.json()
-    } catch (error) {
-      throw new SdkErrorFromCode('UM-5', { error })
-    }
-
-    if (result.length < 1) {
-      throw new SdkErrorFromCode('UM-4')
-    } else {
-      return result[0]
-    }
-  }
+  // /**
+  //  * Fetch `Truecaller` public key.
+  //  * See docs https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
+  //  * @param url
+  //  */
+  // async fetchTrueCallerPublicKey(url: string) {
+  //   let result: Array<{ keyType: string; key: string }>
+  //   try {
+  //     const resp = await fetch(url, {
+  //       method: 'GET',
+  //       headers: {
+  //         Accept: 'application/ld+json, application/json',
+  //       },
+  //     })
+  //
+  //     result = await resp.json()
+  //   } catch (error) {
+  //     throw new SdkErrorFromCode('UM-5', { error })
+  //   }
+  //
+  //   if (result.length < 1) {
+  //     throw new SdkErrorFromCode('UM-4')
+  //   } else {
+  //     return result[0]
+  //   }
+  // }
 
   /**
    * Verify `payload` of `Truecaller` token/profile.
@@ -65,7 +66,12 @@ export class TrueCallerService {
       throw new SdkErrorFromCode('UM-6')
     }
 
-    const keyResult = await this.fetchTrueCallerPublicKey(this.trueCallerUrl)
+    if (!this.trueCallerPublicKeyManager) {
+      this.trueCallerPublicKeyManager = new TrueCallerPublicKeyManager(this.trueCallerUrl)
+      await this.trueCallerPublicKeyManager.sync()
+    }
+
+    const keyResult = await this.trueCallerPublicKeyManager.getKey()
     const keyStr = keyResult.key
     const publicKeyPem = this.preparePublicKeyPemFile(keyStr)
     const keyBytes = Buffer.from(publicKeyPem)
@@ -76,7 +82,13 @@ export class TrueCallerService {
     const verifier = crypto.createVerify(signatureAlgorithm)
     verifier.update(payload)
 
-    return verifier.verify(keyBytes, signature)
+    const res = verifier.verify(keyBytes, signature)
+
+    if (!res) {
+      await this.trueCallerPublicKeyManager.sync()
+    }
+
+    return res
   }
 
   /**

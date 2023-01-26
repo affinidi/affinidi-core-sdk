@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import sinon from 'sinon'
 import { TrueCallerService } from '../../src'
 import { generateTrueCallerToken, testPayload } from '../helpers/generateTrueCallerToken'
+import { TrueCallerPublicKeyManager } from '../../src/TrueCallerPublicKeyManager'
 
 const token = generateTrueCallerToken()
 
@@ -9,12 +10,11 @@ describe('Truecaller service', () => {
   it('should successfully verify `Truecaller` token', async () => {
     const trucallerService = new TrueCallerService()
 
-    sinon.stub(TrueCallerService.prototype, 'fetchTrueCallerPublicKey').resolves({
+    sinon.stub(TrueCallerPublicKeyManager.prototype, 'getKey').resolves({
       keyType: 'RSA',
       key: process.env.TEST_PUBLICKEY_TRUE_CALLER,
     })
     const verificationResult = await trucallerService.verifyProfile(token)
-
     expect(verificationResult).to.be.true
   })
 
