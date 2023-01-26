@@ -7,6 +7,10 @@ export class TrueCallerPublicKeyManager {
     private keys: Array<{ keyType: string; key: string }> = [],
   ) {}
 
+  /**
+   //  * Fetch `Truecaller` public key.
+   //  * See docs https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
+   //  */
   async sync() {
     let result: Array<{ keyType: string; key: string }>
     try {

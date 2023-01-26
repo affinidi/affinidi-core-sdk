@@ -29,33 +29,6 @@ export class TrueCallerService {
     return this.trueCallerUrl
   }
 
-  // /**
-  //  * Fetch `Truecaller` public key.
-  //  * See docs https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
-  //  * @param url
-  //  */
-  // async fetchTrueCallerPublicKey(url: string) {
-  //   let result: Array<{ keyType: string; key: string }>
-  //   try {
-  //     const resp = await fetch(url, {
-  //       method: 'GET',
-  //       headers: {
-  //         Accept: 'application/ld+json, application/json',
-  //       },
-  //     })
-  //
-  //     result = await resp.json()
-  //   } catch (error) {
-  //     throw new SdkErrorFromCode('UM-5', { error })
-  //   }
-  //
-  //   if (result.length < 1) {
-  //     throw new SdkErrorFromCode('UM-4')
-  //   } else {
-  //     return result[0]
-  //   }
-  // }
-
   /**
    * Verify `payload` of `Truecaller` token/profile.
    * See official nodejs example https://github.com/truecaller/backend-sdk-validation/blob/master/nodejs/index.js#L38
