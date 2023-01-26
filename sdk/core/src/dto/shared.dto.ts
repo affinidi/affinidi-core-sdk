@@ -66,6 +66,9 @@ export class SdkOptions {
   @IsIn(SUPPORTED_DID_METHODS)
   didMethod?: DidMethod
 
+  @IsOptional()
+  webDomain?: string
+
   @IsIn(SUPPORTED_ENVIRONMENTS)
   env: Env
 
@@ -159,6 +162,9 @@ export class KeyParams {
 
   @IsString()
   password: string
+
+  @IsOptional()
+  didDocument?: any
 }
 
 export type KeyAlgorithmType = 'rsa' | 'bbs' | 'ecdsa'

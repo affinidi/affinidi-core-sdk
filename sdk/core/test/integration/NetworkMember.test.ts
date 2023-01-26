@@ -1188,6 +1188,21 @@ describe('CommonNetworkMember', () => {
     await commonNetworkMember.deleteAllCredentials()
   })
 
+  it('#createWallet should return wallet with resolvable did (web)', async () => {
+    const webDomain = 'did.actor:alice'
+    const commonNetworkMember = await AffinidiWallet.createWallet(
+      {
+        ...options,
+        webDomain,
+        didMethod: 'web',
+      },
+      password,
+    )
+
+    expect(commonNetworkMember.didDocument).to.be.not.undefined
+    expect(commonNetworkMember.didDocument.id).to.be.eq(`did:web:${webDomain}`)
+  })
+
   it('#createWallet should return wallet with resolvable did (elem)', async () => {
     const commonNetworkMember = await AffinidiWallet.createWallet(
       {

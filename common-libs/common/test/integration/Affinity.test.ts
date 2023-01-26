@@ -4,7 +4,8 @@ import { signedCredential, signedCredentialWithLongFormVerificationMethod } from
 import { signedPresentation, signedPresentationWithPolygon } from '../factory/signedPresentation'
 import { Affinity } from '../../src'
 import { ecdsaCryptographyTools } from '../../src/shared/EcdsaCryptographyTools'
-import { signedCredentialWithPolygon } from '../factory/credential'
+import { signedCredentialWithPolygon, signedCredentialWithWeb } from '../factory/credential'
+import { webDidDocument } from '../factory/didDocument'
 
 const { TEST_SECRETS } = process.env
 const { STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
@@ -38,6 +39,12 @@ describe('Validation Snapshots', () => {
 
   it('#validateCredential (existing cred) (polygon)', async () => {
     const result = await affinity.validateCredential(signedCredentialWithPolygon)
+
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (existing cred) (web)', async () => {
+    const result = await affinity.validateCredential(signedCredentialWithWeb, null, webDidDocument)
 
     expect(result.result).to.be.true
   })
