@@ -1,3 +1,5 @@
+# release 2.3.2 (2023-01-26)
+* extended Cognito `verify-auth` lambda's errors handling
 # release 2.3.1 (2023-01-20)
 * bumped `internal-api-clients`, `common` versions
 # release 2.3.0 (2022-11-29)
