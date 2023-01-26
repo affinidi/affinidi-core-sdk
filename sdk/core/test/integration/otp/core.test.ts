@@ -733,5 +733,20 @@ parallel('CommonNetworkMember [OTP]', () => {
 //       const { wallet } = await AffinidiWallet.signInWithProfile(options, trueCallerTestProfile)
 //       checkIsWallet(wallet)
 //     })
+//
+//     it('should throws UM-8 / 400 when token contains mismatch phone number', async () => {
+//       try {
+//         await AffinidiWallet.signInWithProfile(options, {
+//           ...trueCallerTestProfile,
+//           phoneNumber: '+919781611001',
+//         })
+//         expect.fail('The phone number should be the same in the payload and in the token body.')
+//       } catch (err) {
+//         console.log('err', JSON.stringify(err))
+//         expect(err.code).to.equal('UM-8')
+//         expect(err.httpStatusCode).to.equal(400)
+//         expect(err.message).to.equal('Truecaller token/profile contains mismatched phone numbers.')
+//       }
+//     })
 //   })
 // })

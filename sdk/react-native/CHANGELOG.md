@@ -1,3 +1,5 @@
+# release 7.10.4 (2023-01-26)
+* bumped `core` version
 # release 7.10.3 (2023-01-24)
 * add new `did:web` method support
 # release 7.10.2 (2023-01-23)

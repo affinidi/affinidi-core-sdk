@@ -42,6 +42,11 @@ const errors = {
     message: 'Truecaller token/profile contains mismatched phone numbers.',
     httpStatusCode: 400,
   },
+  'UM-9': {
+    type: 'OperationError',
+    message: 'Truecaller token/profile verification failed. Please, check original error for more info.',
+    httpStatusCode: 400,
+  },
   // NOTE: errors related to user-management only should be added here with a separate prefix UM-XXX (UM-1), not to commonErrors
 }
 

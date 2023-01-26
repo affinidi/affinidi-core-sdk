@@ -53,6 +53,7 @@ const USERNAME_EXISTS_EXCEPTION = 'UsernameExistsException'
 const INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException'
 const INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException'
 const NOT_AUTHORIZED_EXCEPTION = 'NotAuthorizedException'
+const USER_LAMBDA_VALIDATION_EXCEPTION = 'UserLambdaValidationException'
 
 const options = {
   region: 'fakeRegion',
@@ -1041,6 +1042,83 @@ describe('UserManagementService', () => {
 
       expect(code).to.eql('COR-4')
       expect(httpStatusCode).to.eql(404)
+    })
+
+    it('should throws `UM-9 / 400` when error happens in the Cognito verify lambda with initial error.', async () => {
+      const initialCustomErrorFromLambda = 'I am an Error from lambda'
+      const error = {
+        code: USER_LAMBDA_VALIDATION_EXCEPTION,
+        message: `VerifyAuthChallengeResponse Tru-la-la {{${initialCustomErrorFromLambda}}}`,
+      }
+      const username = normalizeUsername(profileTrueCaller.phoneNumber)
+      stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      let responseError: any
+
+      try {
+        await userManagementService.logInWithProfile(username, profileTrueCaller)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code, httpStatusCode, originalError } = responseError
+
+      expect(code).to.eql('UM-9')
+      expect(originalError?.errorMessage).to.eql(initialCustomErrorFromLambda)
+      expect(httpStatusCode).to.eql(400)
+    })
+
+    it('should throws `UM-9 / 400` when error happens in the Cognito verify lambda with mock error.', async () => {
+      const initialCustomErrorFromLambda = 'I am an Error from lambda'
+      const error = {
+        code: USER_LAMBDA_VALIDATION_EXCEPTION,
+        message: `VerifyAuthChallengeResponse Tru-la-la ${initialCustomErrorFromLambda}`,
+      }
+      const username = normalizeUsername(profileTrueCaller.phoneNumber)
+      stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      let responseError: any
+
+      try {
+        await userManagementService.logInWithProfile(username, profileTrueCaller)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code, httpStatusCode, originalError } = responseError
+
+      expect(code).to.eql('UM-9')
+      expect(originalError?.errorMessage).to.eql('No correct error message.')
+      expect(httpStatusCode).to.eql(400)
+    })
+
+    it('should throws `COR-13 / 400` when wrong username or password provided', async () => {
+      const username = normalizeUsername(profileTrueCaller.phoneNumber)
+      const error = { message: 'Incorrect username or password.' }
+
+      stubMethod(INITIATE_AUTH, cognitoInitiateCustomAuthResponse)
+      stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      let responseError: any
+
+      try {
+        await userManagementService.logInWithProfile(username, profileTrueCaller)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code, httpStatusCode } = responseError
+
+      expect(code).to.eql('COR-13')
+      expect(httpStatusCode).to.eql(400)
     })
   })
 
