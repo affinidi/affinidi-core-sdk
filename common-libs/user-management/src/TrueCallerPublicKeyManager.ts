@@ -3,11 +3,12 @@ import SdkErrorFromCode from './SdkErrorFromCode'
 
 const TRUE_CALLER_PUBLIC_KEY_URL = 'https://api4.truecaller.com/v1/key'
 
+type TrueCallerPK = { keyType: string; key: string }
+
 export class TrueCallerPublicKeyManager {
-  constructor(
-    private readonly trueCallerPublicKeyUrl: string,
-    private keys: Array<{ keyType: string; key: string }> = [],
-  ) {}
+  private key: TrueCallerPK
+
+  constructor(private readonly trueCallerPublicKeyUrl: string) {}
 
   /**
    //  * Fetch `Truecaller` public key.
@@ -31,12 +32,12 @@ export class TrueCallerPublicKeyManager {
     if (result.length < 1) {
       throw new SdkErrorFromCode('UM-4')
     } else {
-      this.keys = result
+      this.key = result[0]
     }
   }
 
-  async getKey(): Promise<{ keyType: string; key: string }> {
-    return this.keys[0]
+  async getKey(): Promise<TrueCallerPK> {
+    return this.key
   }
 }
 

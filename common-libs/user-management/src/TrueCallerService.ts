@@ -33,15 +33,14 @@ export class TrueCallerService {
 
     if (res) {
       return res
-    } else {
-      await this.keyManager.sync()
-      return await this.verifySignature(profileTrueCaller)
     }
+
+    return await this.verifySignature(profileTrueCaller, true)
   }
 
-  private async verifySignature(profileTrueCaller: ProfileTrueCaller): Promise<boolean> {
+  private async verifySignature(profileTrueCaller: ProfileTrueCaller, invalidatePK: boolean = false): Promise<boolean> {
     let keyResult = await this.keyManager.getKey()
-    if (!keyResult) {
+    if (!keyResult || invalidatePK) {
       await this.keyManager.sync()
       keyResult = await this.keyManager.getKey()
     }
