@@ -1,3 +1,5 @@
+# release 7.10.5 (2023-01-27)
+* bumped `core` version
 # release 7.10.4 (2023-01-26)
 * bumped `core` version
 # release 7.10.3 (2023-01-24)
