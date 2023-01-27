@@ -1,6 +1,8 @@
 import { fetch } from '@affinidi/platform-fetch'
 import SdkErrorFromCode from './SdkErrorFromCode'
 
+const TRUE_CALLER_PUBLIC_KEY_URL = 'https://api4.truecaller.com/v1/key'
+
 export class TrueCallerPublicKeyManager {
   constructor(
     private readonly trueCallerPublicKeyUrl: string,
@@ -37,3 +39,5 @@ export class TrueCallerPublicKeyManager {
     return this.keys[0]
   }
 }
+
+export const trueCallerPublicKeyManager = new TrueCallerPublicKeyManager(TRUE_CALLER_PUBLIC_KEY_URL)

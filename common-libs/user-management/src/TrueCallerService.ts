@@ -3,13 +3,12 @@ import { pki } from 'node-forge'
 import crypto from 'crypto'
 import { ProfileTrueCaller, ProfileTrueCallerPayload } from './dto'
 import SdkErrorFromCode from './SdkErrorFromCode'
-import { TrueCallerPublicKeyManager } from './TrueCallerPublicKeyManager'
+import { TrueCallerPublicKeyManager, trueCallerPublicKeyManager } from './TrueCallerPublicKeyManager'
 
 export const ALGO_MAP: { [key: string]: any } = {
   SHA512withRSA: 'RSA-SHA512',
 }
 
-const TRUE_CALLER_PUBLIC_KEY_URL = 'https://api4.truecaller.com/v1/key'
 const { TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER } = process.env
 
 /**
@@ -18,16 +17,7 @@ const { TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER } = process.env
  */
 @profile()
 export class TrueCallerService {
-  private readonly trueCallerUrl
-  private trueCallerPublicKeyManager: TrueCallerPublicKeyManager
-
-  constructor() {
-    this.trueCallerUrl = TRUE_CALLER_PUBLIC_KEY_URL
-  }
-
-  getTrueCallerUrl() {
-    return this.trueCallerUrl
-  }
+  constructor(private readonly keyManager: TrueCallerPublicKeyManager = trueCallerPublicKeyManager) {}
 
   /**
    * Verify `payload` of `Truecaller` token/profile.
@@ -39,23 +29,23 @@ export class TrueCallerService {
       throw new SdkErrorFromCode('UM-6')
     }
 
-    if (!this.trueCallerPublicKeyManager) {
-      this.trueCallerPublicKeyManager = new TrueCallerPublicKeyManager(this.trueCallerUrl)
-      await this.trueCallerPublicKeyManager.sync()
-    }
-
     const res = await this.verifySignature(profileTrueCaller)
 
     if (res) {
       return res
     } else {
-      await this.trueCallerPublicKeyManager.sync()
+      await this.keyManager.sync()
       return await this.verifySignature(profileTrueCaller)
     }
   }
 
   private async verifySignature(profileTrueCaller: ProfileTrueCaller): Promise<boolean> {
-    const keyResult = await this.trueCallerPublicKeyManager.getKey()
+    let keyResult = await this.keyManager.getKey()
+    if (!keyResult) {
+      await this.keyManager.sync()
+      keyResult = await this.keyManager.getKey()
+    }
+
     const keyStr = keyResult.key
     const publicKeyPem = this.preparePublicKeyPemFile(keyStr)
     const keyBytes = Buffer.from(publicKeyPem)
