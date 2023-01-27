@@ -44,6 +44,17 @@ export class TrueCallerService {
       await this.trueCallerPublicKeyManager.sync()
     }
 
+    const res = await this.verifySignature(profileTrueCaller)
+
+    if (res) {
+      return res
+    } else {
+      await this.trueCallerPublicKeyManager.sync()
+      return await this.verifySignature(profileTrueCaller)
+    }
+  }
+
+  private async verifySignature(profileTrueCaller: ProfileTrueCaller): Promise<boolean> {
     const keyResult = await this.trueCallerPublicKeyManager.getKey()
     const keyStr = keyResult.key
     const publicKeyPem = this.preparePublicKeyPemFile(keyStr)
@@ -55,13 +66,7 @@ export class TrueCallerService {
     const verifier = crypto.createVerify(signatureAlgorithm)
     verifier.update(payload)
 
-    const res = verifier.verify(keyBytes, signature)
-
-    if (!res) {
-      await this.trueCallerPublicKeyManager.sync()
-    }
-
-    return res
+    return verifier.verify(keyBytes, signature)
   }
 
   /**
