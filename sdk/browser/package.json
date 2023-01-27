@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-browser-sdk",
-  "version": "7.9.4",
+  "version": "7.9.5",
   "description": "SDK monorepo for affinity DID solution for browser",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -38,7 +38,7 @@
   "license": "ISC",
   "dependencies": {
     "@affinidi/platform-fetch-native": "^1.1.0",
-    "@affinidi/wallet-core-sdk": "^7.12.3",
+    "@affinidi/wallet-core-sdk": "^7.12.4",
     "eccrypto-js": "^5.0.0",
     "randombytes": "^2.1.0"
   },

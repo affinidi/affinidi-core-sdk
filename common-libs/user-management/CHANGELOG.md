@@ -1,3 +1,5 @@
+# release 2.4.0 (2023-01-27)
+* add caching of Truecaller public key
 # release 2.3.2 (2023-01-26)
 * extended Cognito `verify-auth` lambda's errors handling
 # release 2.3.1 (2023-01-20)
