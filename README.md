@@ -103,4 +103,3 @@ Workflow to publish npm packages is:
 4. `npm run publish`.
 
 Note that `prepare` command is not required as the projects are built on step 2 anyway, and `prepare` command is run for all projects during step 1, making it unnecessary long.
-
