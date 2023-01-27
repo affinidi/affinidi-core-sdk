@@ -660,6 +660,54 @@ parallel('CommonNetworkMember [OTP]', () => {
   })
 })
 
+describe.skip('sign in passwordless - OTP lifetime tests', () => {
+  it('should sign in in 2m and 55 seconds', async () => {
+    const waitTime = (2 * 60 + 55) * 1000
+    const inbox = createInbox()
+    const password = COGNITO_PASSWORD
+
+    const startTime = Date.now()
+    const interval = setInterval(() => {
+      console.log(startTime + waitTime - Date.now())
+    }, 5000)
+    const signUpToken = await AffinidiWallet.initiateSignUpByEmail(options, inbox.email, password, messageParameters)
+
+    checkIsString(signUpToken)
+    const newSignUpCode = await waitForOtpCode(inbox)
+    console.log('OTP received', waitTime - (Date.now() - startTime))
+
+    // wait 9 m 55 sec from the start moment
+    await wait(waitTime - (Date.now() - startTime))
+
+    const commonNetworkMember = await AffinidiWallet.completeSignUp(options, signUpToken, newSignUpCode)
+    checkIsWallet(commonNetworkMember)
+
+    clearInterval(interval)
+  })
+
+  it('should sign in in 9m and 45 seconds', async () => {
+    const waitTime = (9 * 60 + 45) * 1000
+    const inbox = createInbox()
+    const password = COGNITO_PASSWORD
+
+    const startTime = Date.now()
+    const interval = setInterval(() => {
+      console.log(startTime + waitTime - Date.now())
+    }, 5000)
+    const signUpToken = await AffinidiWallet.initiateSignUpByEmail(options, inbox.email, password, messageParameters)
+
+    checkIsString(signUpToken)
+    const newSignUpCode = await waitForOtpCode(inbox)
+    console.log('OTP received', waitTime - (Date.now() - startTime))
+
+    // wait 9 m 55 sec from the start moment
+    await wait(waitTime - (Date.now() - startTime))
+
+    const commonNetworkMember = await AffinidiWallet.completeSignUp(options, signUpToken, newSignUpCode)
+    checkIsWallet(commonNetworkMember)
+    clearInterval(interval)
+  })
+})
 // describe('CommonNetworkMember [TrueCaller]', () => {
 //   describe('#signInWithProfile', () => {
 //     const trueCaller = new TrueCallerService()
