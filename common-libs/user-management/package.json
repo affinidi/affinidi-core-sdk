@@ -52,7 +52,7 @@
     "@affinidi/platform-fetch-node": "^1.1.0",
     "@affinidi/tools-common": "^1.3.0",
     "@affinidi/common": "^2.12.0",
-    "aws-sdk": "^2.1161.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.258.0",
     "create-hash": "^1.2.0",
     "node-forge": "^1.3.1",
     "uuid": "^9.0.0"
@@ -70,7 +70,7 @@
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "3.7.1",
     "@typescript-eslint/parser": "3.7.1",
-    "aws-sdk-mock": "^5.4.0",
+    "aws-sdk-client-mock": "2.0.1",
     "chai": "^4.3.4",
     "cross-env": "^7.0.3",
     "eslint": "^7.32.0",

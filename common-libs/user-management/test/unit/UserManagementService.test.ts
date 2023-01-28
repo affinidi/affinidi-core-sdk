@@ -1,7 +1,7 @@
 'use strict'
 
-import * as AWSMock from 'aws-sdk-mock'
-import AWS from 'aws-sdk'
+import { mockClient, AwsCommand, AwsStub } from 'aws-sdk-client-mock'
+import * as cognito from '@aws-sdk/client-cognito-identity-provider'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
 import { expect, use as chaiUse } from 'chai'
@@ -34,16 +34,16 @@ const otpExpiredErrorTestName = 'throws `COR-2 / 400` when ExpiredCodeException'
 const otpMismatchErrorTestName = 'throws `COR-5 / 400` when CodeMismatchException'
 const userNotFoundErrorTestName = 'throws `COR-4 / 404` when UserNotFoundException'
 
-const SIGN_UP = 'signUp'
-const INITIATE_AUTH = 'initiateAuth'
-const CONFIRM_SIGN_UP = 'confirmSignUp'
-const FORGOT_PASSWORD = 'forgotPassword'
-const VERIFY_USER_ATTRIBUTE = 'verifyUserAttribute'
-const UPDATE_USER_ATTRIBUTES = 'updateUserAttributes'
-const CONFIRM_FORGOT_PASSWORD = 'confirmForgotPassword'
-const RESEND_CONFIRMATION_CODE = 'resendConfirmationCode'
-const RESPOND_TO_AUTH_CHALLENGE = 'respondToAuthChallenge'
-const GET_USER = 'getUser'
+const SIGN_UP = cognito.SignUpCommand
+const INITIATE_AUTH = cognito.InitiateAuthCommand
+const CONFIRM_SIGN_UP = cognito.ConfirmSignUpCommand
+const FORGOT_PASSWORD = cognito.ForgotPasswordCommand
+const VERIFY_USER_ATTRIBUTE = cognito.VerifyUserAttributeCommand
+const UPDATE_USER_ATTRIBUTES = cognito.UpdateUserAttributesCommand
+const CONFIRM_FORGOT_PASSWORD = cognito.ConfirmForgotPasswordCommand
+const RESEND_CONFIRMATION_CODE = cognito.ResendConfirmationCodeCommand
+const RESPOND_TO_AUTH_CHALLENGE = cognito.RespondToAuthChallengeCommand
+const GET_USER = cognito.GetUserCommand
 
 const COGNITO_EXCEPTION = 'Exception'
 const EXPIRED_CODE_EXCEPTION = 'ExpiredCodeException'
@@ -54,6 +54,8 @@ const INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException'
 const INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException'
 const NOT_AUTHORIZED_EXCEPTION = 'NotAuthorizedException'
 const USER_LAMBDA_VALIDATION_EXCEPTION = 'UserLambdaValidationException'
+
+type CognitoCommand = new (inp: any) => AwsCommand<any, any>
 
 const options = {
   region: 'fakeRegion',
@@ -66,7 +68,7 @@ let dependencies: { keyStorageApiService: KeyStorageApiService }
 const cognitoTokens = { accessToken: cognitoAccessToken }
 
 describe('UserManagementService', () => {
-  AWSMock.setSDKInstance(AWS)
+  let cognitoProviderClientMock: AwsStub<any, any>
 
   beforeEach(() => {
     dependencies = {
@@ -78,23 +80,18 @@ describe('UserManagementService', () => {
         storeInTruecallerUserList: undefined,
       }),
     }
+
+    cognitoProviderClientMock = mockClient(cognito.CognitoIdentityProviderClient)
   })
 
   afterEach(() => {
-    AWSMock.restore('CognitoIdentityServiceProvider')
+    cognitoProviderClientMock.restore()
     sinon.restore()
   })
 
-  const stubMethod = (
-    methodName: keyof AWS.CognitoIdentityServiceProvider,
-    responseObject: any = null,
-    errorObject: any = null,
-  ) => {
-    // eslint-disable-next-line no-unused-vars
-    AWSMock.mock('CognitoIdentityServiceProvider', methodName, (params: any, callback: any) => {
-      if (errorObject) callback(errorObject, null)
-      else callback(null, responseObject)
-    })
+  const stubMethod = (command: CognitoCommand, responseObject: any = null, errorObject: any = null) => {
+    if (errorObject) cognitoProviderClientMock.on(command).rejects(errorObject)
+    else cognitoProviderClientMock.on(command).resolves(responseObject)
   }
 
   describe('#signInWithUsername', () => {
@@ -875,14 +872,14 @@ describe('UserManagementService', () => {
           subject: 'Fake subject',
         }
 
-        AWSMock.mock('CognitoIdentityServiceProvider', UPDATE_USER_ATTRIBUTES, (params: any, callback: any) => {
+        cognitoProviderClientMock.on(UPDATE_USER_ATTRIBUTES).callsFakeOnce((params: any) => {
           expect(params.ClientMetadata).to.deep.equal(messageParameters)
-          callback(null, {})
         })
 
         const userManagementService = new UserManagementService(options, dependencies)
         const response = await userManagementService.initiateChangeLogin(cognitoTokens, email, messageParameters)
         expect(response).to.exist
+        expect(cognitoProviderClientMock.commandCalls(UPDATE_USER_ATTRIBUTES).length).to.be.eql(1)
       })
     })
 

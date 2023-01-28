@@ -1,5 +1,19 @@
 const createHash = require('create-hash/browser')
-import { CognitoIdentityServiceProvider } from 'aws-sdk'
+import {
+  AuthenticationResultType,
+  ChangePasswordCommand,
+  CognitoIdentityProviderClient,
+  ConfirmForgotPasswordCommand,
+  ConfirmSignUpCommand,
+  ForgotPasswordCommand,
+  GetUserCommand,
+  InitiateAuthCommand,
+  ResendConfirmationCodeCommand,
+  RespondToAuthChallengeCommand,
+  SignUpCommand,
+  UpdateUserAttributesCommand,
+  VerifyUserAttributeCommand,
+} from '@aws-sdk/client-cognito-identity-provider'
 import { profile } from '@affinidi/tools-common'
 
 import { CognitoUserTokens, MessageParameters } from './dto'
@@ -161,6 +175,12 @@ const sha256 = (data: string): string =>
 const tempSession: Record<string, string> = {}
 const INVALID_PASSWORD = '1'
 
+type CognitoIdentityServiceOptions = {
+  clientId: string
+  region?: string
+  cognitoProviderClient?: CognitoIdentityProviderClient
+}
+
 /**
  * @internal
  */
@@ -169,12 +189,13 @@ export class CognitoIdentityService {
   private readonly clientId
   private readonly cognitoidentityserviceprovider
 
-  constructor({ region, clientId }: { region: string; clientId: string }) {
-    this.clientId = clientId
-    this.cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({
-      region,
-      apiVersion: '2016-04-18',
-    })
+  constructor(options: CognitoIdentityServiceOptions) {
+    this.clientId = options.clientId
+    this.cognitoidentityserviceprovider =
+      options.cognitoProviderClient ??
+      new CognitoIdentityProviderClient({
+        region: options.region,
+      })
   }
 
   async tryLogInWithPassword(login: string, password: string): Promise<LogInWithPasswordResponse> {
@@ -183,7 +204,7 @@ export class CognitoIdentityService {
         ...this._getCognitoAuthParametersObject(AuthFlow.UserPassword, { login, password }),
       }
 
-      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
+      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.send(new InitiateAuthCommand(params))
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
       const registrationStatus = await this._getRegistrationStatus(cognitoTokens.accessToken)
       return {
@@ -213,7 +234,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      const response = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
+      const response = await this.cognitoidentityserviceprovider.send(new InitiateAuthCommand(params))
       const token = JSON.stringify(response)
       return { result: InitiateLoginPasswordlessResult.Success, token }
     } catch (error) {
@@ -243,7 +264,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      const result = await this.cognitoidentityserviceprovider.respondToAuthChallenge(params).promise()
+      const result = await this.cognitoidentityserviceprovider.send(new RespondToAuthChallengeCommand(params))
       //NOTE : successful OTP return a undefined session . wrong code return a new session
       tempSession[hashedTokenSession] = result.Session
       // NOTE: respondToAuthChallenge for the custom auth flow do not return
@@ -300,7 +321,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      await this.cognitoidentityserviceprovider.forgotPassword(params).promise()
+      await this.cognitoidentityserviceprovider.send(new ForgotPasswordCommand(params))
 
       return InitiateForgotPasswordResult.Success
     } catch (error) {
@@ -325,7 +346,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      await this.cognitoidentityserviceprovider.confirmForgotPassword(params).promise()
+      await this.cognitoidentityserviceprovider.send(new ConfirmForgotPasswordCommand(params))
 
       return CompleteForgotPasswordResult.Success
     } catch (error) {
@@ -361,7 +382,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      await this.cognitoidentityserviceprovider.signUp(params).promise()
+      await this.cognitoidentityserviceprovider.send(new SignUpCommand(params))
       return SignUpResult.Success
     } catch (error) {
       switch (error.code) {
@@ -390,7 +411,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      await this.cognitoidentityserviceprovider.resendConfirmationCode(params).promise()
+      await this.cognitoidentityserviceprovider.send(new ResendConfirmationCodeCommand(params))
       return ResendSignUpResult.Success
     } catch (error) {
       switch (error.code) {
@@ -415,7 +436,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      await this.cognitoidentityserviceprovider.confirmSignUp(params).promise()
+      await this.cognitoidentityserviceprovider.send(new ConfirmSignUpCommand(params))
       return CompleteSignUpResult.Success
     } catch (error) {
       switch (error.code) {
@@ -440,7 +461,7 @@ export class CognitoIdentityService {
   async changePassword(AccessToken: string, PreviousPassword: string, ProposedPassword: string) {
     const params = { AccessToken, PreviousPassword, ProposedPassword }
 
-    return this.cognitoidentityserviceprovider.changePassword(params).promise()
+    return this.cognitoidentityserviceprovider.send(new ChangePasswordCommand(params))
   }
 
   async initiateChangeAttributes(
@@ -461,7 +482,7 @@ export class CognitoIdentityService {
       ...getAdditionalParameters(messageParameters),
     }
 
-    await this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
+    await this.cognitoidentityserviceprovider.send(new UpdateUserAttributesCommand(params))
     return InitiateChangeLoginResult.Success
   }
 
@@ -477,7 +498,7 @@ export class CognitoIdentityService {
     }
 
     try {
-      await this.cognitoidentityserviceprovider.verifyUserAttribute(params).promise()
+      await this.cognitoidentityserviceprovider.send(new VerifyUserAttributeCommand(params))
       return CompleteChangeLoginResult.Success
     } catch (error) {
       switch (error.code) {
@@ -534,7 +555,7 @@ export class CognitoIdentityService {
   }
 
   private _normalizeTokensFromCognitoAuthenticationResult(
-    AuthenticationResult: AWS.CognitoIdentityServiceProvider.AuthenticationResultType,
+    AuthenticationResult: AuthenticationResultType,
   ): CognitoUserTokens {
     const { AccessToken: accessToken, IdToken: idToken, RefreshToken: refreshToken, ExpiresIn } = AuthenticationResult
 
@@ -547,7 +568,7 @@ export class CognitoIdentityService {
   public async logInWithRefreshToken(refreshToken: string): Promise<LogInWithRefreshTokenResponse> {
     const params = this._getCognitoAuthParametersObject(AuthFlow.RefreshToken, { refreshToken })
     try {
-      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.initiateAuth(params).promise()
+      const { AuthenticationResult } = await this.cognitoidentityserviceprovider.send(new InitiateAuthCommand(params))
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
       return { result: LogInWithRefreshTokenResult.Success, cognitoTokens }
     } catch (error) {
@@ -561,7 +582,7 @@ export class CognitoIdentityService {
       AccessToken: accessToken,
       UserAttributes: this._buildUserAttributes({ registrationStatus: RegistrationStatus.Complete }),
     }
-    await this.cognitoidentityserviceprovider.updateUserAttributes(params).promise()
+    await this.cognitoidentityserviceprovider.send(new UpdateUserAttributesCommand(params))
   }
 
   private _buildUserAttributes({ phoneNumber, emailAddress, registrationStatus }: BuildUserAttributesInput) {
@@ -604,11 +625,7 @@ export class CognitoIdentityService {
    * @private
    */
   private async _getRegistrationStatus(accessToken: string): Promise<RegistrationStatus> {
-    const userData = await this.cognitoidentityserviceprovider
-      .getUser({
-        AccessToken: accessToken,
-      })
-      .promise()
+    const userData = await this.cognitoidentityserviceprovider.send(new GetUserCommand({ AccessToken: accessToken }))
 
     const registrationStatusRawValue = userData.UserAttributes.find(
       (a) => a.Name === REGISTRATION_STATUS_ATTRIBUTE,

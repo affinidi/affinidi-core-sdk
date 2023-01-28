@@ -1,4 +1,5 @@
 import { v4 as generateUuid } from 'uuid'
+import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 import { EncryptionService } from '@affinidi/common'
@@ -33,9 +34,10 @@ class DefaultResultError extends Error {
 }
 
 type ConstructorOptions = {
-  region: string
   clientId: string
   userPoolId: string
+  region?: string
+  cognitoProviderClient?: CognitoIdentityProviderClient
   shouldDisableNameNormalisation?: boolean
 }
 
