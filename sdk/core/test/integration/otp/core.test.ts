@@ -6,7 +6,6 @@ import { expect } from 'chai'
 import { SdkError } from '@affinidi/tools-common'
 
 // import { TrueCallerService } from '@affinidi/user-management'
-// import { CognitoIdentityServiceProvider } from 'aws-sdk'
 import {
   AffinidiWalletV6 as AffinidiWallet,
   AffinidiWallet as LegacyAffinidiWallet,

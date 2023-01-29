@@ -21,6 +21,7 @@ import {
 
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
 import { DocumentLoader } from '@affinidi/common'
+import { CognitoIdentityProviderClient } from '@affinidi/user-management'
 
 export type Env = 'dev' | 'staging' | 'prod'
 export type DidMethod = typeof SUPPORTED_DID_METHODS[number]
@@ -142,6 +143,9 @@ export class SdkOptions {
    * If it returns an undefined - the main document Loader is invoked with the same params.
    */
   beforeDocumentLoader?: DocumentLoader
+
+  @IsOptional()
+  cognitoProviderClient?: CognitoIdentityProviderClient
 }
 
 export class MessageParameters {

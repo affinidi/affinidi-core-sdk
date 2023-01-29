@@ -2,8 +2,9 @@ import { DEFAULT_COGNITO_REGION } from '../_defaultConfig'
 import { extractSDKVersion } from '../_helpers'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { UserManagementService } from '@affinidi/user-management'
+import type { CognitoIdentityProviderClient } from '@affinidi/user-management'
 
-type InputOptions = {
+type CreateUserManagementServiceOptions = {
   region?: string
   shouldDisableNameNormalisation?: boolean
   accessApiKey: string
@@ -12,9 +13,12 @@ type InputOptions = {
     clientId: string
     userPoolId: string
   }
+  otherOptions?: {
+    cognitoProviderClient?: CognitoIdentityProviderClient
+  }
 }
 
-export const createUserManagementService = (options: InputOptions): UserManagementService => {
+export const createUserManagementService = (options: CreateUserManagementServiceOptions): UserManagementService => {
   const keyStorageApiService = new KeyStorageApiService({
     keyStorageUrl: options.basicOptions.keyStorageUrl,
     accessApiKey: options.accessApiKey,
@@ -27,6 +31,6 @@ export const createUserManagementService = (options: InputOptions): UserManageme
       shouldDisableNameNormalisation: options.shouldDisableNameNormalisation,
       ...options.basicOptions,
     },
-    { keyStorageApiService },
+    { keyStorageApiService, cognitoProviderClient: options.otherOptions?.cognitoProviderClient },
   )
 }
