@@ -1,3 +1,5 @@
+# release 7.12.4 (2023-01-27)
+* bumped `user-namagement` version
 # release 7.12.3 (2023-01-26)
 * bumped `user-management` lib version
 # release 7.12.2 (2023-01-24)

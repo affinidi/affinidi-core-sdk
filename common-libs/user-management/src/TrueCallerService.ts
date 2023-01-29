@@ -1,15 +1,14 @@
 import { profile } from '@affinidi/tools-common'
-import { fetch } from '@affinidi/platform-fetch'
 import { pki } from 'node-forge'
 import crypto from 'crypto'
 import { ProfileTrueCaller, ProfileTrueCallerPayload } from './dto'
 import SdkErrorFromCode from './SdkErrorFromCode'
+import { TrueCallerPublicKeyManager, trueCallerPublicKeyManager } from './TrueCallerPublicKeyManager'
 
 export const ALGO_MAP: { [key: string]: any } = {
   SHA512withRSA: 'RSA-SHA512',
 }
 
-const TRUE_CALLER_PUBLIC_KEY_URL = 'https://api4.truecaller.com/v1/key'
 const { TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER } = process.env
 
 /**
@@ -18,42 +17,7 @@ const { TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER } = process.env
  */
 @profile()
 export class TrueCallerService {
-  private readonly trueCallerUrl
-
-  constructor() {
-    this.trueCallerUrl = TRUE_CALLER_PUBLIC_KEY_URL
-  }
-
-  getTrueCallerUrl() {
-    return this.trueCallerUrl
-  }
-
-  /**
-   * Fetch `Truecaller` public key.
-   * See docs https://docs.truecaller.com/truecaller-sdk/android/server-side-response-validation/for-truecaller-users-verification-flow
-   * @param url
-   */
-  async fetchTrueCallerPublicKey(url: string) {
-    let result: Array<{ keyType: string; key: string }>
-    try {
-      const resp = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/ld+json, application/json',
-        },
-      })
-
-      result = await resp.json()
-    } catch (error) {
-      throw new SdkErrorFromCode('UM-5', { error })
-    }
-
-    if (result.length < 1) {
-      throw new SdkErrorFromCode('UM-4')
-    } else {
-      return result[0]
-    }
-  }
+  constructor(private readonly keyManager: TrueCallerPublicKeyManager = trueCallerPublicKeyManager) {}
 
   /**
    * Verify `payload` of `Truecaller` token/profile.
@@ -65,7 +29,22 @@ export class TrueCallerService {
       throw new SdkErrorFromCode('UM-6')
     }
 
-    const keyResult = await this.fetchTrueCallerPublicKey(this.trueCallerUrl)
+    const res = await this.verifySignature(profileTrueCaller)
+
+    if (res) {
+      return res
+    }
+
+    return await this.verifySignature(profileTrueCaller, true)
+  }
+
+  private async verifySignature(profileTrueCaller: ProfileTrueCaller, invalidatePK: boolean = false): Promise<boolean> {
+    let keyResult = await this.keyManager.getKey()
+    if (!keyResult || invalidatePK) {
+      await this.keyManager.sync()
+      keyResult = await this.keyManager.getKey()
+    }
+
     const keyStr = keyResult.key
     const publicKeyPem = this.preparePublicKeyPemFile(keyStr)
     const keyBytes = Buffer.from(publicKeyPem)
