@@ -1,3 +1,5 @@
+# release 7.10.0 (2023-01-29)
+* updated user-management lib and allow to inject cognito client into that
 # release 7.9.5 (2023-01-27)
 * bumped `core` version
 # release 7.9.4 (2023-01-26)

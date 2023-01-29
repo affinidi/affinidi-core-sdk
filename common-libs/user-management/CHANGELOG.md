@@ -1,3 +1,5 @@
+# release 2.5.0 (2023-01-29)
+* updated cognito client to v3 and allow inject it as dependency
 # release 2.4.0 (2023-01-27)
 * added caching of Truecaller public key
 # release 2.3.2 (2023-01-26)
