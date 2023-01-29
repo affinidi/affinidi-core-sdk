@@ -37,12 +37,13 @@ type ConstructorOptions = {
   clientId: string
   userPoolId: string
   region?: string
-  cognitoProviderClient?: CognitoIdentityProviderClient
   shouldDisableNameNormalisation?: boolean
 }
 
 type ConstructorDependencies = {
   keyStorageApiService: KeyStorageApiService
+
+  cognitoProviderClient?: CognitoIdentityProviderClient
 }
 
 /**
@@ -66,7 +67,7 @@ export class UserManagementService {
 
   constructor(options: ConstructorOptions, dependencies: ConstructorDependencies) {
     this._keyStorageApiService = dependencies.keyStorageApiService
-    this._cognitoIdentityService = new CognitoIdentityService(options)
+    this._cognitoIdentityService = new CognitoIdentityService({ ...options, ...dependencies })
     this._sessionStorageService = new SessionStorageService(options.userPoolId)
     this._shouldDisableNameNormalisation = options.shouldDisableNameNormalisation ?? false
     this._trueCallerService = new TrueCallerService()

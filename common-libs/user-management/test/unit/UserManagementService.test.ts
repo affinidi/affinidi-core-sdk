@@ -63,7 +63,10 @@ const options = {
   userPoolId: 'fakePoolId' as string,
 }
 
-let dependencies: { keyStorageApiService: KeyStorageApiService }
+let dependencies: {
+  keyStorageApiService: KeyStorageApiService
+  cognitoProviderClient: cognito.CognitoIdentityProviderClient
+}
 
 const cognitoTokens = { accessToken: cognitoAccessToken }
 
@@ -71,6 +74,8 @@ describe('UserManagementService', () => {
   let cognitoProviderClientMock: AwsStub<any, any>
 
   beforeEach(() => {
+    cognitoProviderClientMock = mockClient(cognito.CognitoIdentityProviderClient)
+
     dependencies = {
       keyStorageApiService: sinon.createStubInstance(KeyStorageApiService, {
         adminDeleteIncompleteUser: undefined,
@@ -79,9 +84,8 @@ describe('UserManagementService', () => {
         doesUserExist: undefined,
         storeInTruecallerUserList: undefined,
       }),
+      cognitoProviderClient: cognitoProviderClientMock as any,
     }
-
-    cognitoProviderClientMock = mockClient(cognito.CognitoIdentityProviderClient)
   })
 
   afterEach(() => {
@@ -105,7 +109,7 @@ describe('UserManagementService', () => {
     })
 
     it('throws `COR-4 / 404` when user not found', async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
+      const error = { name: USER_NOT_FOUND_EXCEPTION }
 
       stubMethod(INITIATE_AUTH, null, error)
 
@@ -126,7 +130,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
       stubMethod(INITIATE_AUTH, null, error)
 
@@ -140,9 +144,9 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      const { code } = responseError
+      const { name } = responseError
 
-      expect(code).to.eql(COGNITO_EXCEPTION)
+      expect(name).to.eql(COGNITO_EXCEPTION)
     })
   })
 
@@ -219,7 +223,7 @@ describe('UserManagementService', () => {
 
       const otp = '123456'
       const token = cognitoSignInWithUsernameResponseToken
-      const error = { code: cognitoException }
+      const error = { name: cognitoException }
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
@@ -244,7 +248,7 @@ describe('UserManagementService', () => {
     it(cognitoErrorTestName, async () => {
       const otp = '123456'
       const token = cognitoSignInWithUsernameResponseToken
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
       stubMethod(RESPOND_TO_AUTH_CHALLENGE, null, error)
 
@@ -258,9 +262,9 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      const { code } = responseError
+      const { name } = responseError
 
-      expect(code).to.eql(COGNITO_EXCEPTION)
+      expect(name).to.eql(COGNITO_EXCEPTION)
     })
   })
 
@@ -301,7 +305,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
       stubMethod(INITIATE_AUTH, null, error)
 
       const userManagementService = new UserManagementService(options, dependencies)
@@ -310,7 +314,7 @@ describe('UserManagementService', () => {
         await userManagementService.logInWithPassword('username', 'pAssword123')
         expect.fail()
       } catch (err) {
-        expect(err.code).to.eql(COGNITO_EXCEPTION)
+        expect(err.name).to.eql(COGNITO_EXCEPTION)
       }
     })
   })
@@ -326,7 +330,7 @@ describe('UserManagementService', () => {
     })
 
     it('throws COR-27', async () => {
-      stubMethod(INITIATE_AUTH, undefined, { code: NOT_AUTHORIZED_EXCEPTION })
+      stubMethod(INITIATE_AUTH, undefined, { name: NOT_AUTHORIZED_EXCEPTION })
 
       const userManagementService = new UserManagementService(options, dependencies)
       try {
@@ -339,7 +343,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      stubMethod(INITIATE_AUTH, null, { code: COGNITO_EXCEPTION })
+      stubMethod(INITIATE_AUTH, null, { name: COGNITO_EXCEPTION })
 
       const userManagementService = new UserManagementService(options, dependencies)
 
@@ -347,7 +351,7 @@ describe('UserManagementService', () => {
         await userManagementService.logInWithRefreshToken('testRefreshToken')
         expect.fail()
       } catch (err) {
-        expect(err.code).to.eql(COGNITO_EXCEPTION)
+        expect(err.name).to.eql(COGNITO_EXCEPTION)
       }
     })
   })
@@ -362,7 +366,7 @@ describe('UserManagementService', () => {
     })
 
     it('throws `COR-4 / 404` when user not found', async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
+      const error = { name: USER_NOT_FOUND_EXCEPTION }
 
       stubMethod(FORGOT_PASSWORD, null, error)
 
@@ -383,7 +387,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
       stubMethod(FORGOT_PASSWORD, null, error)
 
@@ -397,9 +401,9 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      const { code } = responseError
+      const { name } = responseError
 
-      expect(code).to.eql(COGNITO_EXCEPTION)
+      expect(name).to.eql(COGNITO_EXCEPTION)
     })
   })
 
@@ -430,7 +434,7 @@ describe('UserManagementService', () => {
     })
 
     it(otpExpiredErrorTestName, async () => {
-      const error = { code: EXPIRED_CODE_EXCEPTION }
+      const error = { name: EXPIRED_CODE_EXCEPTION }
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
@@ -454,7 +458,7 @@ describe('UserManagementService', () => {
     })
 
     it(userNotFoundErrorTestName, async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
+      const error = { name: USER_NOT_FOUND_EXCEPTION }
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
@@ -477,7 +481,7 @@ describe('UserManagementService', () => {
     })
 
     it(otpMismatchErrorTestName, async () => {
-      const error = { code: CODE_MISMATCH_EXCEPTION }
+      const error = { name: CODE_MISMATCH_EXCEPTION }
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
@@ -501,7 +505,7 @@ describe('UserManagementService', () => {
     })
 
     it('throws `COR-6 / 400` when InvalidPasswordException', async () => {
-      const error = { code: INVALID_PASSWORD_EXCEPTION }
+      const error = { name: INVALID_PASSWORD_EXCEPTION }
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
@@ -522,7 +526,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
       stubMethod(CONFIRM_FORGOT_PASSWORD, null, error)
 
@@ -536,9 +540,9 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      const { code } = responseError
+      const { name } = responseError
 
-      expect(code).to.eql(COGNITO_EXCEPTION)
+      expect(name).to.eql(COGNITO_EXCEPTION)
     })
   })
 
@@ -583,7 +587,7 @@ describe('UserManagementService', () => {
     })
 
     it('throws `COR-4 / 404` when UserNotFoundException', async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
+      const error = { name: USER_NOT_FOUND_EXCEPTION }
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
@@ -606,7 +610,7 @@ describe('UserManagementService', () => {
     })
 
     it('throws `COR-8 / 409` when InvalidParameterException', async () => {
-      const error = { code: INVALID_PARAMETER_EXCEPTION }
+      const error = { name: INVALID_PARAMETER_EXCEPTION }
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
@@ -629,7 +633,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
       stubMethod(RESEND_CONFIRMATION_CODE, null, error)
 
@@ -643,16 +647,16 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      const { code } = responseError
+      const { name } = responseError
 
-      expect(code).to.eql(COGNITO_EXCEPTION)
+      expect(name).to.eql(COGNITO_EXCEPTION)
     })
   })
 
   describe('#signUp', () => {
     it('success path', async () => {
       stubMethod(SIGN_UP, {})
-      stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
+      stubMethod(INITIATE_AUTH, null, { name: USER_NOT_FOUND_EXCEPTION })
 
       const userManagementService = new UserManagementService(options, dependencies)
       const response = await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password')
@@ -661,7 +665,7 @@ describe('UserManagementService', () => {
     })
 
     it('throws `COR-7 / 409` when UsernameExistsException and isUserUnconfirmed === false', async () => {
-      const error = { code: USERNAME_EXISTS_EXCEPTION }
+      const error = { name: USERNAME_EXISTS_EXCEPTION }
 
       stubMethod(SIGN_UP, null, error)
       stubMethod(INITIATE_AUTH, null, {})
@@ -685,9 +689,9 @@ describe('UserManagementService', () => {
     })
 
     it('throws `COR-6 / 400` when password requirements are not met', async () => {
-      const error = { code: INVALID_PASSWORD_EXCEPTION }
+      const error = { name: INVALID_PASSWORD_EXCEPTION }
 
-      stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
+      stubMethod(INITIATE_AUTH, null, { name: USER_NOT_FOUND_EXCEPTION })
       stubMethod(SIGN_UP, null, error)
 
       const userManagementService = new UserManagementService(options, dependencies)
@@ -707,9 +711,9 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
-      stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
+      stubMethod(INITIATE_AUTH, null, { name: USER_NOT_FOUND_EXCEPTION })
       stubMethod(SIGN_UP, null, error)
 
       const userManagementService = new UserManagementService(options, dependencies)
@@ -722,9 +726,9 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      const { code } = responseError
+      const { name } = responseError
 
-      expect(code).to.eql(COGNITO_EXCEPTION)
+      expect(name).to.eql(COGNITO_EXCEPTION)
     })
   })
 
@@ -741,7 +745,7 @@ describe('UserManagementService', () => {
     })
 
     it(userNotFoundErrorTestName, async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
+      const error = { name: USER_NOT_FOUND_EXCEPTION }
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
@@ -764,7 +768,7 @@ describe('UserManagementService', () => {
     })
 
     it(otpExpiredErrorTestName, async () => {
-      const error = { code: EXPIRED_CODE_EXCEPTION }
+      const error = { name: EXPIRED_CODE_EXCEPTION }
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
@@ -787,7 +791,7 @@ describe('UserManagementService', () => {
     })
 
     it(otpMismatchErrorTestName, async () => {
-      const error = { code: CODE_MISMATCH_EXCEPTION }
+      const error = { name: CODE_MISMATCH_EXCEPTION }
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
@@ -810,7 +814,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
@@ -824,13 +828,13 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      const { code } = responseError
+      const { name } = responseError
 
-      expect(code).to.eql(COGNITO_EXCEPTION)
+      expect(name).to.eql(COGNITO_EXCEPTION)
     })
 
     it('throws `UM-1 / 400` when NotAuthorizedException to confirm again as the user already confirmed', async () => {
-      const error = { code: 'NotAuthorizedException', message: 'User cannot be confirmed. Current status is CONFIRMED' }
+      const error = { name: NOT_AUTHORIZED_EXCEPTION, message: 'User cannot be confirmed. Current status is CONFIRMED' }
 
       stubMethod(CONFIRM_SIGN_UP, null, error)
 
@@ -853,7 +857,7 @@ describe('UserManagementService', () => {
   describe('#changeUsername', () => {
     describe('[username is not taken]', () => {
       beforeEach(() => {
-        stubMethod(INITIATE_AUTH, null, { code: USER_NOT_FOUND_EXCEPTION })
+        stubMethod(INITIATE_AUTH, null, { name: USER_NOT_FOUND_EXCEPTION })
       })
 
       it(successPathTestName, async () => {
@@ -915,7 +919,7 @@ describe('UserManagementService', () => {
     })
 
     it(otpExpiredErrorTestName, async () => {
-      const error = { code: EXPIRED_CODE_EXCEPTION }
+      const error = { name: EXPIRED_CODE_EXCEPTION }
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
@@ -936,7 +940,7 @@ describe('UserManagementService', () => {
     })
 
     it(otpMismatchErrorTestName, async () => {
-      const error = { code: CODE_MISMATCH_EXCEPTION }
+      const error = { name: CODE_MISMATCH_EXCEPTION }
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
@@ -957,7 +961,7 @@ describe('UserManagementService', () => {
     })
 
     it(cognitoErrorTestName, async () => {
-      const error = { code: COGNITO_EXCEPTION }
+      const error = { name: COGNITO_EXCEPTION }
 
       stubMethod(VERIFY_USER_ATTRIBUTE, null, error)
 
@@ -971,7 +975,7 @@ describe('UserManagementService', () => {
         responseError = error
       }
 
-      expect(responseError.code).to.eql(COGNITO_EXCEPTION)
+      expect(responseError.name).to.eql(COGNITO_EXCEPTION)
     })
   })
 
@@ -1021,7 +1025,7 @@ describe('UserManagementService', () => {
     })
 
     it('should throws `COR-4 / 404` when user not found', async () => {
-      const error = { code: USER_NOT_FOUND_EXCEPTION }
+      const error = { name: USER_NOT_FOUND_EXCEPTION }
 
       stubMethod(INITIATE_AUTH, null, error)
 
@@ -1044,7 +1048,7 @@ describe('UserManagementService', () => {
     it('should throws `UM-9 / 400` when error happens in the Cognito verify lambda with initial error.', async () => {
       const initialCustomErrorFromLambda = 'I am an Error from lambda'
       const error = {
-        code: USER_LAMBDA_VALIDATION_EXCEPTION,
+        name: USER_LAMBDA_VALIDATION_EXCEPTION,
         message: `VerifyAuthChallengeResponse Tru-la-la {{${initialCustomErrorFromLambda}}}`,
       }
       const username = normalizeUsername(profileTrueCaller.phoneNumber)
@@ -1071,7 +1075,7 @@ describe('UserManagementService', () => {
     it('should throws `UM-9 / 400` when error happens in the Cognito verify lambda with mock error.', async () => {
       const initialCustomErrorFromLambda = 'I am an Error from lambda'
       const error = {
-        code: USER_LAMBDA_VALIDATION_EXCEPTION,
+        name: USER_LAMBDA_VALIDATION_EXCEPTION,
         message: `VerifyAuthChallengeResponse Tru-la-la ${initialCustomErrorFromLambda}`,
       }
       const username = normalizeUsername(profileTrueCaller.phoneNumber)

@@ -213,7 +213,7 @@ export class CognitoIdentityService {
         registrationStatus,
       }
     } catch (error) {
-      switch (error.code) {
+      switch (error.name) {
         case 'UserNotFoundException':
           return { result: LogInWithPasswordResult.UserNotFound }
         case 'UserNotConfirmedException':
@@ -238,7 +238,7 @@ export class CognitoIdentityService {
       const token = JSON.stringify(response)
       return { result: InitiateLoginPasswordlessResult.Success, token }
     } catch (error) {
-      if (error.code === 'UserNotFoundException') {
+      if (error.name === 'UserNotFoundException') {
         return { result: InitiateLoginPasswordlessResult.UserNotFound }
       } else {
         throw error
@@ -292,12 +292,12 @@ export class CognitoIdentityService {
       //       error when OTP was entered incorrectly 3 times.
       if (error.message === 'Incorrect username or password.') {
         return { result: CompleteLoginPasswordlessResult.AttemptsExceeded }
-      } else if (error.code === 'NotAuthorizedException') {
+      } else if (error.name === 'NotAuthorizedException') {
         // Throw when OTP is expired (3 min)
         return { result: CompleteLoginPasswordlessResult.ConfirmationCodeExpired }
       } else if (
         error.message?.includes('VerifyAuthChallengeResponse') &&
-        error.code === 'UserLambdaValidationException'
+        error.name === 'UserLambdaValidationException'
       ) {
         const initialErrorMessage = error.message.match('{{(.*)}}', 'gm')?.[1] || 'No correct error message.'
         return {
@@ -325,7 +325,7 @@ export class CognitoIdentityService {
 
       return InitiateForgotPasswordResult.Success
     } catch (error) {
-      if (error.code === 'UserNotFoundException') {
+      if (error.name === 'UserNotFoundException') {
         return InitiateForgotPasswordResult.UserNotFound
       } else {
         throw error
@@ -350,7 +350,7 @@ export class CognitoIdentityService {
 
       return CompleteForgotPasswordResult.Success
     } catch (error) {
-      switch (error.code) {
+      switch (error.name) {
         case 'ExpiredCodeException':
           return CompleteForgotPasswordResult.ConfirmationCodeExpired
         case 'UserNotFoundException':
@@ -385,7 +385,7 @@ export class CognitoIdentityService {
       await this.cognitoidentityserviceprovider.send(new SignUpCommand(params))
       return SignUpResult.Success
     } catch (error) {
-      switch (error.code) {
+      switch (error.name) {
         case 'UsernameExistsException': {
           const isUserUnconfirmed = await this.doesUnconfirmedUserExist(usernameWithAttributes.username)
           return isUserUnconfirmed ? SignUpResult.UnconfirmedUsernameExists : SignUpResult.ConfirmedUsernameExists
@@ -414,7 +414,7 @@ export class CognitoIdentityService {
       await this.cognitoidentityserviceprovider.send(new ResendConfirmationCodeCommand(params))
       return ResendSignUpResult.Success
     } catch (error) {
-      switch (error.code) {
+      switch (error.name) {
         case 'UserNotFoundException':
           return ResendSignUpResult.UserNotFound
         case 'InvalidParameterException':
@@ -439,7 +439,7 @@ export class CognitoIdentityService {
       await this.cognitoidentityserviceprovider.send(new ConfirmSignUpCommand(params))
       return CompleteSignUpResult.Success
     } catch (error) {
-      switch (error.code) {
+      switch (error.name) {
         case 'UserNotFoundException':
           return CompleteSignUpResult.UserNotFound
         case 'ExpiredCodeException':
@@ -501,7 +501,7 @@ export class CognitoIdentityService {
       await this.cognitoidentityserviceprovider.send(new VerifyUserAttributeCommand(params))
       return CompleteChangeLoginResult.Success
     } catch (error) {
-      switch (error.code) {
+      switch (error.name) {
         case 'ExpiredCodeException':
           return CompleteChangeLoginResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
@@ -572,7 +572,7 @@ export class CognitoIdentityService {
       const cognitoTokens = this._normalizeTokensFromCognitoAuthenticationResult(AuthenticationResult)
       return { result: LogInWithRefreshTokenResult.Success, cognitoTokens }
     } catch (error) {
-      if (error.code === 'NotAuthorizedException') return { result: LogInWithRefreshTokenResult.NotAuthorizedException }
+      if (error.name === 'NotAuthorizedException') return { result: LogInWithRefreshTokenResult.NotAuthorizedException }
       throw error
     }
   }

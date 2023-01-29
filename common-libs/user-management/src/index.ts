@@ -1,3 +1,4 @@
+export type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider'
 export * from './UserManagementService'
 export * from './validateUsername'
 export * from './normalizeUsername'
