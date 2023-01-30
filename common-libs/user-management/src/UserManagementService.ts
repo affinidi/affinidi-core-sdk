@@ -146,6 +146,8 @@ export class UserManagementService {
         throw new SdkErrorFromCode('COR-2', { username: login, confirmationCode })
       case CompleteSignUpResult.ConfirmationCodeWrong:
         throw new SdkErrorFromCode('COR-5', { username: login, confirmationCode })
+      case CompleteSignUpResult.TooManyInvalidSignInAttepts:
+        throw new SdkErrorFromCode('COR-32', { username: login, confirmationCode })
       case CompleteSignUpResult.UserNotFound:
         throw new SdkErrorFromCode('COR-4', { username: login })
       case CompleteSignUpResult.DoubleConfirmation:
@@ -277,6 +279,8 @@ export class UserManagementService {
           throw new SdkErrorFromCode('COR-17', { confirmationCode })
         case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
           throw new SdkErrorFromCode('COR-5', { newToken: response.token })
+        case CompleteLoginPasswordlessResult.TooManyInvalidSignInAttepts:
+          throw new SdkErrorFromCode('COR-32', { newToken: response.token })
         default:
           throw new DefaultResultError(response as never)
       }
@@ -345,6 +349,8 @@ export class UserManagementService {
           throw new SdkErrorFromCode('COR-17', { confirmationCode: JSON.stringify(profileTrueCaller) })
         case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
           throw new SdkErrorFromCode('COR-5', { newToken: response.token })
+          case CompleteLoginPasswordlessResult.TooManyInvalidSignInAttepts:
+          throw new SdkErrorFromCode('COR-32', { newToken: response.token })
         case CompleteLoginPasswordlessResult.VerifyAuthLambdaCustomError:
           throw new SdkErrorFromCode('UM-9', {}, { errorMessage: response.initialErrorMessage })
         default:
@@ -436,6 +442,8 @@ export class UserManagementService {
         throw new SdkErrorFromCode('COR-2', { username: login, confirmationCode })
       case CompleteForgotPasswordResult.ConfirmationCodeWrong:
         throw new SdkErrorFromCode('COR-5', { username: login, confirmationCode })
+      case CompleteForgotPasswordResult.TooManyInvalidSignInAttepts:
+        throw new SdkErrorFromCode('COR-32', { username: login, confirmationCode })
       case CompleteForgotPasswordResult.NewPasswordInvalid:
         throw new SdkErrorFromCode('COR-6')
       case CompleteForgotPasswordResult.UserNotFound:
@@ -514,6 +522,8 @@ export class UserManagementService {
           throw new SdkErrorFromCode('COR-2', { confirmationCode })
         case CompleteChangeLoginResult.ConfirmationCodeWrong:
           throw new SdkErrorFromCode('COR-5', { confirmationCode })
+        case CompleteChangeLoginResult.TooManyInvalidSignInAttepts:
+          throw new SdkErrorFromCode('COR-32', { confirmationCode })
         default:
           throw new DefaultResultError(result)
       }

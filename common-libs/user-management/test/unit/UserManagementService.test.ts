@@ -32,6 +32,7 @@ const successPathTestName = 'success path'
 const cognitoErrorTestName = 'throws error when cognito returns error'
 const otpExpiredErrorTestName = 'throws `COR-2 / 400` when ExpiredCodeException'
 const otpMismatchErrorTestName = 'throws `COR-5 / 400` when CodeMismatchException'
+const limitExceededErrorTestName = 'throws `COR-32 / 400` when LimitExceededException'
 const userNotFoundErrorTestName = 'throws `COR-4 / 404` when UserNotFoundException'
 
 const SIGN_UP = cognito.SignUpCommand
@@ -48,6 +49,7 @@ const GET_USER = cognito.GetUserCommand
 const COGNITO_EXCEPTION = 'Exception'
 const EXPIRED_CODE_EXCEPTION = 'ExpiredCodeException'
 const CODE_MISMATCH_EXCEPTION = 'CodeMismatchException'
+const LIMIT_EXCEEDED_EXCEPTION = 'LimitExceededException'
 const USER_NOT_FOUND_EXCEPTION = 'UserNotFoundException'
 const USERNAME_EXISTS_EXCEPTION = 'UsernameExistsException'
 const INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException'
