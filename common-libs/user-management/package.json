@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/user-management",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "User Management implementation for AWS Cognito",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

@@ -17,7 +17,11 @@ const { TRUECALLER_TOKEN_DEFAULT_EXPIRY_BUFFER } = process.env
  */
 @profile()
 export class TrueCallerService {
-  constructor(private readonly keyManager: TrueCallerPublicKeyManager = trueCallerPublicKeyManager) {}
+  constructor(public readonly keyManager: TrueCallerPublicKeyManager = trueCallerPublicKeyManager) {}
+
+  getTrueCallerUrl() {
+    return this.keyManager.trueCallerPublicKeyUrl
+  }
 
   /**
    * Verify `payload` of `Truecaller` token/profile.

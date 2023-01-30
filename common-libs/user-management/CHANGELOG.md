@@ -1,3 +1,5 @@
+# release 2.5.1 (2023-01-30)
+* return getTrueCallerUrl method to TrueCallerService
 # release 2.5.0 (2023-01-29)
 * updated cognito client to v3 and allow inject it as dependency
 # release 2.4.0 (2023-01-27)
