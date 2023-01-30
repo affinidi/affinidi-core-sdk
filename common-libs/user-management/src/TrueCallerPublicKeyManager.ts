@@ -8,7 +8,7 @@ type TrueCallerPK = { keyType: string; key: string }
 export class TrueCallerPublicKeyManager {
   private key: TrueCallerPK
 
-  constructor(private readonly trueCallerPublicKeyUrl: string) {}
+  constructor(public readonly trueCallerPublicKeyUrl: string) {}
 
   /**
    //  * Fetch `Truecaller` public key.
