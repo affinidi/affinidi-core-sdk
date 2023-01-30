@@ -9,8 +9,8 @@ export const getDidDataFromKeysService = (keysService: KeysService) => {
 }
 
 export const withDidData = (userData: { encryptedSeed: string; password: string; didDocument?: any }) => {
-  const { encryptedSeed, password } = userData
+  const { encryptedSeed, password, didDocument } = userData
   const keysService = new KeysService(encryptedSeed, password)
   const { did, didDocumentKeyId } = getDidDataFromKeysService(keysService)
-  return { did, didDocumentKeyId, encryptedSeed, password }
+  return { did, didDocumentKeyId, encryptedSeed, password, didDocument }
 }

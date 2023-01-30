@@ -1,3 +1,5 @@
+# release 7.13.2 (2023-01-30)
+* fix missing didDocument passing
 # release 7.13.1 (2023-01-30)
 * bumped `user-management` lib version
 # release 7.13.0 (2023-01-29)

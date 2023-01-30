@@ -1,3 +1,5 @@
+# release 7.11.2 (2023-01-30)
+* bumped `core` version
 # release 7.11.1 (2023-01-30)
 * bumped `user-management` lib version
 # release 7.11.0 (2023-01-29)
