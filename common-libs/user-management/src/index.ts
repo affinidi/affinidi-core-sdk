@@ -1,7 +1,4 @@
-import { useNodeFetch } from '@affinidi/platform-fetch-node'
-
-useNodeFetch()
-
+export type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider'
 export * from './UserManagementService'
 export * from './validateUsername'
 export * from './normalizeUsername'

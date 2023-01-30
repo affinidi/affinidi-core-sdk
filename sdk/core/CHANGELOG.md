@@ -1,3 +1,5 @@
+# release 7.13.0 (2023-01-29)
+* updated user-management lib and allow to inject cognito client into that
 # release 7.12.4 (2023-01-27)
 * bumped `user-namagement` version
 # release 7.12.3 (2023-01-26)

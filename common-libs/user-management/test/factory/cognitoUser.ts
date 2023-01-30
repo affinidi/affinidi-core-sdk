@@ -1,5 +1,4 @@
-import { REGISTRATION_STATUS_ATTRIBUTE } from '../../src'
-import { RegistrationStatus } from '../../dist'
+import { REGISTRATION_STATUS_ATTRIBUTE, RegistrationStatus } from '../../src'
 
 export const cognitoUserWithIncompleteRegistration = {
   UserAttributes: [

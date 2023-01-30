@@ -135,4 +135,17 @@ describe('AffinidiWalletV6', () => {
       expect(wallet.did).to.exist
     })
   })
+
+  describe('non environment options / dependencies', () => {
+    it('should use cognitoProviderClient if given', async () => {
+      const cognitoProviderClientMock = { send: sinon.stub() }
+
+      await AffinidiWalletV6.initiateForgotPassword(
+        { ...sdkOptions, cognitoProviderClient: cognitoProviderClientMock as any },
+        'fake@email.com',
+      )
+
+      expect(cognitoProviderClientMock.send).to.be.calledOnce
+    })
+  })
 })
