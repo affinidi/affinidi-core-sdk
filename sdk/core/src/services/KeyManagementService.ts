@@ -62,8 +62,10 @@ export default class KeyManagementService {
   }
 
   public async pullKeyAndSeed(accessToken: string) {
-    const encryptionKey = await this._pullEncryptionKey(accessToken)
-    const encryptedSeed = await this._pullEncryptedSeed(accessToken)
+    const [encryptionKey, encryptedSeed] = await Promise.all([
+      this._pullEncryptionKey(accessToken),
+      this._pullEncryptedSeed(accessToken),
+    ])
     return { encryptionKey, encryptedSeed }
   }
 
