@@ -1,3 +1,5 @@
+# release 2.6.0 (2023-02-01)
+added class to fetch JSON Web Key Sets (JWKS) public keys
 # release 2.5.1 (2023-01-30)
 * return getTrueCallerUrl method to TrueCallerService
 # release 2.5.0 (2023-01-29)
