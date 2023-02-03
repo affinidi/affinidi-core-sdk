@@ -1,3 +1,5 @@
+# release 2.5.2 (2023-02-03)
+* added COR-32 error
 # release 2.5.1 (2023-01-30)
 * return getTrueCallerUrl method to TrueCallerService
 # release 2.5.0 (2023-01-29)
