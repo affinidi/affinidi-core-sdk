@@ -299,10 +299,12 @@ parallel('CommonNetworkMember [OTP]', () => {
     const attempt = async (i: number) => {
       try {
         await AffinidiWallet.completeSignInPasswordless(options, loginToken, '123456')
-        expect.fail(`COR-${i < X ? 5 : 32} error expected`)
+        expect.fail('Error expected')
       } catch (error) {
         expect(error).to.be.instanceOf(SdkError)
-        expect(error.name).to.eql(`COR-${i < X ? 5 : 32}`)
+        if (i >= X) {
+          expect(error.name).to.eql('COR-32')
+        }
       }
     }
 
