@@ -1,3 +1,5 @@
+# release 7.13.3 (2023-02-03)
+* added COR-32 error
 # release 7.13.2 (2023-01-30)
 * fix missing didDocument passing
 # release 7.13.1 (2023-01-30)

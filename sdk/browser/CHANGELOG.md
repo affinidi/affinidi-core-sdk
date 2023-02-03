@@ -1,3 +1,5 @@
+# release 7.10.3 (2023-02-03)
+* added COR-32 error
 # release 7.10.2 (2023-01-30)
 * bumped `core` version
 # release 7.10.1 (2023-01-30)
