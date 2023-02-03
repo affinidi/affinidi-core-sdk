@@ -302,6 +302,7 @@ parallel('CommonNetworkMember [OTP]', () => {
         expect.fail('Error expected')
       } catch (error) {
         expect(error).to.be.instanceOf(SdkError)
+        console.log(error.name)
         return error.name
       }
     }
