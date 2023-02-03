@@ -349,7 +349,7 @@ export class UserManagementService {
           throw new SdkErrorFromCode('COR-17', { confirmationCode: JSON.stringify(profileTrueCaller) })
         case CompleteLoginPasswordlessResult.ConfirmationCodeWrong:
           throw new SdkErrorFromCode('COR-5', { newToken: response.token })
-          case CompleteLoginPasswordlessResult.TooManyInvalidSignInAttepts:
+        case CompleteLoginPasswordlessResult.TooManyInvalidSignInAttepts:
           throw new SdkErrorFromCode('COR-32', { newToken: response.token })
         case CompleteLoginPasswordlessResult.VerifyAuthLambdaCustomError:
           throw new SdkErrorFromCode('UM-9', {}, { errorMessage: response.initialErrorMessage })
