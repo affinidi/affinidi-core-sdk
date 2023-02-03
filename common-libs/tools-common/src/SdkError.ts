@@ -222,5 +222,5 @@ export const commonErrors = {
     type: 'OperationError',
     message: 'Too many invalid sing-in requests were sent, sing-in may be temporary blocked.',
     httpStatusCode: 400,
-  }
+  },
 } as const
