@@ -280,18 +280,7 @@ parallel('CommonNetworkMember [OTP]', () => {
 
   it('throws COR-32 after X calls to #confirmSignIn with wrong confirmation code', async () => {
     const X = 15
-
     const inbox = createInbox()
-    const password = COGNITO_PASSWORD
-
-    const signUpToken = await AffinidiWallet.initiateSignUpByEmail(options, inbox.email, password, messageParameters)
-    checkIsString(signUpToken)
-    const signUpCode = await waitForOtpCode(inbox)
-
-    const commonNetworkMember = await AffinidiWallet.completeSignUp(options, signUpToken, signUpCode)
-    checkIsWallet(commonNetworkMember)
-
-    await commonNetworkMember.logOut()
 
     const loginToken = await AffinidiWallet.initiateSignInPasswordless(options, inbox.email)
     checkIsString(loginToken)
