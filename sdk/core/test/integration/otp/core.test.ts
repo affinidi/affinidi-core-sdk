@@ -278,6 +278,29 @@ parallel('CommonNetworkMember [OTP]', () => {
     expect(error.name).to.eql('COR-13')
   })
 
+  it('throws COR-32 after X calls to #confirmSignIn with wrong confirmation code', async () => {
+    const X = 15
+    const inbox = createInbox()
+
+    const signinToken = await AffinidiWallet.initiateSignInPasswordless(options, inbox.email)
+
+    const attempt = async (i: number) => {
+      try {
+        await AffinidiWallet.completeSignInPasswordless(options, signinToken, '123456')
+        expect.fail('Error expected')
+      } catch (error) {
+        expect(error).to.be.instanceOf(SdkError)
+        expect(error.name).to.eql(`COR-${i < X ? 5 : 32}`)
+      }
+    }
+
+    await Array.from({ length: X + 1 }).reduce(
+      /* eslint-disable-next-line no-unused-vars */
+      async (attempts: Promise<void>, val, i) => attempts.then(() => attempt(i)),
+      Promise.resolve(),
+    )
+  })
+
   it('logs in with email and new password after adding email to username-only account and changing password', async () => {
     const username = generateUsername()
     const password = COGNITO_PASSWORD

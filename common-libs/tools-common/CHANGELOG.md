@@ -1,3 +1,5 @@
+# release 1.3.1 (2023-02-03)
+* added COR-32 error
 # release 1.3.0 (2022-10-03)
 * move common errors to one place
 # release 1.2.0 (2022-09-06)

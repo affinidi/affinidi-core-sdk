@@ -58,12 +58,14 @@ export enum CompleteLoginPasswordlessResult {
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
   VerifyAuthLambdaCustomError,
+  TooManyInvalidSignInAttepts,
 }
 
 export type CompleteLoginPasswordlessResponse = Response<
   CompleteLoginPasswordlessResult,
   | CompleteLoginPasswordlessResult.Success
   | CompleteLoginPasswordlessResult.ConfirmationCodeWrong
+  | CompleteLoginPasswordlessResult.TooManyInvalidSignInAttepts
   | CompleteLoginPasswordlessResult.VerifyAuthLambdaCustomError,
   {
     cognitoTokens?: CognitoUserTokens
@@ -95,6 +97,7 @@ export enum CompleteForgotPasswordResult {
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
   NewPasswordInvalid,
+  TooManyInvalidSignInAttepts,
 }
 
 export enum ResendSignUpResult {
@@ -110,6 +113,7 @@ export enum CompleteSignUpResult {
   ConfirmationCodeWrong,
   DoubleConfirmation,
   AliasExistsException,
+  TooManyInvalidSignInAttepts,
 }
 
 export enum InitiateChangeLoginResult {
@@ -121,6 +125,7 @@ export enum CompleteChangeLoginResult {
   Success,
   ConfirmationCodeExpired,
   ConfirmationCodeWrong,
+  TooManyInvalidSignInAttepts,
 }
 
 enum AuthFlow {
@@ -357,6 +362,8 @@ export class CognitoIdentityService {
           return CompleteForgotPasswordResult.UserNotFound
         case 'CodeMismatchException':
           return CompleteForgotPasswordResult.ConfirmationCodeWrong
+        case 'LimitExceededException':
+          return CompleteForgotPasswordResult.TooManyInvalidSignInAttepts
         case 'InvalidPasswordException':
           return CompleteForgotPasswordResult.NewPasswordInvalid
         default:
@@ -446,6 +453,8 @@ export class CognitoIdentityService {
           return CompleteSignUpResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
           return CompleteSignUpResult.ConfirmationCodeWrong
+        case 'LimitExceededException':
+          return CompleteSignUpResult.TooManyInvalidSignInAttepts
         case 'AliasExistsException':
           return CompleteSignUpResult.AliasExistsException
         case 'NotAuthorizedException':
@@ -506,6 +515,8 @@ export class CognitoIdentityService {
           return CompleteChangeLoginResult.ConfirmationCodeExpired
         case 'CodeMismatchException':
           return CompleteChangeLoginResult.ConfirmationCodeWrong
+        case 'LimitExceededException':
+          return CompleteChangeLoginResult.TooManyInvalidSignInAttepts
         default:
           throw error
       }
