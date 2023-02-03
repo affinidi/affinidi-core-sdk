@@ -296,23 +296,18 @@ parallel('CommonNetworkMember [OTP]', () => {
     const loginToken = await AffinidiWallet.initiateSignInPasswordless(options, inbox.email)
     checkIsString(loginToken)
 
-    const attempt = async (i: number) => {
+    const attempt = async () => {
       try {
         await AffinidiWallet.completeSignInPasswordless(options, loginToken, '123456')
         expect.fail('Error expected')
       } catch (error) {
         expect(error).to.be.instanceOf(SdkError)
-        if (i >= X) {
-          expect(error.name).to.eql('COR-32')
-        }
+        return error.name
       }
     }
 
-    await Array.from({ length: X + 1 }).reduce(
-      /* eslint-disable-next-line no-unused-vars */
-      async (attempts: Promise<void>, val, i) => attempts.then(() => attempt(i)),
-      Promise.resolve(),
-    )
+    const errors = await Promise.all(Array.from({ length: X + 1 }).map(attempt))
+    expect(errors).contains('COR-32')
   })
 
   it('logs in with email and new password after adding email to username-only account and changing password', async () => {
