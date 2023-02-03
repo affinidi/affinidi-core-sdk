@@ -284,7 +284,7 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     const signinToken = await AffinidiWallet.initiateSignInPasswordless(options, inbox.email)
 
-    const attempt = async (i: number) => {
+    const attempt = async () => {
       try {
         await AffinidiWallet.completeSignInPasswordless(options, signinToken, '123456')
         expect.fail('Error expected')
@@ -295,8 +295,7 @@ parallel('CommonNetworkMember [OTP]', () => {
     }
 
     await Array.from({ length: X + 1 }).reduce(
-      /* eslint-disable-next-line no-unused-vars */
-      async (attempts: Promise<void>, val, i) => attempts.then(() => attempt(i)),
+      async (attempts: Promise<void>) => attempts.then(attempt),
       Promise.resolve(),
     )
   })
