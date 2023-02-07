@@ -86,6 +86,14 @@ export const Util = {
     return JwtService.fromJWT(token)
   },
 
+  /**
+   * Simple check if token has JWT structure
+   * @param token
+   */
+  isJWT: (token: string): boolean => {
+    return JwtService.isJWT(token)
+  },
+
   getLoginType: (login: string) => {
     const { isEmailValid, isPhoneNumberValid } = validateUsername(login)
 

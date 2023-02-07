@@ -66,4 +66,26 @@ describe('JwtService', () => {
       }
     })
   })
+
+  describe('#isJWT', () => {
+    it('should return true with JWT', () => {
+      expect(JwtService.isJWT(token)).to.be.true
+    })
+
+    it('should return false with empty string', () => {
+      expect(JwtService.isJWT('')).to.be.false
+    })
+
+    it('should return false with random string', () => {
+      expect(JwtService.isJWT('asdfasdf')).to.be.false
+    })
+
+    it('should return false with uuid string', () => {
+      expect(JwtService.isJWT('beb140f5-e746-4ba0-8bd2-f6ecf26c3f25')).to.be.false
+    })
+
+    it('should return false with undefined', () => {
+      expect(JwtService.isJWT(undefined)).to.be.false
+    })
+  })
 })

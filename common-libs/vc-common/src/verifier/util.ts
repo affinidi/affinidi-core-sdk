@@ -1,8 +1,8 @@
 type ValidatorResponse = true | { message: string }
 
-export type Validator<V = any, D = any> =
-  | ((value: V, data: D) => ValidatorResponse)
-  | ((value: V, data: D) => Promise<ValidatorResponse>)
+export type Validator<V = any, D = any, A = any> =
+  | ((value: V, data: D, additionalData?: A) => ValidatorResponse)
+  | ((value: V, data: D, additionalData?: A) => Promise<ValidatorResponse>)
 
 type Unvalidated<T> = { [key in keyof T]?: any }
 
@@ -25,10 +25,10 @@ export type Validatied<T> = ValidatiedSuccess<T> | ValidatiedInvalid
 
 type Validations<T> = { [k in keyof T]: Validator | Validator[] }
 
-export type ValidateFn<T> = (data: Unvalidated<T>) => Promise<Validatied<T>>
+export type ValidateFn<T> = (data: Unvalidated<T>, additionalData?: any) => Promise<Validatied<T>>
 
 export const genValidateFn = <T>(validations: Validations<T>): ValidateFn<T> => {
-  return async (data) => {
+  return async (data, { challenge }) => {
     const keys = Object.keys(validations)
     const errors: ErrorConfig[] = []
 
@@ -39,7 +39,7 @@ export const genValidateFn = <T>(validations: Validations<T>): ValidateFn<T> => 
 
       for (const validator of validators) {
         try {
-          const outcome = await validator(data[fieldName], data)
+          const outcome = await validator(data[fieldName], data, { challenge })
 
           if (outcome !== true) {
             errors.push({
