@@ -199,7 +199,8 @@ const isValidVPProof =
     getVerifySuite: GetVerifySuiteFn,
     getProofPurposeOptions?: GetVerifierProofPurposeOptionsFn,
   ): Validator =>
-  async (value, data, { challenge }) => {
+  async (value, data, additionalData) => {
+    const { challenge } = additionalData
     try {
       let suite
       try {

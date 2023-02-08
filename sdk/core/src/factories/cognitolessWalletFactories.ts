@@ -1,7 +1,7 @@
 import { EventComponent } from '@affinidi/affinity-metrics-lib'
 
 import { NetworkMemberWithoutCognito as Wallet } from '../CommonNetworkMember/NetworkMemberWithoutCognito'
-import { SdkOptions } from '../dto/shared.dto'
+import { KeyOptions, SdkOptions } from '../dto/shared.dto'
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 
 export const createCognitolessWalletFactories = (
@@ -13,17 +13,18 @@ export const createCognitolessWalletFactories = (
   return {
     /**
      * @description Generates a new DID and creates a new instance of SDK using password
-     * @param options - parameters with specified environment
-     * @param password - password
+     * @param inputOptions - parameters with specified environment
+     * @param inputPassword - password
+     * @param keyOptions - specifies available wallet key types (allowed rsa and bbs; ecdsa - default, no need to specify)
      * @returns initialized instance of SDK
      */
-    createWallet: (inputOptions: SdkOptions, inputPassword: string) => {
-      return Wallet.createWallet(dependencies, inputOptions, inputPassword)
+    createWallet: (inputOptions: SdkOptions, inputPassword: string, keyOptions?: KeyOptions) => {
+      return Wallet.createWallet(dependencies, inputOptions, inputPassword, keyOptions)
     },
 
     /**
      * @description Initilizes instance of SDK from seed
-     * @param options - parameters with specified environment
+     * @param inputOptions - parameters with specified environment
      * @param encryptedSeed - encrypted seed
      * @param password - password
      * @returns initialized instance of SDK

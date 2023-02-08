@@ -28,9 +28,10 @@ type Validations<T> = { [k in keyof T]: Validator | Validator[] }
 export type ValidateFn<T> = (data: Unvalidated<T>, additionalData?: any) => Promise<Validatied<T>>
 
 export const genValidateFn = <T>(validations: Validations<T>): ValidateFn<T> => {
-  return async (data, { challenge }) => {
+  return async (data, additionalData) => {
     const keys = Object.keys(validations)
     const errors: ErrorConfig[] = []
+    const challenge = additionalData?.challenge
 
     for (const _fieldName of keys) {
       const fieldName = _fieldName as keyof T
