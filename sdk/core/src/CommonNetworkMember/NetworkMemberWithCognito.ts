@@ -510,13 +510,17 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     //       case when user signs up more often
     const options = getOptionsFromEnvironment(inputOptions)
     const userManagementService = createUserManagementService(options)
-    const doesConfirmedUserExist = await userManagementService.doesConfirmedUserExist(login)
-    if (doesConfirmedUserExist) {
+    try {
       return JSON.stringify({
         signInType: 'logIn',
         logInToken: await userManagementService.initiateLogInPasswordless(login, messageParameters),
       })
-    } else {
+    } catch (err) {
+      // COR-4 user not found
+      if (err.code !== 'COR-4') {
+        throw err
+      }
+
       const password = normalizeShortPassword(await generatePassword(), login)
 
       return JSON.stringify({
