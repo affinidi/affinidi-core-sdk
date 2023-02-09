@@ -1,3 +1,5 @@
+# release 7.10.4 (2023-02-09)
+* removed redundant call to check if unconfirmed user exist
 # release 7.10.3 (2023-02-03)
 * added COR-32 error
 # release 7.10.2 (2023-01-30)
