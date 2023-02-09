@@ -1,3 +1,6 @@
+# release 2.13.0 (2023-02-09)
+* add an optional field `challenge` to the `validatePresentation` method;
+* bumped `vc-common`, `vc-data`, `tools-common`, `internal-api-clients`, `tools-openapi` libs versions.
 # release 2.12.0 (2023-01-24)
 * add new `did:web` method support
 # release 2.11.1 (2023-01-20)

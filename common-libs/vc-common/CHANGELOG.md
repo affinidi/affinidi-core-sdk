@@ -1,3 +1,7 @@
+# release 1.7.0 (2023-02-09)
+* Added the ability to check if the `challenge` field matches.
+* Now the `VP` requester can send an initial `challenge` to compare
+* with the `challenge` field that is in the `proof` section of the `VP` signed by the `VP` holder.
 # release 1.6.1 (2022-10-27)
 * Fix Security Vulnerabilities by patching `xmldom`
 ## release 1.6.0 (2022-09-06)

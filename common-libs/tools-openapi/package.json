@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/tools-openapi",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -43,7 +43,7 @@
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
     "@affinidi/platform-fetch": "^1.1.0",
-    "@affinidi/tools-common": "^1.2.0",
+    "@affinidi/tools-common": "^1.4.0",
     "lodash.keyby": "^4.6.0",
     "lodash.mapvalues": "^4.6.0"
   },

@@ -1,3 +1,6 @@
+## release 1.6.1 (2023-02-09)
+* bumped `vc-common` lib version.
+
 ## release 1.6.0 (2022-09-06)
 * upgraded to npm 8;
 * fixed typing issues.
