@@ -1,3 +1,5 @@
+# release 2.5.5 (2023-02-09)
+* bumped `common`, `tools-common`, `internal-api-clients` libs versions
 # release 2.5.3 (2023-01-20)
 * bumped `internal-api-clients`, `common` versions
 # release 2.5.2 (2022-11-29)

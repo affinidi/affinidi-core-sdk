@@ -1,3 +1,6 @@
+# release 2.5.1 (2023-02-09)
+* Updated api of VerifierService. 
+* Updated `tools-common`, `tools-openapi` libs versions.
 # release 2.5.0 (2023-01-20)
 * Updated `getSignedCredential` endpoint for Keystorage service.
 # release 2.4.0 (2022-11-29)

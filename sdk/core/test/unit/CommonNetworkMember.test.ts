@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import { Affinity, JwtService, KeysService, DidDocumentService, EncryptionService } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { SdkError } from '@affinidi/tools-common'
-import { buildVCV1Skeleton, buildVCV1Unsigned } from '@affinidi/vc-common'
+import { buildVCV1Skeleton, buildVCV1Unsigned, buildVPV1Unsigned } from '@affinidi/vc-common'
 import {
   VCSPhonePersonV1,
   getVCPhonePersonV1Context,
@@ -43,6 +43,7 @@ import credentialShareRequestToken from '../factory/credentialShareRequestToken'
 import parsedCredentialShareRequestToken from '../factory/parsedCredentialShareRequestToken'
 import parsedCredentialShareResponseToken from '../factory/parsedCredentialShareResponseToken'
 import { testPlatformTools } from '../helpers/testPlatformTools'
+import { randomBytes } from '../../src/shared/randomBytes'
 
 let walletPassword: string
 
@@ -1657,6 +1658,110 @@ describe('CommonNetworkMember', () => {
     const result = await requesterCommonNetworkMember.verifyPresentation(vp)
 
     expect(result.isValid).to.be.false
+  })
+
+  it('#verifyPresentation should work with challenge as uuid', async () => {
+    const affinity = new Affinity({}, testPlatformTools)
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
+
+    const vc = await affinity.signCredential(
+      buildVCV1Unsigned({
+        skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+          credentialSubject: {
+            data: {
+              '@type': ['Person', 'PersonE', 'PhonePerson'],
+              telephone: '555 555 5555',
+            },
+          },
+          holder: { id: didElemAlt },
+          type: 'PhoneCredentialPersonV1',
+          context: getVCPhonePersonV1Context(),
+        }),
+        issuanceDate: new Date().toISOString(),
+      }),
+      encryptedSeedElem,
+      walletPassword,
+    )
+
+    const presentationChallenge = 'beb140f5-e746-4ba0-8bd2-f6ecf26c3f25'
+    const domain = 'domain'
+    const vcs = [vc]
+
+    const vp = await userCommonNetworkMember.signUnsignedPresentation(
+      buildVPV1Unsigned({
+        id: `presentationId:${randomBytes(8).toString('hex')}`,
+        vcs,
+        holder: { id: didElemAlt },
+      }),
+      presentationChallenge,
+      domain,
+    )
+
+    const result = await requesterCommonNetworkMember.verifyPresentation(vp)
+
+    if (result.isValid === true) {
+      expect(result.did).to.eq(didElem)
+      expect(result.challenge).to.eq(presentationChallenge)
+      expect(result.suppliedPresentation).to.deep.eq(vp)
+    } else {
+      expect(result.suppliedPresentation).to.deep.eq(vp)
+      expect.fail(result.errors.join('\n'))
+    }
+  })
+
+  it('#verifyPresentation should fail validation with substituted wrong challenge by VP holder', async () => {
+    const affinity = new Affinity({}, testPlatformTools)
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
+
+    const vc = await affinity.signCredential(
+      buildVCV1Unsigned({
+        skeleton: buildVCV1Skeleton<VCSPhonePersonV1>({
+          id: 'urn:uuid:9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+          credentialSubject: {
+            data: {
+              '@type': ['Person', 'PersonE', 'PhonePerson'],
+              telephone: '555 555 5555',
+            },
+          },
+          holder: { id: didElemAlt },
+          type: 'PhoneCredentialPersonV1',
+          context: getVCPhonePersonV1Context(),
+        }),
+        issuanceDate: new Date().toISOString(),
+      }),
+      encryptedSeedElem,
+      walletPassword,
+    )
+
+    const presentationChallenge = 'beb140f5-e746-4ba0-8bd2-f6ecf26c3f25'
+    const substitutedChallengeByHolder = 'afc140g5-d746-4bb0-8ce2-g6fdf26d3g26'
+    const domain = 'domain'
+    const vcs = [vc]
+
+    const vp = await userCommonNetworkMember.signUnsignedPresentation(
+      buildVPV1Unsigned({
+        id: `presentationId:${randomBytes(8).toString('hex')}`,
+        vcs,
+        holder: { id: didElemAlt },
+      }),
+      substitutedChallengeByHolder,
+      domain,
+    )
+
+    // VP requester could add initial challenge to check if holder put same challenge in the signed VP
+    const result = await requesterCommonNetworkMember.verifyPresentation(vp, presentationChallenge)
+
+    if (result.isValid === true) {
+      expect(result.did).to.eq(didElem)
+      expect(result.challenge).to.eq(presentationChallenge)
+      expect(result.suppliedPresentation).to.deep.eq(vp)
+    } else {
+      expect(result.suppliedPresentation).to.deep.eq(vp)
+      expect(result.errors.join('\n')).to.contains('The challenge is not as expected')
+    }
   })
 
   it('#generateDidAuthRequest should throw validation error for invalid "jwtOptions.audienceDid"', async () => {

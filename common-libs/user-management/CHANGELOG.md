@@ -1,3 +1,5 @@
+# release 2.5.3 (2023-02-09)
+* bumped `common`, `tools-common`, `internal-api-clients` libs
 # release 2.5.2 (2023-02-03)
 * added COR-32 error
 # release 2.5.1 (2023-01-30)

@@ -1,3 +1,5 @@
+# release 1.4.0 (2023-02-09)
+* added new `isJWT` method.
 # release 1.3.1 (2023-02-03)
 * added COR-32 error
 # release 1.3.0 (2022-10-03)

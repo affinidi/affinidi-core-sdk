@@ -1,3 +1,12 @@
+# release 7.14.0 (2023-02-09)
+* Added optional field `challenge` to the `verifyPresentation` method of the `BaseNetworkMember` class.
+* Now the `VP` requester can send an initial `challenge` to compare
+* with the `challenge` field that is in the `proof` section of the `VP` signed by the `VP` holder;
+* Added optional fields `holderKey` and `didDocument` to the `validateCredential` method of the `BaseNetworkMember` class;
+* Added the `validateJWT` method to the `BaseNetworkMember` class;
+* Added optional field `keyOptions` to the `createWallet` method of the `NetworkMemberWithoutCognito` class.
+* It provides user flexibility in choosing additional key types(`rsa` and `bbs`) that could be used.
+* Bumped `vc-common`, `vc-data`, `common`, `tools-common`, `internal-api-clients` libs versions.
 # release 7.13.4 (2023-02-09)
 * removed redundant call to check if unconfirmed user exist
 # release 7.13.3 (2023-02-03)

@@ -725,8 +725,8 @@ export abstract class BaseNetworkMember {
     return this.signUnsignedCredential(unsignedCredential, keyType)
   }
 
-  async validateCredential(signedCredential: SignedCredential) {
-    return this._affinity.validateCredential(signedCredential)
+  async validateCredential(signedCredential: SignedCredential, holderKey?: string, didDocument?: any) {
+    return this._affinity.validateCredential(signedCredential, holderKey, didDocument)
   }
 
   async verifyDidAuthResponse(
@@ -997,6 +997,8 @@ export abstract class BaseNetworkMember {
    * @description Validates a VP, and the contained VCs
    * @param vp - the presentation to be validated
    * when needed to verify if holder is a subject of VC
+   * @param challenge (optional) - challenge from VP requester to
+   * be compared with challenge in presentation
    * @returns { isValid, did, challenge, suppliedPresentation, errors }
    *
    * isValid - boolean, result of the verification
@@ -1010,14 +1012,15 @@ export abstract class BaseNetworkMember {
    *
    * errors - array of validation errors
    */
-  async verifyPresentation(vp: unknown): Promise<PresentationValidationOutput> {
-    const response = await this._affinity.validatePresentation(vp)
+  async verifyPresentation(vp: unknown, challenge?: string): Promise<PresentationValidationOutput> {
+    const response = await this._affinity.validatePresentation(vp, null, challenge)
 
     if (response.result === true) {
+      const vpChallenge = response.data.proof.challenge
       // After validating the VP we need to validate the VP's challenge token
       // to ensure that it was issued from the correct DID and that it hasn't expired.
       try {
-        await this._holderService.verifyPresentationChallenge(response.data.proof.challenge, this.did)
+        Util.isJWT(vpChallenge) && (await this._holderService.verifyPresentationChallenge(vpChallenge, this.did))
       } catch (error) {
         return {
           isValid: false,
@@ -1029,7 +1032,7 @@ export abstract class BaseNetworkMember {
       return {
         isValid: true,
         did: response.data.holder.id,
-        challenge: response.data.proof.challenge,
+        challenge: vpChallenge,
         suppliedPresentation: response.data,
       }
     } else {
@@ -1039,6 +1042,14 @@ export abstract class BaseNetworkMember {
         errors: [response.error],
       }
     }
+  }
+
+  /**
+   * Wrapper for Affinity class validateJWT method.
+   * @param token
+   */
+  async validateJWT(token: string): Promise<void> {
+    return this._affinity.validateJWT(token)
   }
 
   /**

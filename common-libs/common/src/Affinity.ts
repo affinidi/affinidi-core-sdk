@@ -461,6 +461,7 @@ export class Affinity {
   async validatePresentation(
     vp: any,
     didDocument?: any,
+    challenge?: string,
   ): Promise<{ result: true; data: VPV1 } | { result: false; error: string }> {
     const result = await validateVPV1({
       documentLoader: this._createDocumentLoader(),
@@ -497,7 +498,7 @@ export class Affinity {
             throw new Error(`Unsupported proofPurpose: ${proofPurpose}`)
         }
       },
-    })(vp)
+    })(vp, { challenge })
 
     let eventOptions: EventOptions
 

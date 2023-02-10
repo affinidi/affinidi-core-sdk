@@ -75,6 +75,16 @@ const JwtService = {
 
     return jwt
   },
+
+  isJWT: (token: string): boolean => {
+    try {
+      JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+    } catch (err) {
+      return false
+    }
+
+    return true
+  },
 }
 
 export default JwtService

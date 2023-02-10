@@ -1,3 +1,5 @@
+# release 7.11.5 (2023-02-09)
+* bumped `core` version. bumped `common` lib version in dev dependencies
 # release 7.11.4 (2023-02-09)
 * removed redundant call to check if unconfirmed user exist
 # release 7.11.3 (2023-02-03)

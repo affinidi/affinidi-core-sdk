@@ -1,3 +1,5 @@
+# release 1.2.1 (2023-02-09)
+* Updated `tools-common` version.
 # release 1.2.0 (2022-09-06)
 * upgraded to npm 8;
 * updated `typedoc` version.

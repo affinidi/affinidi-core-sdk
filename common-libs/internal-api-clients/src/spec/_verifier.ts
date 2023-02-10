@@ -7,94 +7,79 @@ export default {
     "requestBodies": {},
     "responses": {},
     "schemas": {
+      "ValidateJwtOutput": {
+        "properties": {
+          "isValid": {
+            "type": "boolean"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "properties": {
+                  "exp": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number",
+                        "format": "double"
+                      }
+                    ]
+                  },
+                  "iat": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number",
+                        "format": "double"
+                      }
+                    ]
+                  },
+                  "jti": {
+                    "type": "string"
+                  },
+                  "iss": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": {},
+                "type": "object"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "required": [
+          "isValid",
+          "payload"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "ValidateJwtInput": {
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "FreeFormObject": {
         "properties": {},
         "type": "object",
-        "additionalProperties": {
-          "additionalProperties": true,
-          "type": "object"
-        }
-      },
-      "Proof": {
-        "properties": {
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "type": {
-            "type": "string",
-            "nullable": true
-          },
-          "nonce": {
-            "type": "string"
-          },
-          "signatureValue": {
-            "type": "string"
-          },
-          "creator": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "nonce",
-          "signatureValue",
-          "creator"
-        ],
-        "type": "object",
-        "additionalProperties": false
+        "additionalProperties": {}
       },
       "SignedCredential": {
-        "properties": {
-          "@context": {
-            "items": {
-              "$ref": "#/components/schemas/FreeFormObject"
-            },
-            "type": "array"
-          },
-          "id": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "issuer": {
-            "type": "string"
-          },
-          "issued": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "type": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "expires": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "claim": {
-            "$ref": "#/components/schemas/FreeFormObject"
-          },
-          "proof": {
-            "$ref": "#/components/schemas/Proof"
-          }
-        },
-        "required": [
-          "@context",
-          "issuer",
-          "issued",
-          "type",
-          "expires",
-          "claim",
-          "proof"
-        ],
-        "type": "object",
-        "additionalProperties": false
+        "$ref": "#/components/schemas/FreeFormObject"
       },
       "VerifyCredentialShareResponseOutput": {
         "properties": {
@@ -232,7 +217,14 @@ export default {
       "W3cCredential": {
         "properties": {
           "@context": {
-            "$ref": "#/components/schemas/FreeFormObject"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FreeFormObject"
+              },
+              {
+                "type": "string"
+              }
+            ]
           },
           "id": {
             "type": "string",
@@ -245,7 +237,7 @@ export default {
             "type": "array"
           },
           "holder": {
-            "oneOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/FreeFormObject"
               },
@@ -259,7 +251,11 @@ export default {
             "$ref": "#/components/schemas/FreeFormObject"
           },
           "credentialStatus": {
-            "$ref": "#/components/schemas/W3cCredentialStatus",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/W3cCredentialStatus"
+              }
+            ],
             "nullable": true
           },
           "issuanceDate": {
@@ -274,6 +270,21 @@ export default {
           },
           "proof": {
             "$ref": "#/components/schemas/W3cProof"
+          },
+          "credentialSchema": {
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "id"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -295,6 +306,9 @@ export default {
             },
             "type": "array",
             "minItems": 1
+          },
+          "issuerDidDocument": {
+            "$ref": "#/components/schemas/FreeFormObject"
           }
         },
         "required": [
@@ -308,12 +322,17 @@ export default {
           "error": {
             "type": "string"
           },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "isValid": {
             "type": "boolean"
           }
         },
         "required": [
-          "error",
           "isValid"
         ],
         "type": "object",
@@ -322,7 +341,14 @@ export default {
       "W3cPresentation": {
         "properties": {
           "@context": {
-            "$ref": "#/components/schemas/FreeFormObject"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FreeFormObject"
+              },
+              {
+                "type": "string"
+              }
+            ]
           },
           "id": {
             "type": "string",
@@ -361,11 +387,14 @@ export default {
         "properties": {
           "verifiablePresentation": {
             "$ref": "#/components/schemas/W3cPresentation"
+          },
+          "signedPresentation": {
+            "$ref": "#/components/schemas/W3cPresentation"
+          },
+          "challenge": {
+            "type": "string"
           }
         },
-        "required": [
-          "verifiablePresentation"
-        ],
         "type": "object",
         "additionalProperties": false
       },
@@ -381,6 +410,10 @@ export default {
         "type": "object",
         "additionalProperties": false
       },
+      "UrlType": {
+        "type": "string",
+        "pattern": "^https?:\\/\\/.*$"
+      },
       "CredentialRequirements": {
         "properties": {
           "type": {
@@ -388,6 +421,22 @@ export default {
               "type": "string"
             },
             "type": "array"
+          },
+          "constraints": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FreeFormObject"
+                },
+                "type": "array"
+              }
+            ]
           }
         },
         "required": [
@@ -396,11 +445,22 @@ export default {
         "type": "object",
         "additionalProperties": false
       },
+      "DidType": {
+        "type": "string",
+        "pattern": "did:.*"
+      },
+      "DateISOType": {
+        "type": "string",
+        "pattern": "\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+([+-][0-2]\\d:[0-5]\\d|Z)"
+      },
       "BuildCredentialRequestInput": {
         "properties": {
           "callbackUrl": {
-            "type": "string",
-            "pattern": "^https?:\\/\\/.*$",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UrlType"
+              }
+            ],
             "nullable": true
           },
           "credentialRequirements": {
@@ -410,23 +470,35 @@ export default {
             "type": "array"
           },
           "issuerDid": {
-            "type": "string",
-            "pattern": "did:(elem|jolo):.*",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DidType"
+              }
+            ],
             "nullable": true
           },
           "subjectDid": {
-            "type": "string",
-            "pattern": "did:(elem|jolo):.*",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DidType"
+              }
+            ],
             "nullable": true
           },
           "audienceDid": {
-            "type": "string",
-            "pattern": "did:(elem|jolo):.*",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DidType"
+              }
+            ],
             "nullable": true
           },
           "expiresAt": {
-            "type": "string",
-            "pattern": "\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+([+-][0-2]\\d:[0-5]\\d|Z)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateISOType"
+              }
+            ],
             "nullable": true
           },
           "nonce": {
@@ -445,30 +517,82 @@ export default {
   },
   "info": {
     "title": "affinity-verifier",
-    "version": "0.0.82",
+    "version": "0.34.1",
     "description": "Affinity verifier",
     "license": {
       "name": "ISC"
+    },
+    "contact": {
+      "name": "The Engineering Team",
+      "email": "nucleus.team@affinidi.com"
     }
   },
   "openapi": "3.0.0",
   "paths": {
+    "/verifier/validate-jwt": {
+      "post": {
+        "operationId": "ValidateJwt",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateJwtOutput"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "description": "Validates JWT object.\n\nreturns\n  isValid: boolean\n  payload: payload from JWT",
+        "tags": [
+          "Verifier"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Api-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateJwtInput"
+              }
+            }
+          }
+        }
+      }
+    },
     "/verifier/verify-share-response": {
       "post": {
         "operationId": "VerifyCredentialShareResponse",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VerifyCredentialShareResponseOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
-        "description": "Verifying JWT token (signature and expiration), validate each credential inside it (signature), validate response against request if requestToken was passed.\n\n`errors` contains list of error messages for invalid credentials.",
+        "description": "Verifying JWT token (signature and expiration), validate each credential\ninside it (signature), validate response against request if requestToken was passed.\n\n`errors` contains list of error messages for invalid credentials.",
         "summary": "Verifying share response token.",
         "tags": [
           "Verifier"
@@ -485,6 +609,7 @@ export default {
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -500,14 +625,14 @@ export default {
         "operationId": "VerifyCredentials",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VerifyCredentialOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
         "description": "Verifying Verifiable Credentials (signatures)\n\n`isValid` - true if all credentials verified\n`errors` contains list of error messages for invalid credentials.",
@@ -527,6 +652,7 @@ export default {
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -542,17 +668,17 @@ export default {
         "operationId": "VerifyPresentation",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VerifyPresentationOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
-        "description": "Verifying Verifiable Presentation (signatures)\n\n`isValid` - true if presentation verified\n`error` verificaction error.",
+        "description": "Verifying Verifiable Presentation (signatures)\nThe request body has three optional fields:\n- verifiablePresentation - VP with structure according to W3C\n- signedPresentation - signed VP with structure according to W3C\n- challenge - VP challenge, which the VP requester could optionally send\n  to check if it is the same as in VP. Otherwise, the check will be skipped.\n\nNOTE 1: You must use `verifiablePresentation` or `signedPresentation` as a request body input field.\n\nNOTE 2: VP challenge (according to VP model docs) could be any string. Endpoint allows only JWT challenge created\nusing `generatePresentationChallenge` of `@affinidi/wallet-core-sdk`. In that case, JWT will be processed correctly\nand will provide more security out of the box.\n\n`isValid` - true if presentation verified\n`error` verificaction error.",
         "summary": "Verifying VP",
         "tags": [
           "Verifier"
@@ -569,6 +695,7 @@ export default {
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -584,14 +711,14 @@ export default {
         "operationId": "BuildCredentialRequest",
         "responses": {
           "200": {
+            "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BuildCredentialRequestOutput"
                 }
               }
-            },
-            "description": "Ok"
+            }
           }
         },
         "description": "Build credential share request JWT object from input data.",
@@ -602,6 +729,7 @@ export default {
         "security": [],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {

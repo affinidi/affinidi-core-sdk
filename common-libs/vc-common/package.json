@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/vc-common",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "description": "Shared types and utilities for credential related libraries",
