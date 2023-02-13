@@ -139,7 +139,6 @@ parallel('CommonNetworkMember [OTP]', () => {
     const changeToken = await commonNetworkMember.initiateChangeEmail(newInbox.email, messageParameters)
     const changeUsernameCode = await waitForOtpCode(newInbox)
 
-
     await commonNetworkMember.completeChangeEmailOrPhone(changeToken, changeUsernameCode)
 
     const userInfo = await commonNetworkMember.getInfo()
