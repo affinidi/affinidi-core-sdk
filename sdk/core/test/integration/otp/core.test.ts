@@ -142,8 +142,8 @@ parallel('CommonNetworkMember [OTP]', () => {
 
     await commonNetworkMember.completeChangeEmailOrPhone(changeToken, changeUsernameCode)
 
-    const userCreateDate = await commonNetworkMember.getInfo()
-    expect(userCreateDate).to.be.a('string')
+    const userInfo = await commonNetworkMember.getInfo()
+    expect(userInfo.userCreateDate).to.be.a('string')
 
     await commonNetworkMember.logOut()
     // NOTE: try/catch added as a workaround because of issue NotAuthorizedException see https://github.com/aws-amplify/amplify-js/issues/9838
@@ -177,8 +177,8 @@ parallel('CommonNetworkMember [OTP]', () => {
     let commonNetworkMember = await AffinidiWallet.completeSignUp(options, signUpToken, signUpCode)
     checkIsWallet(commonNetworkMember)
 
-    const userCreateDate = await commonNetworkMember.getInfo()
-    expect(userCreateDate).to.be.a('string')
+    const userInfo = await commonNetworkMember.getInfo()
+    expect(userInfo.userCreateDate).to.be.a('string')
 
     await commonNetworkMember.logOut()
 
