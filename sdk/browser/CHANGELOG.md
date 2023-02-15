@@ -1,3 +1,5 @@
+# release 7.10.6 (2023-02-15)
+* bumped `core` version.
 # release 7.10.5 (2023-02-09)
 * bumped `core` version. bumped `common` lib version in dev dependencies
 # release 7.10.4 (2023-02-09)

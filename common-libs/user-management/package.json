@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/user-management",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "description": "User Management implementation for AWS Cognito",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -50,7 +50,7 @@
     "@affinidi/internal-api-clients": "^2.5.1",
     "@affinidi/platform-fetch": "^1.1.0",
     "@affinidi/platform-fetch-node": "^1.1.0",
-    "@affinidi/tools-common": "^1.4.0",
+    "@affinidi/tools-common": "^1.4.1",
     "@affinidi/common": "^2.13.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.258.0",
     "create-hash": "^1.2.0",
