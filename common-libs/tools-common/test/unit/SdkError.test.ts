@@ -1,6 +1,5 @@
 import SdkError from '../../src/SdkError'
 import { expect } from 'chai'
-import {before} from "mocha";
 
 describe('SdkError', () => {
   describe('#renderMessage', () => {

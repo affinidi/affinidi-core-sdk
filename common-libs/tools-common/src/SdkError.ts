@@ -52,9 +52,7 @@ export default class SdkError extends Error {
   }
 
   static renderMessage(message: string, context: any) {
-    const templateVariables = (message.match(/{{(.*?)}}/g) || []).map((x) =>
-      x.replace('{{', '').replace('}}', ''),
-    )
+    const templateVariables = (message.match(/{{(.*?)}}/g) || []).map((x) => x.replace('{{', '').replace('}}', ''))
 
     for (const templateVariable of templateVariables) {
       const isIncluded = context[templateVariable]
