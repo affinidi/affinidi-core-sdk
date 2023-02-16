@@ -17,7 +17,7 @@ import { credentialsV1, revocationList2020V1 } from '../factory/w3'
 import { resolvedDidDocument } from '../factory/resolveDidResponse'
 
 const options = {
-  registryUrl: 'https://affinity-registry.staging.affinity-project.org',
+  registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io',
 }
 
 const jwtObject = {
@@ -90,22 +90,22 @@ describe('Affinity', () => {
   })
 
   beforeEach(() => {
-    nock('https://affinity-registry.staging.affinity-project.org')
+    nock('https://affinity-registry.apse1.dev.affinidi.io')
       .post('/api/v1/did/resolve-did', /jolo/gi)
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: joloDidDocument })
 
-    nock('https://affinity-registry.staging.affinity-project.org')
+    nock('https://affinity-registry.apse1.dev.affinidi.io')
       .post('/api/v1/did/resolve-did', /elem/gi)
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: elemDidDocument })
 
-    nock('https://affinity-registry.staging.affinity-project.org')
+    nock('https://affinity-registry.apse1.dev.affinidi.io')
       .post('/api/v1/did/resolve-did', /polygon/gi)
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: testDids.polygon.didDocument })
 
-    nock('https://affinity-registry.staging.affinity-project.org')
+    nock('https://affinity-registry.apse1.dev.affinidi.io')
       .post('/api/v1/did/resolve-did', /web/gi)
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: testDids.web.didDocument })
@@ -656,13 +656,13 @@ describe('Affinity', () => {
     it('uses cache', async () => {
       const testDocument = { cache: 'test' }
 
-      const mock = nock('https://affinity-registry.cachetest1.affinity-project.org')
+      const mock = nock('https://affinity-registry.apse1.cachetest1.affinidi.io')
         .post('/api/v1/did/resolve-did', /cache-test/gi)
         .times(1)
         .reply(200, { didDocument: testDocument })
 
       const affinity1 = new Affinity(
-        { registryUrl: 'https://affinity-registry.cachetest1.affinity-project.org' },
+        { registryUrl: 'https://affinity-registry.apse1.cachetest1.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result1 = await affinity1.resolveDid('cache-test')
@@ -676,13 +676,13 @@ describe('Affinity', () => {
     it('correctly handles different urls', async () => {
       const testDocument = { cache: 'test' }
 
-      nock('https://affinity-registry.cachetest2.affinity-project.org')
+      nock('https://affinity-registry.apse1.cachetest2.affinidi.io')
         .post('/api/v1/did/resolve-did', /cache-test/gi)
         .times(1)
         .reply(200, { didDocument: testDocument })
 
       const affinity2 = new Affinity(
-        { registryUrl: 'https://affinity-registry.cachetest2.affinity-project.org' },
+        { registryUrl: 'https://affinity-registry.apse1.cachetest2.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result1 = await affinity2.resolveDid('cache-test1')
@@ -699,25 +699,25 @@ describe('Affinity', () => {
       const testDocument3 = { cache: 'test3' }
       const testDocument4 = { cache: 'test4' }
 
-      nock('https://affinity-registry.cachetest3.affinity-project.org')
+      nock('https://affinity-registry.apse1.cachetest3.affinidi.io')
         .post('/api/v1/did/resolve-did', /cache-test/gi)
         .times(1)
         .reply(200, { didDocument: testDocument3 })
 
-      nock('https://affinity-registry.cachetest4.affinity-project.org')
+      nock('https://affinity-registry.apse1.cachetest4.affinidi.io')
         .post('/api/v1/did/resolve-did', /cache-test/gi)
         .times(1)
         .reply(200, { didDocument: testDocument4 })
 
       const affinity3 = new Affinity(
-        { registryUrl: 'https://affinity-registry.cachetest3.affinity-project.org' },
+        { registryUrl: 'https://affinity-registry.apse1.cachetest3.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result3 = await affinity3.resolveDid('cache-test')
       expect(result3).to.deep.equal(testDocument3)
 
       const affinity4 = new Affinity(
-        { registryUrl: 'https://affinity-registry.cachetest4.affinity-project.org' },
+        { registryUrl: 'https://affinity-registry.apse1.cachetest4.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result4 = await affinity4.resolveDid('cache-test')
@@ -728,11 +728,11 @@ describe('Affinity', () => {
       const testDocument = { cache: 'test' }
 
       const affinity5 = new Affinity(
-        { registryUrl: 'https://affinity-registry.cachetest5.affinity-project.org' },
+        { registryUrl: 'https://affinity-registry.apse1.cachetest5.affinidi.io' },
         ecdsaCryptographyTools,
       )
 
-      nock('https://affinity-registry.cachetest5.affinity-project.org')
+      nock('https://affinity-registry.apse1.cachetest5.affinidi.io')
         .post('/api/v1/did/resolve-did', /cache-test/gi)
         .times(1)
         .reply(500, { message: 'first call fail' })
@@ -743,7 +743,7 @@ describe('Affinity', () => {
         expect(error._originalError.message).to.equal('first call fail')
       }
 
-      nock('https://affinity-registry.cachetest5.affinity-project.org')
+      nock('https://affinity-registry.apse1.cachetest5.affinidi.io')
         .post('/api/v1/did/resolve-did', /cache-test/gi)
         .times(1)
         .reply(200, { didDocument: testDocument })

@@ -8,11 +8,11 @@ import { signedCredentialWithPolygon, signedCredentialWithWeb } from '../factory
 import { webDidDocument } from '../factory/didDocument'
 
 const { TEST_SECRETS } = process.env
-const { STAGING_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
+const { DEV_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
 
 const options = {
-  registryUrl: 'https://affinity-registry.staging.affinity-project.org',
-  apiKey: STAGING_API_KEY_HASH,
+  registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io',
+  apiKey: DEV_API_KEY_HASH,
 }
 
 const affinity = new Affinity(options, ecdsaCryptographyTools)

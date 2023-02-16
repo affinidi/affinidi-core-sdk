@@ -20,7 +20,7 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
    * 5. anchor DID with DID document ID from IPFS
    * @param dependencies - static dependencies
    * @param password - encryption key which will be used to encrypt randomly created seed/keys pair
-   * @param inputOptions - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+   * @param inputOptions - optional parameter { registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io' }
    * @param keyOptions - list of key types (rsa and bbs allowed, ecdsa - default)
    * @returns
    *
@@ -48,7 +48,7 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
   /**
    * @description Initilizes instance of SDK from seed
    * @param dependencies - static dependencies
-   * @param inputOptions - parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+   * @param inputOptions - parameter { registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io' }
    * @param encryptedSeed - seed for derive keys in string hex format
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK

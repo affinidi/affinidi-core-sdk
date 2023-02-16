@@ -25,8 +25,8 @@ import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 import { extractSDKVersion } from '../../../src/_helpers'
 import { testPlatformToolsWithBadEncryption } from '../../helpers/testPlatformToolsWithBadEncryption'
 
-const affinidiVaultUrl = resolveUrl(Service.VAULT, 'staging')
-const keyStorageUrl = resolveUrl(Service.KEY_STORAGE, 'staging')
+const affinidiVaultUrl = resolveUrl(Service.VAULT, 'dev')
+const keyStorageUrl = resolveUrl(Service.KEY_STORAGE, 'dev')
 
 let walletPassword: string
 

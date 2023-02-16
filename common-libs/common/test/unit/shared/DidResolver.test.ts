@@ -11,15 +11,15 @@ import {did, did1, did2, response} from '../../factory/resolveDidResponse'
 use(sinonChai)
 
 const {TEST_SECRETS} = process.env
-const {STAGING_API_KEY_HASH} = JSON.parse(TEST_SECRETS)
+const {DEV_API_KEY_HASH} = JSON.parse(TEST_SECRETS)
 
 const DEFAULT_CACHE_MAX_SIZE = 3
 const DEFAULT_CACHE_TTL_IN_MIN = 1440
 
 describe('LocalDidResolver with cache', () => {
   const didResolver = new LocalDidResolver({
-    registryUrl: resolveUrl(Service.REGISTRY, 'staging'),
-    accessApiKey: STAGING_API_KEY_HASH,
+    registryUrl: resolveUrl(Service.REGISTRY, 'dev'),
+    accessApiKey: DEV_API_KEY_HASH,
     useCache: true,
     cacheMaxSize: DEFAULT_CACHE_MAX_SIZE,
     cacheTtlInMin: DEFAULT_CACHE_TTL_IN_MIN * 60 * 1000,
@@ -103,8 +103,8 @@ describe('LocalDidResolver with cache', () => {
 
 describe('LocalDidResolver without cache', () => {
   const didResolver1 = new LocalDidResolver({
-    registryUrl: resolveUrl(Service.REGISTRY, 'staging'),
-    accessApiKey: STAGING_API_KEY_HASH,
+    registryUrl: resolveUrl(Service.REGISTRY, 'dev'),
+    accessApiKey: DEV_API_KEY_HASH,
     useCache: false,
   })
 

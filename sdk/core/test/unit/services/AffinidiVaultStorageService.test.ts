@@ -17,8 +17,8 @@ import { VaultCredential } from '../../../src/dto/vault.dto'
 import { expect } from 'chai'
 import { extractSDKVersion } from '../../../src/_helpers'
 
-const affinidiVaultUrl = resolveUrl(Service.VAULT, 'staging')
-const registryUrl = resolveUrl(Service.REGISTRY, 'staging')
+const affinidiVaultUrl = resolveUrl(Service.VAULT, 'dev')
+const registryUrl = resolveUrl(Service.REGISTRY, 'dev')
 
 let encryptionKey: string
 let encryptedSeed: string
