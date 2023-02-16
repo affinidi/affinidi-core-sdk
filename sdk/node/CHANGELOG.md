@@ -1,3 +1,5 @@
+# release 7.11.6 (2023-02-15)
+* bumped `core` version.
 # release 7.11.5 (2023-02-09)
 * bumped `core` version and `vc-common`, `vc-data` libs version.
 * bumped `common` lib version in dev dependencies.

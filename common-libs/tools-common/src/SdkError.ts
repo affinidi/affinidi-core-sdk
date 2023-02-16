@@ -16,6 +16,9 @@ export default class SdkError extends Error {
       throw new Error(`Empty error data`)
     }
 
+    const message = SdkError.renderMessage(errorData.message, context)
+    errorData.message = message
+
     super(errorData.message)
 
     this._code = errorData.code
@@ -46,6 +49,27 @@ export default class SdkError extends Error {
 
   get isSdkError() {
     return true
+  }
+
+  static renderMessage(message: string, context: any) {
+    const templateVariables = (message.match(/{{(.*?)}}/g) || []).map((x) => x.replace('{{', '').replace('}}', ''))
+
+    for (const templateVariable of templateVariables) {
+      const isIncluded = context[templateVariable]
+      const regex = new RegExp(`{{${templateVariable}}}`, 'g')
+
+      if (isIncluded) {
+        message = message.replace(regex, context[templateVariable])
+      } else {
+        message = message.replace(regex, SdkError.undefinedContextVariable)
+      }
+    }
+
+    return message
+  }
+
+  static get undefinedContextVariable() {
+    return 'UNDEFINED'
   }
 }
 

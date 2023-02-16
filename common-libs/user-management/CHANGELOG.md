@@ -1,3 +1,6 @@
+# release 2.5.4 (2023-02-15)
+* added `errors` getter with existing errors codes list for `SdkErrorFromCode`
+* bumped `tools-common`
 # release 2.5.3 (2023-02-09)
 * bumped `common`, `tools-common`, `internal-api-clients` libs
 # release 2.5.2 (2023-02-03)

@@ -1,3 +1,5 @@
+# release 7.14.1 (2023-02-15)
+* bumped `user-management`, `tools-common` libs versions
 # release 7.14.0 (2023-02-09)
 * Added optional field `challenge` to the `verifyPresentation` method of the `BaseNetworkMember` class.
 * Now the `VP` requester can send an initial `challenge` to compare
