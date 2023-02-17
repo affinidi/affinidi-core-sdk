@@ -20,10 +20,10 @@ const { PASSWORD, COGNITO_PASSWORD, COGNITO_USERNAME, ENCRYPTED_SEED_JOLO } = te
 const password = PASSWORD
 const encryptedSeed = ENCRYPTED_SEED_JOLO
 
-const cognitoUsernameStaging = COGNITO_USERNAME
+const cognitoUsernameDev = COGNITO_USERNAME
 const nonExistingUser = 'non_existing@email.com'
 const cognitoPassword = COGNITO_PASSWORD
-const cognitoUsername = cognitoUsernameStaging
+const cognitoUsername = cognitoUsernameDev
 
 const { keyStorageUrl } = options
 let userManagementService: UserManagementService

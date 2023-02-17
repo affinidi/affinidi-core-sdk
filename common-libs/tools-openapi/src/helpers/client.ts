@@ -110,7 +110,7 @@ const executeByOptions = async (
     if (isContentTypeHTML) {
       const errorText = await response.text()
       throw new SdkError(
-        { code: 'COR-0', message: errorText },
+        { code: 'COR-0', message: errorText + url },
         {},
         Object.assign({}, { httpStatusCode: status, errorText }),
       )
