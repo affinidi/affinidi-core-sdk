@@ -28,7 +28,7 @@ describe('Client Helpers', () => {
     nock.cleanAll()
   })
 
-  it.skip('should throw and not parse response body as JSON when content-type text/html (not 200)', async () => {
+  it('should throw and not parse response body as JSON when content-type text/html (not 200)', async () => {
     nock('http://fake.url/').post('/api/v1/client-helper-test').reply(413, ngnixError, { 'Content-type': 'text/html' })
 
     try {
