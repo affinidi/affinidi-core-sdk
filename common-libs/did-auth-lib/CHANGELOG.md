@@ -1,3 +1,6 @@
+# release 2.6.0 (2023-02-17)
+* added .env.example for testing the lib locally.
+* `DEV_API_KEY_HASH` variable must be set up as a part of `TEST_SECRETS` locally.
 # release 2.5.5 (2023-02-09)
 * bumped `common`, `tools-common`, `internal-api-clients` libs versions
 # release 2.5.3 (2023-01-20)
