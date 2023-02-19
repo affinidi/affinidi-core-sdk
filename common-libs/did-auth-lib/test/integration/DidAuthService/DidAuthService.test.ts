@@ -3,11 +3,13 @@ import { expect } from 'chai'
 import { JwtService } from '@affinidi/tools-common'
 import { Env } from '@affinidi/url-resolver'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
-import { verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid, verifierDid } from './../../factory/verifier'
-import { holderEncryptedSeed, holderEncryptionKey, holderDid } from './../../factory/holder'
+import { verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid, verifierDid } from '../../factory/verifier'
+import { holderEncryptedSeed, holderEncryptionKey, holderDid } from '../../factory/holder'
+const { TEST_SECRETS } = process.env
+const { DEV_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
 const env = {
-  environment: <Env>'staging',
-  accessApiKey: '92856d9a1dbe5eeb4517c813990fff8c8bffc3dc75226bfd66f091ccd45e002d',
+  environment: <Env>'dev',
+  accessApiKey: DEV_API_KEY_HASH,
 }
 
 module.exports = function () {

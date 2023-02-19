@@ -4,17 +4,17 @@ import { expect } from 'chai'
 import { JwtService } from '@affinidi/tools-common'
 import { Env, resolveUrl, Service } from '@affinidi/url-resolver'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
-import { mockVerifierElemDidDocument } from './../../factory/mockVerifierElemDidDocument'
-import { mockHolderElemDidDocument } from './../../factory/mockHolderElemDidDocument'
-import { verifierDid, verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid } from './../../factory/verifier'
-import { holderDid, holderEncryptedSeed, holderEncryptionKey, holderFullDid } from './../../factory/holder'
+import { mockVerifierElemDidDocument } from '../../factory/mockVerifierElemDidDocument'
+import { mockHolderElemDidDocument } from '../../factory/mockHolderElemDidDocument'
+import { verifierDid, verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid } from '../../factory/verifier'
+import { holderDid, holderEncryptedSeed, holderEncryptionKey, holderFullDid } from '../../factory/holder'
 import DidAuthServerService from '../../../src/DidAuthService/DidAuthServerService'
 import Signer from '../../../src/shared/Signer'
 import { Affinidi, KeysService, LocalKeyVault } from '@affinidi/common'
 import DidAuthClientService from '../../../src/DidAuthService/DidAuthClientService'
 
 const env = {
-  environment: <Env>'staging',
+  environment: <Env>'dev',
   accessApiKey: 'mockAccessApiKeyToAffinidiRegistry1',
 }
 
@@ -122,11 +122,11 @@ describe('AffinidiDidAuthService', () => {
   it('#verifyDidAuthResponse', async () => {
     const { environment, accessApiKey } = env
 
-    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
       .post('/api/v1/did/resolve-did', /elem/gi)
       .reply(200, mockVerifierElemDidDocument)
 
-    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
       .post('/api/v1/did/resolve-did', /elem/gi)
       .reply(200, mockHolderElemDidDocument)
 
@@ -161,11 +161,11 @@ describe('AffinidiDidAuthService', () => {
   it('#verifyDidAuthResponse (new way)', async () => {
     const { environment, accessApiKey } = env
 
-    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
       .post('/api/v1/did/resolve-did', /elem/gi)
       .reply(200, mockVerifierElemDidDocument)
 
-    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
       .post('/api/v1/did/resolve-did', /elem/gi)
       .reply(200, mockHolderElemDidDocument)
 
@@ -185,11 +185,11 @@ describe('AffinidiDidAuthService', () => {
   it('#verifyDidAuthResponse - `didAuthResponseToken` without `requestToken` in jwt `payload` should throw error', async () => {
     const { environment, accessApiKey } = env
 
-    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
       .post('/api/v1/did/resolve-did', /elem/gi)
       .reply(200, mockVerifierElemDidDocument)
 
-    nock(`https://affinity-registry.${environment}.affinity-project.org`)
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
       .post('/api/v1/did/resolve-did', /elem/gi)
       .reply(200, mockHolderElemDidDocument)
 

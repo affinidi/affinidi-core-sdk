@@ -29,7 +29,7 @@ export class Affinity {
     this._didResolver =
       options.didResolver ??
       new LocalDidResolver({
-        registryUrl: options.registryUrl ?? resolveUrl(Service.REGISTRY, 'staging'),
+        registryUrl: options.registryUrl ?? resolveUrl(Service.REGISTRY, 'dev'),
         accessApiKey: options.apiKey,
         useCache: options.useCache ?? true,
         cacheMaxSize: options.cacheMaxSize,
@@ -38,7 +38,7 @@ export class Affinity {
       })
     this._digestService = new DigestService()
     this._metricsService = new MetricsService({
-      metricsUrl: options.metricsUrl ?? resolveUrl(Service.METRICS, 'staging'),
+      metricsUrl: options.metricsUrl ?? resolveUrl(Service.METRICS, 'dev'),
       accessApiKey: options.apiKey,
       component: options.component || EventComponent.AffinidiCommon,
     })

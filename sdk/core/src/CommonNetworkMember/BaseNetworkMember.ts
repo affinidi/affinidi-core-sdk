@@ -198,7 +198,7 @@ export abstract class BaseNetworkMember {
    * 5. anchor DID with DID document ID from IPFS
    * @param dependencies
    * @param password - encryption key which will be used to encrypt randomly created seed/keys pair
-   * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+   * @param options - optional parameter { registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io' }
    * @param keyOptions
    * @returns
    *

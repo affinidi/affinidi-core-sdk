@@ -15,7 +15,7 @@ export const createLegacyWalletFactories = (
     /**
      * @description Checks if registration for the user was completed
      * @param username - a valid email, phone number or arbitrary username
-     * @param options - object with environment, staging is default { env: 'staging' }
+     * @param options - object with environment, dev is default { env: 'dev' }
      * @returns `true` if user is uncofirmed in Cognito, and `false` otherwise.
      * @deprecated
      */
@@ -26,7 +26,7 @@ export const createLegacyWalletFactories = (
     /**
      * @description Initilizes instance of SDK from seed
      * @param seedHexWithMethod - seed for derive keys in string hex format
-     * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+     * @param options - optional parameter { registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io' }
      * @param password - optional password, will be generated, if not provided
      * @returns initialized instance of SDK
      * @deprecated
@@ -53,7 +53,7 @@ export const createLegacyWalletFactories = (
      * 4. store DID document in IPFS
      * 5. anchor DID with DID document ID from IPFS
      * @param password - encryption key which will be used to encrypt randomly created seed/keys pair
-     * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+     * @param options - optional parameter { registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io' }
      * @returns
      *
      * did - hash from public key (your decentralized ID)

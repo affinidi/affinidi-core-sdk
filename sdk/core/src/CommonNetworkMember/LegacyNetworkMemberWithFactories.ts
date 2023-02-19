@@ -42,7 +42,7 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   /**
    * @description Checks if registration for the user was completed
    * @param username - a valid email, phone number or arbitrary username
-   * @param options - object with environment, staging is default { env: 'staging' }
+   * @param inputOptions - object with environment, dev is default { env: 'dev' }
    * @returns `true` if user is uncofirmed in Cognito, and `false` otherwise.
    */
   static async isUserUnconfirmed(username: string, inputOptions: SdkOptions) {
@@ -59,7 +59,7 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   /**
    * @description Initilizes instance of SDK from seed
    * @param seedHexWithMethod - seed for derive keys in string hex format
-   * @param options - optional parameter { registryUrl: 'https://affinity-registry.dev.affinity-project.org' }
+   * @param inputOptions - optional parameter { registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io' }
    * @param password - optional password, will be generated, if not provided
    * @returns initialized instance of SDK
    */

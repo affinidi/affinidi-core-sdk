@@ -359,7 +359,7 @@ describe('CommonNetworkMember', () => {
     const [, didMethod] = updatingDid.split(':')
     expect(didMethod).to.be.equal(joloDidMethod)
 
-    // TODO: when registry with conuntTransaction endpoint will be at staging - change to default env
+    // TODO: when registry with conuntTransaction endpoint will be at dev - change to default env
     const commonNetworkMember = new AffinidiWallet(password, updatingEncryoptedSeed, options)
     const didDocument = await commonNetworkMember.resolveDid(updatingDid)
 
@@ -1101,7 +1101,7 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#getSignupCredentials', async () => {
-    // NOTE: Get full options because UserManagementService will use staging variables
+    // NOTE: Get full options because UserManagementService will use dev variables
     //       and `options` has only accessApiKey and env
     //       This is important for testing against different environments
     const fullOptions = getAllOptionsForEnvironment()
