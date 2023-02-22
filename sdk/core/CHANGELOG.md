@@ -1,3 +1,5 @@
+# release 7.14.2 (2023-02-22)
+* update VC type to support multiple(array) proof.
 # release 7.14.1 (2023-02-15)
 * bumped `user-management`, `tools-common` libs versions
 # release 7.14.0 (2023-02-09)
