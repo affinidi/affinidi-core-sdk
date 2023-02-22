@@ -278,8 +278,7 @@ export class SignedCredential {
   credentialSubject?: unknown
 
   @IsDefined()
-  @IsObject()
-  proof: Proof
+  proof: Proof | Proof[]
 
   @IsOptional()
   @IsObject()
