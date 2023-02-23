@@ -1,3 +1,5 @@
+# release 1.4.2 (2023-02-23)
+* added COR-33 & COR-34 errors
 # release 1.4.1 (2023-02-15)
 * fixed error message context rendering for `SdkError` class.
 # release 1.4.0 (2023-02-09)

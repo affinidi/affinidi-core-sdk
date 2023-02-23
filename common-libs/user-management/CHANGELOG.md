@@ -1,3 +1,5 @@
+# release 2.5.5 (2023-02-23)
+* added COR-33 & COR-34 error handling
 # release 2.5.4 (2023-02-15)
 * added `errors` getter with existing errors codes list for `SdkErrorFromCode`
 * bumped `tools-common`
