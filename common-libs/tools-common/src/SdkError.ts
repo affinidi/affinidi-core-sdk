@@ -247,4 +247,14 @@ export const commonErrors = {
     message: 'Too many invalid sing-in requests were sent, sing-in may be temporary blocked.',
     httpStatusCode: 400,
   },
+  'COR-33': {
+    type: 'ApplicationError',
+    message: 'Code delivery failed. Please try again',
+    httpStatusCode: 500,
+  },
+  'COR-34': {
+    type: 'InvalidParametersError',
+    message: 'Invalid phone number format',
+    httpStatusCode: 400,
+  },
 } as const
