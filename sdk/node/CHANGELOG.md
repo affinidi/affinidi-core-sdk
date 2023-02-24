@@ -1,3 +1,5 @@
+# release 7.11.8 (2023-02-23)
+* updated dependencies versions
 # release 7.11.7 (2023-02-22)
 * update VC type to support multiple(array) proof.
 # release 7.11.6 (2023-02-15)

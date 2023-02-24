@@ -101,6 +101,10 @@ export class UserManagementService {
       case SignUpResult.UnconfirmedUsernameExists:
         await this._keyStorageApiService.adminDeleteUnconfirmedUser({ username })
         return this._signUp(usernameWithAttributes, password, messageParameters)
+      case SignUpResult.CodeDeliveryFailure:
+        throw new SdkErrorFromCode('COR-33')
+      case SignUpResult.InvalidPhoneNumberFormat:
+        throw new SdkErrorFromCode('COR-34')
       default:
         throw new DefaultResultError(result)
     }

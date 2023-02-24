@@ -54,6 +54,7 @@ const INVALID_PASSWORD_EXCEPTION = 'InvalidPasswordException'
 const INVALID_PARAMETER_EXCEPTION = 'InvalidParameterException'
 const NOT_AUTHORIZED_EXCEPTION = 'NotAuthorizedException'
 const USER_LAMBDA_VALIDATION_EXCEPTION = 'UserLambdaValidationException'
+const CODE_DELIVERY_FAILURE_EXCEPTION = 'CodeDeliveryFailureException'
 
 type CognitoCommand = new (inp: any) => AwsCommand<any, any>
 
@@ -707,6 +708,50 @@ describe('UserManagementService', () => {
       const { code, httpStatusCode } = responseError
 
       expect(code).to.eql('COR-6')
+      expect(httpStatusCode).to.eql(400)
+    })
+
+    it('throws `COR-33 / 500` when CodeDeliveryFailureException', async () => {
+      const error = { name: CODE_DELIVERY_FAILURE_EXCEPTION }
+
+      stubMethod(INITIATE_AUTH, null, { name: USER_NOT_FOUND_EXCEPTION })
+      stubMethod(SIGN_UP, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      let responseError: any
+
+      try {
+        await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code, httpStatusCode } = responseError
+
+      expect(code).to.eql('COR-33')
+      expect(httpStatusCode).to.eql(500)
+    })
+
+    it('throws `COR-34 / 400` when InvalidParameterException and message eql to "Invalid phone number format"', async () => {
+      const error = { name: INVALID_PARAMETER_EXCEPTION, message: 'Invalid phone number format.' }
+
+      stubMethod(INITIATE_AUTH, null, { name: USER_NOT_FOUND_EXCEPTION })
+      stubMethod(SIGN_UP, null, error)
+
+      const userManagementService = new UserManagementService(options, dependencies)
+
+      let responseError: any
+
+      try {
+        await userManagementService.initiateSignUpWithEmailOrPhone(email, 'password', undefined)
+      } catch (error) {
+        responseError = error
+      }
+
+      const { code, httpStatusCode } = responseError
+
+      expect(code).to.eql('COR-34')
       expect(httpStatusCode).to.eql(400)
     })
 

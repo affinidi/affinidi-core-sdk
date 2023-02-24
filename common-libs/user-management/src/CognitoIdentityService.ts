@@ -27,6 +27,8 @@ export enum SignUpResult {
   UnconfirmedUsernameExists,
   ConfirmedUsernameExists,
   InvalidPassword,
+  CodeDeliveryFailure,
+  InvalidPhoneNumberFormat,
 }
 
 export enum LogInWithRefreshTokenResult {
@@ -400,6 +402,12 @@ export class CognitoIdentityService {
 
         case 'InvalidPasswordException':
           return SignUpResult.InvalidPassword
+        case 'CodeDeliveryFailureException':
+          return SignUpResult.CodeDeliveryFailure
+        case 'InvalidParameterException': {
+          if (error.message?.includes('Invalid phone number format')) return SignUpResult.InvalidPhoneNumberFormat
+          throw error
+        }
 
         default:
           throw error
