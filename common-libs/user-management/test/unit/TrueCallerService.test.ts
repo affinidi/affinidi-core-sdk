@@ -28,11 +28,11 @@ describe('Truecaller service', () => {
     expect(verifier).to.be.eq(testPayload.verifier)
   })
 
-  it('should parse payload with international symbols of `Truecaller` profile/token',  () => {
+  it('should parse payload with international symbols of `Truecaller` profile/token', () => {
     const payload = {
       ...testPayload,
       firstName: 'को',
-      lastName: 'ब्रा'
+      lastName: 'ब्रा',
     }
     const token = generateTrueCallerToken(payload)
     const trucallerService = new TrueCallerService()
