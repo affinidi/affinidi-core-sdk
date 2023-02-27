@@ -1,3 +1,5 @@
+# release 7.14.4 (2023-02-27)
+* updated dependency version
 # release 7.14.3 (2023-02-23)
 * updated dependencies versions
 # release 7.14.2 (2023-02-22)

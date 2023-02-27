@@ -1,3 +1,5 @@
+# release 2.5.6 (2023-02-27)
+* fixed truecaller hindi decoding
 # release 2.5.5 (2023-02-23)
 * added COR-33 & COR-34 error handling
 # release 2.5.4 (2023-02-15)
