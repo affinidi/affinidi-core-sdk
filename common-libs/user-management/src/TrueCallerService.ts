@@ -89,7 +89,7 @@ export class TrueCallerService {
     verifier: string
     phoneNumber: string
   } {
-    const payloadStr = Buffer.from(profileTrueCaller.payload, 'base64').toString('ascii')
+    const payloadStr = Buffer.from(profileTrueCaller.payload, 'base64').toString('utf8')
     const payload: ProfileTrueCallerPayload = JSON.parse(payloadStr)
     const { verifier, requestTime, phoneNumber } = payload
     const timeStamp = this.normalizeRequestTime(requestTime)
