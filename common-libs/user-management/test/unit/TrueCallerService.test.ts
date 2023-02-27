@@ -27,4 +27,20 @@ describe('Truecaller service', () => {
     expect(timeStamp).to.be.eq(testPayload.requestTime)
     expect(verifier).to.be.eq(testPayload.verifier)
   })
+
+  it('should parse payload with international symbols of `Truecaller` profile/token',  () => {
+    const payload = {
+      ...testPayload,
+      firstName: 'को',
+      lastName: 'ब्रा'
+    }
+    const token = generateTrueCallerToken(payload)
+    const trucallerService = new TrueCallerService()
+
+    const { timeStamp, verifier, phoneNumber } = trucallerService.parsePayloadProfileTrueCaller(token)
+
+    expect(phoneNumber).to.be.eq(payload.phoneNumber)
+    expect(timeStamp).to.be.eq(payload.requestTime)
+    expect(verifier).to.be.eq(payload.verifier)
+  })
 })

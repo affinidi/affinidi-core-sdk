@@ -15,7 +15,7 @@ export const testPayload: ProfileTrueCallerPayload = {
   verifier: '2alivAkHjJD/S5OZ0X9hHZb3PMedUYnj96z6qK9r6yo=',
 }
 
-export const generateTrueCallerToken = (): ProfileTrueCaller => {
+export const generateTrueCallerToken = (payload: ProfileTrueCallerPayload = testPayload): ProfileTrueCaller => {
   // default TrueCaller signature algorithm
   const signatureAlgorithm = 'SHA512withRSA'
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
@@ -34,7 +34,7 @@ export const generateTrueCallerToken = (): ProfileTrueCaller => {
   process.env.TEST_PUBLICKEY_TRUE_CALLER = stringifiedPubKey
   console.log('`Truecaller` public key was set as TEST_PUBLICKEY_TRUE_CALLER')
 
-  const payloadStr = JSON.stringify(testPayload)
+  const payloadStr = JSON.stringify(payload)
   const payloadBase64 = Buffer.from(payloadStr).toString('base64')
   const paylodaBuffer = Buffer.from(payloadBase64)
 
