@@ -1,3 +1,5 @@
+# release 7.14.5 (2023-03-06)
+* updated `decryptCredential` to use Promise.all
 # release 7.14.4 (2023-02-27)
 * updated dependency version
 # release 7.14.3 (2023-02-23)
