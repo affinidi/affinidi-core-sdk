@@ -81,7 +81,7 @@ export default class AffinidiVaultEncryptionService {
   async decryptCredentials(encryptedCredentials: VaultCredential[]): Promise<CredentialLike[]> {
     let credentials: CredentialLike[] = []
 
-    const promises = encryptedCredentials.map(async (encryptedCredential) => {
+    const decryptCredentialsPromises = encryptedCredentials.map(async (encryptedCredential) => {
       try {
         const result = await this.decryptCredential(encryptedCredential)
         return result
@@ -89,7 +89,7 @@ export default class AffinidiVaultEncryptionService {
         console.log('error decryptCredential', error)
       }
     })
-    const data = await Promise.all(promises)
+    const data = await Promise.all(decryptCredentialsPromises)
     credentials = data.filter((credential) => !!credential)
     return credentials
   }
