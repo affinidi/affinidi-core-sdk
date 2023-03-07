@@ -58,6 +58,7 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
     inputOptions: SdkOptions,
     encryptedSeed: string,
     password: string,
+    accountNumber?: number,
   ) {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -66,6 +67,6 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    return new NetworkMemberWithoutCognito(withDidData({ password, encryptedSeed }), dependencies, options)
+    return new NetworkMemberWithoutCognito(withDidData({ password, encryptedSeed, accountNumber }), dependencies, options)
   }
 }
