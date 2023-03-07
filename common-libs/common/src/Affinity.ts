@@ -425,8 +425,9 @@ export class Affinity {
     encryptedSeed: string,
     encryptionKey: string,
     keySuiteType: KeySuiteType = 'ecdsa',
+    accountNumber?: number,
   ): Promise<VCV1<TSubject>> {
-    const keyService = new KeysService(encryptedSeed, encryptionKey)
+    const keyService = new KeysService(encryptedSeed, encryptionKey, accountNumber)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
     const did = didDocumentService.getMyDid()
     const mainKeyId = didDocumentService.getKeyId()
@@ -537,8 +538,9 @@ export class Affinity {
     vp: VPV1Unsigned
     encryption: { seed: string; key: string }
     purpose: { challenge: string; domain: string }
+    accountNumber?: number
   }): Promise<VPV1> {
-    const keyService = new KeysService(opts.encryption.seed, opts.encryption.key)
+    const keyService = new KeysService(opts.encryption.seed, opts.encryption.key, opts.accountNumber)
     const { seed, didMethod } = keyService.decryptSeed()
 
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
@@ -549,7 +551,7 @@ export class Affinity {
       holder: {
         did,
         keyId: didDocumentService.getKeyId(),
-        privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod).toString('hex'),
+        privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod, opts.accountNumber).toString('hex'),
       },
       getSignSuite: ({ keyId, privateKey, controller }) => {
         return new Secp256k1Signature({
@@ -607,8 +609,8 @@ export class Affinity {
   }
 
   // to be deprecated and replaced with instance method
-  static signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
-    const keyService = new KeysService(encryptedSeed, encryptionKey)
+  static signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string, accountNumber?: number) {
+    const keyService = new KeysService(encryptedSeed, encryptionKey, accountNumber)
     return keyService.signJWT(jwtObject)
   }
 

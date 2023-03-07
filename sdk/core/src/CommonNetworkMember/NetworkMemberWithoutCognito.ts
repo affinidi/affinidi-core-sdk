@@ -51,6 +51,7 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
    * @param inputOptions - parameter { registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io' }
    * @param encryptedSeed - seed for derive keys in string hex format
    * @param password - optional password, will be generated, if not provided
+   * @param accountNumber - optional parameter
    * @returns initialized instance of SDK
    */
   static async openWalletByEncryptedSeed(
@@ -58,6 +59,7 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
     inputOptions: SdkOptions,
     encryptedSeed: string,
     password: string,
+    accountNumber?: number,
   ) {
     await ParametersValidator.validate([
       { isArray: false, type: SdkOptions, isRequired: true, value: inputOptions },
@@ -66,6 +68,10 @@ export class NetworkMemberWithoutCognito extends BaseNetworkMember {
     ])
 
     const options = getOptionsFromEnvironment(inputOptions)
-    return new NetworkMemberWithoutCognito(withDidData({ password, encryptedSeed }), dependencies, options)
+    return new NetworkMemberWithoutCognito(
+      withDidData({ password, encryptedSeed, accountNumber }),
+      dependencies,
+      options,
+    )
   }
 }
