@@ -8,14 +8,16 @@ const keccak256 = require('keccak256')
 export default class JoloDidDocument {
   private readonly _keysService: KeysService
   private readonly _signingKey: string
+  private readonly _accountNumber: number
 
-  constructor(keysService: KeysService) {
+  constructor(keysService: KeysService, accountNumber?: number) {
     this._signingKey = 'keys-1'
     this._keysService = keysService
+    this._accountNumber = accountNumber
   }
 
   private _getDid(seedHex: string) {
-    const publicKey = KeysService.getPublicKey(seedHex, 'jolo')
+    const publicKey = KeysService.getPublicKey(seedHex, 'jolo', this._accountNumber)
     const prefix = 'did:jolo:'
     const suffix = keccak256(publicKey)
 
@@ -37,7 +39,7 @@ export default class JoloDidDocument {
     const { seed } = this._keysService.decryptSeed()
     const seedHex = seed.toString('hex')
 
-    const publicKey = KeysService.getPublicKey(seedHex, 'jolo')
+    const publicKey = KeysService.getPublicKey(seedHex, 'jolo', this._accountNumber)
 
     const did = this._getDid(seedHex)
     const keyId = `${did}#${this._signingKey}`

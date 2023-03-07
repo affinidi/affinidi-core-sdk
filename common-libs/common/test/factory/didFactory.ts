@@ -56,8 +56,14 @@ export const generateTestDIDs = async () => {
   didDocumentService = DidDocumentService.createDidDocumentService(keysService)
   const elemDidDocument = await didDocumentService.getDidDocument(didResolverMock)
   const elemDid = await didDocumentService.getMyDid()
-
   const elemPublicKey = KeysService.getPublicKey(elemSeedHex, 'elem').toString('hex')
+
+  keysService = new KeysService(elemEncryptedSeed, password, 1)
+
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const elemDidDocumentWithAccountNumber1 = await didDocumentService.getDidDocument(didResolverMock)
+  const elemDidWithAccountNumber1 = await didDocumentService.getMyDid()
+  const elemPublicKeyWithAccountNumber1 = KeysService.getPublicKey(elemSeedHex, 'elem', 1).toString('hex')
 
   const polygonSeed = await randomBytes(32)
   const polygonSeedHex = polygonSeed.toString('hex')
@@ -195,6 +201,15 @@ export const generateTestDIDs = async () => {
       did: elemDid,
       didDocument: elemDidDocument,
       publicKey: elemPublicKey,
+      elemDidForLocalResolving,
+    },
+    elemAccount1: {
+      seed: elemSeed,
+      encryptedSeed: elemEncryptedSeed,
+      seedHex: elemSeedHex,
+      did: elemDidWithAccountNumber1,
+      didDocument: elemDidDocumentWithAccountNumber1,
+      publicKey: elemPublicKeyWithAccountNumber1,
       elemDidForLocalResolving,
     },
     polygon: {

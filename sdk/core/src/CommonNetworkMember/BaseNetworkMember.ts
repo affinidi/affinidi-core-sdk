@@ -72,12 +72,14 @@ export type ConstructorUserData = {
   did: string
   didDocumentKeyId: string
   encryptedSeed: string
-  password: string
+  password: string,
+  accountNumber: number
 }
 
 @profile()
 export abstract class BaseNetworkMember {
   readonly didDocument?: any
+  readonly accountNumber?: number
   private readonly _did: string
   private readonly _encryptedSeed: string
   private readonly _password: string
@@ -97,7 +99,7 @@ export abstract class BaseNetworkMember {
   protected readonly _platformCryptographyTools
 
   constructor(
-    { didDocument, did, didDocumentKeyId, encryptedSeed, password }: ConstructorUserData,
+    { didDocument, did, didDocumentKeyId, encryptedSeed, password, accountNumber }: ConstructorUserData,
     { platformCryptographyTools, eventComponent }: StaticDependencies,
     options: ParsedOptions,
   ) {
@@ -108,7 +110,7 @@ export abstract class BaseNetworkMember {
 
     const { accessApiKey, basicOptions, storageRegion } = options
     const { issuerUrl, revocationUrl, metricsUrl, registryUrl, verifierUrl, affinidiVaultUrl } = basicOptions
-    const keysService = new KeysService(encryptedSeed, password)
+    const keysService = new KeysService(encryptedSeed, password, accountNumber)
     const keyVault = new LocalKeyVault(keysService)
     const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault })
     const didAuthService = new DidAuthClientService(signer)
@@ -170,6 +172,7 @@ export abstract class BaseNetworkMember {
     this._didDocumentKeyId = didDocumentKeyId
     this._platformCryptographyTools = platformCryptographyTools
 
+    this.accountNumber = accountNumber
     this.didDocument = didDocument
   }
 
@@ -600,6 +603,8 @@ export abstract class BaseNetworkMember {
         revocationListCredential as any,
         this._encryptedSeed,
         this._password,
+        'ecdsa',
+        this.accountNumber,
       )
       revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
@@ -618,6 +623,8 @@ export abstract class BaseNetworkMember {
       revocationListCredential,
       this._encryptedSeed,
       this._password,
+      'ecdsa',
+      this.accountNumber
     )
     revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
@@ -670,7 +677,7 @@ export abstract class BaseNetworkMember {
   }
 
   async signUnsignedCredential(unsignedCredential: VCV1Unsigned, keyType?: KeyAlgorithmType) {
-    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password, keyType)
+    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password, keyType, this.accountNumber)
   }
 
   /**
@@ -965,6 +972,7 @@ export abstract class BaseNetworkMember {
         challenge,
         domain,
       },
+      accountNumber: this.accountNumber,
     })
   }
 

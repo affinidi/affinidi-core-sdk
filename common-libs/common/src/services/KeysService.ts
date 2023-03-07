@@ -62,18 +62,20 @@ export default class KeysService {
   private readonly _digestService: DigestService
   private readonly _encryptedSeed: string
   private readonly _password: string
+  public readonly accountNumber: number
 
-  constructor(encryptedSeed: string, password: string) {
+  constructor(encryptedSeed: string, password: string, accountNumber?: number) {
     this._digestService = new DigestService()
     this._encryptedSeed = encryptedSeed
     this._password = password
+    this.accountNumber = accountNumber || null
   }
 
   sign(digest: Buffer) {
     const { seed, didMethod } = this.decryptSeed()
 
     const seedHex = seed.toString('hex')
-    const signingKey = KeysService.getKey(seedHex, didMethod)
+    const signingKey = KeysService.getKey(seedHex, didMethod, false, this.accountNumber)
 
     return signingKey.sign(digest)
   }
@@ -105,28 +107,42 @@ export default class KeysService {
     return createHash('sha256').update(data).digest()
   }
 
-  private static getDerivationPath(didMethod: DidMethod, isAnchoring: boolean) {
-    if (isAnchoring) {
-      return etheriumIdentityKey
+  private static modifyDeriviationPath(derivationPath: string, accountNumber?: number): String {
+    if (!accountNumber) {
+      return derivationPath
     }
+
+    const derivationPathWithoutNonce = derivationPath.slice(0, -1)
+
+    return `${derivationPathWithoutNonce}${accountNumber}`
+  }
+
+  private static getDerivationPath(didMethod: DidMethod, isAnchoring: boolean, accountNumber?: number) {
+    if (isAnchoring) {
+      return KeysService.modifyDeriviationPath(etheriumIdentityKey, accountNumber)
+    }
+
+    let key
 
     switch (didMethod) {
       case 'jolo':
-        return jolocomIdentityKey
+        key = jolocomIdentityKey
       case 'elem':
       case 'elem-anchored':
-        return elemIdentityPrimaryKey
+        key = elemIdentityPrimaryKey
       case 'polygon':
       case 'polygon:testnet':
-        return etheriumIdentityKey
+        key = etheriumIdentityKey
       case 'web':
-        return elemIdentityPrimaryKey
+        key = elemIdentityPrimaryKey
     }
+
+    return KeysService.modifyDeriviationPath(key, accountNumber)
   }
 
-  private static getKey(seedHex: string, didMethod: string, isAnchoring = false) {
+  private static getKey(seedHex: string, didMethod: string, isAnchoring = false, accountNumber?: number) {
     validateDidMethodSupported(didMethod)
-    const derivationPath = KeysService.getDerivationPath(didMethod, isAnchoring)
+    const derivationPath = KeysService.getDerivationPath(didMethod, isAnchoring, accountNumber)
     const seed = Buffer.from(seedHex, 'hex')
     const id = `${seedHex}::${derivationPath}`
     if (!cachedSigningKey[id]) {
@@ -136,8 +152,8 @@ export default class KeysService {
     return cachedSigningKey[id]
   }
 
-  static getPublicAndPrivateKeys(seedHex: string, didMethod: string) {
-    const { publicKey, privateKey } = KeysService.getKey(seedHex, didMethod)
+  static getPublicAndPrivateKeys(seedHex: string, didMethod: string, accountNumber?: number) {
+    const { publicKey, privateKey } = KeysService.getKey(seedHex, didMethod, false, accountNumber)
 
     return { publicKey, privateKey }
   }
@@ -151,21 +167,21 @@ export default class KeysService {
   getOwnPublicKey() {
     const { seed, didMethod } = this.decryptSeed()
     const seedHex = seed.toString('hex')
-    return KeysService.getPublicKey(seedHex, didMethod)
+    return KeysService.getPublicKey(seedHex, didMethod, this.accountNumber)
   }
 
-  static getPublicKey(seedHex: string, didMethod: string) {
-    return KeysService.getKey(seedHex, didMethod).publicKey
+  static getPublicKey(seedHex: string, didMethod: string, accountNumber?: number) {
+    return KeysService.getKey(seedHex, didMethod, false, accountNumber).publicKey
   }
 
   public getOwnPrivateKey() {
     const { seed, didMethod } = this.decryptSeed()
     const seedHex = seed.toString('hex')
-    return KeysService.getPrivateKey(seedHex, didMethod)
+    return KeysService.getPrivateKey(seedHex, didMethod, this.accountNumber)
   }
 
-  static getPrivateKey(seedHex: string, didMethod: string) {
-    return KeysService.getKey(seedHex, didMethod).privateKey
+  static getPrivateKey(seedHex: string, didMethod: string, accountNumber?: number) {
+    return KeysService.getKey(seedHex, didMethod, false, accountNumber).privateKey
   }
 
   static getAnchorTransactionPrivateKey(seedHex: string, didMethod: string) {

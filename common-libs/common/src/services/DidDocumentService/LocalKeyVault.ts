@@ -14,13 +14,14 @@ export class LocalKeyVault implements KeyVault {
 
   constructor(keyService: KeysService) {
     const { seed, externalKeys, metadata, didMethod } = keyService.decryptSeed()
+    const { accountNumber } = keyService
 
     this._externalKeys = externalKeys
     this._metadata = metadata
 
     const seedHex = seed.toString('hex')
 
-    const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, didMethod)
+    const { publicKey, privateKey } = KeysService.getPublicAndPrivateKeys(seedHex, didMethod, accountNumber)
     this._publicKey = publicKey
     this._privateKey = privateKey
 
