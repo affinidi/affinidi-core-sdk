@@ -425,7 +425,7 @@ export class Affinity {
     encryptedSeed: string,
     encryptionKey: string,
     keySuiteType: KeySuiteType = 'ecdsa',
-    accountNumber?: number
+    accountNumber?: number,
   ): Promise<VCV1<TSubject>> {
     const keyService = new KeysService(encryptedSeed, encryptionKey, accountNumber)
     const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
@@ -537,7 +537,7 @@ export class Affinity {
   async signPresentation(opts: {
     vp: VPV1Unsigned
     encryption: { seed: string; key: string }
-    purpose: { challenge: string; domain: string },
+    purpose: { challenge: string; domain: string }
     accountNumber?: number
   }): Promise<VPV1> {
     const keyService = new KeysService(opts.encryption.seed, opts.encryption.key, opts.accountNumber)
