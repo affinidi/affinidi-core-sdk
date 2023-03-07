@@ -10,10 +10,10 @@ export default class JoloDidDocument {
   private readonly _signingKey: string
   private readonly _accountNumber: number
 
-  constructor(keysService: KeysService, accountNumber?: number) {
+  constructor(keysService: KeysService) {
     this._signingKey = 'keys-1'
     this._keysService = keysService
-    this._accountNumber = accountNumber
+    this._accountNumber = keysService.accountNumber
   }
 
   private _getDid(seedHex: string) {

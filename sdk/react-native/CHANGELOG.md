@@ -1,3 +1,6 @@
+# release 7.12.0 (2023-03-07)
+* add optional parameter `accountNumber` for wallet initialization to derive custom account `keys`/`did`
+  from the root `seed`(could be used to create several ephemeral DIDs to support not traceability option).
 # release 7.11.10 (2023-03-06)
 * updated `decryptCredential` to use Promise.all
 # release 7.11.9 (2023-02-27)

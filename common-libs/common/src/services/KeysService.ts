@@ -107,7 +107,7 @@ export default class KeysService {
     return createHash('sha256').update(data).digest()
   }
 
-  private static modifyDeriviationPath(derivationPath: string, accountNumber?: number): String {
+  private static modifyDeriviationPath(derivationPath: string, accountNumber?: number): string {
     if (!accountNumber) {
       return derivationPath
     }
@@ -127,17 +127,23 @@ export default class KeysService {
     switch (didMethod) {
       case 'jolo':
         key = jolocomIdentityKey
+        break
       case 'elem':
       case 'elem-anchored':
         key = elemIdentityPrimaryKey
+        break
       case 'polygon':
       case 'polygon:testnet':
         key = etheriumIdentityKey
+        break
       case 'web':
         key = elemIdentityPrimaryKey
+        break
     }
 
-    return KeysService.modifyDeriviationPath(key, accountNumber)
+    if (key) {
+      return KeysService.modifyDeriviationPath(key, accountNumber)
+    }
   }
 
   private static getKey(seedHex: string, didMethod: string, isAnchoring = false, accountNumber?: number) {

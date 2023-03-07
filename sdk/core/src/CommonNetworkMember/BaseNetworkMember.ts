@@ -72,8 +72,8 @@ export type ConstructorUserData = {
   did: string
   didDocumentKeyId: string
   encryptedSeed: string
-  password: string,
-  accountNumber: number
+  password: string
+  accountNumber?: number
 }
 
 @profile()
@@ -624,7 +624,7 @@ export abstract class BaseNetworkMember {
       this._encryptedSeed,
       this._password,
       'ecdsa',
-      this.accountNumber
+      this.accountNumber,
     )
     revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
@@ -677,7 +677,13 @@ export abstract class BaseNetworkMember {
   }
 
   async signUnsignedCredential(unsignedCredential: VCV1Unsigned, keyType?: KeyAlgorithmType) {
-    return this._affinity.signCredential(unsignedCredential, this._encryptedSeed, this._password, keyType, this.accountNumber)
+    return this._affinity.signCredential(
+      unsignedCredential,
+      this._encryptedSeed,
+      this._password,
+      keyType,
+      this.accountNumber,
+    )
   }
 
   /**

@@ -1252,13 +1252,27 @@ describe('CommonNetworkMember', () => {
     const customOptions: SdkOptions = { ...options, didMethod: 'elem' }
     const cnmByCreateWallet = await AffinidiWallet.createWallet(customOptions, password)
 
-    const cnmByOpenWalletByEncryptedSeed = await AffinidiWallet.openWalletByEncryptedSeed(
-      customOptions,
-      cnmByCreateWallet.encryptedSeed,
-      password,
-    )
+    {
+      const cnmByOpenWalletByEncryptedSeed = await AffinidiWallet.openWalletByEncryptedSeed(
+        customOptions,
+        cnmByCreateWallet.encryptedSeed,
+        password,
+      )
 
-    expect(cnmByCreateWallet.did).to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
+      expect(cnmByCreateWallet.did).to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
+    }
+
+    {
+      const accountNumber = 1
+      const cnmByOpenWalletByEncryptedSeed = await AffinidiWallet.openWalletByEncryptedSeed(
+        customOptions,
+        cnmByCreateWallet.encryptedSeed,
+        password,
+        accountNumber,
+      )
+
+      expect(cnmByCreateWallet.did).not.to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
+    }
   })
 
   it('#createWallet and #openWalletByEncryptedSeed should return the same did (elem-anchored)', async () => {
