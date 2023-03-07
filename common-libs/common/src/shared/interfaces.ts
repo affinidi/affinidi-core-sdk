@@ -69,6 +69,9 @@ export type IPlatformCryptographyTools = Readonly<{
   keyGenerators: Record<'rsa' | 'bbs', KeyGenerator>
   signSuites: Readonly<Record<'ecdsa' | 'rsa' | 'bbs', GetSignSuiteFn>>
   verifySuiteFactories: Readonly<Record<ProofType, CreateVerifySuite>>
+  decryptByPrivateKey(privateKeyBuffer: Buffer, encryptedDataString: string): Promise<any>
+  encryptByPublicKey(publicKeyBuffer: Buffer, data: unknown): Promise<string>
+  computePersonalHash(privateKeyBuffer: Buffer, data: string): Promise<string>
   deriveBbsSegmentProof: (options: {
     credential: any
     revealDocument: any

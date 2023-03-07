@@ -20,7 +20,7 @@ import {
 } from 'class-validator'
 
 import { SUPPORTED_DID_METHODS, SUPPORTED_ENVIRONMENTS } from '../_defaultConfig'
-import { DocumentLoader } from '@affinidi/common'
+import { DocumentLoader, KeyManager } from '@affinidi/common'
 import { CognitoIdentityProviderClient } from '@affinidi/user-management'
 
 export type Env = 'dev' | 'staging' | 'prod'
@@ -146,6 +146,9 @@ export class SdkOptions {
 
   @IsOptional()
   cognitoProviderClient?: CognitoIdentityProviderClient
+
+  @IsOptional()
+  keyManager?: KeyManager
 }
 
 export class MessageParameters {

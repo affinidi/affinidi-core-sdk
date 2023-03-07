@@ -1,7 +1,6 @@
 import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/affinity-metrics-lib'
-import { Secp256k1Signature, Secp256k1Key } from '@affinidi/tiny-lds-ecdsa-secp256k1-2019'
 import { JwtService } from '@affinidi/tools-common'
-import { buildVCV1, buildVPV1, removeIfExists, SimpleThing, VCV1Subject, VCV1SubjectBaseMA } from '@affinidi/vc-common'
+import { SimpleThing, VCV1Subject, VCV1SubjectBaseMA } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
 import { resolveUrl, Service } from '@affinidi/url-resolver'
 import { parse } from 'did-resolver'
@@ -12,20 +11,21 @@ import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
 import { LocalDidResolver } from './shared/DidResolver'
 import { buildObjectSkeletonFromPaths, injectFieldForAllParentRoots } from './utils/objectUtil'
+import { KeyManager, KeySuiteType, UnsignedJwtObject } from './services/KeyManager/KeyManager'
+import { LocalKeyManager } from './services/KeyManager/LocalKeyManager'
 
 const revocationList = require('vc-revocation-list')
-
-type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
-const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
 
 export class Affinity {
   private readonly _didResolver
   private readonly _metricsService
   private readonly _digestService
   private readonly _platformCryptographyTools
+  private readonly _keyManager: KeyManager
   private readonly _beforeDocumentLoader?: DocumentLoader
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
+    if (!options.keyManager && !options.keysService) throw new Error('"keyManager" or "keysService" has to be provided')
     this._didResolver =
       options.didResolver ??
       new LocalDidResolver({
@@ -43,6 +43,14 @@ export class Affinity {
       component: options.component || EventComponent.AffinidiCommon,
     })
     this._platformCryptographyTools = platformCryptographyTools
+    this._keyManager =
+      options.keyManager ??
+      new LocalKeyManager(
+        options.keysService,
+        platformCryptographyTools,
+        this._createDocumentLoader(),
+        this._didResolver,
+      )
     this._beforeDocumentLoader = options.beforeDocumentLoader
   }
 
@@ -381,81 +389,11 @@ export class Affinity {
     return { result: true, error: '' }
   }
 
-  private getIssuerForSigning(keySuiteType: KeySuiteType, keyService: KeysService, did: string, mainKeyId: string) {
-    const shortDid = mainKeyId.split('#')[0]
-
-    switch (keySuiteType) {
-      case 'ecdsa':
-        return {
-          did,
-          keyId: mainKeyId,
-          privateKey: keyService.getOwnPrivateKey().toString('hex'),
-        }
-      case 'rsa':
-        return {
-          did,
-          keyId: `${shortDid}#secondary`,
-          privateKey: keyService.getExternalPrivateKey('rsa'),
-        }
-      case 'bbs':
-        return {
-          did,
-          keyId: `${shortDid}#bbs`,
-          privateKey: keyService.getExternalPrivateKey('bbs'),
-          publicKey: keyService.getExternalPublicKey('bbs'),
-        }
-      default:
-        throw new Error(`Unsupported key type '${keySuiteType}`)
-    }
-  }
-
-  postprocessCredentialToSign<TVC extends VCV1Unsigned>(unsignedCredential: TVC, keySuiteType: KeySuiteType) {
-    if (keySuiteType === 'bbs') {
-      return {
-        ...unsignedCredential,
-        '@context': [...removeIfExists(unsignedCredential['@context'], BBS_CONTEXT), BBS_CONTEXT],
-      }
-    }
-
-    return unsignedCredential
-  }
-
   async signCredential<TSubject extends VCV1SubjectBaseMA>(
     unsignedCredentialInput: VCV1Unsigned<TSubject>,
-    encryptedSeed: string,
-    encryptionKey: string,
     keySuiteType: KeySuiteType = 'ecdsa',
   ): Promise<VCV1<TSubject>> {
-    const keyService = new KeysService(encryptedSeed, encryptionKey)
-    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const did = didDocumentService.getMyDid()
-    const mainKeyId = didDocumentService.getKeyId()
-    const issuer = this.getIssuerForSigning(keySuiteType, keyService, did, mainKeyId)
-    const unsignedCredential = this.postprocessCredentialToSign(unsignedCredentialInput, keySuiteType)
-
-    const signedVc = buildVCV1<TSubject>({
-      unsigned: unsignedCredential,
-      issuer,
-      compactProof: keySuiteType === 'bbs',
-      getSignSuite: this._platformCryptographyTools.signSuites[keySuiteType],
-      documentLoader: this._createDocumentLoader(),
-      getProofPurposeOptions: async () => ({
-        controller: await didDocumentService.getDidDocument(this._didResolver),
-      }),
-    })
-
-    // send VC_SIGNED event
-    if (unsignedCredential.holder) {
-      // TODO: also send the event when holder is not available, maybe add a metadata property to indicate that
-      const eventOptions = {
-        link: parse(unsignedCredential.holder.id).did,
-        secondaryLink: unsignedCredential.id,
-        name: EventName.VC_SIGNED,
-      }
-      this._metricsService.sendVcEvent(unsignedCredential, eventOptions)
-    }
-
-    return signedVc
+    return this._keyManager.signCredential(unsignedCredentialInput, keySuiteType)
   }
 
   async validatePresentation(
@@ -533,49 +471,8 @@ export class Affinity {
     return { result: true, data: result.data }
   }
 
-  async signPresentation(opts: {
-    vp: VPV1Unsigned
-    encryption: { seed: string; key: string }
-    purpose: { challenge: string; domain: string }
-  }): Promise<VPV1> {
-    const keyService = new KeysService(opts.encryption.seed, opts.encryption.key)
-    const { seed, didMethod } = keyService.decryptSeed()
-
-    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
-    const did = didDocumentService.getMyDid()
-
-    const signedVp = buildVPV1({
-      unsigned: opts.vp,
-      holder: {
-        did,
-        keyId: didDocumentService.getKeyId(),
-        privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod).toString('hex'),
-      },
-      getSignSuite: ({ keyId, privateKey, controller }) => {
-        return new Secp256k1Signature({
-          key: new Secp256k1Key({
-            id: keyId,
-            controller,
-            privateKeyHex: privateKey,
-          }),
-        })
-      },
-      documentLoader: this._createDocumentLoader(),
-      getProofPurposeOptions: () => ({
-        challenge: opts.purpose.challenge,
-        domain: opts.purpose.domain,
-      }),
-    })
-
-    // send VP_SIGNED event
-    const eventOptions = {
-      link: did,
-      secondaryLink: opts.vp.id,
-      name: EventName.VP_SIGNED,
-    }
-    this._metricsService.sendVpEvent(eventOptions)
-
-    return signedVp
+  async signPresentation(opts: { vp: VPV1Unsigned; purpose: { challenge: string; domain: string } }): Promise<VPV1> {
+    return this._keyManager.signPresentation(opts.vp, opts.purpose)
   }
 
   private async _getCredentialIssuerPublicKey(credential: any, didDocument?: any): Promise<Buffer> {
@@ -590,26 +487,8 @@ export class Affinity {
     return JwtService.fromJWT(jwt)
   }
 
-  async signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
-    const signedJwtObject = Affinity.signJWTObject(jwtObject, encryptedSeed, encryptionKey)
-
-    // send VP_SIGNED_JWT event
-    if (jwtObject.payload.typ === 'credentialResponse') {
-      const eventOptions = {
-        link: jwtObject.payload.iss,
-        secondaryLink: jwtObject.payload.jti,
-        name: EventName.VP_SIGNED_JWT,
-      }
-      this._metricsService.sendVpEvent(eventOptions)
-    }
-
-    return signedJwtObject
-  }
-
-  // to be deprecated and replaced with instance method
-  static signJWTObject(jwtObject: any, encryptedSeed: string, encryptionKey: string) {
-    const keyService = new KeysService(encryptedSeed, encryptionKey)
-    return keyService.signJWT(jwtObject)
+  async signJWTObject(jwtObject: UnsignedJwtObject, keyId?: string) {
+    return this._keyManager.signJWTObject(jwtObject, keyId)
   }
 
   static encodeObjectToJWT(jwtObject: any) {
@@ -663,5 +542,21 @@ export class Affinity {
     }
 
     return fragment
+  }
+
+  decryptByPrivateKey(encryptedMessage: string): Promise<any> {
+    return this._keyManager.decryptByPrivateKey(encryptedMessage)
+  }
+
+  signAsync(buffer: Buffer): Promise<Buffer> {
+    return this._keyManager.signAsync(buffer)
+  }
+
+  getAnchorTransactionPublicKey(): Promise<string> {
+    return this._keyManager.getAnchorTransactionPublicKey()
+  }
+
+  getKeyManager() {
+    return this._keyManager
   }
 }

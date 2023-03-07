@@ -1,10 +1,9 @@
-import { JwtService, KeysService } from '@affinidi/common'
+import { JwtService, KeyManager } from '@affinidi/common'
 import { KeyStorageApiService } from '@affinidi/internal-api-clients'
 import { profile } from '@affinidi/tools-common'
 import { extractSDKVersion } from '../_helpers'
 import { Env, SignedCredential } from '../dto/shared.dto'
 import { DidAuthAdapter } from '../shared/DidAuthAdapter'
-import { IPlatformCryptographyTools } from '../shared/interfaces'
 import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 import AffinidiVaultStorageService from './AffinidiVaultStorageService'
 import AffinidiVaultEncryptionService from './AffinidiVaultEncryptionService'
@@ -27,14 +26,10 @@ export default class WalletStorageService {
   private _storageRegion
   private _affinidiVaultStorageService
 
-  constructor(
-    keysService: KeysService,
-    platformCryptographyTools: IPlatformCryptographyTools,
-    options: ConstructorOptions,
-  ) {
+  constructor(keyManager: KeyManager, options: ConstructorOptions) {
     this._storageRegion = options.storageRegion
 
-    const encryptionService = new AffinidiVaultEncryptionService(keysService, platformCryptographyTools)
+    const encryptionService = new AffinidiVaultEncryptionService(keyManager)
 
     this._affinidiVaultStorageService = new AffinidiVaultStorageService(encryptionService, {
       didAuthAdapter: options.didAuthAdapter,

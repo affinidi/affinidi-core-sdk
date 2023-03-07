@@ -16,6 +16,7 @@ import credential from '../../factory/signedCredential'
 import { VaultCredential } from '../../../src/dto/vault.dto'
 import { expect } from 'chai'
 import { extractSDKVersion } from '../../../src/_helpers'
+import { LocalKeyManager } from '@affinidi/common/dist/services/KeyManager/LocalKeyManager'
 
 const affinidiVaultUrl = resolveUrl(Service.VAULT, 'dev')
 const registryUrl = resolveUrl(Service.REGISTRY, 'dev')
@@ -29,7 +30,8 @@ const reqheaders: Record<string, string> = {}
 
 const createAffinidiStorageService = () => {
   const keysService = new KeysService(encryptedSeed, encryptionKey)
-  const encryptionService = new AffinidiVaultEncryptionService(keysService, testPlatformTools)
+  const keyManager = new LocalKeyManager(keysService, testPlatformTools, {} as any, {} as any)
+  const encryptionService = new AffinidiVaultEncryptionService(keyManager)
   const documentService = DidDocumentService.createDidDocumentService(keysService)
   const keyVault = new LocalKeyVault(keysService)
   const signer = new Signer({

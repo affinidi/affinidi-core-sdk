@@ -48,3 +48,4 @@ export {
 export { DidResolver } from './shared/DidResolver'
 export type { DocumentLoader } from './dto/shared.dto'
 export * from './shared/interfaces'
+export * from './services/KeyManager/KeyManager'

@@ -1,5 +1,7 @@
 import { EventName, EventComponent, VerificationMetadata } from '@affinidi/affinity-metrics-lib'
 import { DidResolver } from '../shared/DidResolver'
+import { KeyManager } from '../services/KeyManager/KeyManager'
+import { KeysService } from '../services'
 
 export type DocumentLoader = (
   iri: string,
@@ -16,6 +18,13 @@ export class AffinityOptions {
   cacheTtlInMin?: number
   resolveLegacyElemLocally?: boolean
   beforeDocumentLoader?: DocumentLoader
+
+  keyManager?: KeyManager
+
+  /**
+   * required when keyManager is not provided
+   */
+  keysService?: KeysService
 }
 
 export class EventOptions {
