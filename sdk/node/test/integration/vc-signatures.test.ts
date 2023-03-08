@@ -22,6 +22,13 @@ async function isValid(credential: any): Promise<boolean> {
   return result
 }
 
+const createAffinidi = (encryptedSeed: string, password: string) => {
+  return new Affinidi(
+    { ...affinidiOptions, keysService: new KeysService(encryptedSeed, password) },
+    platformCryptographyTools,
+  )
+}
+
 describe('VC Signatures', () => {
   describe('[RSA]', () => {
     const { issuerEncryptionKey, unsignedCredential } = rsaFixtures
@@ -31,10 +38,8 @@ describe('VC Signatures', () => {
 
       const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
 
-      const signedCredential = await affinidi.signCredential(
+      const signedCredential = await createAffinidi(encryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredential,
-        encryptedSeed,
-        issuerEncryptionKey,
         'rsa',
       )
 
@@ -58,10 +63,8 @@ describe('VC Signatures', () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
       const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
 
-      const signedCredential: any = await affinidi.signCredential(
+      const signedCredential: any = await createAffinidi(encryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredential,
-        encryptedSeed,
-        issuerEncryptionKey,
         'bbs',
       )
 
@@ -92,10 +95,8 @@ describe('VC Signatures', () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
       const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
 
-      const signedCredential = await affinidi.signCredential(
+      const signedCredential = await createAffinidi(encryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredentialWithNewCtx,
-        encryptedSeed,
-        issuerEncryptionKey,
         'bbs',
       )
 
@@ -129,10 +130,8 @@ describe('VC Signatures', () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
       const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
 
-      const signedCredential = await affinidi.signCredential(
+      const signedCredential = await createAffinidi(encryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredential,
-        encryptedSeed,
-        issuerEncryptionKey,
         'bbs',
       )
 
@@ -163,10 +162,8 @@ describe('VC Signatures', () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
       const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
 
-      const signedCredential = await affinidi.signCredential(
+      const signedCredential = await createAffinidi(encryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredential,
-        encryptedSeed,
-        issuerEncryptionKey,
         'bbs',
       )
 
@@ -197,10 +194,8 @@ describe('VC Signatures', () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
       const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
 
-      const signedCredential = await affinidi.signCredential(
+      const signedCredential = await createAffinidi(encryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredWithoutDataField as any,
-        encryptedSeed,
-        issuerEncryptionKey,
         'bbs',
       )
 
@@ -231,10 +226,8 @@ describe('VC Signatures', () => {
       const fullSeed = await generateFullSeed(platformCryptographyTools, 'elem', { keyTypes: ['bbs'] })
       const encryptedSeed = await KeysService.encryptSeed(fullSeed, KeysService.normalizePassword(issuerEncryptionKey))
 
-      const signedCredential = await affinidi.signCredential(
+      const signedCredential = await createAffinidi(encryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredentialWithNewCtx,
-        encryptedSeed,
-        issuerEncryptionKey,
         'bbs',
       )
 
