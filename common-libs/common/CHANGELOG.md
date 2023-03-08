@@ -1,3 +1,5 @@
+# release 3.0.0 (2023-03-08)
+* added KeyManager abstraction, all operations with Private Key moved to KeyManager
 # release 2.14.0 (2023-03-07)
 * add optional parameter `accountNumber` for wallet initialization to derive custom account `keys`/`did`
 from the root `seed`(could be used to create several ephemeral DIDs to support not traceability option).
