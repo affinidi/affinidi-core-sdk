@@ -29,6 +29,7 @@ export {
   ElemDidDocumentService,
   ElemAnchoredDidDocumentService,
   JoloDidDocumentService,
+  KeyManager,
 } from './services'
 
 export { IPlatformCryptographyTools } from './shared/interfaces'

@@ -16,6 +16,11 @@ import { LocalKeyManager } from './services/KeyManager/LocalKeyManager'
 
 const revocationList = require('vc-revocation-list')
 
+const NO_KEY_MANAGER_ERROR =
+  '"keyManager" or "keysService" has to be provided as constructor argument for Affinity class' +
+  ' to perform operations with Private Key'
+
+// TODO: further refactoring to decouple functionality that can work without Private Key
 export class Affinity {
   private readonly _didResolver
   private readonly _metricsService
@@ -25,7 +30,6 @@ export class Affinity {
   private readonly _beforeDocumentLoader?: DocumentLoader
 
   constructor(options: AffinityOptions, platformCryptographyTools: IPlatformCryptographyTools) {
-    if (!options.keyManager && !options.keysService) throw new Error('"keyManager" or "keysService" has to be provided')
     this._didResolver =
       options.didResolver ??
       new LocalDidResolver({
@@ -43,14 +47,17 @@ export class Affinity {
       component: options.component || EventComponent.AffinidiCommon,
     })
     this._platformCryptographyTools = platformCryptographyTools
-    this._keyManager =
-      options.keyManager ??
-      new LocalKeyManager(
+    if (options.keyManager) {
+      this._keyManager = options.keyManager
+    } else if (options.keysService) {
+      this._keyManager = new LocalKeyManager(
         options.keysService,
         platformCryptographyTools,
         this._createDocumentLoader(),
         this._didResolver,
       )
+    }
+
     this._beforeDocumentLoader = options.beforeDocumentLoader
   }
 
@@ -393,6 +400,7 @@ export class Affinity {
     unsignedCredentialInput: VCV1Unsigned<TSubject>,
     keySuiteType: KeySuiteType = 'ecdsa',
   ): Promise<VCV1<TSubject>> {
+    if (!this._keyManager) throw new Error(NO_KEY_MANAGER_ERROR)
     return this._keyManager.signCredential(unsignedCredentialInput, keySuiteType)
   }
 
@@ -472,6 +480,7 @@ export class Affinity {
   }
 
   async signPresentation(opts: { vp: VPV1Unsigned; purpose: { challenge: string; domain: string } }): Promise<VPV1> {
+    if (!this._keyManager) throw new Error(NO_KEY_MANAGER_ERROR)
     return this._keyManager.signPresentation(opts.vp, opts.purpose)
   }
 
@@ -488,6 +497,7 @@ export class Affinity {
   }
 
   async signJWTObject(jwtObject: UnsignedJwtObject, keyId?: string) {
+    if (!this._keyManager) throw new Error(NO_KEY_MANAGER_ERROR)
     return this._keyManager.signJWTObject(jwtObject, keyId)
   }
 
@@ -545,18 +555,22 @@ export class Affinity {
   }
 
   decryptByPrivateKey(encryptedMessage: string): Promise<any> {
+    if (!this._keyManager) throw new Error(NO_KEY_MANAGER_ERROR)
     return this._keyManager.decryptByPrivateKey(encryptedMessage)
   }
 
   signAsync(buffer: Buffer): Promise<Buffer> {
+    if (!this._keyManager) throw new Error(NO_KEY_MANAGER_ERROR)
     return this._keyManager.signAsync(buffer)
   }
 
   getAnchorTransactionPublicKey(): Promise<string> {
+    if (!this._keyManager) throw new Error(NO_KEY_MANAGER_ERROR)
     return this._keyManager.getAnchorTransactionPublicKey()
   }
 
   getKeyManager() {
+    if (!this._keyManager) throw new Error(NO_KEY_MANAGER_ERROR)
     return this._keyManager
   }
 }
