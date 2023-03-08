@@ -1,5 +1,4 @@
 import { VCV1, VCV1SubjectBaseMA, VCV1Unsigned, VPV1, VPV1Unsigned } from '@affinidi/vc-common'
-import KeysService from "../KeysService";
 
 export type KeySuiteType = 'ecdsa' | 'rsa' | 'bbs'
 

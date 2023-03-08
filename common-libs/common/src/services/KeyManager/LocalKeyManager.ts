@@ -13,8 +13,7 @@ import { KeysService } from '../index'
 import DidDocumentService from '../DidDocumentService'
 import { IPlatformCryptographyTools } from '../../shared/interfaces'
 import { DocumentLoader } from '../../dto/shared.dto'
-import { DidResolver, LocalDidResolver } from '../../shared/DidResolver'
-import {resolveUrl, Service} from "@affinidi/url-resolver";
+import { DidResolver } from '../../shared/DidResolver'
 
 const BBS_CONTEXT = 'https://w3id.org/security/bbs/v1'
 
