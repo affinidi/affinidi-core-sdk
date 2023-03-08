@@ -1,3 +1,6 @@
+# release 2.7.0 (2023-03-07)
+* add optional parameter `accountNumber` for wallet initialization to derive custom account `keys`/`did`
+  from the root `seed`(could be used to create several ephemeral DIDs to support not traceability option).
 # release 2.6.0 (2023-02-17)
 * added .env.example for testing the lib locally.
 * `DEV_API_KEY_HASH` variable must be set up as a part of `TEST_SECRETS` locally.

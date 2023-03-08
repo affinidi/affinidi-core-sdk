@@ -74,9 +74,11 @@ let didJolo: string
 let joloDidDocument: { id: string }
 
 let didElemShortForm: string
+let didElemShortFormWithAccountNumber1: string
 let elemDidDocument: { id: string }
 
 let didElem: string
+let didElemAccount1: string
 
 let joloSeed: string
 
@@ -94,6 +96,9 @@ describe('Affinity', () => {
     didElem = testDids.elem.did
     didElemShortForm = didElem.substring(0, didElem.indexOf(';'))
     elemDidDocument = testDids.elem.didDocument
+
+    didElemAccount1 = testDids.elemAccount1.did
+    didElemShortFormWithAccountNumber1 = didElemAccount1.substring(0, didElem.indexOf(';'))
   })
   after(() => {
     nock.cleanAll()
@@ -320,6 +325,17 @@ describe('Affinity', () => {
     const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(credential)
 
     const keyId = `${didElemShortForm}#primary`
+    expect(createdCredential).to.exist
+    expect(createdCredential.proof).to.exist
+    expect(createdCredential['@context']).to.exist
+    expect(createdCredential.proof.verificationMethod).to.be.equal(keyId)
+    expect(createdCredential.proof.jws).to.exist
+  })
+
+  it('#signCredential (elem) with custom account number', async () => {
+    const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password, 'ecdsa', 1)
+
+    const keyId = `${didElemShortFormWithAccountNumber1}#primary`
     expect(createdCredential).to.exist
     expect(createdCredential.proof).to.exist
     expect(createdCredential['@context']).to.exist

@@ -65,7 +65,7 @@ export class LocalKeyManager implements KeyManager {
       holder: {
         did,
         keyId: didDocumentService.getKeyId(),
-        privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod).toString('hex'),
+        privateKey: KeysService.getPrivateKey(seed.toString('hex'), didMethod, this.keysService.accountNumber).toString('hex'),
       },
       getSignSuite: this.platformCryptographyTools.signSuites[keySuiteType],
       documentLoader: this.documentLoader,

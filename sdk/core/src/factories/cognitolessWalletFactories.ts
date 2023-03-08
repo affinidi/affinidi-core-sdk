@@ -27,10 +27,16 @@ export const createCognitolessWalletFactories = (
      * @param inputOptions - parameters with specified environment
      * @param encryptedSeed - encrypted seed
      * @param password - password
+     * @param accountNumber - account number is an optional parameter to derive custom account `keys`/`did` from the root `seed`
      * @returns initialized instance of SDK
      */
-    openWalletByEncryptedSeed: (inputOptions: SdkOptions, encryptedSeed: string, password: string) => {
-      return Wallet.openWalletByEncryptedSeed(dependencies, inputOptions, encryptedSeed, password)
+    openWalletByEncryptedSeed: (
+      inputOptions: SdkOptions,
+      encryptedSeed: string,
+      password: string,
+      accountNumber?: number,
+    ) => {
+      return Wallet.openWalletByEncryptedSeed(dependencies, inputOptions, encryptedSeed, password, accountNumber)
     },
   }
 }

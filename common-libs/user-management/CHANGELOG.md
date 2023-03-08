@@ -1,3 +1,6 @@
+# release 2.6.0 (2023-03-07)
+* add optional parameter `accountNumber` for wallet initialization to derive custom account `keys`/`did`
+  from the root `seed`(could be used to create several ephemeral DIDs to support not traceability option).
 # release 2.5.6 (2023-02-27)
 * fixed truecaller hindi decoding
 # release 2.5.5 (2023-02-23)

@@ -73,11 +73,13 @@ export type ConstructorUserData = {
   didDocumentKeyId: string
   encryptedSeed: string
   password: string
+  accountNumber?: number
 }
 
 @profile()
 export abstract class BaseNetworkMember {
   readonly didDocument?: any
+  readonly accountNumber?: number
   private readonly _did: string
   private readonly _encryptedSeed: string
   private readonly _password: string
@@ -96,7 +98,7 @@ export abstract class BaseNetworkMember {
   protected readonly _platformCryptographyTools
 
   constructor(
-    { didDocument, did, didDocumentKeyId, encryptedSeed, password }: ConstructorUserData,
+    { didDocument, did, didDocumentKeyId, encryptedSeed, password, accountNumber }: ConstructorUserData,
     { platformCryptographyTools, eventComponent }: StaticDependencies,
     options: ParsedOptions,
   ) {
@@ -111,7 +113,7 @@ export abstract class BaseNetworkMember {
 
     const { accessApiKey, basicOptions, storageRegion } = options
     const { issuerUrl, revocationUrl, metricsUrl, registryUrl, verifierUrl, affinidiVaultUrl } = basicOptions
-    const keysService = new KeysService(encryptedSeed, password)
+    const keysService = new KeysService(encryptedSeed, password, accountNumber)
     this._affinity = new Affinity(
       {
         apiKey: accessApiKey,
@@ -175,6 +177,7 @@ export abstract class BaseNetworkMember {
     this._didDocumentKeyId = didDocumentKeyId
     this._platformCryptographyTools = platformCryptographyTools
 
+    this.accountNumber = accountNumber
     this.didDocument = didDocument
   }
 
