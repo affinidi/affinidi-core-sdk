@@ -18,6 +18,7 @@ import { resolvedDidDocument } from '../factory/resolveDidResponse'
 
 const options = {
   registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io',
+  keysService: new KeysService('', ''),
 }
 
 const jwtObject = {
@@ -35,6 +36,15 @@ const jwtObject = {
 }
 
 const affinity = new Affinity(options, ecdsaCryptographyTools)
+
+const createAffinity = (encryptedSeed: string, pass: string) =>
+  new Affinity(
+    {
+      ...options,
+      keysService: new KeysService(encryptedSeed, pass),
+    },
+    ecdsaCryptographyTools,
+  )
 
 const jwt =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJpbnRlcmFjdGlvblRva2Vu' +
@@ -172,18 +182,10 @@ describe('Affinity', () => {
     expect(object.payload.typ).to.be.equal('credentialOfferResponse')
   })
 
-  it('#signJWTObject (static method to be deprecated)', async () => {
-    const extendedPayload = Object.assign({}, jwtObject.payload, { exp: Date.now() + 1000 })
-    jwtObject.payload = extendedPayload
-    const signedJwtObject = await Affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
-
-    expect(signedJwtObject.signature).to.be.exist
-  })
-
   it('#signJWTObject', async () => {
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp: Date.now() + 1000 })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
+    const signedJwtObject = await createAffinity(encryptedSeedJolo, password).signJWTObject(jwtObject)
 
     expect(signedJwtObject.signature).to.be.exist
   })
@@ -191,7 +193,7 @@ describe('Affinity', () => {
   it('#signJWTObject (polygon)', async () => {
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp: Date.now() + 1000 })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await affinity.signJWTObject(jwtObject, testDids.polygon.encryptedSeed, password)
+    const signedJwtObject = await createAffinity(testDids.polygon.encryptedSeed, password).signJWTObject(jwtObject)
 
     expect(signedJwtObject.signature).to.be.exist
   })
@@ -200,7 +202,7 @@ describe('Affinity', () => {
     const exp = Date.now() + 2000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await Affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
+    const signedJwtObject = await createAffinity(encryptedSeedJolo, password).signJWTObject(jwtObject)
 
     const token = await Affinity.encodeObjectToJWT(signedJwtObject)
     expect(token).to.be.exist
@@ -211,11 +213,11 @@ describe('Affinity', () => {
     expect(object.payload.exp).to.be.equal(exp)
   })
 
-  it('#encodeObjectToJWT ()polygon', async () => {
+  it('#encodeObjectToJWT (polygon)', async () => {
     const exp = Date.now() + 2000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await Affinity.signJWTObject(jwtObject, testDids.polygon.encryptedSeed, password)
+    const signedJwtObject = await createAffinity(testDids.polygon.encryptedSeed, password).signJWTObject(jwtObject)
 
     const token = await Affinity.encodeObjectToJWT(signedJwtObject)
     expect(token).to.be.exist
@@ -230,7 +232,7 @@ describe('Affinity', () => {
     const exp = Date.now() + 9000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await Affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
+    const signedJwtObject = await createAffinity(encryptedSeedJolo, password).signJWTObject(jwtObject)
 
     const token = await Affinity.encodeObjectToJWT(signedJwtObject)
     expect(token).to.be.exist
@@ -250,7 +252,7 @@ describe('Affinity', () => {
     const exp = Date.now() + 9000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await Affinity.signJWTObject(jwtObject, testDids.polygon.encryptedSeed, password)
+    const signedJwtObject = await createAffinity(testDids.polygon.encryptedSeed, password).signJWTObject(jwtObject)
 
     const token = await Affinity.encodeObjectToJWT(signedJwtObject)
     expect(token).to.be.exist
@@ -270,7 +272,7 @@ describe('Affinity', () => {
     const exp = Date.now() - 1000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await Affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
+    const signedJwtObject = await createAffinity(encryptedSeedJolo, password).signJWTObject(jwtObject)
 
     const token = await Affinity.encodeObjectToJWT(signedJwtObject)
     expect(token).to.be.exist
@@ -291,7 +293,7 @@ describe('Affinity', () => {
     const exp = Date.now() + 9000
     const extendedPayload = Object.assign({}, jwtObject.payload, { exp })
     jwtObject.payload = extendedPayload
-    const signedJwtObject = await Affinity.signJWTObject(jwtObject, encryptedSeedJolo, password)
+    const signedJwtObject = await createAffinity(encryptedSeedJolo, password).signJWTObject(jwtObject)
 
     const token = await Affinity.encodeObjectToJWT(signedJwtObject)
     expect(token).to.be.exist
@@ -309,7 +311,7 @@ describe('Affinity', () => {
   })
 
   it('#signCredential (jolo)', async () => {
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedJolo, password)
+    const createdCredential = await createAffinity(encryptedSeedJolo, password).signCredential(credential)
 
     const keyId = `${didJolo}#keys-1`
     expect(createdCredential).to.exist
@@ -320,7 +322,7 @@ describe('Affinity', () => {
   })
 
   it('#signCredential (elem)', async () => {
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(credential)
 
     const keyId = `${didElemShortForm}#primary`
     expect(createdCredential).to.exist
@@ -342,7 +344,7 @@ describe('Affinity', () => {
   })
 
   it('#signCredential (polygon)', async () => {
-    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(credential)
 
     const keyId = `${testDids.polygon.did}#key-1`
     expect(createdCredential).to.exist
@@ -353,7 +355,7 @@ describe('Affinity', () => {
   })
 
   it('#signCredential (web)', async () => {
-    const createdCredential = await affinity.signCredential(credential, testDids.web.encryptedSeed, password)
+    const createdCredential = await createAffinity(testDids.web.encryptedSeed, password).signCredential(credential)
     const keyId = `${testDids.web.did}#primary`
     expect(createdCredential).to.exist
     expect(createdCredential.proof).to.exist
@@ -363,63 +365,63 @@ describe('Affinity', () => {
   })
 
   it('#validateCredential (jolo)', async () => {
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedJolo, password)
+    const createdCredential = await createAffinity(encryptedSeedJolo, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
 
     expect(result.result).to.be.true
   })
 
   it('#validateCredential (elem)', async () => {
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })
 
   it('#validateCredential (elem, resolved locally)', async () => {
     const affinityWithLocalResolver = new Affinity(
-      { resolveLegacyElemLocally: true, ...options },
+      { resolveLegacyElemLocally: true, ...options, keysService: new KeysService(encryptedSeedElem, password) },
       ecdsaCryptographyTools,
     )
-    const createdCredential = await affinityWithLocalResolver.signCredential(credential, encryptedSeedElem, password)
+    const createdCredential = await affinityWithLocalResolver.signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })
 
   it('#validateCredential (polygon)', async () => {
-    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })
 
   it('#validateCredential (web)', async () => {
-    const createdCredential = await affinity.signCredential(credential, testDids.web.encryptedSeed, password)
+    const createdCredential = await createAffinity(testDids.web.encryptedSeed, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })
 
   it("#validateCredential (elem) when holderKey is set and doesn't match", async () => {
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential, `${didJolo}#primary`)
 
     expect(result.result).to.be.false
   })
 
   it('#validateCredential (elem) when holderKey is set', async () => {
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential, `${credential.holder.id}#key`)
 
     expect(result.result).to.be.true
   })
 
   it("#validateCredential (polygon) when holderKey is set and doesn't match", async () => {
-    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential, `${didJolo}#primary`)
 
     expect(result.result).to.be.false
   })
 
   it('#validateCredential (polygon) when holderKey is set', async () => {
-    const createdCredential = await affinity.signCredential(credential, testDids.polygon.encryptedSeed, password)
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential, `${credential.holder.id}#key`)
 
     expect(result.result).to.be.true
@@ -427,13 +429,9 @@ describe('Affinity', () => {
 
   it('#signPresentation (elem)', async () => {
     const unsignedCredential = createUnsignedCredential(didElem)
-    const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedElem, password)
-    const createdPresentation = await affinity.signPresentation({
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(unsignedCredential)
+    const createdPresentation = await createAffinity(encryptedSeedElem, password).signPresentation({
       vp: buildPresentation([createdCredential], didElem),
-      encryption: {
-        seed: encryptedSeedElem,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -450,13 +448,9 @@ describe('Affinity', () => {
 
   it('#signPresentation (jolo)', async () => {
     const unsignedCredential = createUnsignedCredential(didJolo)
-    const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
-    const createdPresentation = await affinity.signPresentation({
+    const createdCredential = await createAffinity(encryptedSeedJolo, password).signCredential(unsignedCredential)
+    const createdPresentation = await createAffinity(encryptedSeedJolo, password).signPresentation({
       vp: buildPresentation([createdCredential], didElem),
-      encryption: {
-        seed: encryptedSeedJolo,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -472,18 +466,13 @@ describe('Affinity', () => {
   })
 
   it('#signPresentation (polygon)', async () => {
-    const unsignedCredential = createUnsignedCredential(didElem)
-    const createdCredential = await affinity.signCredential(
+    const unsignedCredential = createUnsignedCredential(testDids.polygon.did)
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(
       unsignedCredential,
-      testDids.polygon.encryptedSeed,
-      password,
     )
-    const createdPresentation = await affinity.signPresentation({
+
+    const createdPresentation = await createAffinity(testDids.polygon.encryptedSeed, password).signPresentation({
       vp: buildPresentation([createdCredential], testDids.polygon.did),
-      encryption: {
-        seed: testDids.polygon.encryptedSeed,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -500,13 +489,9 @@ describe('Affinity', () => {
 
   it('#validatePresentation (elem) (new presentations)', async () => {
     const unsignedCredential = createUnsignedCredential(didElem)
-    const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
-    const createdPresentation = await affinity.signPresentation({
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(unsignedCredential)
+    const createdPresentation = await createAffinity(encryptedSeedElem, password).signPresentation({
       vp: buildPresentation([createdCredential], didElem),
-      encryption: {
-        seed: encryptedSeedElem,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -519,17 +504,11 @@ describe('Affinity', () => {
 
   it('#validatePresentation (polygon) (new presentations)', async () => {
     const unsignedCredential = createUnsignedCredential(testDids.polygon.did)
-    const createdCredential = await affinity.signCredential(
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(
       unsignedCredential,
-      testDids.polygon.encryptedSeed,
-      password,
     )
-    const createdPresentation = await affinity.signPresentation({
+    const createdPresentation = await createAffinity(testDids.polygon.encryptedSeed, password).signPresentation({
       vp: buildPresentation([createdCredential], testDids.polygon.did),
-      encryption: {
-        seed: testDids.polygon.encryptedSeed,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -549,7 +528,7 @@ describe('Affinity', () => {
     // eslint-disable-next-line
     // @ts-ignore
     revokableCredential['@context'].push('https://w3id.org/vc-revocation-list-2020/v1')
-    const createdCredential = await affinity.signCredential(revokableCredential, encryptedSeedElem, password)
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(revokableCredential)
     const result = await affinity.validateCredential(createdCredential, `${credential.holder.id}#primary`)
     expect(result.result).to.be.true
   })
@@ -563,10 +542,8 @@ describe('Affinity', () => {
     // eslint-disable-next-line
     // @ts-ignore
     revokableCredential['@context'].push('https://w3id.org/vc-revocation-list-2020/v1')
-    const createdCredential = await affinity.signCredential(
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(
       revokableCredential,
-      testDids.polygon.encryptedSeed,
-      password,
     )
 
     const result = await affinity.validateCredential(createdCredential, `${credential.holder.id}#key-1`)
@@ -575,13 +552,9 @@ describe('Affinity', () => {
 
   it('#validatePresentation (jolo) (new presentations)', async () => {
     const unsignedCredential = createUnsignedCredential(didJolo)
-    const createdCredential = await affinity.signCredential(unsignedCredential, encryptedSeedJolo, password)
-    const createdPresentation = await affinity.signPresentation({
+    const createdCredential = await createAffinity(encryptedSeedJolo, password).signCredential(unsignedCredential)
+    const createdPresentation = await createAffinity(encryptedSeedJolo, password).signPresentation({
       vp: buildPresentation([createdCredential], didJolo),
-      encryption: {
-        seed: encryptedSeedJolo,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -596,17 +569,11 @@ describe('Affinity', () => {
   it('#validatePresentation (polygon) (new presentations)', async () => {
     const unsignedCredential = createUnsignedCredential(testDids.polygon.did)
     console.dir({ unsignedCredential }, { depth: null })
-    const createdCredential = await affinity.signCredential(
+    const createdCredential = await createAffinity(testDids.polygon.encryptedSeed, password).signCredential(
       unsignedCredential,
-      testDids.polygon.encryptedSeed,
-      password,
     )
-    const createdPresentation = await affinity.signPresentation({
+    const createdPresentation = await createAffinity(testDids.polygon.encryptedSeed, password).signPresentation({
       vp: buildPresentation([createdCredential], testDids.polygon.did),
-      encryption: {
-        seed: testDids.polygon.encryptedSeed,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -621,13 +588,9 @@ describe('Affinity', () => {
   it("#validatePresentation fails when the VP is not signed by the VC's holder", async () => {
     // In this case the ISSUER of the VC is the same as the signer of the VP.
     // But the holder of the issued VC is different than the signer of the VP.
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password)
-    const createdPresentation = await affinity.signPresentation({
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(credential)
+    const createdPresentation = await createAffinity(encryptedSeedElem, password).signPresentation({
       vp: buildPresentation([createdCredential], didElem),
-      encryption: {
-        seed: encryptedSeedElem,
-        key: password,
-      },
       purpose: {
         challenge: 'challenge',
         domain: 'domain',
@@ -648,7 +611,7 @@ describe('Affinity', () => {
     // @ts-ignore
     revokableCredential['@context'].push('https://w3id.org/vc-revocation-list-2020/v1')
 
-    const createdCredential = await affinity.signCredential(revokableCredential, encryptedSeedElem, password)
+    const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(revokableCredential)
     const result = await affinity.validateCredential(createdCredential, `${credential.holder.id}#keys-1`)
 
     expect(result.result).to.be.false
@@ -678,7 +641,7 @@ describe('Affinity', () => {
         .reply(200, { didDocument: testDocument })
 
       const affinity1 = new Affinity(
-        { registryUrl: 'https://affinity-registry.apse1.cachetest1.affinidi.io' },
+        { ...options, registryUrl: 'https://affinity-registry.apse1.cachetest1.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result1 = await affinity1.resolveDid('cache-test')
@@ -698,7 +661,7 @@ describe('Affinity', () => {
         .reply(200, { didDocument: testDocument })
 
       const affinity2 = new Affinity(
-        { registryUrl: 'https://affinity-registry.apse1.cachetest2.affinidi.io' },
+        { ...options, registryUrl: 'https://affinity-registry.apse1.cachetest2.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result1 = await affinity2.resolveDid('cache-test1')
@@ -726,14 +689,14 @@ describe('Affinity', () => {
         .reply(200, { didDocument: testDocument4 })
 
       const affinity3 = new Affinity(
-        { registryUrl: 'https://affinity-registry.apse1.cachetest3.affinidi.io' },
+        { ...options, registryUrl: 'https://affinity-registry.apse1.cachetest3.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result3 = await affinity3.resolveDid('cache-test')
       expect(result3).to.deep.equal(testDocument3)
 
       const affinity4 = new Affinity(
-        { registryUrl: 'https://affinity-registry.apse1.cachetest4.affinidi.io' },
+        { ...options, registryUrl: 'https://affinity-registry.apse1.cachetest4.affinidi.io' },
         ecdsaCryptographyTools,
       )
       const result4 = await affinity4.resolveDid('cache-test')
@@ -744,7 +707,7 @@ describe('Affinity', () => {
       const testDocument = { cache: 'test' }
 
       const affinity5 = new Affinity(
-        { registryUrl: 'https://affinity-registry.apse1.cachetest5.affinidi.io' },
+        { ...options, registryUrl: 'https://affinity-registry.apse1.cachetest5.affinidi.io' },
         ecdsaCryptographyTools,
       )
 
@@ -777,7 +740,7 @@ describe('Affinity', () => {
 
       const spyOnDidResolver = sinon.spy(didResolver, 'resolveDid')
 
-      const affinity6 = new Affinity({ didResolver: didResolver }, ecdsaCryptographyTools)
+      const affinity6 = new Affinity({ ...options, didResolver: didResolver }, ecdsaCryptographyTools)
       await affinity6.resolveDid(didElem)
 
       expect(spyOnDidResolver).to.have.been.calledOnce

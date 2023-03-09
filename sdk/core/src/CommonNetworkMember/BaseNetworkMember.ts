@@ -1,4 +1,4 @@
-import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity, LocalKeyVault } from '@affinidi/common'
+import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
 import { fetch } from '@affinidi/platform-fetch'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import {
@@ -84,7 +84,6 @@ export abstract class BaseNetworkMember {
   private readonly _encryptedSeed: string
   private readonly _password: string
   protected readonly _walletStorageService: WalletStorageService
-  protected readonly _keysService: KeysService
   private readonly _holderService: HolderService
   private readonly _metricsService: MetricsService
   private readonly _issuerApiService
@@ -103,16 +102,32 @@ export abstract class BaseNetworkMember {
     { platformCryptographyTools, eventComponent }: StaticDependencies,
     options: ParsedOptions,
   ) {
-    if (!did || !didDocumentKeyId || !encryptedSeed || !password) {
+    const isKeyManagerExternal = !!options.otherOptions.keyManager
+    const isSeedLocal = did && didDocumentKeyId && encryptedSeed && password
+    if (!did || !didDocumentKeyId || (!isSeedLocal && !isKeyManagerExternal)) {
       // TODO: implement appropriate error wrapper
-      throw new Error('`did`, `didDocumentKeyId`, `encryptedSeed` and `password` must be provided!')
+      throw new Error(
+        '`did`, `didDocumentKeyId`, `encryptedSeed` and `password` OR `did`, `didDocumentKeyId`, `keyManager` must be provided!',
+      )
     }
 
     const { accessApiKey, basicOptions, storageRegion } = options
     const { issuerUrl, revocationUrl, metricsUrl, registryUrl, verifierUrl, affinidiVaultUrl } = basicOptions
     const keysService = new KeysService(encryptedSeed, password, accountNumber)
-    const keyVault = new LocalKeyVault(keysService)
-    const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault })
+    this._affinity = new Affinity(
+      {
+        apiKey: accessApiKey,
+        registryUrl: registryUrl,
+        metricsUrl: metricsUrl,
+        component: eventComponent,
+        resolveLegacyElemLocally: options.otherOptions?.resolveLocallyElemMethod,
+        beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
+        keyManager: options.otherOptions?.keyManager,
+        keysService: keysService,
+      },
+      platformCryptographyTools,
+    )
+    const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault: this._affinity })
     const didAuthService = new DidAuthClientService(signer)
     const didAuthAdapter = new DidAuthAdapter(did, didAuthService)
 
@@ -134,7 +149,7 @@ export abstract class BaseNetworkMember {
       sdkVersion,
       didAuthAdapter,
     })
-    this._walletStorageService = new WalletStorageService(keysService, platformCryptographyTools, {
+    this._walletStorageService = new WalletStorageService(this._affinity.getKeyManager(), {
       affinidiVaultUrl,
       accessApiKey,
       storageRegion,
@@ -145,24 +160,14 @@ export abstract class BaseNetworkMember {
         registryUrl,
         metricsUrl,
         accessApiKey,
+        keyManager: options.otherOptions?.keyManager,
+        keysService: keysService,
       },
       platformCryptographyTools,
       eventComponent,
       options.otherOptions?.resolveLocallyElemMethod,
       options.otherOptions?.beforeDocumentLoader,
     )
-    this._affinity = new Affinity(
-      {
-        apiKey: accessApiKey,
-        registryUrl: registryUrl,
-        metricsUrl: metricsUrl,
-        component: eventComponent,
-        resolveLegacyElemLocally: options.otherOptions?.resolveLocallyElemMethod,
-        beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
-      },
-      platformCryptographyTools,
-    )
-    this._keysService = keysService
 
     this._options = options
     this._component = eventComponent
@@ -297,10 +302,7 @@ export abstract class BaseNetworkMember {
       throw new SdkErrorFromCode('COR-21', { did, instanceDid })
     }
 
-    const { seed, didMethod } = this._keysService.decryptSeed()
-    const seedHex = seed.toString('hex')
-    const transactionPublicKey = KeysService.getAnchorTransactionPublicKey(seedHex, didMethod)
-    const ethereumPublicKeyHex = transactionPublicKey.toString('hex')
+    const ethereumPublicKeyHex = await this._affinity.getAnchorTransactionPublicKey()
 
     const {
       body: { transactionCount },
@@ -384,7 +386,7 @@ export abstract class BaseNetworkMember {
       body: { credentialOffer },
     } = await this._issuerApiService.buildCredentialOffer(params)
 
-    const signedObject = this._keysService.signJWT(credentialOffer as any, this.didDocumentKeyId)
+    const signedObject = await this._affinity.signJWTObject(credentialOffer as any, this.didDocumentKeyId)
 
     return JwtService.encodeObjectToJWT(signedObject)
   }
@@ -433,7 +435,7 @@ export abstract class BaseNetworkMember {
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest as any, this.didDocumentKeyId)
+    const signedObject = await this._affinity.signJWTObject(credentialShareRequest as any, this.didDocumentKeyId)
 
     return JwtService.encodeObjectToJWT(signedObject)
   }
@@ -448,7 +450,7 @@ export abstract class BaseNetworkMember {
 
     const credentialOfferResponse = await this._holderService.buildCredentialOfferResponse(credentialOfferToken)
 
-    const signedObject = this._keysService.signJWT(credentialOfferResponse, this.didDocumentKeyId)
+    const signedObject = await this._affinity.signJWTObject(credentialOfferResponse, this.didDocumentKeyId)
 
     return JwtService.encodeObjectToJWT(signedObject)
   }
@@ -537,7 +539,7 @@ export abstract class BaseNetworkMember {
       expiresAt,
     )
 
-    const signedObject = this._keysService.signJWT(credentialResponse, this.didDocumentKeyId)
+    const signedObject = await this._affinity.signJWTObject(credentialResponse, this.didDocumentKeyId)
 
     return JwtService.encodeObjectToJWT(signedObject)
   }
@@ -599,13 +601,7 @@ export abstract class BaseNetworkMember {
     revokableUnsignedCredential['@context'].push('https://w3id.org/vc-revocation-list-2020/v1')
 
     if (revocationListCredential) {
-      const revocationSignedListCredential = await this._affinity.signCredential(
-        revocationListCredential as any,
-        this._encryptedSeed,
-        this._password,
-        'ecdsa',
-        this.accountNumber,
-      )
+      const revocationSignedListCredential = await this._affinity.signCredential(revocationListCredential as any)
       revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
       await this._revocationApiService.publishRevocationListCredential(revocationSignedListCredential)
@@ -619,13 +615,7 @@ export abstract class BaseNetworkMember {
       body: { revocationListCredential },
     } = await this._revocationApiService.revokeCredential({ id: credentialId, revocationReason })
 
-    const revocationSignedListCredential = await this._affinity.signCredential(
-      revocationListCredential,
-      this._encryptedSeed,
-      this._password,
-      'ecdsa',
-      this.accountNumber,
-    )
+    const revocationSignedListCredential = await this._affinity.signCredential(revocationListCredential)
     revocationSignedListCredential.issuanceDate = new Date().toISOString()
 
     await this._revocationApiService.publishRevocationListCredential(revocationSignedListCredential)
@@ -677,13 +667,7 @@ export abstract class BaseNetworkMember {
   }
 
   async signUnsignedCredential(unsignedCredential: VCV1Unsigned, keyType?: KeyAlgorithmType) {
-    return this._affinity.signCredential(
-      unsignedCredential,
-      this._encryptedSeed,
-      this._password,
-      keyType,
-      this.accountNumber,
-    )
+    return this._affinity.signCredential(unsignedCredential, keyType)
   }
 
   /**
@@ -962,7 +946,7 @@ export abstract class BaseNetworkMember {
       body: { credentialShareRequest },
     } = await this._verifierApiService.buildCredentialRequest(params)
 
-    const signedObject = this._keysService.signJWT(credentialShareRequest as any)
+    const signedObject = await this._affinity.signJWTObject(credentialShareRequest as any)
 
     return JwtService.encodeObjectToJWT(signedObject)
   }
@@ -970,15 +954,10 @@ export abstract class BaseNetworkMember {
   async signUnsignedPresentation(vp: VPV1Unsigned, challenge: string, domain: string) {
     return this._affinity.signPresentation({
       vp,
-      encryption: {
-        seed: this._encryptedSeed,
-        key: this._password,
-      },
       purpose: {
         challenge,
         domain,
       },
-      accountNumber: this.accountNumber,
     })
   }
 
@@ -1150,9 +1129,7 @@ export abstract class BaseNetworkMember {
    * @returns decrypted message
    */
   async readEncryptedMessage(encryptedMessage: string): Promise<any> {
-    const privateKeyBuffer = this._keysService.getOwnPrivateKey()
-
-    return this._platformCryptographyTools.decryptByPrivateKey(privateKeyBuffer, encryptedMessage)
+    return this._affinity.decryptByPrivateKey(encryptedMessage)
   }
 
   /**
@@ -1179,7 +1156,7 @@ export abstract class BaseNetworkMember {
   }
 
   async signJwt(jwtObject: any) {
-    return this._keysService.signJWT(jwtObject)
+    return this._affinity.signJWTObject(jwtObject)
   }
 
   /**

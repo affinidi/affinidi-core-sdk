@@ -1443,7 +1443,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#createPresentationFromChallenge returns a signed VPV1', async () => {
-    const affinity = new Affinity({}, testPlatformTools)
+    const keysService = new KeysService(encryptedSeedJolo, walletPassword)
+    const affinity = new Affinity({ keysService }, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
@@ -1463,8 +1464,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedJolo,
-      walletPassword,
     )
 
     const presentationChallenge = await requesterCommonNetworkMember.generatePresentationChallenge([
@@ -1480,7 +1479,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#createPresentationFromChallenge filters VCs based on the challenge', async () => {
-    const affinity = new Affinity({}, testPlatformTools)
+    const keysService = new KeysService(encryptedSeedJolo, walletPassword)
+    const affinity = new Affinity({ keysService }, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
@@ -1500,8 +1500,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedJolo,
-      walletPassword,
     )
 
     const phoneVC = await affinity.signCredential(
@@ -1520,8 +1518,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedJolo,
-      walletPassword,
     )
 
     const presentationChallenge = await requesterCommonNetworkMember.generatePresentationChallenge([
@@ -1542,7 +1538,8 @@ describe('CommonNetworkMember', () => {
 
   it('#verifyPresentation', async () => {
     // TODO resolve why this is failing
-    const affinity = new Affinity({}, testPlatformTools)
+    const keysService = new KeysService(encryptedSeedElem, walletPassword)
+    const affinity = new Affinity({ keysService }, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
 
@@ -1562,8 +1559,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedElem,
-      walletPassword,
     )
 
     const presentationChallenge = await requesterCommonNetworkMember.generatePresentationChallenge([
@@ -1585,7 +1580,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it("#verifyPresentation fails when the challenge wasn't signed by the correct party", async () => {
-    const affinity = new Affinity({}, testPlatformTools)
+    const keysService = new KeysService(encryptedSeedJolo, walletPassword)
+    const affinity = new Affinity({ keysService }, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
@@ -1605,8 +1601,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedJolo,
-      walletPassword,
     )
 
     const presentationChallenge = await userCommonNetworkMember.generatePresentationChallenge([
@@ -1621,7 +1615,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#verifyPresentation fails when the challenge is tampered with', async () => {
-    const affinity = new Affinity({}, testPlatformTools)
+    const keysService = new KeysService(encryptedSeedJolo, walletPassword)
+    const affinity = new Affinity({ keysService }, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedJolo, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
 
@@ -1641,8 +1636,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedJolo,
-      walletPassword,
     )
 
     const presentationChallenge = await requesterCommonNetworkMember.generatePresentationChallenge([
@@ -1661,7 +1654,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#verifyPresentation should work with challenge as uuid', async () => {
-    const affinity = new Affinity({}, testPlatformTools)
+    const keysService = new KeysService(encryptedSeedElem, walletPassword)
+    const affinity = new Affinity({ keysService }, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
 
@@ -1681,8 +1675,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedElem,
-      walletPassword,
     )
 
     const presentationChallenge = 'beb140f5-e746-4ba0-8bd2-f6ecf26c3f25'
@@ -1712,7 +1704,8 @@ describe('CommonNetworkMember', () => {
   })
 
   it('#verifyPresentation should fail validation with substituted wrong challenge by VP holder', async () => {
-    const affinity = new Affinity({}, testPlatformTools)
+    const keysService = new KeysService(encryptedSeedElem, walletPassword)
+    const affinity = new Affinity({ keysService }, testPlatformTools)
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
     const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
 
@@ -1732,8 +1725,6 @@ describe('CommonNetworkMember', () => {
         }),
         issuanceDate: new Date().toISOString(),
       }),
-      encryptedSeedElem,
-      walletPassword,
     )
 
     const presentationChallenge = 'beb140f5-e746-4ba0-8bd2-f6ecf26c3f25'

@@ -1,4 +1,4 @@
-import { Affinity } from '@affinidi/common'
+import { Affinity, KeysService } from '@affinidi/common'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import sinonChai from 'sinon-chai'
@@ -13,6 +13,10 @@ chai.use(sinonChai)
 
 function simpleClonePlainObject<T>(object: T): T {
   return JSON.parse(JSON.stringify(object))
+}
+
+const createAffinity = (encryptedSeed: string, password: string) => {
+  return new Affinity({ keysService: new KeysService(encryptedSeed, password) }, platformCryptographyTools)
 }
 
 describe('VC Signatures', () => {
@@ -41,10 +45,8 @@ describe('VC Signatures', () => {
     const { issuerEncryptedSeed, issuerEncryptionKey, issuerDidDocument, unsignedCredential } = rsaFixtures
 
     it('#signUnsignedCredential and #validateCredential with ecdsa', async () => {
-      const signedCredential: any = await affinity.signCredential(
+      const signedCredential: any = await createAffinity(issuerEncryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredential,
-        issuerEncryptedSeed,
-        issuerEncryptionKey,
         'ecdsa',
       )
       expect(signedCredential.proof.type).to.be.equal('EcdsaSecp256k1Signature2019')
@@ -65,10 +67,8 @@ describe('VC Signatures', () => {
     const { issuerEncryptedSeed, issuerEncryptionKey, issuerDidDocument, unsignedCredential } = rsaFixtures
 
     it('#signUnsignedCredential and #validateCredential with rsa', async () => {
-      const signedCredential = await affinity.signCredential(
+      const signedCredential = await createAffinity(issuerEncryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredential,
-        issuerEncryptedSeed,
-        issuerEncryptionKey,
         'rsa',
       )
 
@@ -88,10 +88,8 @@ describe('VC Signatures', () => {
 
     let signedCredential: any
     before(async () => {
-      signedCredential = await affinity.signCredential(
+      signedCredential = await createAffinity(issuerEncryptedSeed, issuerEncryptionKey).signCredential(
         unsignedCredential,
-        issuerEncryptedSeed,
-        issuerEncryptionKey,
         'bbs',
       )
     })

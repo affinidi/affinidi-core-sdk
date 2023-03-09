@@ -399,14 +399,11 @@ describe('CommonNetworkMember', () => {
 
     const revokableUnsignedCredential = await commonNetworkMember.buildRevocationListStatus(unsignedCredential)
 
-    const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
+    const keysService = new KeysService(REVOCATION_ENCRYPTED_SEED, REVOCATION_PASSWORD)
+    const affinityOptions = { ...fullOptions, apiKey: fullOptions.accessApiKey, keysService }
     const affinity = new Affinity(affinityOptions, testPlatformTools)
     expect(revokableUnsignedCredential.credentialStatus).to.exist
-    const createdCredential = await affinity.signCredential(
-      revokableUnsignedCredential,
-      REVOCATION_ENCRYPTED_SEED,
-      REVOCATION_PASSWORD,
-    )
+    const createdCredential = await affinity.signCredential(revokableUnsignedCredential)
 
     const sucessResult = await affinity.validateCredential(createdCredential)
     expect(sucessResult.result).to.equal(true)
@@ -619,13 +616,10 @@ describe('CommonNetworkMember', () => {
       expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
     })
 
-    const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
+    const keysService = new KeysService(REVOCATION_ENCRYPTED_SEED, REVOCATION_PASSWORD)
+    const affinityOptions = { ...fullOptions, apiKey: fullOptions.accessApiKey, keysService }
     const affinity = new Affinity(affinityOptions, testPlatformTools)
-    const signedCredential = await affinity.signCredential(
-      unsignedCredential,
-      REVOCATION_ENCRYPTED_SEED,
-      REVOCATION_PASSWORD,
-    )
+    const signedCredential = await affinity.signCredential(unsignedCredential)
 
     const sucessResult = await commonNetworkMember.validateCredential(signedCredential as SignedCredential)
     expect(sucessResult.result).to.equal(true)
@@ -1627,13 +1621,10 @@ describe('CommonNetworkMember', () => {
         expirationDate: new Date(new Date().getTime() + 10 * 60 * 1000).toISOString(),
       })
 
-      const affinityOptions = Object.assign({}, fullOptions, { apiKey: fullOptions.accessApiKey })
+      const keysService = new KeysService(REVOCATION_ENCRYPTED_SEED, REVOCATION_PASSWORD)
+      const affinityOptions = { ...fullOptions, apiKey: fullOptions.accessApiKey, keysService }
       const affinity = new Affinity(affinityOptions, testPlatformTools)
-      const signedCredential = await affinity.signCredential(
-        unsignedCredential,
-        REVOCATION_ENCRYPTED_SEED,
-        REVOCATION_PASSWORD,
-      )
+      const signedCredential = await affinity.signCredential(unsignedCredential)
 
       const sucessResult = await commonNetworkMember.validateCredential(signedCredential as SignedCredential)
       expect(sucessResult.result).to.equal(true)

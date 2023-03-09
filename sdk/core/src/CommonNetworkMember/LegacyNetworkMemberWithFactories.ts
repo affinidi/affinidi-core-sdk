@@ -25,8 +25,11 @@ export class LegacyNetworkMemberWithFactories extends LegacyNetworkMember {
   private readonly _userManagementService
   protected cognitoUserTokens: CognitoUserTokens | undefined
 
+  private _keysService: KeysService
+
   constructor(userData: UserDataWithCognito, dependencies: StaticDependencies, options: ParsedOptions) {
     super(userData, dependencies, options)
+    this._keysService = new KeysService(userData.encryptedSeed, userData.password)
     this._userManagementService = createUserManagementService(options)
     this.cognitoUserTokens = userData.cognitoUserTokens
   }

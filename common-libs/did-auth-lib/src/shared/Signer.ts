@@ -1,7 +1,11 @@
-import { KeysService, KeyVault } from '@affinidi/common'
+import { KeysService } from '@affinidi/common'
 import base64url from 'base64url'
 
-type SignerOptions = {
+export type KeyVault = {
+  signAsync(buffer: Buffer): Promise<Buffer>
+}
+
+export type SignerOptions = {
   did: string
   keyId: string
   keyVault: KeyVault

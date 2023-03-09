@@ -2,6 +2,15 @@ import { Secp256k1Key, Secp256k1Signature } from '@affinidi/tiny-lds-ecdsa-secp2
 import { IPlatformCryptographyTools } from './interfaces'
 
 export const ecdsaCryptographyTools: IPlatformCryptographyTools = {
+  computePersonalHash(): Promise<string> {
+    throw new Error('Not implemented')
+  },
+  decryptByPrivateKey(): Promise<any> {
+    throw new Error('Not implemented')
+  },
+  encryptByPublicKey(): Promise<string> {
+    throw new Error('Not implemented')
+  },
   signSuites: {
     bbs: () => {
       throw new Error('Not implemented')

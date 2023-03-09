@@ -13,6 +13,7 @@ const { DEV_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
 const options = {
   registryUrl: 'https://affinity-registry.apse1.dev.affinidi.io',
   apiKey: DEV_API_KEY_HASH,
+  keysService: {} as any,
 }
 
 const affinity = new Affinity(options, ecdsaCryptographyTools)

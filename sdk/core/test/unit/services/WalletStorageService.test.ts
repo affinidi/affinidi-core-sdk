@@ -24,6 +24,7 @@ import { AffinidiVaultApiService } from '@affinidi/internal-api-clients'
 import { DidAuthAdapter } from '../../../src/shared/DidAuthAdapter'
 import { extractSDKVersion } from '../../../src/_helpers'
 import { testPlatformToolsWithBadEncryption } from '../../helpers/testPlatformToolsWithBadEncryption'
+import { LocalKeyManager } from '@affinidi/common/dist/services/KeyManager/LocalKeyManager'
 
 const affinidiVaultUrl = resolveUrl(Service.VAULT, 'dev')
 const keyStorageUrl = resolveUrl(Service.KEY_STORAGE, 'dev')
@@ -36,6 +37,7 @@ const region = 'eu-west-2'
 
 const createWalletStorageService = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
+  const keyManager = new LocalKeyManager(keysService, testPlatformTools, {} as any, {} as any)
   const documentService = DidDocumentService.createDidDocumentService(keysService)
   const keyVault = new LocalKeyVault(keysService)
   const signer = new Signer({
@@ -45,7 +47,7 @@ const createWalletStorageService = () => {
   })
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter('', didAuthService)
-  return new WalletStorageService(keysService, testPlatformTools, {
+  return new WalletStorageService(keyManager, {
     affinidiVaultUrl,
     accessApiKey: undefined,
     storageRegion: region,
@@ -55,6 +57,7 @@ const createWalletStorageService = () => {
 
 const createWalletStorageServiceWithBadEncryption = () => {
   const keysService = new KeysService(encryptedSeed, walletPassword)
+  const keyManager = new LocalKeyManager(keysService, testPlatformToolsWithBadEncryption, {} as any, {} as any)
   const documentService = DidDocumentService.createDidDocumentService(keysService)
   const keyVault = new LocalKeyVault(keysService)
   const signer = new Signer({
@@ -64,7 +67,7 @@ const createWalletStorageServiceWithBadEncryption = () => {
   })
   const didAuthService = new DidAuthClientService(signer)
   const didAuthAdapter = new DidAuthAdapter('', didAuthService)
-  return new WalletStorageService(keysService, testPlatformToolsWithBadEncryption, {
+  return new WalletStorageService(keyManager, {
     affinidiVaultUrl,
     accessApiKey: undefined,
     storageRegion: region,
