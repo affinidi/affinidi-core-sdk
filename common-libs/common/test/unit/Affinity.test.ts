@@ -37,11 +37,11 @@ const jwtObject = {
 
 const affinity = new Affinity(options, ecdsaCryptographyTools)
 
-const createAffinity = (encryptedSeed: string, pass: string) =>
+const createAffinity = (encryptedSeed: string, pass: string, accountNumber?: number) =>
   new Affinity(
     {
       ...options,
-      keysService: new KeysService(encryptedSeed, pass),
+      keysService: new KeysService(encryptedSeed, pass, accountNumber),
     },
     ecdsaCryptographyTools,
   )
@@ -333,7 +333,7 @@ describe('Affinity', () => {
   })
 
   it('#signCredential (elem) with custom account number', async () => {
-    const createdCredential = await affinity.signCredential(credential, encryptedSeedElem, password, 'ecdsa', 1)
+    const createdCredential = await createAffinity(encryptedSeedElem, password, 1).signCredential(credential, 'ecdsa')
 
     const keyId = `${didElemShortFormWithAccountNumber1}#primary`
     expect(createdCredential).to.exist
