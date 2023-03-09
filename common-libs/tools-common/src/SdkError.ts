@@ -257,4 +257,9 @@ export const commonErrors = {
     message: 'Invalid phone number format',
     httpStatusCode: 400,
   },
+  'COR-35': {
+    type: 'InvalidParametersError',
+    message: 'Invalid JWT Token',
+    httpStatusCode: 400,
+  },
 } as const

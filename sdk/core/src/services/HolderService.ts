@@ -175,6 +175,10 @@ export default class HolderService {
         throw new SdkErrorFromCode('COR-19')
       }
 
+      if (error.message === 'Invalid Token') {
+        throw new SdkErrorFromCode('COR-35')
+      }
+
       throw error
     }
 
@@ -247,6 +251,10 @@ export default class HolderService {
     } catch (error) {
       if (error.message === 'Token expired') {
         return { isValid: false, errorCode: 'COR-19', error: error.message }
+      }
+
+      if (error.message === 'Invalid Token') {
+        return { isValid: false, errorCode: 'COR-35', error: error.message }
       }
 
       if (error.message === 'Signature on token is invalid') {

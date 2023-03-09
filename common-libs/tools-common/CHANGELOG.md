@@ -1,3 +1,5 @@
+# release 1.4.3 (2023-03-09)
+* added `COR-35` error code for invalid jwt token
 # release 1.4.2 (2023-02-23)
 * added COR-33 & COR-34 errors
 # release 1.4.1 (2023-02-15)

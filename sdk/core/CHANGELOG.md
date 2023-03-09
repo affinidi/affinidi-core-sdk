@@ -1,3 +1,5 @@
+# release 7.16.1 (2023-03-09)
+* updated `validateJWT` error handling
 # release 7.16.0 (2023-03-08)
 * updated to use latest common lib with KeyManager
 # release 7.15.0 (2023-03-07)
