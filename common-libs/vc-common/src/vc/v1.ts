@@ -39,6 +39,11 @@ export type VCV1Revocation = {
   id: string
 }
 
+export type VCV1Schema = {
+  id: string
+  type: string
+}
+
 export type VCV1Skeleton<
   Subject extends MaybeArray<VCV1Subject<SimpleThing>> = VCV1SubjectMA,
   Type extends VCV1Type = VCV1Type,
@@ -49,6 +54,7 @@ export type VCV1Skeleton<
   type: Type
   holder: Holder
   credentialSubject: Subject
+  credentialSchema?: VCV1Schema
 }
 
 export type VCV1Unsigned<

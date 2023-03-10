@@ -1763,6 +1763,7 @@ describe('CommonNetworkMember', () => {
     const presentationChallenge = 'beb140f5-e746-4ba0-8bd2-f6ecf26c3f25'
     const domain = 'domain'
 
+    // TODO: VP should be signed by the same user as VC inside VP
     const vp = await userCommonNetworkMember.signUnsignedPresentation(
       presentationWithSubmission,
       presentationChallenge,
