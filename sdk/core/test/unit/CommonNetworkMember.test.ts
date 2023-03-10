@@ -42,6 +42,7 @@ import cognitoUserTokens from '../factory/cognitoUserTokens'
 import credentialShareRequestToken from '../factory/credentialShareRequestToken'
 import parsedCredentialShareRequestToken from '../factory/parsedCredentialShareRequestToken'
 import parsedCredentialShareResponseToken from '../factory/parsedCredentialShareResponseToken'
+import presentationWithSubmission from '../factory/presentationWithSubmission'
 import { testPlatformTools } from '../helpers/testPlatformTools'
 import { randomBytes } from '../../src/shared/randomBytes'
 
@@ -1752,6 +1753,30 @@ describe('CommonNetworkMember', () => {
     } else {
       expect(result.suppliedPresentation).to.deep.eq(vp)
       expect(result.errors.join('\n')).to.contains('The challenge is not as expected')
+    }
+  })
+
+  it('#verifyPresentation should work with presentation that has submissions', async () => {
+    const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
+    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
+
+    const presentationChallenge = 'beb140f5-e746-4ba0-8bd2-f6ecf26c3f25'
+    const domain = 'domain'
+
+    const vp = await userCommonNetworkMember.signUnsignedPresentation(
+      presentationWithSubmission,
+      presentationChallenge,
+      domain,
+    )
+    const result = await requesterCommonNetworkMember.verifyPresentation(vp)
+
+    if (result.isValid === true) {
+      expect(result.did).to.eq(didElem)
+      expect(result.challenge).to.eq(presentationChallenge)
+      expect(result.suppliedPresentation).to.deep.eq(vp)
+    } else {
+      expect(result.suppliedPresentation).to.deep.eq(vp)
+      expect.fail(result.errors.join('\n'))
     }
   })
 

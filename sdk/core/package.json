@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-core-sdk",
-  "version": "7.16.1",
+  "version": "7.16.2",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -43,7 +43,7 @@
   "dependencies": {
     "@affinidi/affinidi-did-auth-lib": "^2.8.0",
     "@affinidi/affinity-metrics-lib": "^0.0.25",
-    "@affinidi/common": "^3.0.0",
+    "@affinidi/common": "^3.0.1",
     "@affinidi/internal-api-clients": "^2.5.1",
     "@affinidi/issuer-email-ses-client": "^0.1.1",
     "@affinidi/issuer-phone-twilio-client": "^0.1.1",
@@ -51,8 +51,8 @@
     "@affinidi/tools-common": "^1.4.3",
     "@affinidi/url-resolver": "^4.0.0",
     "@affinidi/user-management": "^2.6.1",
-    "@affinidi/vc-common": "^1.7.0",
-    "@affinidi/vc-data": "^1.6.1",
+    "@affinidi/vc-common": "^1.7.1",
+    "@affinidi/vc-data": "^1.6.2",
     "ajv": "^6.12.3",
     "async-retry": "^1.3.1",
     "bip32": "^2.0.5",
