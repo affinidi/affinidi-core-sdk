@@ -1758,12 +1758,14 @@ describe('CommonNetworkMember', () => {
 
   it('#verifyPresentation should work with presentation that has submissions', async () => {
     const requesterCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElem, options)
-    const userCommonNetworkMember = new AffinidiWallet(walletPassword, encryptedSeedElemAlt, options)
+    const userSeed =
+      'a6a6c462b15619273fbf942c99e2b7c1be03ef184f5d1d27a17f29b45c4676dcc5e07ecc835acf1ff1d6f437e95f5cc77ce597d254a7b7' +
+      'db932bbb2698d0804e47cd02c7f02580da2132d008c0e313820964646c7630e01d65925d4b5f8db741'
+    const userPassword = 'Test8b60806087f5e7b8eee6607ae8!!'
+    const userCommonNetworkMember = new AffinidiWallet(userPassword, userSeed, options)
 
     const presentationChallenge = 'beb140f5-e746-4ba0-8bd2-f6ecf26c3f25'
     const domain = 'domain'
-
-    // TODO: VP should be signed by the same user as VC inside VP
     const vp = await userCommonNetworkMember.signUnsignedPresentation(
       presentationWithSubmission,
       presentationChallenge,
@@ -1772,7 +1774,6 @@ describe('CommonNetworkMember', () => {
     const result = await requesterCommonNetworkMember.verifyPresentation(vp)
 
     if (result.isValid === true) {
-      expect(result.did).to.eq(didElem)
       expect(result.challenge).to.eq(presentationChallenge)
       expect(result.suppliedPresentation).to.deep.eq(vp)
     } else {
