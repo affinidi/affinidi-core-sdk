@@ -1,3 +1,5 @@
+# release 7.16.2 (2023-03-10)
+* Update common libs to support presentation submission v2 
 # release 7.16.1 (2023-03-09)
 * updated `validateJWT` error handling
 # release 7.16.0 (2023-03-08)

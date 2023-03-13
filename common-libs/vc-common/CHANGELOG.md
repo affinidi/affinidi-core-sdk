@@ -1,3 +1,5 @@
+# release 1.7.0 (2023-03-10)
+* Extend types for Presentation Exchange V2 submission
 # release 1.7.0 (2023-02-09)
 * Added the ability to check if the `challenge` field matches.
 * Now the `VP` requester can send an initial `challenge` to compare

@@ -25,6 +25,8 @@ export type PresentationSubmissionDescriptorV1 = {
 }
 export type PresentationSubmissionV1 = {
   locale?: string
+  id?: string
+  definition_id?: string
   descriptor_map: PresentationSubmissionDescriptorV1[]
 }
 

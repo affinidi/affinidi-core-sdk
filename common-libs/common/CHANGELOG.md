@@ -1,3 +1,5 @@
+# release 3.0.1 (2023-02-10)
+* Update vc common lb, extend presentation submission 
 # release 3.0.0 (2023-03-08)
 * added KeyManager abstraction, all operations with Private Key moved to KeyManager
 # release 2.14.0 (2023-03-07)

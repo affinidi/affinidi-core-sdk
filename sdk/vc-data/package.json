@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/vc-data",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "description": "Data types for verifiable credentials",
@@ -29,7 +29,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@affinidi/vc-common": "^1.7.0",
+    "@affinidi/vc-common": "^1.7.1",
     "@ahryman40k/ts-fhir-types": "^4.0.34",
     "ts-toolbelt": "^6.4.2",
     "tslib": "^2.0.0"
