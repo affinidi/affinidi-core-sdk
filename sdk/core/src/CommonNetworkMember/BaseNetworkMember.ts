@@ -58,8 +58,8 @@ import WalletStorageService from '../services/WalletStorageService'
 
 import { Util } from './Util'
 
-export const createKeyManagementService = ({ basicOptions, accessApiKey }: ParsedOptions) => {
-  return new KeyManagementService({ ...basicOptions, accessApiKey })
+export const createKeyManagementService = ({ basicOptions, accessApiKey, otherOptions }: ParsedOptions) => {
+  return new KeyManagementService({ ...basicOptions, accessApiKey, tenantToken: otherOptions.tenantToken })
 }
 
 export type StaticDependencies = {

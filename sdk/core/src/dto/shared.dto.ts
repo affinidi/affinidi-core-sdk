@@ -149,6 +149,9 @@ export class SdkOptions {
 
   @IsOptional()
   keyManager?: KeyManager
+
+  @IsOptional()
+  tenantToken?: string
 }
 
 export class MessageParameters {

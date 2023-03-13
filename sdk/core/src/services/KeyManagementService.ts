@@ -12,6 +12,7 @@ import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 type ConstructorOptions = {
   keyStorageUrl: string
   accessApiKey: string
+  tenantToken?: string
 }
 
 const sha256 = (data: unknown) => {
@@ -33,6 +34,7 @@ export default class KeyManagementService {
       keyStorageUrl: options.keyStorageUrl,
       accessApiKey: options.accessApiKey,
       sdkVersion: extractSDKVersion(),
+      tenantToken: options.tenantToken,
     })
   }
 

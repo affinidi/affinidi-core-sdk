@@ -675,6 +675,22 @@ export default {
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "header",
+						"name": "Api-Key",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "tenantToken",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				]
 			}
