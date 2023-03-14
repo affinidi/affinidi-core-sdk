@@ -51,7 +51,14 @@ export default class KeyStorageApiService {
   }
 
   async readMyKey({ accessToken }: { accessToken: string }) {
-    return this.client.ReadMyKey({ authorization: accessToken })
+    const tenantToken = this.client.tenantToken
+
+    const params = { authorization: accessToken } as any
+    if (tenantToken) {
+      params.queryParams = { tenantToken }
+    }
+
+    return this.client.ReadMyKey(params)
   }
 
   async storeMyKey(accessToken: string, params: GetParams<typeof clientMethods.StoreMyKey>) {

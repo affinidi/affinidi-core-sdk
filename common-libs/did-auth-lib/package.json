@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/affinidi-did-auth-lib",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "Affinidi Did Auth Helpers",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -42,8 +42,8 @@
   },
   "homepage": "https://github.com/affinityproject/affinidi-core-sdk#readme",
   "dependencies": {
-    "@affinidi/common": "^3.0.0",
-    "@affinidi/internal-api-clients": "^2.5.1",
+    "@affinidi/common": "^3.1.0",
+    "@affinidi/internal-api-clients": "^2.6.0",
     "@affinidi/tools-common": "^1.4.2",
     "@affinidi/url-resolver": "^4.0.0",
     "did-resolver": "^4.0.0"

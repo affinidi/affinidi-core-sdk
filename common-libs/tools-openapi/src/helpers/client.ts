@@ -13,6 +13,7 @@ export type ThisData = {
   accessApiKey: string
   sdkVersion?: string
   serviceUrl: string
+  tenantToken?: string
 }
 
 type MethodTypeByOperation<TOperation extends BuiltApiOperationType> = (
