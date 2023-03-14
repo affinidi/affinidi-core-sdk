@@ -1,3 +1,5 @@
+# release 7.14.0 (2023-03-14)
+* add tenant token
 # release 7.13.1 (2023-03-09)
 * updated `validateJWT` error handling
 # release 7.13.0 (2023-03-08)

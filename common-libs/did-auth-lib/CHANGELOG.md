@@ -1,3 +1,5 @@
+# release 2.9.0 (2023-03-14)
+* add tenant token
 # release 2.8.0 (2023-03-08)
 * updated to use latest common lib
 # release 2.7.0 (2023-03-07)

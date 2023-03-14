@@ -1,3 +1,5 @@
+# release 2.6.0 (2023-03-14)
+* add tenant token
 # release 2.5.1 (2023-02-09)
 * Updated api of VerifierService. 
 * Updated `tools-common`, `tools-openapi` libs versions.
