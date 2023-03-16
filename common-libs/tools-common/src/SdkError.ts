@@ -259,7 +259,7 @@ export const commonErrors = {
   },
   'COR-35': {
     type: 'InvalidParametersError',
-    message: 'Invalid JWT Token',
+    message: 'Invalid Token',
     httpStatusCode: 400,
   },
 } as const
