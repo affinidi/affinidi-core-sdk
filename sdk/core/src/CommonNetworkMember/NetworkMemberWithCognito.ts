@@ -560,7 +560,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
     try {
       token = JSON.parse(signInToken)
     } catch (error) {
-      throw new SdkErrorFromCode('COR-35')
+      throw new SdkErrorFromCode('COR-35', {}, error)
     }
 
     switch (token.signInType) {
@@ -575,7 +575,7 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
           wallet: await this.completeSignUp(dependencies, options, token.signUpToken, confirmationCode, null, true),
         }
       default:
-        throw new Error(`Incorrect token type '${token.signInType}'`)
+        throw new SdkErrorFromCode('COR-35', { message: `Incorrect token type '${token.signInType}'` })
     }
   }
 
