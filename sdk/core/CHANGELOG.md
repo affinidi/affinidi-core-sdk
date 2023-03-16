@@ -1,3 +1,5 @@
+# release 7.17.1 (2023-03-16)
+* updated error handling for invalid `signInToken`
 # release 7.17.0 (2023-03-14)
 * add tenant token
 # release 7.16.2 (2023-03-10)
