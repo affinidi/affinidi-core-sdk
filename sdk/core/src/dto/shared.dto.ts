@@ -61,6 +61,11 @@ export class SdkOptions {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   @IsUrl({ require_tld: false })
   @IsOptional()
+  affinidiMessagesUrl?: string
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  @IsUrl({ require_tld: false })
+  @IsOptional()
   revocationUrl?: string
 
   @IsOptional()

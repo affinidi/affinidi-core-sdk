@@ -24,6 +24,7 @@ export const getAllOptionsForEnvironment = () => {
 
   const urls = {
     affinidiVaultUrl: resolveUrl(Service.VAULT, env),
+    affinidiMessagesUrl: resolveUrl(Service.MESSAGES, env),
     registryUrl: resolveUrl(Service.REGISTRY, env),
     revocationUrl: resolveUrl(Service.REVOCATION, env),
     keyStorageUrl: resolveUrl(Service.KEY_STORAGE, env),

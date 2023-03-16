@@ -7,6 +7,7 @@ import {
   RevocationApiService,
   VerifierApiService,
 } from '@affinidi/internal-api-clients'
+import { AffinidiMessagesApiService } from '../../../../common-libs/internal-api-clients/dist'
 import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
 import { profile } from '@affinidi/tools-common'
 import {
@@ -89,6 +90,7 @@ export abstract class BaseNetworkMember {
   private readonly _verifierApiService
   private readonly _registryApiService
   private readonly _revocationApiService
+  private readonly _affinidiMessagesApiService
   protected readonly _keyManagementService
   protected readonly _affinity
   protected readonly _options
@@ -107,7 +109,15 @@ export abstract class BaseNetworkMember {
     }
 
     const { accessApiKey, basicOptions, storageRegion } = options
-    const { issuerUrl, revocationUrl, metricsUrl, registryUrl, verifierUrl, affinidiVaultUrl } = basicOptions
+    const {
+      issuerUrl,
+      revocationUrl,
+      metricsUrl,
+      registryUrl,
+      verifierUrl,
+      affinidiVaultUrl,
+      affinidiMessagesUrl,
+    } = basicOptions
     const keysService = new KeysService(encryptedSeed, password)
     const keyVault = new LocalKeyVault(keysService)
     const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault })
@@ -125,6 +135,12 @@ export abstract class BaseNetworkMember {
     this._registryApiService = new RegistryApiService({ registryUrl, accessApiKey, sdkVersion })
     this._issuerApiService = new IssuerApiService({ issuerUrl, accessApiKey, sdkVersion })
     this._verifierApiService = new VerifierApiService({ verifierUrl, accessApiKey, sdkVersion })
+    this._affinidiMessagesApiService = new AffinidiMessagesApiService({
+      affinidiMessagesUrl,
+      accessApiKey,
+      sdkVersion,
+      didAuthAdapter,
+    })
     this._keyManagementService = createKeyManagementService(options)
     this._revocationApiService = new RevocationApiService({
       revocationUrl,
@@ -1219,5 +1235,17 @@ export abstract class BaseNetworkMember {
     }
 
     return credentialsRequestBody.vcs
+  }
+
+  async sendMessage() {
+    return this._affinidiMessagesApiService.sendMessage({})
+  }
+
+  async pullMyMessages() {
+    return this._affinidiMessagesApiService.pullMyMessages()
+  }
+
+  async deleteMyMessage() {
+    return this._affinidiMessagesApiService.deleteMyMessage('')
   }
 }
