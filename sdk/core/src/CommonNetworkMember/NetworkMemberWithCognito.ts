@@ -23,6 +23,7 @@ import {
 import { createUserManagementService } from '../shared/createUserManagementService'
 import { generatePassword } from '../shared/generatePassword'
 import { normalizeShortPassword } from '../shared/normalizeShortPassword'
+import SdkErrorFromCode from '../shared/SdkErrorFromCode'
 
 type UserDataWithCognito = ConstructorUserData & {
   cognitoUserTokens: CognitoUserTokens
@@ -555,7 +556,13 @@ export class NetworkMemberWithCognito extends BaseNetworkMember {
       { isArray: false, type: 'confirmationCode', isRequired: true, value: confirmationCode },
     ])
 
-    const token = JSON.parse(signInToken)
+    let token
+    try {
+      token = JSON.parse(signInToken)
+    } catch (error) {
+      throw new SdkErrorFromCode('COR-35')
+    }
+
     switch (token.signInType) {
       case 'logIn':
         return {
