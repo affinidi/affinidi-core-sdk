@@ -1,5 +1,5 @@
 import { wrapJsonldFrameFunction } from '@affinidi/common'
-import { IPlatformCryptographyTools, ecdsaCryptographyTools } from '@affinidi/wallet-core-sdk'
+import { IPlatformCryptographyTools, ecdsaCryptographyTools, crypto as eccrypto } from '@affinidi/wallet-core-sdk'
 import { generateBls12381G2KeyPair } from '@mattrglobal/bbs-signatures'
 import {
   BbsBlsSignature2020,
@@ -9,7 +9,6 @@ import {
 } from '@mattrglobal/jsonld-signatures-bbs'
 import bs58 from 'bs58'
 import crypto from 'crypto'
-import * as eccrypto from 'eccrypto-js'
 import randomBytes from 'randombytes'
 
 const jsonldSignatures = require('jsonld-signatures')

@@ -13,6 +13,7 @@ export type {
   SdkOptions,
 } from './dto/shared.dto'
 export type { IPlatformCryptographyTools } from './shared/interfaces'
+export * as crypto from './CryptoLib'
 export { createV5CompatibleWalletFactories, createV6WalletFactories } from './factories/walletFactories'
 export { Util } from './CommonNetworkMember/Util'
 
