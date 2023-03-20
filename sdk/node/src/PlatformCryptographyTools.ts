@@ -1,5 +1,5 @@
 import { wrapJsonldFrameFunction } from '@affinidi/common'
-import { IPlatformCryptographyTools, ecdsaCryptographyTools, crypto as eccrypto } from '@affinidi/wallet-core-sdk'
+import { IPlatformCryptographyTools, ecdsaCryptographyTools, crypto as customcrypto } from '@affinidi/wallet-core-sdk'
 import { generateBls12381G2KeyPair } from '@mattrglobal/bbs-signatures'
 import {
   BbsBlsSignature2020,
@@ -20,7 +20,7 @@ const { RSAKeyPair } = cryptoLd
 wrapJsonldFrameFunction(require('jsonld'))
 
 const isValidPrivateKey = (privateKey: Buffer) => {
-  const { EC_GROUP_ORDER, ZERO32 } = eccrypto
+  const { EC_GROUP_ORDER, ZERO32 } = customcrypto
 
   const isValid = privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
   return isValid
@@ -54,7 +54,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
       mac: Buffer.from(mac, 'hex'),
     }
 
-    const dataBuffer = await eccrypto.decrypt(privateKeyBuffer, encryptedData)
+    const dataBuffer = await customcrypto.decrypt(privateKeyBuffer, encryptedData)
     const data = JSON.parse(dataBuffer.toString())
 
     return data
@@ -69,7 +69,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
 
     const options = { iv: randomIv, ephemPrivateKey }
 
-    const encryptedData = await eccrypto.encrypt(publicKeyBuffer, dataBuffer, options)
+    const encryptedData = await customcrypto.encrypt(publicKeyBuffer, dataBuffer, options)
 
     const { iv, ephemPublicKey, ciphertext, mac } = encryptedData
 
@@ -88,7 +88,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
   computePersonalHash: async (privateKeyBuffer, data) => {
     const dataBuffer = Buffer.from(data)
 
-    const signatureBuffer = await eccrypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
+    const signatureBuffer = await customcrypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
     const signature = signatureBuffer.toString('hex')
 
     return signature

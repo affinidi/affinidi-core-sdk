@@ -1,3 +1,5 @@
+# release 7.15.0 (2023-03-20)
+Rebuild crypto encrypt/decrypt lib
 # release 7.14.1 (2023-03-16)
 * updated error handling for invalid `signInToken`
 # release 7.14.0 (2023-03-14)
