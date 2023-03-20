@@ -67,7 +67,7 @@ export async function browserImportKey(
     buffer,
     getAlgo(type),
     true,
-    getOps(type)
+    getOps(type) as any
   );
 }
 
@@ -117,7 +117,7 @@ export async function browserHmacSha256Sign(
     {
       length: HMAC_LENGTH,
       name: HMAC_BROWSER,
-    },
+    } as any,
     cryptoKey,
     data
   );
