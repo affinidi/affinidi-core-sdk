@@ -10,19 +10,21 @@ import {
   HMAC_LENGTH,
   SHA256_BROWSER_ALGO,
   SHA512_BROWSER_ALGO,
-} from '../constants';
-import { arrayToBuffer } from '../helpers';
-import { fallbackRandomBytes } from './fallback';
+} from '../constants'
+import { arrayToBuffer } from '../helpers'
+import { fallbackRandomBytes } from './fallback'
 
 export function getBrowerCrypto(): Crypto {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  return global?.crypto || global?.msCrypto || {};
+  return global?.crypto || global?.msCrypto || {}
 }
 
 export function getSubtleCrypto(): SubtleCrypto {
-  const browserCrypto = getBrowerCrypto();
+  const browserCrypto = getBrowerCrypto()
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  return browserCrypto.subtle || browserCrypto.webkitSubtle;
+  return browserCrypto.subtle || browserCrypto.webkitSubtle
 }
 
 export function getAlgo(type: string): AesKeyAlgorithm | HmacImportParams {
@@ -31,117 +33,86 @@ export function getAlgo(type: string): AesKeyAlgorithm | HmacImportParams {
     : {
         hash: { name: HMAC_BROWSER_ALGO },
         name: HMAC_BROWSER,
-      };
+      }
 }
 
 export function getOps(type: string): string[] {
-  return type === AES_BROWSER_ALGO
-    ? [ENCRYPT_OP, DECRYPT_OP]
-    : [SIGN_OP, VERIFY_OP];
+  return type === AES_BROWSER_ALGO ? [ENCRYPT_OP, DECRYPT_OP] : [SIGN_OP, VERIFY_OP]
 }
 
 export function browserRandomBytes(length: number): Buffer {
-  const browserCrypto = getBrowerCrypto();
+  const browserCrypto = getBrowerCrypto()
   if (typeof browserCrypto.getRandomValues !== 'undefined') {
-    return arrayToBuffer(browserCrypto.getRandomValues(new Uint8Array(length)));
+    return arrayToBuffer(browserCrypto.getRandomValues(new Uint8Array(length)))
   }
-  return fallbackRandomBytes(length);
+
+  return fallbackRandomBytes(length)
 }
 
-export async function browserExportKey(
-  cryptoKey: CryptoKey,
-  type: string = AES_BROWSER_ALGO
-): Promise<Buffer> {
-  const subtle = getSubtleCrypto();
-  return arrayToBuffer(
-    new Uint8Array(await subtle.exportKey('raw', cryptoKey))
-  );
+export async function browserImportKey(buffer: Buffer, type: string = AES_BROWSER_ALGO): Promise<CryptoKey> {
+  return getSubtleCrypto().importKey('raw', buffer, getAlgo(type), true, getOps(type) as any)
 }
 
-export async function browserImportKey(
-  buffer: Buffer,
-  type: string = AES_BROWSER_ALGO
-): Promise<CryptoKey> {
-  return getSubtleCrypto().importKey(
-    'raw',
-    buffer,
-    getAlgo(type),
-    true,
-    getOps(type) as any
-  );
-}
-
-export async function browserAesEncrypt(
-  iv: Buffer,
-  key: Buffer,
-  data: Buffer
-): Promise<Buffer> {
-  const subtle = getSubtleCrypto();
-  const cryptoKey = await browserImportKey(key, AES_BROWSER_ALGO);
+export async function browserAesEncrypt(iv: Buffer, key: Buffer, data: Buffer): Promise<Buffer> {
+  const subtle = getSubtleCrypto()
+  const cryptoKey = await browserImportKey(key, AES_BROWSER_ALGO)
   const result = await subtle.encrypt(
     {
       iv,
       name: AES_BROWSER_ALGO,
     },
     cryptoKey,
-    data
-  );
-  return Buffer.from(result);
+    data,
+  )
+  return Buffer.from(result)
 }
 
-export async function browserAesDecrypt(
-  iv: Buffer,
-  key: Buffer,
-  data: Buffer
-): Promise<Buffer> {
-  const subtle = getSubtleCrypto();
-  const cryptoKey = await browserImportKey(key, AES_BROWSER_ALGO);
+export async function browserAesDecrypt(iv: Buffer, key: Buffer, data: Buffer): Promise<Buffer> {
+  const subtle = getSubtleCrypto()
+  const cryptoKey = await browserImportKey(key, AES_BROWSER_ALGO)
   const result = await subtle.decrypt(
     {
       iv,
       name: AES_BROWSER_ALGO,
     },
     cryptoKey,
-    data
-  );
-  return Buffer.from(result);
+    data,
+  )
+  return Buffer.from(result)
 }
 
-export async function browserHmacSha256Sign(
-  key: Buffer,
-  data: Buffer
-): Promise<Buffer> {
-  const subtle = getSubtleCrypto();
-  const cryptoKey = await browserImportKey(key, HMAC_BROWSER);
+export async function browserHmacSha256Sign(key: Buffer, data: Buffer): Promise<Buffer> {
+  const subtle = getSubtleCrypto()
+  const cryptoKey = await browserImportKey(key, HMAC_BROWSER)
   const signature = await subtle.sign(
     {
       length: HMAC_LENGTH,
       name: HMAC_BROWSER,
     } as any,
     cryptoKey,
-    data
-  );
-  return Buffer.from(signature);
+    data,
+  )
+  return Buffer.from(signature)
 }
 
 export async function browserSha256(data: Buffer): Promise<Buffer> {
-  const subtle = getSubtleCrypto();
+  const subtle = getSubtleCrypto()
   const result = await subtle.digest(
     {
       name: SHA256_BROWSER_ALGO,
     },
-    data
-  );
-  return Buffer.from(result);
+    data,
+  )
+  return Buffer.from(result)
 }
 
 export async function browserSha512(data: Buffer): Promise<Buffer> {
-  const subtle = getSubtleCrypto();
+  const subtle = getSubtleCrypto()
   const result = await subtle.digest(
     {
       name: SHA512_BROWSER_ALGO,
     },
-    data
-  );
-  return Buffer.from(result);
+    data,
+  )
+  return Buffer.from(result)
 }

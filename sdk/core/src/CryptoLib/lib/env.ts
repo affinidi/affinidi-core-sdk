@@ -1,7 +1,7 @@
-import { getBrowerCrypto, getSubtleCrypto } from './browser';
+import { getBrowerCrypto, getSubtleCrypto } from './browser'
 
 export function isBrowser(): boolean {
-  return !!getBrowerCrypto() && !!getSubtleCrypto();
+  return !!getBrowerCrypto() && !!getSubtleCrypto()
 }
 
 export function isNode(): boolean {
@@ -9,5 +9,5 @@ export function isNode(): boolean {
     typeof process !== 'undefined' &&
     typeof process.versions !== 'undefined' &&
     typeof process.versions.node !== 'undefined'
-  );
+  )
 }

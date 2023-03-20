@@ -1,21 +1,23 @@
-import { isValidKeyLength } from './helpers';
+import { isValidKeyLength } from './helpers'
 
-import { isBrowser, isNode } from './lib/env';
-import { browserRandomBytes } from './lib/browser';
-import { nodeRandomBytes } from './lib/node';
-import { fallbackRandomBytes } from './lib/fallback';
+import { isBrowser, isNode } from './lib/env'
+import { browserRandomBytes } from './lib/browser'
+import { nodeRandomBytes } from './lib/node'
+import { fallbackRandomBytes } from './lib/fallback'
 
 export function randomBytes(length: number): Buffer {
   if (!isValidKeyLength(length)) {
-    throw new Error(`randomBytes - invalid key length: ${length}`);
+    throw new Error(`randomBytes - invalid key length: ${length}`)
   }
-  let result;
+
+  let result
   if (isBrowser()) {
-    result = browserRandomBytes(length);
+    result = browserRandomBytes(length)
   } else if (isNode()) {
-    result = nodeRandomBytes(length);
+    result = nodeRandomBytes(length)
   } else {
-    result = fallbackRandomBytes(length);
+    result = fallbackRandomBytes(length)
   }
-  return result;
+
+  return result
 }
