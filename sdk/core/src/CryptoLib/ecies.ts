@@ -3,7 +3,7 @@ import {
   aesCbcDecrypt,
 } from './aes';
 import { derive } from './ecdh';
-import { getPublic, decompress, compress } from './ecdsa';
+import { getPublic, decompress } from './ecdsa';
 import {
   hmacSha256Sign,
   hmacSha256Verify,
@@ -15,8 +15,6 @@ import {
   LENGTH_0,
   KEY_LENGTH,
   IV_LENGTH,
-  MAC_LENGTH,
-  PREFIXED_KEY_LENGTH,
   ERROR_BAD_MAC,
 } from './constants';
 import {
@@ -86,23 +84,4 @@ export async function decrypt(
   assert(macTest, ERROR_BAD_MAC);
   const msg = await aesCbcDecrypt(opts.iv, encryptionKey, opts.ciphertext);
   return msg;
-}
-
-export function serialize(opts: Encrypted): Buffer {
-  const ephemPublicKey = compress(opts.ephemPublicKey);
-  return concatBuffers(opts.iv, ephemPublicKey, opts.mac, opts.ciphertext);
-}
-
-export function deserialize(buf: Buffer): Encrypted {
-  const slice0 = LENGTH_0;
-  const slice1 = slice0 + IV_LENGTH;
-  const slice2 = slice1 + PREFIXED_KEY_LENGTH;
-  const slice3 = slice2 + MAC_LENGTH;
-  const slice4 = buf.length;
-  return {
-    iv: buf.slice(slice0, slice1),
-    ephemPublicKey: decompress(buf.slice(slice1, slice2)),
-    mac: buf.slice(slice2, slice3),
-    ciphertext: buf.slice(slice3, slice4),
-  };
 }

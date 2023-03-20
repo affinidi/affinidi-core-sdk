@@ -4,7 +4,6 @@ import {
   AES_NODE_ALGO,
   SHA512_NODE_ALGO,
   SHA256_NODE_ALGO,
-  RIPEMD160_NODE_ALGO,
 } from '../constants';
 import { concatBuffers } from '../helpers';
 
@@ -29,12 +28,6 @@ export function fallbackHmacSha256Sign(key: Buffer, data: Buffer): Buffer {
     .digest();
 }
 
-export function fallbackHmacSha512Sign(key: Buffer, data: Buffer): Buffer {
-  return crypto
-    .createHmac(SHA512_NODE_ALGO, Buffer.from(key))
-    .update(data)
-    .digest();
-}
 
 export function fallbackSha256(data: Buffer): Buffer {
   return crypto
@@ -46,13 +39,6 @@ export function fallbackSha256(data: Buffer): Buffer {
 export function fallbackSha512(data: Buffer): Buffer {
   return crypto
     .createHash(SHA512_NODE_ALGO)
-    .update(data)
-    .digest();
-}
-
-export function fallbackRipemd160(data: Buffer): Buffer {
-  return crypto
-    .createHash(RIPEMD160_NODE_ALGO)
     .update(data)
     .digest();
 }

@@ -10,7 +10,6 @@ import {
   HMAC_LENGTH,
   SHA256_BROWSER_ALGO,
   SHA512_BROWSER_ALGO,
-  LENGTH_512,
 } from '../constants';
 import { arrayToBuffer } from '../helpers';
 import { fallbackRandomBytes } from './fallback';
@@ -117,23 +116,6 @@ export async function browserHmacSha256Sign(
   const signature = await subtle.sign(
     {
       length: HMAC_LENGTH,
-      name: HMAC_BROWSER,
-    },
-    cryptoKey,
-    data
-  );
-  return Buffer.from(signature);
-}
-
-export async function browserHmacSha512Sign(
-  key: Buffer,
-  data: Buffer
-): Promise<Buffer> {
-  const subtle = getSubtleCrypto();
-  const cryptoKey = await browserImportKey(key, HMAC_BROWSER);
-  const signature = await subtle.sign(
-    {
-      length: LENGTH_512,
       name: HMAC_BROWSER,
     },
     cryptoKey,
