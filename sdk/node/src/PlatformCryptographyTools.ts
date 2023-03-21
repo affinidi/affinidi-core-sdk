@@ -1,5 +1,5 @@
 import { wrapJsonldFrameFunction } from '@affinidi/common'
-import { IPlatformCryptographyTools, ecdsaCryptographyTools, Crypto } from '@affinidi/wallet-core-sdk'
+import { IPlatformCryptographyTools, ecdsaCryptographyTools, crypto as Crypto } from '@affinidi/wallet-core-sdk'
 import { generateBls12381G2KeyPair } from '@mattrglobal/bbs-signatures'
 import {
   BbsBlsSignature2020,
