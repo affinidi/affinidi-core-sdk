@@ -1,4 +1,4 @@
-import * as _secp256k1 from 'secp256k1'
+import * as _secp256k1 from 'secp256k1-v3'
 
 import { ISecp256k1 } from './typings'
 
