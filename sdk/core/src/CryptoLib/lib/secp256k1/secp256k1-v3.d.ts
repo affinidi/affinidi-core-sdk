@@ -1,1 +1,1 @@
-declare module 'secp256k1-v3';
+declare module 'secp256k1-v3'
