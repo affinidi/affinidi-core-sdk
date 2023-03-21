@@ -1,9 +1,9 @@
-import * as _secp256k1 from 'secp256k1-v3'
-
 import { ISecp256k1 } from './typings'
 
 import { KEY_LENGTH } from '../../constants'
 import { trimLeft, sanitizePublicKey } from '../../helpers'
+
+const _secp256k1 = require('secp256k1-v3')
 
 export const secp256k1: ISecp256k1 = _secp256k1 as any
 
