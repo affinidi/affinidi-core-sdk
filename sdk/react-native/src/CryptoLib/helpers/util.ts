@@ -1,6 +1,4 @@
 import { KEY_LENGTH, DECOMPRESSED_LENGTH, PREFIXED_KEY_LENGTH, PREFIXED_DECOMPRESSED_LENGTH } from '../constants'
-import { Signature } from './types'
-import { concatBuffers, bufferToHex, hexToBuffer, sanitizeHex, removeHexLeadingZeros, hexToNumber } from './encoding'
 
 export function isCompressed(publicKey: Buffer): boolean {
   return publicKey.length === KEY_LENGTH || publicKey.length === PREFIXED_KEY_LENGTH

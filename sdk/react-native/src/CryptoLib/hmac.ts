@@ -3,7 +3,7 @@ import { reactNativeHmacSha256Sign } from './lib/reactnative'
 import { equalConstTime } from './helpers'
 
 export async function hmacSha256Sign(key: Buffer, msg: Buffer): Promise<Buffer> {
-  const  result = reactNativeHmacSha256Sign(key, msg)
+  const result = reactNativeHmacSha256Sign(key, msg)
 
   return result
 }

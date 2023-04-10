@@ -11,6 +11,6 @@ export async function sha256(msg: Buffer): Promise<Buffer> {
 export async function sha512(msg: Buffer): Promise<Buffer> {
   let result = EMPTY_BUFFER
   result = reactNativeSha512(msg)
-  
+
   return result
 }

@@ -7,6 +7,6 @@ export async function aesCbcEncrypt(iv: Buffer, key: Buffer, data: Buffer): Prom
 }
 
 export async function aesCbcDecrypt(iv: Buffer, key: Buffer, data: Buffer): Promise<Buffer> {
-    const result = reactNativeAesDecrypt(iv, key, data)
+  const result = reactNativeAesDecrypt(iv, key, data)
   return result
 }
