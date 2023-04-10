@@ -1,5 +1,5 @@
 import { wrapJsonldFrameFunction } from '@affinidi/common'
-import { IPlatformCryptographyTools, ecdsaCryptographyTools, crypto as Crypto } from '@affinidi/wallet-core-sdk'
+import { IPlatformCryptographyTools, ecdsaCryptographyTools } from '@affinidi/wallet-core-sdk'
 import { generateBls12381G2KeyPair } from '@mattrglobal/bbs-signatures'
 import {
   BbsBlsSignature2020,
@@ -9,6 +9,7 @@ import {
 } from '@mattrglobal/jsonld-signatures-bbs'
 import bs58 from 'bs58'
 import crypto from 'crypto'
+import * as eccrypto from 'eccrypto-js'
 import randomBytes from 'randombytes'
 
 const jsonldSignatures = require('jsonld-signatures')
@@ -20,7 +21,7 @@ const { RSAKeyPair } = cryptoLd
 wrapJsonldFrameFunction(require('jsonld'))
 
 const isValidPrivateKey = (privateKey: Buffer) => {
-  const { EC_GROUP_ORDER, ZERO32 } = Crypto
+  const { EC_GROUP_ORDER, ZERO32 } = eccrypto
 
   const isValid = privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
   return isValid
@@ -54,7 +55,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
       mac: Buffer.from(mac, 'hex'),
     }
 
-    const dataBuffer = await Crypto.decrypt(privateKeyBuffer, encryptedData)
+    const dataBuffer = await eccrypto.decrypt(privateKeyBuffer, encryptedData)
     const data = JSON.parse(dataBuffer.toString())
 
     return data
@@ -69,7 +70,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
 
     const options = { iv: randomIv, ephemPrivateKey }
 
-    const encryptedData = await Crypto.encrypt(publicKeyBuffer, dataBuffer, options)
+    const encryptedData = await eccrypto.encrypt(publicKeyBuffer, dataBuffer, options)
 
     const { iv, ephemPublicKey, ciphertext, mac } = encryptedData
 
@@ -88,7 +89,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
   computePersonalHash: async (privateKeyBuffer, data) => {
     const dataBuffer = Buffer.from(data)
 
-    const signatureBuffer = await Crypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
+    const signatureBuffer = await eccrypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
     const signature = signatureBuffer.toString('hex')
 
     return signature

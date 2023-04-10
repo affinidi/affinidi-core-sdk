@@ -1,5 +1,6 @@
-import { ecdsaCryptographyTools, IPlatformCryptographyTools, crypto } from '@affinidi/wallet-core-sdk'
+import { ecdsaCryptographyTools, IPlatformCryptographyTools } from '@affinidi/wallet-core-sdk'
 import randomBytes from 'randombytes'
+import * as crypto from './CryptoLib'
 
 const isValidPrivateKey = (privateKey: Buffer) => {
   const { EC_GROUP_ORDER, ZERO32 } = crypto
