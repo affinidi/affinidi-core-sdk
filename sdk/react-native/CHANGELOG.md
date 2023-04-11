@@ -1,3 +1,5 @@
+# release 7.15.0 (2023-04-10)
+Rebuild crypto lib for sdk/react-native
 # release 7.14.1 (2023-03-16)
 * updated error handling for invalid `signInToken`
 # release 7.14.0 (2023-03-14)

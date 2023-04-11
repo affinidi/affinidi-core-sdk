@@ -1,9 +1,9 @@
 import { ecdsaCryptographyTools, IPlatformCryptographyTools } from '@affinidi/wallet-core-sdk'
-import * as eccrypto from 'eccrypto-js'
 import randomBytes from 'randombytes'
+import * as crypto from './CryptoLib'
 
 const isValidPrivateKey = (privateKey: Buffer) => {
-  const { EC_GROUP_ORDER, ZERO32 } = eccrypto
+  const { EC_GROUP_ORDER, ZERO32 } = crypto
 
   return privateKey.compare(ZERO32) > 0 && privateKey.compare(EC_GROUP_ORDER) < 0
 }
@@ -38,7 +38,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
       mac: Buffer.from(mac, 'hex'),
     }
 
-    const dataBuffer = await eccrypto.decrypt(privateKeyBuffer, encryptedData)
+    const dataBuffer = await crypto.decrypt(privateKeyBuffer, encryptedData)
 
     return JSON.parse(dataBuffer.toString())
   },
@@ -52,7 +52,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
 
     const options = { iv: randomIv, ephemPrivateKey }
 
-    const encryptedData = await eccrypto.encrypt(publicKeyBuffer, dataBuffer, options)
+    const encryptedData = await crypto.encrypt(publicKeyBuffer, dataBuffer, options)
 
     const { iv, ephemPublicKey, ciphertext, mac } = encryptedData
 
@@ -69,7 +69,7 @@ const platformCryptographyTools: IPlatformCryptographyTools = {
   computePersonalHash: async (privateKeyBuffer, data) => {
     const dataBuffer = Buffer.from(data)
 
-    const signatureBuffer = await eccrypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
+    const signatureBuffer = await crypto.hmacSha256Sign(privateKeyBuffer, dataBuffer)
     const signature = signatureBuffer.toString('hex')
 
     return signature
