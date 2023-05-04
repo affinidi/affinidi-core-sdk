@@ -61,7 +61,6 @@ export enum CompleteLoginPasswordlessResult {
   ConfirmationCodeWrong,
   VerifyAuthLambdaCustomError,
   TooManyInvalidSignInAttepts,
-  UserNotFound,
 }
 
 export type CompleteLoginPasswordlessResponse = Response<
@@ -69,8 +68,7 @@ export type CompleteLoginPasswordlessResponse = Response<
   | CompleteLoginPasswordlessResult.Success
   | CompleteLoginPasswordlessResult.ConfirmationCodeWrong
   | CompleteLoginPasswordlessResult.TooManyInvalidSignInAttepts
-  | CompleteLoginPasswordlessResult.VerifyAuthLambdaCustomError
-  | CompleteLoginPasswordlessResult.UserNotFound,
+  | CompleteLoginPasswordlessResult.VerifyAuthLambdaCustomError,
   {
     cognitoTokens?: CognitoUserTokens
     token?: string
@@ -304,8 +302,6 @@ export class CognitoIdentityService {
       } else if (error.name === 'NotAuthorizedException') {
         // Throw when OTP is expired (3 min)
         return { result: CompleteLoginPasswordlessResult.ConfirmationCodeExpired }
-      } else if (error.name === 'UserNotFoundException') {
-        return { result: CompleteLoginPasswordlessResult.UserNotFound }
       } else if (
         error.message?.includes('VerifyAuthChallengeResponse') &&
         error.name === 'UserLambdaValidationException'

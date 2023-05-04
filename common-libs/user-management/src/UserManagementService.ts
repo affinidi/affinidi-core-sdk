@@ -285,8 +285,6 @@ export class UserManagementService {
           throw new SdkErrorFromCode('COR-5', { newToken: response.token })
         case CompleteLoginPasswordlessResult.TooManyInvalidSignInAttepts:
           throw new SdkErrorFromCode('COR-32', { newToken: response.token })
-        case CompleteLoginPasswordlessResult.UserNotFound:
-          throw new SdkErrorFromCode('COR-4', { newToken: response.token })
         default:
           throw new DefaultResultError(response as never)
       }
