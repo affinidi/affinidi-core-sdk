@@ -1,7 +1,5 @@
 import 'mocha'
 import '../env'
-import { useNodeFetch } from '@affinidi/platform-fetch-node'
-useNodeFetch()
 
 import { expect } from 'chai'
 // import nock from 'nock'
