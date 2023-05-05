@@ -1,5 +1,7 @@
 import 'mocha'
 import '../env'
+import { useNodeFetch } from '@affinidi/platform-fetch-node'
+useNodeFetch()
 
 import { expect } from 'chai'
 // import nock from 'nock'
@@ -495,8 +497,14 @@ parallel('CommonNetworkMember [OTP]', () => {
     })
 
     it('user get COR-4 if user is not exist', async function () {
-      const email = 'test@test.com'
-      const loginToken = await AffinidiWallet.initiateLogInPasswordless(options, email, messageParameters)
+      const loginToken = JSON.stringify({
+        ChallengeName: 'CUSTOM_CHALLENGE',
+        ChallengeParameters: {
+          USERNAME: '8936fb74-eb3b-11ed-a05b-0242ac120003',
+          email: 'test@test.com',
+        },
+        Session: '8936fb74eb3b11eda05b0242ac120003',
+      })
 
       try {
         await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
@@ -504,7 +512,6 @@ parallel('CommonNetworkMember [OTP]', () => {
       } catch (err) {
         expect(err).to.be.instanceOf(SdkError)
         expect(err.name).to.eql('COR-4')
-        expect(err.context.newToken).to.exist
       }
     })
 

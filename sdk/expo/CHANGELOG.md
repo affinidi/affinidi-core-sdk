@@ -1,3 +1,5 @@
+# release 7.14.2 (2023-05-05)
+* updated user-management lib version
 # release 7.14.1 (2023-03-16)
 * updated error handling for invalid `signInToken`
 # release 7.14.0 (2023-03-14)
