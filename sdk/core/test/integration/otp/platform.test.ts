@@ -116,7 +116,8 @@ parallel('AffinityWallet [OTP]', () => {
     expect(credentials).to.have.length(0)
   })
 
-  it('#deleteCredentials scenario with elem-anchored', async () => {
+  // Skip related to disabling anchoring on registry
+  it.skip('#deleteCredentials scenario with elem-anchored', async () => {
     const inbox = createInbox()
     const password = COGNITO_PASSWORD
     const optionsWithElemAnchored: SdkOptions = { ...options, didMethod: ELEM_ANCHORED_DID_METHOD }
