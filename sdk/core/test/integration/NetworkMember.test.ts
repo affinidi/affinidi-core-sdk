@@ -249,7 +249,8 @@ describe('CommonNetworkMember', () => {
     expect(didMethod).to.be.equal(elemDidMethod)
   })
 
-  it('.register (elem-anchored did method)', async () => {
+  // Skip related to disabling anchoring on registry
+  it.skip('.register (elem-anchored did method)', async () => {
     const optionsWithElemAnchoredDid = Object.assign({}, options, { didMethod: elemAnchoredDidMethod } as const)
 
     const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithElemAnchoredDid)
@@ -1212,7 +1213,8 @@ describe('CommonNetworkMember', () => {
     expect(resolvedDidDocument.publicKey.length).to.be.gte(1)
   })
 
-  it('#createWallet should return wallet with resolvable did (elem-anchored)', async () => {
+  // Skip related to disabling anchoring on registry
+  it.skip('#createWallet should return wallet with resolvable did (elem-anchored)', async () => {
     const commonNetworkMember = await AffinidiWallet.createWallet(
       {
         ...options,
@@ -1269,7 +1271,8 @@ describe('CommonNetworkMember', () => {
     }
   })
 
-  it('#createWallet and #openWalletByEncryptedSeed should return the same did (elem-anchored)', async () => {
+  // Skip related to disabling anchoring on registry
+  it.skip('#createWallet and #openWalletByEncryptedSeed should return the same did (elem-anchored)', async () => {
     const customOptions: SdkOptions = { ...options, didMethod: 'elem-anchored' }
     const cnmByCreateWallet = await AffinidiWallet.createWallet(customOptions, password)
 
@@ -1530,7 +1533,8 @@ describe('CommonNetworkMember', () => {
       expect(spyOnAnchor.callCount).to.be.equal(0)
     })
 
-    it('.register (elem-anchored did method) should call anchorDid() once', async () => {
+    // Skip related to disabling anchoring on registry
+    it.skip('.register (elem-anchored did method) should call anchorDid() once', async () => {
       const optionsWithElemAnchoredDid = Object.assign({}, sdkOptions, { didMethod: elemAnchoredDidMethod } as const)
 
       const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithElemAnchoredDid)
@@ -1565,7 +1569,8 @@ describe('CommonNetworkMember', () => {
       expect(spyOnAnchor.callCount).to.be.equal(0)
     })
 
-    it('#createWallet should return wallet with resolvable did (elem-anchored) and call anchorDid() once', async () => {
+    // Skip related to disabling anchoring on registry
+    it.skip('#createWallet should return wallet with resolvable did (elem-anchored) and call anchorDid() once', async () => {
       const commonNetworkMember = await AffinidiWallet.createWallet(
         {
           ...sdkOptions,

@@ -1,3 +1,5 @@
+# release 7.15.1 (2023-05-05)
+* updated user-management lib version
 # release 7.15.0 (2023-04-10)
 Rebuild crypto lib for sdk/react-native
 # release 7.14.1 (2023-03-16)

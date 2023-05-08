@@ -1,3 +1,5 @@
+# release 2.7.1 (2023-05-05)
+* added COR-4 handling in additional place
 # release 2.7.0 (2023-03-14)
 * add tenant token
 # release 2.6.1 (2023-03-08)

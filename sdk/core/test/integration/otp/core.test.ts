@@ -494,6 +494,25 @@ parallel('CommonNetworkMember [OTP]', () => {
       expect(commonNetworkMember.did).to.exist
     })
 
+    it('user get COR-4 if user is not exist', async function () {
+      const loginToken = JSON.stringify({
+        ChallengeName: 'CUSTOM_CHALLENGE',
+        ChallengeParameters: {
+          USERNAME: '8936fb74-eb3b-11ed-a05b-0242ac120003',
+          email: 'test@test.com',
+        },
+        Session: '8936fb74eb3b11eda05b0242ac120003',
+      })
+
+      try {
+        await AffinidiWallet.completeLogInPasswordless(options, loginToken, randomOTP())
+        expect.fail('COR-4 error expected')
+      } catch (err) {
+        expect(err).to.be.instanceOf(SdkError)
+        expect(err.name).to.eql('COR-4')
+      }
+    })
+
     it('use newToken session from error for existing OTP', async function () {
       const { inbox } = await createUser()
       const loginToken = await AffinidiWallet.initiateLogInPasswordless(options, inbox.email, messageParameters)
