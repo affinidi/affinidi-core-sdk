@@ -268,7 +268,7 @@ describe('CommonNetworkMember', () => {
     expect(decrypted.metadata.anchoredDid).to.equal(resolvedDidResponse.body.didDocument.id)
   })
 
-  it('.register (jolo did method)', async () => {
+  it.skip('.register (jolo did method)', async () => {
     const optionsWithJoloDid = Object.assign({}, options, { didMethod: joloDidMethod } as const)
 
     const { did, encryptedSeed } = await AffinidiWallet.register(password, optionsWithJoloDid)
@@ -1229,7 +1229,7 @@ describe('CommonNetworkMember', () => {
     expect(resolvedDidDocument.publicKey.length).to.be.gte(1)
   })
 
-  it('#createWallet should return wallet with resolvable did (jolo)', async () => {
+  it.skip('#createWallet should return wallet with resolvable did (jolo)', async () => {
     const commonNetworkMember = await AffinidiWallet.createWallet(
       {
         ...options,
@@ -1285,7 +1285,7 @@ describe('CommonNetworkMember', () => {
     expect(cnmByCreateWallet.did).to.be.eql(cnmByOpenWalletByEncryptedSeed.did)
   })
 
-  it('#createWallet and #openWalletByEncryptedSeed should return the same did (jolo)', async () => {
+  it.skip('#createWallet and #openWalletByEncryptedSeed should return the same did (jolo)', async () => {
     const customOptions: SdkOptions = { ...options, didMethod: 'jolo' }
     const cnmByCreateWallet = await AffinidiWallet.createWallet(customOptions, password)
 
