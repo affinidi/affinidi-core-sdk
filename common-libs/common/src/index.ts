@@ -24,7 +24,6 @@ export {
   DidDocumentService,
   DigestService,
   KeysService,
-  MetricsService,
   PolygonDidDocumentService,
   ElemDidDocumentService,
   ElemAnchoredDidDocumentService,
