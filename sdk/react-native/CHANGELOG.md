@@ -1,3 +1,5 @@
+# release 7.16.0 (2023-05-30)
+* remove metrics service
 # release 7.15.1 (2023-05-05)
 * updated user-management lib version
 # release 7.15.0 (2023-04-10)

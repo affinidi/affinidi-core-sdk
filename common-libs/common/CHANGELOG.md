@@ -1,3 +1,5 @@
+# release 3.2.0 (2023-05-30)
+* remove metrics service
 # release 3.1.0 (2023-03-14)
 * add tenant token
 # release 3.0.1 (2023-02-10)

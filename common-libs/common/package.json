@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/common",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Common utilities and types for Affinidi SDKs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -46,7 +46,7 @@
     "@affinidi/internal-api-clients": "^2.6.0",
     "@affinidi/platform-fetch": "^1.1.0",
     "@affinidi/tiny-lds-ecdsa-secp256k1-2019": "^1.2.2",
-    "@affinidi/tools-common": "^1.4.2",
+    "@affinidi/tools-common": "^1.4.4",
     "@affinidi/url-resolver": "^4.0.0",
     "@affinidi/vc-common": "^1.7.1",
     "base64url": "^3.0.1",
