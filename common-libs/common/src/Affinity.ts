@@ -1,11 +1,10 @@
-import { EventComponent, EventName, VerificationInvalidReason } from '@affinidi/affinity-metrics-lib'
 import { JwtService } from '@affinidi/tools-common'
 import { SimpleThing, VCV1Subject, VCV1SubjectBaseMA } from '@affinidi/vc-common'
 import { VCV1Unsigned, VCV1, VPV1, VPV1Unsigned, validateVCV1, validateVPV1 } from '@affinidi/vc-common'
 import { resolveUrl, Service } from '@affinidi/url-resolver'
 import { parse } from 'did-resolver'
 
-import { AffinityOptions, DocumentLoader, EventOptions } from './dto/shared.dto'
+import { AffinityOptions, DocumentLoader } from './dto/shared.dto'
 import { DidDocumentService, KeysService, DigestService } from './services'
 import { baseDocumentLoader } from './_baseDocumentLoader'
 import { IPlatformCryptographyTools, ProofType } from './shared/interfaces'
@@ -253,8 +252,6 @@ export class Affinity {
         throw new Error(`Unsupported proofPurpose: ${proofPurpose}`)
       },
     })(credential)
-
-    let eventOptions: EventOptions
 
     if (result.kind === 'invalid') {
       try {
