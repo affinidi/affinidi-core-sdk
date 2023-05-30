@@ -1,4 +1,4 @@
-import { DidDocumentService, JwtService, KeysService, MetricsService, Affinity } from '@affinidi/common'
+import { DidDocumentService, JwtService, KeysService, Affinity } from '@affinidi/common'
 import { fetch } from '@affinidi/platform-fetch'
 import { DidAuthClientService, Signer } from '@affinidi/affinidi-did-auth-lib'
 import {
@@ -7,7 +7,7 @@ import {
   RevocationApiService,
   VerifierApiService,
 } from '@affinidi/internal-api-clients'
-import { EventComponent, EventCategory, EventName, EventMetadata } from '@affinidi/affinity-metrics-lib'
+import { EventComponent } from '@affinidi/affinity-metrics-lib'
 import { profile } from '@affinidi/tools-common'
 import {
   buildVCV1Skeleton,
@@ -85,7 +85,6 @@ export abstract class BaseNetworkMember {
   private readonly _password: string
   protected readonly _walletStorageService: WalletStorageService
   private readonly _holderService: HolderService
-  private readonly _metricsService: MetricsService
   private readonly _issuerApiService
   private readonly _verifierApiService
   private readonly _registryApiService
@@ -130,12 +129,6 @@ export abstract class BaseNetworkMember {
     const signer = new Signer({ did, keyId: didDocumentKeyId, keyVault: this._affinity })
     const didAuthService = new DidAuthClientService(signer)
     const didAuthAdapter = new DidAuthAdapter(did, didAuthService)
-
-    this._metricsService = new MetricsService({
-      metricsUrl,
-      accessApiKey: accessApiKey,
-      component: eventComponent,
-    })
 
     const sdkVersion = extractSDKVersion()
 
@@ -799,73 +792,7 @@ export abstract class BaseNetworkMember {
 
     const { isValid, did, jti, suppliedCredentials, errors } = response
 
-    const isTestEnvironment = process.env.NODE_ENV === 'test'
-
-    if (isValid && !isTestEnvironment) {
-      this._sendVCVerifiedPerPartyMetrics(suppliedCredentials)
-    }
-
     return { isValid, did, nonce: jti, suppliedCredentials, errors }
-  }
-
-  /* istanbul ignore next: private method */
-  private _sendVCVerifiedPerPartyMetrics(credentials: any[]) {
-    const verifierDid = this.did
-
-    for (const credential of credentials) {
-      const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_VERIFIED_PER_PARTY)
-      this._sendVCVerifiedPerPartyMetric(credential.id, verifierDid, metadata)
-    }
-  }
-
-  /* istanbul ignore next: private method */
-  private _sendVCVerifiedPerPartyMetric(vcId: string, verifierDid: string, metadata: EventMetadata) {
-    const event = {
-      component: this._component,
-      link: vcId,
-      secondaryLink: verifierDid,
-      name: EventName.VC_VERIFIED_PER_PARTY,
-      category: EventCategory.VC,
-      subCategory: 'verify per party',
-      metadata: metadata,
-    }
-
-    this._metricsService.send(event)
-  }
-
-  private _sendVCSavedMetric(vcId: string, issuerId: string, metadata: EventMetadata) {
-    const event = {
-      component: this._component,
-      link: vcId,
-      secondaryLink: issuerId,
-      name: EventName.VC_SAVED,
-      category: EventCategory.VC,
-      subCategory: 'save',
-      metadata: metadata,
-    }
-
-    this._metricsService.send(event)
-  }
-
-  protected _sendVCSavedMetrics(credentials: SignedCredential[]) {
-    for (const credential of credentials) {
-      if (isW3cCredential(credential)) {
-        const metadata = this._metricsService.parseVcMetadata(credential, EventName.VC_SAVED)
-        const vcId = credential.id
-        // the issuer property could be either an URI string or an object with id propoerty
-        // https://www.w3.org/TR/vc-data-model/#issuer
-        let issuerId: string
-        const issuer = credential.issuer
-
-        if (typeof issuer === 'string') {
-          issuerId = issuer
-        } else {
-          issuerId = issuer.id
-        }
-
-        this._sendVCSavedMetric(vcId, issuerId, metadata)
-      }
-    }
   }
 
   /**
@@ -1055,8 +982,6 @@ export abstract class BaseNetworkMember {
    */
   async saveCredentials(data: any[], storageRegion?: string): Promise<any> {
     const result = await this._walletStorageService.saveCredentials(data, storageRegion)
-
-    this._sendVCSavedMetrics(data)
     // NOTE: what if creds actually were not saved in the vault?
     //       follow up with Isaak/Dustin on this - should we parse the response
     //       to define if we need to send the metrics

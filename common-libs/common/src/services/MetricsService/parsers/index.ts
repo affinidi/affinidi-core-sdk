@@ -1,1 +1,0 @@
-export { VcMetadataParserFactory } from './VcMetadataParser'
