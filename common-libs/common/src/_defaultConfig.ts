@@ -4,6 +4,7 @@ export const POLYGON_TESTNET_DID_METHOD = 'polygon:testnet'
 export const ELEM_DID_METHOD = 'elem'
 export const ELEM_ANCHORED_DID_METHOD = 'elem-anchored'
 export const WEB_DID_METHOD = 'web'
+export const KEY_DID_METHOD = 'key'
 export const DEFAULT_DID_METHOD = JOLO_DID_METHOD
 export const SUPPORTED_DID_METHODS = [
   JOLO_DID_METHOD,
@@ -12,4 +13,5 @@ export const SUPPORTED_DID_METHODS = [
   POLYGON_DID_METHOD,
   POLYGON_TESTNET_DID_METHOD,
   WEB_DID_METHOD,
+  KEY_DID_METHOD,
 ] as const

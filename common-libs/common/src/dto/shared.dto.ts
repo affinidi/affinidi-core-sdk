@@ -17,6 +17,7 @@ export class AffinityOptions {
   cacheMaxSize?: number
   cacheTtlInMin?: number
   resolveLegacyElemLocally?: boolean
+  resolveKeyLocally?: boolean
   beforeDocumentLoader?: DocumentLoader
 
   keyManager?: KeyManager

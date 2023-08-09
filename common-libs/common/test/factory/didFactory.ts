@@ -183,6 +183,20 @@ export const generateTestDIDs = async () => {
 
   const elemBBSPublicKey = KeysService.getPublicKey(elemBBSSeedHex, 'elem').toString('hex')
 
+  const keySeed = await randomBytes(32)
+  const keySeedHex = keySeed.toString('hex')
+  const keySeedWithMethod = `${keySeedHex}++${'key'}`
+  const keyPasswordBuffer = KeysService.normalizePassword(password)
+  const keyEncryptedSeed = await KeysService.encryptSeed(keySeedWithMethod, keyPasswordBuffer)
+
+  keysService = new KeysService(keyEncryptedSeed, password)
+
+  didDocumentService = DidDocumentService.createDidDocumentService(keysService)
+  const keyDidDocument = await didDocumentService.getDidDocument(didResolverMock)
+  const keyDid = await didDocumentService.getMyDid()
+  const keyPublicKey = KeysService.getPublicKey(keySeedHex, 'elem').toString('hex')
+
+
   return {
     password,
     jolo: {
@@ -228,6 +242,15 @@ export const generateTestDIDs = async () => {
       didDocument: webRSADidDocument,
       publicKey: webRSAPublicKey,
       publicRSAKey: webRSAPublicKeyRSA,
+    },
+    key: {
+      seed: keySeed,
+      encryptedSeed: keyEncryptedSeed,
+      seedHex: keySeedHex,
+      did: keyDid,
+      didDocument: keyDidDocument,
+      publicKey: keyPublicKey,
+      publicRSAKey: keyPublicKeyRSA,
     },
     elemWithRSA: {
       seed: elemRSASeed,

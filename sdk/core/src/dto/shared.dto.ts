@@ -136,6 +136,10 @@ export class SdkOptions {
   @IsOptional()
   resolveLocallyElemMethod?: boolean
 
+  @IsBoolean()
+  @IsOptional()
+  resolveKeyLocally?: boolean
+
   @IsOptional()
   /**
    * document loader invoked before the main document loader.

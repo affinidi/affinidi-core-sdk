@@ -2,6 +2,7 @@ import LRUCache from 'lru-cache'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { DidDocument } from './interfaces'
 import { resolveLegacyDidElemLocal } from '../services/DidDocumentService/ElemDidDocumentLocalResolver'
+import { resolveDidKeyLocal } from '../services/DidDocumentService/KeyDidDocumentLocalResolver'
 
 type ServiceWithCache = {
   service: RegistryApiService
@@ -13,6 +14,7 @@ type ConstructorOptions = ConstructorParameters<typeof RegistryApiService>[0] & 
   cacheMaxSize?: number
   cacheTtlInMin?: number
   resolveLegacyElemLocally?: boolean
+  resolveKeyLocally?: boolean
 }
 
 const DEFAULT_CACHE_MAX_SIZE = 10_000
@@ -72,15 +74,18 @@ export class LocalDidResolver {
   private readonly _service: ServiceWithCache
   private readonly _useCache: boolean
   private readonly _resolveLegacyElemLocally: boolean
+  private readonly _resolveKeyLocally: boolean
 
   constructor(options: ConstructorOptions) {
     this._useCache = options.useCache ?? true
     this._service = getService(options)
     this._resolveLegacyElemLocally = options.resolveLegacyElemLocally
+    this._resolveKeyLocally = options.resolveKeyLocally
   }
 
   resolveDid(did: string) {
     if (this._resolveLegacyElemLocally && isLegacyElemWithState(did)) return resolveLegacyDidElemLocal(did)
+    if (this._resolveKeyLocally) return resolveDidKeyLocal(did)
     return this._useCache ? resolveDid(this._service, did) : resolveDidWithoutCache(this._service, did)
   }
 }

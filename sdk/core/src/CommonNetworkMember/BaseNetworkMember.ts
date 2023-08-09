@@ -120,6 +120,7 @@ export abstract class BaseNetworkMember {
         metricsUrl: metricsUrl,
         component: eventComponent,
         resolveLegacyElemLocally: options.otherOptions?.resolveLocallyElemMethod,
+        resolveKeyLocally: options.otherOptions?.resolveKeyLocally,
         beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
         keyManager: options.otherOptions?.keyManager,
         keysService: keysService,

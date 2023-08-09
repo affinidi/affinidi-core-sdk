@@ -37,6 +37,7 @@ export class Affinity {
         cacheMaxSize: options.cacheMaxSize,
         cacheTtlInMin: options.cacheTtlInMin,
         resolveLegacyElemLocally: options.resolveLegacyElemLocally,
+        resolveKeyLocally: options.resolveKeyLocally,
       })
     this._digestService = new DigestService()
     this._platformCryptographyTools = platformCryptographyTools

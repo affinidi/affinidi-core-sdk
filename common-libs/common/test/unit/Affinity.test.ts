@@ -174,6 +174,13 @@ describe('Affinity', () => {
     expect(didDocument.id).to.be.equal(testDids.web.did)
   })
 
+  it('#resolveDid (key)', async () => {
+    const didDocument = await affinity.resolveDid(testDids.key.did)
+
+    expect(didDocument).to.exist
+    expect(didDocument.id).to.be.equal(testDids.key.did)
+  })
+
   it('.fromJwt', async () => {
     const object = Affinity.fromJwt(jwt)
 
@@ -364,6 +371,16 @@ describe('Affinity', () => {
     expect(createdCredential.proof.jws).to.exist
   })
 
+  it('#signCredential (key)', async () => {
+    const createdCredential = await createAffinity(testDids.key.encryptedSeed, password).signCredential(credential)
+    const keyId = `${testDids.key.did}#primary`
+    expect(createdCredential).to.exist
+    expect(createdCredential.proof).to.exist
+    expect(createdCredential['@context']).to.exist
+    expect(createdCredential.proof.verificationMethod).to.be.equal(keyId)
+    expect(createdCredential.proof.jws).to.exist
+  })
+
   it('#validateCredential (jolo)', async () => {
     const createdCredential = await createAffinity(encryptedSeedJolo, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
@@ -395,6 +412,12 @@ describe('Affinity', () => {
 
   it('#validateCredential (web)', async () => {
     const createdCredential = await createAffinity(testDids.web.encryptedSeed, password).signCredential(credential)
+    const result = await affinity.validateCredential(createdCredential)
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (key)', async () => {
+    const createdCredential = await createAffinity(testDids.key.encryptedSeed, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
     expect(result.result).to.be.true
   })

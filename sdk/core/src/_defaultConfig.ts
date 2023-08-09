@@ -24,6 +24,7 @@ export const JOLO_DID_METHOD = 'jolo'
 export const POLYGON_DID_METHOD = 'polygon'
 export const POLYGON_TESTNET_DID_METHOD = 'polygon:testnet'
 export const WEB_DID_METHOD = 'web'
+export const KEY_DID_METHOD = 'key'
 export const DEFAULT_DID_METHOD = ELEM_DID_METHOD
 export const SUPPORTED_DID_METHODS = [
   JOLO_DID_METHOD,
@@ -32,5 +33,6 @@ export const SUPPORTED_DID_METHODS = [
   POLYGON_DID_METHOD,
   POLYGON_TESTNET_DID_METHOD,
   WEB_DID_METHOD,
+  KEY_DID_METHOD,
 ] as const
 export const SUPPORTED_ENVIRONMENTS = ['dev', 'staging', 'prod'] as const
