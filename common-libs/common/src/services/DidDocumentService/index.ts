@@ -36,7 +36,7 @@ export default class DidDocumentService {
     }[didMethod]
   }
 
-  _getPublicKeyFromPublicKeyJwk(publicKeyJwk) {
+  static getPublicKeyFromPublicKeyJwk(publicKeyJwk: any) {
     // const UCNOMEPRESSED_PREFIX = '04'
     // // const COORD_PREFIX_UNCOMPRESSED = new Buffer([0x04]);
     // // const base64url = require('base64url')
@@ -85,10 +85,13 @@ export default class DidDocumentService {
       keyId = `${did}#${fragment}`
     }
 
+    const isDidKey = keyId.includes(':key:')
+
     const keySection = didDocument.publicKey?.find((section) => section.id === keyId || section.id === fulleKeyId)
 
     if (keySection?.publicKeyPem) return Buffer.from(keySection.publicKeyPem)
-    if (keySection?.publicKeyBase58) return Buffer.from(keySection.publicKeyBase58)
+    if (keySection?.publicKeyBase58 && !isDidKey) return Buffer.from(keySection.publicKeyBase58)
+    if (keySection?.publicKeyBase58 && isDidKey) return decodeBase58(keySection?.publicKeyBase58)
     if (keySection?.publicKeyHex) return Buffer.from(keySection.publicKeyHex, 'hex')
 
     const methodSection = didDocument.verificationMethod?.find(
@@ -97,7 +100,7 @@ export default class DidDocumentService {
 
     if (methodSection?.publicKeyBase58) return decodeBase58(methodSection?.publicKeyBase58)
     if (methodSection?.publicKeyJwk) {
-      return this._getPublicKeyFromPublicKeyJwk(methodSection.publicKeyJwk)
+      return DidDocumentService.getPublicKeyFromPublicKeyJwk(methodSection.publicKeyJwk)
     }
 
     throw new Error('Key not found.')

@@ -134,6 +134,7 @@ export default class KeysService {
         break
       case 'polygon':
       case 'polygon:testnet':
+      case 'key':
         key = etheriumIdentityKey
         break
       case 'web':

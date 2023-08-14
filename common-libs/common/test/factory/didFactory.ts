@@ -2,7 +2,7 @@ import base64url from 'base64url'
 const cryptoRandomString = require('crypto-random-string')
 
 import { randomBytes } from '../../src/shared/randomBytes'
-import { KeysService, DidDocumentService, DidResolver } from '../../'
+import { KeysService, DidDocumentService, DidResolver } from '../../src/index'
 
 const elemDidForLocalResolving =
   'did:elem:EiA8XCSERPjEQQJkNz55d_UZDl3_uBNFDDaeowfY7-QrPQ;elem:' +
@@ -196,7 +196,6 @@ export const generateTestDIDs = async () => {
   const keyDid = await didDocumentService.getMyDid()
   const keyPublicKey = KeysService.getPublicKey(keySeedHex, 'elem').toString('hex')
 
-
   return {
     password,
     jolo: {
@@ -250,7 +249,6 @@ export const generateTestDIDs = async () => {
       did: keyDid,
       didDocument: keyDidDocument,
       publicKey: keyPublicKey,
-      publicRSAKey: keyPublicKeyRSA,
     },
     elemWithRSA: {
       seed: elemRSASeed,

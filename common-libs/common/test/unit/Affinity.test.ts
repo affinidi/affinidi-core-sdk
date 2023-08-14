@@ -125,6 +125,11 @@ describe('Affinity', () => {
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: testDids.web.didDocument })
 
+    nock('https://affinity-registry.apse1.dev.affinidi.io')
+      .post('/api/v1/did/resolve-did', /key/gi)
+      .times(Number.MAX_SAFE_INTEGER)
+      .reply(200, { didDocument: testDids.key.didDocument })
+
     nock('https://www.w3.org').get('/2018/credentials/v1').times(Number.MAX_SAFE_INTEGER).reply(200, credentialsV1)
 
     nock('https://w3id.org')
@@ -373,7 +378,8 @@ describe('Affinity', () => {
 
   it('#signCredential (key)', async () => {
     const createdCredential = await createAffinity(testDids.key.encryptedSeed, password).signCredential(credential)
-    const keyId = `${testDids.key.did}#primary`
+    const fingerPrint = testDids.key.did.split(':')[2]
+    const keyId = `${testDids.key.did}#${fingerPrint}`
     expect(createdCredential).to.exist
     expect(createdCredential.proof).to.exist
     expect(createdCredential['@context']).to.exist

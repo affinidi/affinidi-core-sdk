@@ -9,18 +9,24 @@ describe('#resolveDidKeyLocal', () => {
 
     console.log(JSON.stringify(resolved, null, 2))
     expect(resolved).to.be.deep.eq({
-      '@context': 'https://w3id.org/security/v2',
+      '@context': [
+        'https://www.w3.org/ns/did/v1',
+        'https://w3id.org/security/suites/jws-2020/v1'
+      ],
       publicKey: [
         {
-          id: 'did:elem:EiAab5TYE15xf761dDpSUrUUa77W7xoRo6VlbM80yrMefw#primary',
-          usage: 'signing',
+          id: 'did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd#zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd',
+          controller: 'did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd',
           type: 'Secp256k1VerificationKey2018',
-          publicKeyHex: '03da6ed942b7292152352f0ab2dff0e0283a091c864f86833a5a88dc40c7bf2e04',
+          publicKeyBase58: 'q2Z9QByagL6Vp8MHyy3TtWtR6eZQjPX6jn4mdW67Cufu',
         }
       ],
-      authentication: ['did:elem:EiAab5TYE15xf761dDpSUrUUa77W7xoRo6VlbM80yrMefw#primary'],
-      assertionMethod: ['did:elem:EiAab5TYE15xf761dDpSUrUUa77W7xoRo6VlbM80yrMefw#primary'],
-      id: 'did:elem:EiAab5TYE15xf761dDpSUrUUa77W7xoRo6VlbM80yrMefw',
+      authentication: ['did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd#zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd'],
+      assertionMethod: ['did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd#zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd'],
+      capabilityDelegation: ['did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd#zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd'],
+      capabilityInvocation: ['did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd#zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd'],
+      keyAgreement: ['did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd#zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd'],
+      id: 'did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd',
     })
   })
 })
