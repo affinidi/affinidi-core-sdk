@@ -947,7 +947,7 @@ export abstract class BaseNetworkMember {
    *
    * errors - array of validation errors
    */
-  async verifyPresentation(vp: unknown, challenge?: string, didDocuments: any): Promise<PresentationValidationOutput> {
+  async verifyPresentation(vp: unknown, challenge?: string, didDocuments?: any): Promise<PresentationValidationOutput> {
     const response = await this._affinity.validatePresentation(vp, null, challenge, didDocuments)
 
     if (response.result === true) {
