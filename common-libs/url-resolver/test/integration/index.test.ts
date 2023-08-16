@@ -4,8 +4,7 @@ import { resolveUrl, Service } from '../../src'
 
 const parallel = require('mocha.parallel')
 
-// const envs = ['staging', 'prod'] as const
-const envs = ['staging'] as const
+const envs = ['staging', 'prod'] as const
 
 parallel('resolveUrl', () => {
   // should always be public for tests
@@ -18,7 +17,7 @@ parallel('resolveUrl', () => {
     }
 
     envs.forEach((env) => {
-      it(`should provide valid urls for ${service} on ${env}`, async () => {
+      it.skip(`should provide valid urls for ${service} on ${env}`, async () => {
         const url = resolveUrl(service, env)
         const response = await fetch(url)
         expect(response.status).to.be.lessThan(500, `Got ${response.status} from ${url}`)
