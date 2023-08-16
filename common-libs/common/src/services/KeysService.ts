@@ -7,7 +7,7 @@ import { randomBytes } from '../shared/randomBytes'
 import { convertDecryptedSeedBufferToString, parseDecryptedSeed } from '../shared/seedTools'
 import DigestService from './DigestService'
 import DidDocumentService from './DidDocumentService'
-import { SUPPORTED_DID_METHODS, KEY_DID_METHOD } from '../_defaultConfig'
+import { SUPPORTED_DID_METHODS } from '../_defaultConfig'
 
 const createHash = require('create-hash/browser')
 const tinySecp256k1 = require('tiny-secp256k1')
@@ -153,9 +153,6 @@ export default class KeysService {
     const seed = Buffer.from(seedHex, 'hex')
     const id = `${seedHex}::${derivationPath}`
     if (!cachedSigningKey[id]) {
-      // if (didMethod === KEY_DID_METHOD) {
-        // TODO: check if will be required custom logic (derive key without path deriviation)
-      // }
       cachedSigningKey[id] = bip32FromSeed(seed).derivePath(derivationPath)
     }
 

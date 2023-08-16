@@ -39,17 +39,9 @@ export default class DidDocumentService {
   }
 
   static getPublicKeyJwkFromPublicKey(publicKey: any) {
-    const expandedPublicKey = secp256k1.publicKeyConvert(
-      publicKey,
-      false,
-    )
-    const x = Buffer.from(expandedPublicKey)
-      .toString('hex')
-      .substr(2, 64)
-
-    const y = Buffer.from(expandedPublicKey)
-      .toString('hex')
-      .substr(66)
+    const expandedPublicKey = secp256k1.publicKeyConvert(publicKey, false)
+    const x = Buffer.from(expandedPublicKey).toString('hex').substr(2, 64)
+    const y = Buffer.from(expandedPublicKey).toString('hex').substr(66)
 
     const publicKeyJwk = {
       kty: 'EC',
@@ -66,24 +58,11 @@ export default class DidDocumentService {
 
     const uncompressed = Buffer.concat([
       Buffer.from(UCNOMEPRESSED_PREFIX, 'hex'),
-      Buffer.from(
-        Buffer.from(publicKeyJwk.x, 'base64')
-          .toString('hex')
-          .padStart(64, '0'),
-        'hex'
-      ),
-      Buffer.from(
-        Buffer.from(publicKeyJwk.y, 'base64')
-          .toString('hex')
-          .padStart(64, '0'),
-        'hex'
-      ),
+      Buffer.from(Buffer.from(publicKeyJwk.x, 'base64').toString('hex').padStart(64, '0'), 'hex'),
+      Buffer.from(Buffer.from(publicKeyJwk.y, 'base64').toString('hex').padStart(64, '0'), 'hex'),
     ])
 
-    const compressedPublicKey = tinySecp256k1.pointCompress(
-      uncompressed,
-      true,
-    )
+    const compressedPublicKey = tinySecp256k1.pointCompress(uncompressed, true)
     return compressedPublicKey
   }
 

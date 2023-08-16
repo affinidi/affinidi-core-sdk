@@ -5,7 +5,7 @@ import { decodeBase58 } from '../../utils/ethUtils'
 
 const MULTIBASE_ENCODED_BASE58_IDENTIFIER = 'z' // z represents the multibase encoding scheme of base58 encoding, https://github.com/multiformats/multibase/blob/master/multibase.csv#L18
 
-const pubKeyFromDid = (did: string): {publicKey: Buffer, fingerprint: string} => {
+const pubKeyFromDid = (did: string): { publicKey: Buffer; fingerprint: string } => {
   const fingerprint = did.split(':')[2]
   const encoded = fingerprint.replace(MULTIBASE_ENCODED_BASE58_IDENTIFIER, '')
   const decoded = decodeBase58(encoded)

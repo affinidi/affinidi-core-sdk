@@ -44,7 +44,6 @@ export default class KeyDidDocumentService {
   }
 
   static buildDidDocumentFromPubKey(pubKeyBytes: Buffer, fingerprint: string, isDidJson: boolean = false) {
-
     const did = `did:key:${fingerprint}`
     const keyId = `${did}#${fingerprint}`
     let publicKey: any = {
@@ -65,10 +64,7 @@ export default class KeyDidDocumentService {
     }
 
     return {
-      '@context': [
-        'https://www.w3.org/ns/did/v1',
-        'https://w3id.org/security/suites/jws-2020/v1'
-      ],
+      '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
       id: did,
       // verificationMethod: [publicKey],
       publicKey: [publicKey],

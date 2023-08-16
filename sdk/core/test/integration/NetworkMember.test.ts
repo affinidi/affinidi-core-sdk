@@ -1211,7 +1211,6 @@ describe('CommonNetworkMember', () => {
     const resolvedDidDocument = await commonNetworkMember.resolveDid(commonNetworkMember.did)
     expect(commonNetworkMember.did.includes(resolvedDidDocument.id)).to.be.eql(true)
     expect(resolvedDidDocument.publicKey.length).to.be.eql(1)
-
   })
 
   it('#createWallet should return wallet with resolvable did (elem)', async () => {

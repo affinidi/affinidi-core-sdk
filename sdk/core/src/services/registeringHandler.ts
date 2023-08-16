@@ -36,7 +36,11 @@ export const register = async (
 
   let anchoredInBlockchainDid
 
-  if (didMethod !== KEY_DID_METHOD && didMethod !== WEB_DID_METHOD && (didMethod != ELEM_DID_METHOD || !skipAnchoringForElemMethod)) {
+  if (
+    didMethod !== KEY_DID_METHOD &&
+    didMethod !== WEB_DID_METHOD &&
+    (didMethod != ELEM_DID_METHOD || !skipAnchoringForElemMethod)
+  ) {
     const response = await anchorDid({
       registry,
       keysService,
