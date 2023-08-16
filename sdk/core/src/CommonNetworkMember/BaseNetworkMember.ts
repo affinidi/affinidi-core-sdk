@@ -923,7 +923,7 @@ export abstract class BaseNetworkMember {
    *
    * error - validation error
    */
-  async checkCredentialStatus(credential): Promise<{ verified: boolean; error?: string }> {
+  async checkCredentialStatus(credential: any): Promise<{ verified: boolean; error?: string }> {
     const result = await this._affinity.checkCredentialStatus(credential)
     return result
   }
