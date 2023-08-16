@@ -2,6 +2,7 @@ import { resolveDidKeyLocal } from '../../../src/services/DidDocumentService/Key
 import { expect } from 'chai'
 
 const didKey = 'did:key:zQ3shayiAFLT3zyKP4E2iN3vWi7FrkQkP1wZdfhpZvqmERPXd'
+// const didKey = 'did:key:zQ3shsN61ycuj7Q9b4h2YAieDuBGmSqTQmVqASdZm9V3uqGZh'
 
 describe('#resolveDidKeyLocal', () => {
   it('should resolve legacy did elem', async () => {

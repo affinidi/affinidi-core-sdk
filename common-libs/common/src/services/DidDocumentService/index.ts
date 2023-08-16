@@ -9,7 +9,7 @@ import { parse } from 'did-resolver'
 import { LocalKeyVault } from './LocalKeyVault'
 import PolygonDidDocumentService from './PolygonDidDocumentService'
 import { DidDocument } from '../../shared/interfaces'
-import { decodeBase58 } from '../../utils/ethUtils'
+import { decodeBase58, base64url } from '../../utils/ethUtils'
 
 export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
@@ -36,8 +36,31 @@ export default class DidDocumentService {
     }[didMethod]
   }
 
+  static getPublicKeyJwkFromPublicKey(publicKey: any) {
+    const expandedPublicKey = secp256k1.publicKeyConvert(
+      publicKey,
+      false,
+      new Uint8Array(65)
+    )
+    const x = Buffer.from(expandedPublicKey)
+      .toString('hex')
+      .substr(2, 64)
+
+    const y = Buffer.from(expandedPublicKey)
+      .toString('hex')
+      .substr(66)
+
+    const publicKeyJwk = {
+      kty: 'EC',
+      crv: 'secp256k1',
+      alg,
+      x: base64url.encode(Buffer.from(x, 'hex')),
+      y: base64url.encode(Buffer.from(y, 'hex')),
+    }
+  }
+
   static getPublicKeyFromPublicKeyJwk(publicKeyJwk: any) {
-    // const UCNOMEPRESSED_PREFIX = '04'
+    const UCNOMEPRESSED_PREFIX = '04'
     // // const COORD_PREFIX_UNCOMPRESSED = new Buffer([0x04]);
     // // const base64url = require('base64url')
     // // const x = base64url.toBuffer(publicKeyJwk?.x)
@@ -46,7 +69,7 @@ export default class DidDocumentService {
     // return Buffer.from(`${UCNOMEPRESSED_PREFIX}${publicKeyJwk?.x}${publicKeyJwk?.y}`)
 
     const uncompressed = Buffer.concat([
-      Buffer.from('04', 'hex'),
+      Buffer.from(UCNOMEPRESSED_PREFIX, 'hex'),
       Buffer.from(
         Buffer.from(publicKeyJwk.x, 'base64')
           .toString('hex')
