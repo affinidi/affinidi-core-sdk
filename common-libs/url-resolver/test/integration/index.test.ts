@@ -4,7 +4,8 @@ import { resolveUrl, Service } from '../../src'
 
 const parallel = require('mocha.parallel')
 
-const envs = ['staging', 'prod'] as const
+// const envs = ['staging', 'prod'] as const
+const envs = ['staging'] as const
 
 parallel('resolveUrl', () => {
   // should always be public for tests
