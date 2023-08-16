@@ -13,6 +13,8 @@ import { decodeBase58, base64url } from '../../utils/ethUtils'
 
 export { KeyVault } from './KeyVault'
 export { LocalKeyVault } from './LocalKeyVault'
+import * as secp256k1 from 'secp256k1'
+const tinySecp256k1 = require('tiny-secp256k1')
 
 export default class DidDocumentService {
   /**
@@ -40,7 +42,6 @@ export default class DidDocumentService {
     const expandedPublicKey = secp256k1.publicKeyConvert(
       publicKey,
       false,
-      new Uint8Array(65)
     )
     const x = Buffer.from(expandedPublicKey)
       .toString('hex')
@@ -53,20 +54,15 @@ export default class DidDocumentService {
     const publicKeyJwk = {
       kty: 'EC',
       crv: 'secp256k1',
-      alg,
       x: base64url.encode(Buffer.from(x, 'hex')),
       y: base64url.encode(Buffer.from(y, 'hex')),
     }
+
+    return publicKeyJwk
   }
 
   static getPublicKeyFromPublicKeyJwk(publicKeyJwk: any) {
     const UCNOMEPRESSED_PREFIX = '04'
-    // // const COORD_PREFIX_UNCOMPRESSED = new Buffer([0x04]);
-    // // const base64url = require('base64url')
-    // // const x = base64url.toBuffer(publicKeyJwk?.x)
-    // // const y = base64url.toBuffer(publicKeyJwk?.y)
-    // // const coordinate = Buffer.concat([COORD_PREFIX_UNCOMPRESSED, x, y])
-    // return Buffer.from(`${UCNOMEPRESSED_PREFIX}${publicKeyJwk?.x}${publicKeyJwk?.y}`)
 
     const uncompressed = Buffer.concat([
       Buffer.from(UCNOMEPRESSED_PREFIX, 'hex'),
@@ -83,22 +79,12 @@ export default class DidDocumentService {
         'hex'
       ),
     ])
-    // import secp256k1 from 'secp256k1'
-    // const compressedPublicKey = secp256k1.publicKeyConvert(
-    //   uncompressed,
-    //   true,
-    //   new Uint8Array(33)
-    // )
-    // return compressedPublicKey
 
-    const tinySecp256k1 = require('tiny-secp256k1')
     const compressedPublicKey = tinySecp256k1.pointCompress(
       uncompressed,
       true,
     )
     return compressedPublicKey
-
-    // return uncompressed
   }
 
   static getPublicKey(fulleKeyId: string, didDocument: DidDocument, keyId?: string): Buffer {
@@ -116,15 +102,16 @@ export default class DidDocumentService {
     if (keySection?.publicKeyBase58 && !isDidKey) return Buffer.from(keySection.publicKeyBase58)
     if (keySection?.publicKeyBase58 && isDidKey) return decodeBase58(keySection?.publicKeyBase58)
     if (keySection?.publicKeyHex) return Buffer.from(keySection.publicKeyHex, 'hex')
+    if (keySection?.publicKeyJwk) return DidDocumentService.getPublicKeyFromPublicKeyJwk(keySection.publicKeyJwk)
 
     const methodSection = didDocument.verificationMethod?.find(
       (section) => section.id === keyId || section.id === fulleKeyId,
     )
 
     if (methodSection?.publicKeyBase58) return decodeBase58(methodSection?.publicKeyBase58)
-    if (methodSection?.publicKeyJwk) {
-      return DidDocumentService.getPublicKeyFromPublicKeyJwk(methodSection.publicKeyJwk)
-    }
+    if (methodSection?.publicKeyJwk) return DidDocumentService.getPublicKeyFromPublicKeyJwk(methodSection.publicKeyJwk)
+    // if (methodSection?.publicKeyHex) return Buffer.from(methodSection.publicKeyHex, 'hex')
+    // if (methodSection?.publicKeyPem) return Buffer.from(methodSection.publicKeyPem)
 
     throw new Error('Key not found.')
   }

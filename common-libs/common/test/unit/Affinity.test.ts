@@ -428,6 +428,13 @@ describe('Affinity', () => {
     expect(result.result).to.be.true
   })
 
+  it('#validateCredential (key with JWK key didDocument)', async () => {
+    const { didDocumentJWK } = testDids.key
+    const createdCredential = await createAffinity(testDids.key.encryptedSeed, password).signCredential(credential)
+    const result = await affinity.validateCredential(createdCredential, null, didDocumentJWK)
+    expect(result.result).to.be.true
+  })
+
   it("#validateCredential (elem) when holderKey is set and doesn't match", async () => {
     const createdCredential = await createAffinity(encryptedSeedElem, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential, `${didJolo}#primary`)

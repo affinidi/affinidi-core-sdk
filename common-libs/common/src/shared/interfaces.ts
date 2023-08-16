@@ -28,6 +28,7 @@ export type DidDocument = {
     usage?: 'signing' | 'recovery' | string
     publicKeyHex?: string
     publicKeyPem?: string
+    publicKeyJwk?: any
     publicKeyBase58?: string
   }[]
   authentication?: string[]

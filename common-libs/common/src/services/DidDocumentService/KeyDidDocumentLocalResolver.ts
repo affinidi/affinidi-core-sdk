@@ -1,8 +1,4 @@
-import { PublicKey, Resolver } from 'did-resolver'
-import { getDidUniqueSuffix } from './elem-lib/func'
-import base64url from 'base64url'
-import secp256k1 from 'tiny-secp256k1'
-import createHash from 'create-hash'
+import { Resolver } from 'did-resolver'
 import { DidDocument } from '../../shared/interfaces'
 import KeyDidDocumentService from './KeyDidDocumentService'
 import { decodeBase58 } from '../../utils/ethUtils'
@@ -22,6 +18,13 @@ const pubKeyFromDid = (did: string): {publicKey: Buffer, fingerprint: string} =>
 const resolveKeyDID = async (did: string) => {
   const { publicKey, fingerprint } = pubKeyFromDid(did)
   const didDocument = KeyDidDocumentService.buildDidDocumentFromPubKey(publicKey, fingerprint)
+
+  return didDocument
+}
+
+export const resolveKeyDIDWithParams = async (did: string, isDidJson: boolean = false) => {
+  const { publicKey, fingerprint } = pubKeyFromDid(did)
+  const didDocument = KeyDidDocumentService.buildDidDocumentFromPubKey(publicKey, fingerprint, isDidJson)
 
   return didDocument
 }
