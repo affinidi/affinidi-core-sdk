@@ -64,6 +64,7 @@ const resolveDid = ({ service, cache }: ServiceWithCache, did: string) => {
 }
 
 const isLegacyElemWithState = (did: string) => did.startsWith('did:elem') && did.includes('elem:initial-state=')
+const isDidKey = (did: string) => did.startsWith('did:key')
 
 const resolveDidWithoutCache = async ({ service }: ServiceWithCache, did: string) => {
   const response = await service.resolveDid({ did })
@@ -85,7 +86,7 @@ export class LocalDidResolver {
 
   resolveDid(did: string) {
     if (this._resolveLegacyElemLocally && isLegacyElemWithState(did)) return resolveLegacyDidElemLocal(did)
-    if (this._resolveKeyLocally) return resolveDidKeyLocal(did)
+    if (this._resolveKeyLocally && isDidKey(did)) return resolveDidKeyLocal(did)
     return this._useCache ? resolveDid(this._service, did) : resolveDidWithoutCache(this._service, did)
   }
 }
