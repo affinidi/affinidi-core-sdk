@@ -38,7 +38,8 @@ describe('Validation Snapshots', () => {
     expect(result.result).to.be.true
   })
 
-  it('#validateCredential (existing cred) (polygon)', async () => {
+  // TODO: registry mantain issue
+  it.skip('#validateCredential (existing cred) (polygon)', async () => {
     const result = await affinity.validateCredential(signedCredentialWithPolygon)
 
     expect(result.result).to.be.true
@@ -94,7 +95,8 @@ describe('Validation Snapshots', () => {
     expect(result.result).to.be.true
   })
 
-  it('#validatePresentation (existing presentations) (polygon)', async () => {
+  // TODO: registry mantain issue
+  it.skip('#validatePresentation (existing presentations) (polygon)', async () => {
     const result = await affinity.validatePresentation(signedPresentationWithPolygon)
 
     expect(result.result).to.be.true
