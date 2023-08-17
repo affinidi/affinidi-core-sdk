@@ -43,7 +43,7 @@ jobs:
         run: npm run build
       - name: Lint packages
         run: npm run lint
-      - uses: paambaati/codeclimate-action@v3.0.0
+      - uses: paambaati/codeclimate-action@v2.7.1
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           TEST_SECRETS: ${{secrets.INTEGRATION_TEST_SECRETS}}
@@ -51,9 +51,9 @@ jobs:
           TESTMAIL_NS: ${{secrets.TESTMAIL_NS}}
         with:
           coverageCommand: npm run test:coverage:codeclimate
-      - name: Generate and Upload Test Coverage
-        run: |
-            $GITHUB_WORKSPACE/tmp/cc-test-reporter sum-coverage $GITHUB_WORKSPACE/tmp/codeclimate.*.json -p $(ls -1q $GITHUB_WORKSPACE/tmp/codeclimate.*.json | wc -l) -d -o tmp/codeclimate.total.json
-            $GITHUB_WORKSPACE/tmp/cc-test-reporter upload-coverage -i $GITHUB_WORKSPACE/tmp/codeclimate.total.json
-        env:
-          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+      # - name: Generate and Upload Test Coverage
+      #   run: |
+      #       $GITHUB_WORKSPACE/tmp/cc-test-reporter sum-coverage $GITHUB_WORKSPACE/tmp/codeclimate.*.json -p $(ls -1q $GITHUB_WORKSPACE/tmp/codeclimate.*.json | wc -l) -d -o tmp/codeclimate.total.json
+      #       $GITHUB_WORKSPACE/tmp/cc-test-reporter upload-coverage -i $GITHUB_WORKSPACE/tmp/codeclimate.total.json
+      #   env:
+      #     CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
