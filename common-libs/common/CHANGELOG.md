@@ -1,3 +1,5 @@
+# release 3.3.0 (2023-08-16)
+* Add support for the did key method and public Key JWK format
 # release 3.2.0 (2023-05-30)
 * remove metrics service
 # release 3.1.0 (2023-03-14)

@@ -1,3 +1,5 @@
+# release 7.16.0 (2023-08-16)
+* Add support for the did key method and public Key JWK format
 # release 7.15.0 (2023-05-30)
 * remove metrics service
 # release 7.14.2 (2023-05-05)
@@ -163,7 +165,7 @@ Refer to the changelog for `wallet-core-sdk` v6.0.0-beta.6
  * add new method `AffinityWallet.getCredentialByIndex` that returns credentials given at the index
  * fix `AffinityWallet.signUp` returning CommonNetworkMember instead of Expo AffinityWallet
 
-# release 4.2.2 
+# release 4.2.2
  * use new `vc-data` 
 # release 4.2.1 (2020-02-22)
  * axios version update 
