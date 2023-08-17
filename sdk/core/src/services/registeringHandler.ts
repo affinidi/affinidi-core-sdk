@@ -1,6 +1,6 @@
 import { IPlatformCryptographyTools } from '../shared/interfaces'
 import { DidMethod, KeyOptions } from '../dto/shared.dto'
-import { ELEM_ANCHORED_DID_METHOD, ELEM_DID_METHOD, WEB_DID_METHOD } from '../_defaultConfig'
+import { ELEM_ANCHORED_DID_METHOD, ELEM_DID_METHOD, WEB_DID_METHOD, KEY_DID_METHOD } from '../_defaultConfig'
 import { DidDocumentService, extendSeedWithDid, generateFullSeed, KeysService } from '@affinidi/common'
 import { anchorDid } from './anchoringHandler'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
@@ -36,7 +36,11 @@ export const register = async (
 
   let anchoredInBlockchainDid
 
-  if (didMethod !== WEB_DID_METHOD && (didMethod != ELEM_DID_METHOD || !skipAnchoringForElemMethod)) {
+  if (
+    didMethod !== KEY_DID_METHOD &&
+    didMethod !== WEB_DID_METHOD &&
+    (didMethod != ELEM_DID_METHOD || !skipAnchoringForElemMethod)
+  ) {
     const response = await anchorDid({
       registry,
       keysService,

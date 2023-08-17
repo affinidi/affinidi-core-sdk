@@ -29,6 +29,10 @@ const encryptedSeedElem =
   'f6d18b619e97a2033f0ec7a6630fdcd3827a0dd70b3c439ab4' +
   '76b3fc264b639c84935d6e5d6fcabb3d027d411ae5d74d570fd16d604b038a9250ce4ac271fd6a86d8401ac52c52'
 
+const encryptedSeedKey =
+  '0f0b5023b97d164ba609e36dd296519ceb7492577a36ebacb3badc0e704b1b8b7a137601e1c719a7872308e046fc8f38996e8226172d2a2e134932dbd64375226b9695ea29acba728362ddfdbd056b5236328ed874888f0b53fb3641751a4919'
+const keyDid = 'did:key:zQ3shsQAnpLpZ1z324hjKrn7AEsU6SNkjVwcCGiut1yG8z8NH'
+
 const encryptedSeedPolygonTestnet =
   '40ab24d5c83a66b449a30fd5013b6fc4c52af01b98189b6828' +
   '557314682cc1d4c0cfcd948ae59407be92279847bf249bcff7' +
@@ -181,6 +185,16 @@ describe('DidDocumentService', () => {
 
     expect(did).to.exist
     expect(did).to.be.equal(polygonTestnetDid)
+  })
+
+  it('#getMyDid (key)', async () => {
+    const keyEncryptionPassword = 'Ej@0Of^ScVw+2D++L!si;ITD+nr>ZJCY'
+    const keyService = new KeyService(encryptedSeedKey, keyEncryptionPassword)
+    const didDocumentService = DidDocumentService.createDidDocumentService(keyService)
+    const did = didDocumentService.getMyDid()
+
+    expect(did).to.exist
+    expect(did).to.be.equal(keyDid)
   })
 
   it('#getMyDid and #buildDidDocument and #getPublicKey (elem with externalKeys RSA)', async () => {

@@ -1,3 +1,5 @@
+# release 7.19.0 (2023-08-16)
+* Add support for the did key method and public Key JWK format
 # release 7.18.0 (2023-05-30)
 * remove metrics service
 # release 7.17.2 (2023-05-05)
@@ -339,11 +341,11 @@ fix passwordless signin for users with arbitrary user name
  * add optional pagination to `WalletStorageService.fetchEncryptedCredentials` (backward compatible)
  * add new `WalletStorageService.fetchAllEncryptedCredentialsInBatches` method for retrieving all credentials page by page using async generators
  * fix elem did anchor metrics blocks flow in case of failure
-# release 4.2.2 
+# release 4.2.2
  * use new `vc-data` 
 # release 4.2.1 (2020-02-22)
  * axios version update 
-### Deprecation candidates 
+### Deprecation candidates
 CommonNetworkMember 
   - initiateEmailCredential
   - verifyEmailCredential

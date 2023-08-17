@@ -125,6 +125,11 @@ describe('Affinity', () => {
       .times(Number.MAX_SAFE_INTEGER)
       .reply(200, { didDocument: testDids.web.didDocument })
 
+    nock('https://affinity-registry.apse1.dev.affinidi.io')
+      .post('/api/v1/did/resolve-did', /key/gi)
+      .times(Number.MAX_SAFE_INTEGER)
+      .reply(200, { didDocument: testDids.key.didDocument })
+
     nock('https://www.w3.org').get('/2018/credentials/v1').times(Number.MAX_SAFE_INTEGER).reply(200, credentialsV1)
 
     nock('https://w3id.org')
@@ -172,6 +177,13 @@ describe('Affinity', () => {
 
     expect(didDocument).to.exist
     expect(didDocument.id).to.be.equal(testDids.web.did)
+  })
+
+  it('#resolveDid (key)', async () => {
+    const didDocument = await affinity.resolveDid(testDids.key.did)
+
+    expect(didDocument).to.exist
+    expect(didDocument.id).to.be.equal(testDids.key.did)
   })
 
   it('.fromJwt', async () => {
@@ -364,6 +376,17 @@ describe('Affinity', () => {
     expect(createdCredential.proof.jws).to.exist
   })
 
+  it('#signCredential (key)', async () => {
+    const createdCredential = await createAffinity(testDids.key.encryptedSeed, password).signCredential(credential)
+    const fingerPrint = testDids.key.did.split(':')[2]
+    const keyId = `${testDids.key.did}#${fingerPrint}`
+    expect(createdCredential).to.exist
+    expect(createdCredential.proof).to.exist
+    expect(createdCredential['@context']).to.exist
+    expect(createdCredential.proof.verificationMethod).to.be.equal(keyId)
+    expect(createdCredential.proof.jws).to.exist
+  })
+
   it('#validateCredential (jolo)', async () => {
     const createdCredential = await createAffinity(encryptedSeedJolo, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
@@ -396,6 +419,19 @@ describe('Affinity', () => {
   it('#validateCredential (web)', async () => {
     const createdCredential = await createAffinity(testDids.web.encryptedSeed, password).signCredential(credential)
     const result = await affinity.validateCredential(createdCredential)
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (key)', async () => {
+    const createdCredential = await createAffinity(testDids.key.encryptedSeed, password).signCredential(credential)
+    const result = await affinity.validateCredential(createdCredential)
+    expect(result.result).to.be.true
+  })
+
+  it('#validateCredential (key with JWK key didDocument)', async () => {
+    const { didDocumentJWK } = testDids.key
+    const createdCredential = await createAffinity(testDids.key.encryptedSeed, password).signCredential(credential)
+    const result = await affinity.validateCredential(createdCredential, null, didDocumentJWK)
     expect(result.result).to.be.true
   })
 

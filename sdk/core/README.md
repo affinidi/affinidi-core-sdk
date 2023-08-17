@@ -137,7 +137,7 @@ You can specify optional field `didMethod` and `skipAnchoringForElemMethod` in `
 const options = {
   env: 'staging',
   apiKey: 'YOUR API KEY',
-  didMethod: '...',   // 'elem' (default),  'jolo', 'elem-anchored', 'did:web' and 'did:polygon'
+  didMethod: '...',   // 'elem' (default),  'jolo', 'elem-anchored', 'did:web', 'did:key' and 'did:polygon'
   skipAnchoringForElemMethod: true  
 }
 ```
@@ -162,7 +162,7 @@ const options = {
   env: 'staging',
   apiKey: '....',
   webDomain: 'identity.actor:alice' // required parameter in case `web` is passed as didMethod
-  didMethod: '....' // 'elem' (default),  'jolo' or 'elem-anchored', 'web' and 'polygon'
+  didMethod: '....' // 'elem' (default),  'jolo' or 'elem-anchored', 'web', 'key' and 'polygon'
 }
 
 const wallet = await AffinidiWallet.createWallet(options, password)

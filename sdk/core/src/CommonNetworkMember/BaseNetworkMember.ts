@@ -120,6 +120,7 @@ export abstract class BaseNetworkMember {
         metricsUrl: metricsUrl,
         component: eventComponent,
         resolveLegacyElemLocally: options.otherOptions?.resolveLocallyElemMethod,
+        resolveKeyLocally: options.otherOptions?.resolveKeyLocally,
         beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
         keyManager: options.otherOptions?.keyManager,
         keysService: keysService,
@@ -914,6 +915,20 @@ export abstract class BaseNetworkMember {
   }
 
   /**
+   * @description Validate status of provided VC
+   * @param credential - the W3c VC
+   * @returns { verified, error }
+   *
+   * verified - boolean, result of the verification
+   *
+   * error - validation error
+   */
+  async checkCredentialStatus(credential: any): Promise<{ verified: boolean; error?: string }> {
+    const result = await this._affinity.checkCredentialStatus(credential)
+    return result
+  }
+
+  /**
    * @description Validates a VP, and the contained VCs
    * @param vp - the presentation to be validated
    * when needed to verify if holder is a subject of VC
@@ -932,8 +947,8 @@ export abstract class BaseNetworkMember {
    *
    * errors - array of validation errors
    */
-  async verifyPresentation(vp: unknown, challenge?: string): Promise<PresentationValidationOutput> {
-    const response = await this._affinity.validatePresentation(vp, null, challenge)
+  async verifyPresentation(vp: unknown, challenge?: string, didDocuments?: any): Promise<PresentationValidationOutput> {
+    const response = await this._affinity.validatePresentation(vp, null, challenge, didDocuments)
 
     if (response.result === true) {
       const vpChallenge = response.data.proof.challenge

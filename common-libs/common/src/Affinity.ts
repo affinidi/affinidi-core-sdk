@@ -37,6 +37,7 @@ export class Affinity {
         cacheMaxSize: options.cacheMaxSize,
         cacheTtlInMin: options.cacheTtlInMin,
         resolveLegacyElemLocally: options.resolveLegacyElemLocally,
+        resolveKeyLocally: options.resolveKeyLocally,
       })
     this._digestService = new DigestService()
     this._platformCryptographyTools = platformCryptographyTools
@@ -181,6 +182,10 @@ export class Affinity {
     }
   }
 
+  async checkCredentialStatus(credential: any): Promise<{ verified: boolean; error?: string }> {
+    return this._checkCredentialStatus(credential)
+  }
+
   async _checkCredentialStatus(credential: any): Promise<{ verified: boolean; error?: string }> {
     if (credential.credentialStatus) {
       // We don't need to have `revocationList.checkStatus` verify the VC because we already do that
@@ -298,10 +303,18 @@ export class Affinity {
     return this._keyManager.signCredential(unsignedCredentialInput, keySuiteType)
   }
 
+  _getProvidedDidDocument(didDocuments: any, controller: string, didDocument: any) {
+    const controllerDid = parse(controller).did
+    const providedDidDocument = didDocuments[controllerDid] || didDocuments[controller] || didDocument
+
+    return providedDidDocument
+  }
+
   async validatePresentation(
     vp: any,
     didDocument?: any,
     challenge?: string,
+    didDocuments: any = {},
   ): Promise<{ result: true; data: VPV1 } | { result: false; error: string }> {
     const result = await validateVPV1({
       documentLoader: this._createDocumentLoader(),
@@ -310,17 +323,19 @@ export class Affinity {
           throw new Error(`Unsupported proofType: ${proofType}`)
         }
 
-        const resolvedDidDocument = await this._resolveDidIfNoDidDocument(controller, didDocument)
+        const providedDidDocument = this._getProvidedDidDocument(didDocuments, controller, didDocument)
+        const resolvedDidDocument = await this._resolveDidIfNoDidDocument(controller, providedDidDocument)
         const publicKey = DidDocumentService.getPublicKey(verificationMethod, resolvedDidDocument)
         const factory = this._platformCryptographyTools.verifySuiteFactories[proofType]
 
         return factory(publicKey, verificationMethod, controller)
       },
       getProofPurposeOptions: async ({ proofPurpose, controller }) => {
+        const providedDidDocument = this._getProvidedDidDocument(didDocuments, controller, didDocument)
         switch (proofPurpose) {
           case 'authentication':
           case 'assertionMethod': {
-            const resolvedDidDoc = await this._resolveDidIfNoDidDocument(controller, didDocument)
+            const resolvedDidDoc = await this._resolveDidIfNoDidDocument(controller, providedDidDocument)
 
             // TODO: workaround, for now polygon dids has only verificationMethod
             // it could be changed in future as polygon is under developing
