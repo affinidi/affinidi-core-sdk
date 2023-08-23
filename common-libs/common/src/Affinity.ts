@@ -86,8 +86,8 @@ export class Affinity {
       throw new Error('Signature on token is invalid')
     }
     
-    if(payload.expiredAt) {
-      if (payload.expiredAt < Date.now()) {
+    if(payload.expiresAt) {
+      if (payload.expiresAt < Date.now()) {
         throw new Error('Token expired')
       }
     } else {
