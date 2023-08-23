@@ -91,7 +91,7 @@ export class Affinity {
         throw new Error('Token expired')
       }
     } else {
-      if (payload.exp < Date.now()) {
+      if (!payload.exp || payload.exp < Date.now()) {
         throw new Error('Token expired')
       }
     }
