@@ -73,7 +73,7 @@ export class Affinity {
     const token = Affinity.fromJwt(encryptedtoken)
 
     const { payload } = token
-    const did = DidDocumentService.keyIdToDid(payload.iss)
+    const did = payload.iss
 
     didDocument = await this._resolveDidIfNoDidDocument(did, didDocument)
 
@@ -85,9 +85,15 @@ export class Affinity {
     if (!isSignatureVerified) {
       throw new Error('Signature on token is invalid')
     }
-
-    if (payload.exp < Date.now()) {
-      throw new Error('Token expired')
+    
+    if(payload.expiredAt) {
+      if (payload.expiredAt < Date.now()) {
+        throw new Error('Token expired')
+      }
+    } else {
+      if (payload.exp < Date.now()) {
+        throw new Error('Token expired')
+      }
     }
 
     if (initialEncryptedtoken) {
