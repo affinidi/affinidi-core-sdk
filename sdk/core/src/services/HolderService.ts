@@ -171,7 +171,7 @@ export default class HolderService {
     try {
       await this._affinityService.validateJWT(credentialShareResponseToken, credentialShareRequestToken, didDocument)
     } catch (error) {
-      if (error.message === 'Token expired') {
+      if (error.message === 'Token expired or invalid expiration') {
         throw new SdkErrorFromCode('COR-19')
       }
 
@@ -242,14 +242,14 @@ export default class HolderService {
     }
 
     if (payload.exp < Date.now()) {
-      throw new Error('Token expired')
+      throw new Error('Token expired or invalid expiration')
     }
   }
   async verifyCredentialOfferRequest(credentialOfferRequestToken: string) {
     try {
       await this._affinityService.validateJWT(credentialOfferRequestToken)
     } catch (error) {
-      if (error.message === 'Token expired') {
+      if (error.message === 'Token expired or invalid expiration') {
         return { isValid: false, errorCode: 'COR-19', error: error.message }
       }
 

@@ -703,7 +703,7 @@ describe('CommonNetworkMember', () => {
     const { code, httpStatusCode, message } = responseError
 
     expect(code).to.equal('COR-19')
-    expect(message).to.equal('Token expired')
+    expect(message).to.equal('Token expired or invalid expiration')
     expect(httpStatusCode).to.equal(400)
   })
 

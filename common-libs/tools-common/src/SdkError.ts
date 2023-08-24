@@ -178,7 +178,7 @@ export const commonErrors = {
   },
   'COR-19': {
     type: 'OperationError',
-    message: 'Token expired',
+    message: 'Token expired or invalid expiration',
     httpStatusCode: 400,
   },
   'COR-20': {
