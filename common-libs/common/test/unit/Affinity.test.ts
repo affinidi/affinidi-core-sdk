@@ -298,7 +298,7 @@ describe('Affinity', () => {
     }
 
     expect(expiredTokenError).to.be.not.undefined
-    expect(expiredTokenError.message).to.be.equal('Token expired')
+    expect(expiredTokenError.message).to.be.equal('Token expired or invalid expiration')
   })
 
   it('#validateJWT (When initial token do not match)', async () => {
