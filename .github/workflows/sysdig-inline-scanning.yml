@@ -7,9 +7,10 @@ env:
   
 name: sysdig-inline-scanning
 
-on:
-  push:
-    branches: [master]
+# commenting this out so it does not trigger this scanner which is removed
+# on:
+#  push:
+#    branches: [master]
     
 
 jobs:
