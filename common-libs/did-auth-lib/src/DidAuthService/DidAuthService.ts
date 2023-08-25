@@ -106,7 +106,7 @@ export default class AffinidiDidAuthService {
   async createDidAuthResponseToken(
     didAuthRequestTokenStr: string,
     options?: CreateResponseTokenOptions,
-    exp?: number
+    exp?: number,
   ): Promise<string> {
     const clientService = new DidAuthClientService(this.createSigner())
     return clientService.createDidAuthResponseToken(didAuthRequestTokenStr, options, exp)
