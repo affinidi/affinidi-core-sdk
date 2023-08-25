@@ -106,9 +106,10 @@ export default class AffinidiDidAuthService {
   async createDidAuthResponseToken(
     didAuthRequestTokenStr: string,
     options?: CreateResponseTokenOptions,
+    exp?: number
   ): Promise<string> {
     const clientService = new DidAuthClientService(this.createSigner())
-    return clientService.createDidAuthResponseToken(didAuthRequestTokenStr, options)
+    return clientService.createDidAuthResponseToken(didAuthRequestTokenStr, options, exp)
   }
 
   async createDidAuthResponseTokenThroughCloudWallet(

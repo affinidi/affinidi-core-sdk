@@ -12,6 +12,7 @@ import DidAuthServerService from '../../../src/DidAuthService/DidAuthServerServi
 import Signer from '../../../src/shared/Signer'
 import { Affinidi, KeysService, LocalKeyVault } from '@affinidi/common'
 import DidAuthClientService from '../../../src/DidAuthService/DidAuthClientService'
+import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from 'src/shared/constants'
 
 const env = {
   environment: <Env>'dev',
@@ -150,7 +151,11 @@ describe('AffinidiDidAuthService', () => {
 
     const didAuthRequestToken = await verifierDidAuthService.createDidAuthRequestToken(holderDid)
 
-    const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken)
+    const NOW = Date.now()
+    
+    const exp = NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
+
+    const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken, undefined, exp)
 
     const result = await verifierDidAuthService.verifyDidAuthResponseToken(didAuthResponseToken, verifierOptions)
 
@@ -174,7 +179,11 @@ describe('AffinidiDidAuthService', () => {
 
     const didAuthRequestToken = await serverService.createDidAuthRequestToken(holderDid)
 
-    const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken)
+    const NOW = Date.now()
+    
+    const exp = NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
+
+    const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken, undefined ,exp)
 
     const result = await serverService.verifyDidAuthResponseToken(didAuthResponseToken)
 
