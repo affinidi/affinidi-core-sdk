@@ -1,6 +1,6 @@
 import { Service } from './services'
 
-export const defaultTemplate = 'https://{{service}}.{{env}}.affinity-project.org'
+export const defaultTemplate = 'https://{{service}}.{{env}}.affinidi.io'
 
 export const defaultDevTemplate = 'https://{{service}}.apse1.{{env}}.affinidi.io'
 
