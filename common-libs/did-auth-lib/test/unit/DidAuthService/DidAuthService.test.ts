@@ -155,7 +155,7 @@ describe('AffinidiDidAuthService', () => {
     let options: CreateResponseTokenOptions = undefined
 
     const NOW = Date.now()
-    
+
     const exp = NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
 
     const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken, options, exp)
@@ -185,7 +185,7 @@ describe('AffinidiDidAuthService', () => {
     let options: CreateResponseTokenOptions = undefined
 
     const NOW = Date.now()
-    
+
     const exp = NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
 
     const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken, options, exp)
