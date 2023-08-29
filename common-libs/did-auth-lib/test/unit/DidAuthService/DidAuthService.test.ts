@@ -12,8 +12,8 @@ import DidAuthServerService from '../../../src/DidAuthService/DidAuthServerServi
 import Signer from '../../../src/shared/Signer'
 import { Affinidi, KeysService, LocalKeyVault } from '@affinidi/common'
 import DidAuthClientService from '../../../src/DidAuthService/DidAuthClientService'
-import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from 'src/shared/constants'
-import { CreateResponseTokenOptions } from 'src/shared/types'
+import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from './../../../src/shared/constants'
+import { CreateResponseTokenOptions } from './../../../src/shared/types'
 
 const env = {
   environment: <Env>'dev',
