@@ -5,6 +5,8 @@ import { Env } from '@affinidi/url-resolver'
 import AffinidiDidAuthService from './../../../src/DidAuthService/DidAuthService'
 import { verifierEncryptedSeed, verifierEncryptionKey, verifierFullDid, verifierDid } from '../../factory/verifier'
 import { holderEncryptedSeed, holderEncryptionKey, holderDid } from '../../factory/holder'
+import { DEFAULT_REQUEST_TOKEN_VALID_IN_MS } from './../../../src/shared/constants'
+import { CreateResponseTokenOptions } from './../../../src/shared/types'
 const { TEST_SECRETS } = process.env
 const { DEV_API_KEY_HASH } = JSON.parse(TEST_SECRETS)
 const env = {
@@ -74,7 +76,11 @@ module.exports = function () {
 
       const didAuthRequestToken = await verifierDidAuthService.createDidAuthRequestToken(holderDid)
 
-      const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken)
+      const options: CreateResponseTokenOptions = {
+        exp: Date.now() + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
+      }
+
+      const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken, options)
 
       const result = await verifierDidAuthService.verifyDidAuthResponseToken(didAuthResponseToken, verifierOptions)
 
