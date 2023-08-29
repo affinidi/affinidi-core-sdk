@@ -304,7 +304,7 @@ describe('AffinidiDidAuthService', () => {
     } catch (error) {
       invalidExpirationError = error
     }
-
+    
     expect(invalidExpirationError).to.be.undefined
     expect(invalidExpirationError.message).to.be.equal('Token expired or invalid expiration')
     nock.cleanAll()
