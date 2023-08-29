@@ -76,6 +76,7 @@ Use `createDidAuthResponseToken` method to create `Did-Auth` response token(expi
  * authDidRequestToken {String} - signed JWT request token from the service
  * options {Object} (optional) - key value object with additional options
  * options.maxTokenValidInMs {Number} (optional) - maximum token validity period in milliseconds(12 hours by default)
+ * options.exp {Number} (optional) - `responseToken` expiration timestamp
  */
 const responseToken = await affinidiDidAuthService.createDidAuthResponseToken(authDidRequestToken, options)
 ```
