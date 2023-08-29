@@ -1,3 +1,5 @@
+# release 3.0.0 (2023-08-29)
+* added expiration in Response Token Options
 # release 2.9.0 (2023-03-14)
 * add tenant token
 # release 2.8.0 (2023-03-08)

@@ -294,7 +294,7 @@ describe('AffinidiDidAuthService', () => {
 
     const didAuthRequestToken = await serverService.createDidAuthRequestToken(holderDid)
 
-    const options: CreateResponseTokenOptions = undefined
+    const options: CreateResponseTokenOptions = { exp: 42 }
 
     const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken, options)
 
@@ -306,7 +306,7 @@ describe('AffinidiDidAuthService', () => {
     }
 
     expect(invalidExpirationError).to.be.not.undefined
-    expect(invalidExpirationError.message).to.be.equal('Token expired or invalid expiration')
+    expect(invalidExpirationError.message).to.be.equal('Token expired')
     nock.cleanAll()
   })
 })
