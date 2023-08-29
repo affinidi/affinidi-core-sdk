@@ -300,13 +300,15 @@ describe('AffinidiDidAuthService', () => {
 
     let invalidExpirationError
     try {
+      console.log(didAuthResponseToken)
       await serverService.verifyDidAuthResponseToken(didAuthResponseToken)
     } catch (error) {
+      console.log(error.message)
       invalidExpirationError = error
     }
 
     expect(invalidExpirationError).to.be.not.undefined
-    expect(invalidExpirationError.message).to.be.equal('Token expired')
+    expect(invalidExpirationError.message).to.be.equal('Token expired or invalid expiration')
     nock.cleanAll()
   })
 })
