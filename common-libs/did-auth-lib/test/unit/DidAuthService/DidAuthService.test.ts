@@ -152,13 +152,11 @@ describe('AffinidiDidAuthService', () => {
 
     const didAuthRequestToken = await verifierDidAuthService.createDidAuthRequestToken(holderDid)
 
-    let options: CreateResponseTokenOptions = undefined
+    const options: CreateResponseTokenOptions = {
+      exp: Date.now() + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
+    }
 
-    const NOW = Date.now()
-
-    const exp = NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
-
-    const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken, options, exp)
+    const didAuthResponseToken = await holderDidAuthService.createDidAuthResponseToken(didAuthRequestToken, options)
 
     const result = await verifierDidAuthService.verifyDidAuthResponseToken(didAuthResponseToken, verifierOptions)
 
@@ -182,13 +180,11 @@ describe('AffinidiDidAuthService', () => {
 
     const didAuthRequestToken = await serverService.createDidAuthRequestToken(holderDid)
 
-    let options: CreateResponseTokenOptions = undefined
+    const options: CreateResponseTokenOptions = {
+      exp: Date.now() + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
+    }
 
-    const NOW = Date.now()
-
-    const exp = NOW + DEFAULT_REQUEST_TOKEN_VALID_IN_MS
-
-    const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken, options, exp)
+    const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken, options)
 
     const result = await serverService.verifyDidAuthResponseToken(didAuthResponseToken)
 
@@ -280,5 +276,37 @@ describe('AffinidiDidAuthService', () => {
     const holderDidAuthService = new AffinidiDidAuthService(holderDidAuthServiceOptions)
 
     expect(() => holderDidAuthService.isTokenExpired(token)).to.throw()
+  })
+
+  it('#verifyDidAuthResponse -> invalid expiration for didAuthResponseToken ', async () => {
+    const { environment, accessApiKey } = env
+
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
+      .post('/api/v1/did/resolve-did', /elem/gi)
+      .reply(200, mockVerifierElemDidDocument)
+
+    nock(`https://affinity-registry.apse1.${environment}.affinidi.io`)
+      .post('/api/v1/did/resolve-did', /elem/gi)
+      .reply(200, mockHolderElemDidDocument)
+
+    const clientService = createClientService()
+    const serverService = createServerService(environment, accessApiKey)
+
+    const didAuthRequestToken = await serverService.createDidAuthRequestToken(holderDid)
+
+    const options: CreateResponseTokenOptions = undefined
+
+    const didAuthResponseToken = await clientService.createDidAuthResponseToken(didAuthRequestToken, options)
+
+    let invalidExpirationError
+    try {
+      await serverService.verifyDidAuthResponseToken(didAuthResponseToken)
+    } catch (error) {
+      invalidExpirationError = error
+    }
+
+    expect(invalidExpirationError).to.be.not.undefined
+    expect(invalidExpirationError.message).to.be.equal('Token expired or invalid expiration')
+    nock.cleanAll()
   })
 })

@@ -7,4 +7,5 @@ export interface VerifierOptions {
 
 export type CreateResponseTokenOptions = {
   maxTokenValidInMs?: number
+  exp?: number
 }

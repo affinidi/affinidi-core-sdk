@@ -11,7 +11,6 @@ export default class DidAuthClientService {
   async createDidAuthResponseToken(
     didAuthRequestTokenStr: string,
     options?: CreateResponseTokenOptions,
-    exp?: number,
   ): Promise<string> {
     const didAuthRequestToken = DidAuthRequestToken.fromString(didAuthRequestTokenStr)
     const maxTokenValidityPeriod = options?.maxTokenValidInMs ?? DEFAULT_MAX_TOKEN_VALID_IN_MS
@@ -26,7 +25,7 @@ export default class DidAuthClientService {
       )
     }
 
-    const jwtObject = await buildResponseJwtObject(didAuthRequestTokenStr, exp)
+    const jwtObject = await buildResponseJwtObject(didAuthRequestTokenStr, options.exp)
 
     await this._signer.fillSignature(jwtObject)
 
