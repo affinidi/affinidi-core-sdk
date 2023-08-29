@@ -25,7 +25,7 @@ export default class DidAuthClientService {
       )
     }
 
-    const exp = options ? options.exp : undefined
+    const exp = options?.exp ?? undefined
 
     const jwtObject = await buildResponseJwtObject(didAuthRequestTokenStr, exp)
 
