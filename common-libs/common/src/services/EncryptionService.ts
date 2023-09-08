@@ -50,24 +50,24 @@ const normalizeKey = (key: string): Buffer | undefined => {
 }
 
 export class EncryptionService {
-  static async encrypt(data: string, key: string) {
+  static async encrypt(data: string, key: string, encyption_algo: string = ENCRYPTION_ALGORITHM) {
     const keyBuffer = normalizeKey(key)
     const dataBuffer = Buffer.from(data, undefined)
     const iv = await randomBytes(IV_LENGTH)
 
-    const cipher = createCipheriv(ENCRYPTION_ALGORITHM, keyBuffer, iv)
+    const cipher = createCipheriv(encyption_algo, keyBuffer, iv)
     const encryptedData = Buffer.concat([cipher.update(dataBuffer), cipher.final()])
 
     return Buffer.concat([iv, encryptedData]).toString('hex')
   }
 
-  static decrypt(data: string, key: string) {
+  static decrypt(data: string, key: string, encyption_algo: string = ENCRYPTION_ALGORITHM) {
     const dataBuffer = Buffer.from(data, 'hex')
     const passwordBuffer = normalizeKey(key)
     const iv = dataBuffer.slice(0, IV_LENGTH)
     const encryptedDataWtihoutVector = dataBuffer.slice(IV_LENGTH)
 
-    const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, passwordBuffer, iv)
+    const decipher = createDecipheriv(encyption_algo, passwordBuffer, iv)
     const decryptedBuffer = Buffer.concat([decipher.update(encryptedDataWtihoutVector), decipher.final()])
     return decryptedBuffer.toString()
   }
