@@ -52,32 +52,50 @@ const normalizeKey = (key: string): Buffer | undefined => {
 
 export class EncryptionService {
   static async encrypt(data: string, key: string, encryption_algo: string = ENCRYPTION_ALGORITHM) {
-    const iv_length = encryption_algo.endsWith('-gcm') ? IV_LENGTH_GCM : IV_LENGTH
-    const keyBuffer = normalizeKey(key)
-    const dataBuffer = Buffer.from(data, undefined)
-    const iv = await randomBytes(iv_length)
+    if (encryption_algo.endsWith('-gcm')) {
+      const keyBuffer = normalizeKey(key)
+      const dataBuffer = Buffer.from(data, undefined)
+      const iv = await randomBytes(IV_LENGTH_GCM)
 
-    const cipher = createCipheriv(encryption_algo, keyBuffer, iv)
-    const encryptedData = Buffer.concat([cipher.update(dataBuffer), cipher.final()])
+      const cipher = createCipheriv(encryption_algo, keyBuffer, iv)
+      const encryptedData = Buffer.concat([cipher.update(dataBuffer), cipher.final()])
 
-    return encryption_algo.endsWith('-gcm') ? 
-    `${Buffer.concat([iv, encryptedData]).toString('hex')}-${cipher.getAuthTag().toString('hex')}` :
-    Buffer.concat([iv, encryptedData]).toString('hex')
+      return `${Buffer.concat([iv, encryptedData]).toString('hex')}-${cipher.getAuthTag().toString('hex')}`
+    } else {
+      const keyBuffer = normalizeKey(key)
+      const dataBuffer = Buffer.from(data, undefined)
+      const iv = await randomBytes(IV_LENGTH)
+
+      const cipher = createCipheriv(encryption_algo, keyBuffer, iv)
+      const encryptedData = Buffer.concat([cipher.update(dataBuffer), cipher.final()])
+
+      return Buffer.concat([iv, encryptedData]).toString('hex')
+    }
   }
 
   static decrypt(data: string, key: string, encryption_algo: string = ENCRYPTION_ALGORITHM) {
-    const iv_length = encryption_algo.endsWith('-gcm') ? IV_LENGTH_GCM : IV_LENGTH
-    const dataBuffer = encryption_algo.endsWith('-gcm') ? Buffer.from(data.substring(0, data.lastIndexOf('-')), 'hex') : Buffer.from(data, 'hex')
-    const passwordBuffer = normalizeKey(key)
-    const iv = dataBuffer.slice(0, iv_length)
-    const encryptedDataWtihoutVector = dataBuffer.slice(iv_length)
-
-    const decipher = createDecipheriv(encryption_algo, passwordBuffer, iv)
     if (encryption_algo.endsWith('-gcm')) {
+      const dataBuffer = Buffer.from(data.substring(0, data.lastIndexOf('-')), 'hex')
+      const passwordBuffer = normalizeKey(key)
+      const iv = dataBuffer.slice(0, IV_LENGTH_GCM)
+      const encryptedDataWtihoutVector = dataBuffer.slice(IV_LENGTH_GCM)
+
+      const decipher = createDecipheriv(encryption_algo, passwordBuffer, iv)
       const authTag = Buffer.from(data.slice(data.lastIndexOf('-') + 1), 'hex')
       decipher.setAuthTag(authTag)
+
+      const decryptedBuffer = Buffer.concat([decipher.update(encryptedDataWtihoutVector), decipher.final()])
+      return decryptedBuffer.toString()
+    } else {
+      const dataBuffer = Buffer.from(data, 'hex')
+      const passwordBuffer = normalizeKey(key)
+      const iv = dataBuffer.slice(0, IV_LENGTH)
+      const encryptedDataWtihoutVector = dataBuffer.slice(IV_LENGTH)
+
+      const decipher = createDecipheriv(encryption_algo, passwordBuffer, iv)
+      
+      const decryptedBuffer = Buffer.concat([decipher.update(encryptedDataWtihoutVector), decipher.final()])
+      return decryptedBuffer.toString()
     }
-    const decryptedBuffer = Buffer.concat([decipher.update(encryptedDataWtihoutVector), decipher.final()])
-    return decryptedBuffer.toString()
   }
 }
