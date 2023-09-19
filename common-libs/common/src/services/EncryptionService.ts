@@ -60,8 +60,7 @@ export class EncryptionService {
       const cipher = createCipheriv(encryption_algo, keyBuffer, iv)
       const encryptedData = Buffer.concat([cipher.update(dataBuffer), cipher.final()])
 
-      return `${Buffer.concat([iv, encryptedData]).toString('hex')}-${cipher
-        .getAuthTag().toString('hex')}`
+      return `${Buffer.concat([iv, encryptedData]).toString('hex')}-${cipher.getAuthTag().toString('hex')}`
     } else {
       const keyBuffer = normalizeKey(key)
       const dataBuffer = Buffer.from(data, undefined)
@@ -94,7 +93,6 @@ export class EncryptionService {
       const encryptedDataWtihoutVector = dataBuffer.slice(IV_LENGTH)
 
       const decipher = createDecipheriv(encryption_algo, passwordBuffer, iv)
-      
       const decryptedBuffer = Buffer.concat([decipher.update(encryptedDataWtihoutVector), decipher.final()])
       return decryptedBuffer.toString()
     }
