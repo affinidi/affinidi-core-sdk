@@ -6,6 +6,9 @@ import { createCognitolessWalletFactories } from './cognitolessWalletFactories'
 import { createLegacyWalletFactories } from './legacyWalletFactories'
 import { createPublicToolsFactories } from './publicToolsFactories'
 
+import { BaseNetworkMember } from '../CommonNetworkMember/BaseNetworkMember'
+import { StaticValidateOptions, SignedCredential } from '../dto/shared.dto'
+
 /**
  * Turns any arrow function into a constructor of its return value accepting the same arguments
  * @param inputFunction Original function (e.g. `(arg: string) => ({ arg })`)
@@ -36,12 +39,20 @@ export const createV5CompatibleWalletFactories = (
   const cognitoFactories = createCognitoWalletFactories(platformCryptographyTools, component)
   const cognitolessFactories = createCognitolessWalletFactories(platformCryptographyTools, component)
   const publicToolsFactories = createPublicToolsFactories(platformCryptographyTools, component)
-  return Object.assign(createConstructor(legacyConstructor), {
-    ...cognitoFactories,
-    ...cognitolessFactories,
-    ...publicToolsFactories,
-    ...legacyFactories,
-  })
+
+  const validateCredential = async (options: StaticValidateOptions, signedCredential: SignedCredential, holderKey?: string, didDocument?: any) => {
+    return BaseNetworkMember.validateCredential(platformCryptographyTools, options, signedCredential, holderKey, didDocument)
+  }
+
+  return Object.assign(createConstructor(legacyConstructor),
+    {
+      ...cognitoFactories,
+      ...cognitolessFactories,
+      ...publicToolsFactories,
+      ...legacyFactories,
+    },
+    { validateCredential }
+  )
 }
 
 export const createV6WalletFactories = (
@@ -51,9 +62,15 @@ export const createV6WalletFactories = (
   const cognitoFactories = createCognitoWalletFactories(platformCryptographyTools, component)
   const cognitolessFactories = createCognitolessWalletFactories(platformCryptographyTools, component)
   const publicToolsFactories = createPublicToolsFactories(platformCryptographyTools, component)
+
+  const validateCredential = async (options: StaticValidateOptions, signedCredential: SignedCredential, holderKey?: string, didDocument?: any) => {
+    return BaseNetworkMember.validateCredential(platformCryptographyTools, options, signedCredential, holderKey, didDocument)
+  }
+
   return {
     ...cognitoFactories,
     ...cognitolessFactories,
     ...publicToolsFactories,
+    validateCredential,
   }
 }

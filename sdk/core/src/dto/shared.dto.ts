@@ -32,6 +32,23 @@ export const PASSWORD = /^.{6,}$/
 export const JWT = /^[A-Za-z0-9_=-]+\.[A-Za-z0-9_=-]+\.?[A-Za-z0-9_.+/=-]*$/
 export const COGNITO_CONFIRMATION_CODE = /^\d{6}$/
 
+export class StaticValidateOptions {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  @IsUrl({ require_tld: false })
+  @IsOptional()
+  registryUrl?: string
+
+  @IsOptional()
+  accessApiKey?: string
+
+  @IsBoolean()
+  @IsOptional()
+  resolveLegacyElemLocally?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  resolveKeyLocally?: boolean
+}
 export class SdkOptions {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   @IsUrl({ require_tld: false })

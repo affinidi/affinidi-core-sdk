@@ -35,6 +35,7 @@ import {
   KeyAlgorithmType,
   KeyOptions,
   DidMethod,
+  StaticValidateOptions,
 } from '../dto/shared.dto'
 
 import {
@@ -55,6 +56,8 @@ import HolderService from '../services/HolderService'
 import KeyManagementService from '../services/KeyManagementService'
 import { register } from '../services/registeringHandler'
 import WalletStorageService from '../services/WalletStorageService'
+
+import { getBasicOptionsFromEnvironment } from '../shared/getOptionsFromEnvironment'
 
 import { Util } from './Util'
 
@@ -718,6 +721,25 @@ export abstract class BaseNetworkMember {
 
   async validateCredential(signedCredential: SignedCredential, holderKey?: string, didDocument?: any) {
     return this._affinity.validateCredential(signedCredential, holderKey, didDocument)
+  }
+
+  static async validateCredential(platformCryptographyTools: IPlatformCryptographyTools, options: StaticValidateOptions, signedCredential: SignedCredential, holderKey?: string, didDocument?: any) {
+    const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
+    const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
+    const affinity = new Affinity(
+      {
+        apiKey: accessApiKey,
+        registryUrl,
+        resolveLegacyElemLocally,
+        resolveKeyLocally,
+        // metricsUrl: metricsUrl,
+        // component: eventComponent,
+        // beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
+      },
+      platformCryptographyTools,
+    )
+
+    return affinity.validateCredential(signedCredential, holderKey, didDocument)
   }
 
   async verifyDidAuthResponse(

@@ -50,7 +50,7 @@ type EnvironmentOptions = {
   clientId?: string
 }
 
-function getBasicOptionsFromEnvironment(options: EnvironmentOptions) {
+export const getBasicOptionsFromEnvironment = (options: EnvironmentOptions) => {
   const env = options.env
 
   const urls = {
