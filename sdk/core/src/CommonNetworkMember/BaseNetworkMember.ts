@@ -738,9 +738,6 @@ export abstract class BaseNetworkMember {
         registryUrl,
         resolveLegacyElemLocally,
         resolveKeyLocally,
-        // metricsUrl: metricsUrl,
-        // component: eventComponent,
-        // beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
       },
       platformCryptographyTools,
     )
@@ -1011,6 +1008,7 @@ export abstract class BaseNetworkMember {
     platformCryptographyTools: IPlatformCryptographyTools,
     options: StaticValidateOptions,
     vp: unknown,
+    verifierDid?: string,
     challenge?: string,
     didDocuments?: any,
   ): Promise<PresentationValidationOutput> {
@@ -1022,9 +1020,6 @@ export abstract class BaseNetworkMember {
         registryUrl,
         resolveLegacyElemLocally,
         resolveKeyLocally,
-        // metricsUrl: metricsUrl,
-        // component: eventComponent,
-        // beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
       },
       platformCryptographyTools,
     )
@@ -1034,17 +1029,20 @@ export abstract class BaseNetworkMember {
     if (response.result === true) {
       const vpChallenge = response.data.proof.challenge
 
-      // After validating the VP we need to validate the VP's challenge token
-      // to ensure that it was issued from the correct DID and that it hasn't expired.
-      // try {
-      //   Util.isJWT(vpChallenge) && (await this._holderService.verifyPresentationChallenge(vpChallenge, this.did))
-      // } catch (error) {
-      //   return {
-      //     isValid: false,
-      //     suppliedPresentation: response.data,
-      //     errors: [error],
-      //   }
-      // }
+      if (verifierDid) {
+        // After validating the VP we need to validate the VP's challenge token
+        // to ensure that it was issued from the correct DID and that it hasn't expired.
+        try {
+          Util.isJWT(vpChallenge) &&
+            (await HolderService.verifyPresentationChallenge(affinity, vpChallenge, verifierDid))
+        } catch (error) {
+          return {
+            isValid: false,
+            suppliedPresentation: response.data,
+            errors: [error],
+          }
+        }
+      }
 
       return {
         isValid: true,

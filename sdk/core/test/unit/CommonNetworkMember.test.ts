@@ -1584,7 +1584,12 @@ describe('CommonNetworkMember', () => {
       resolveKeyLocally: true,
     }
 
-    const resultStaticMethod = await AffinidiWallet.verifyPresentation(testPlatformTools, staticOptions, vp)
+    const resultStaticMethod = await AffinidiWallet.verifyPresentation(
+      testPlatformTools,
+      staticOptions,
+      vp,
+      requesterCommonNetworkMember.did,
+    )
     expect(resultStaticMethod.isValid).to.eq(true)
   })
 
