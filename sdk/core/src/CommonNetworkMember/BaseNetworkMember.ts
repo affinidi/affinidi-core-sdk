@@ -1032,7 +1032,7 @@ export abstract class BaseNetworkMember {
     const response = await affinity.validatePresentation(vp, null, challenge, didDocuments)
 
     if (response.result === true) {
-      // const vpChallenge = response.data.proof.challenge
+      const vpChallenge = response.data.proof.challenge
 
       // After validating the VP we need to validate the VP's challenge token
       // to ensure that it was issued from the correct DID and that it hasn't expired.
