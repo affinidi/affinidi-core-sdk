@@ -44,6 +44,10 @@ export const createV5CompatibleWalletFactories = (
     return BaseNetworkMember.validateCredential(platformCryptographyTools, options, signedCredential, holderKey, didDocument)
   }
 
+  const verifyPresentation = async (options: StaticValidateOptions, vp: unknown, challenge?: string, didDocuments?: any) => {
+    return BaseNetworkMember.verifyPresentation(platformCryptographyTools, options, vp, challenge, didDocuments)
+  }
+
   return Object.assign(createConstructor(legacyConstructor),
     {
       ...cognitoFactories,
@@ -51,7 +55,7 @@ export const createV5CompatibleWalletFactories = (
       ...publicToolsFactories,
       ...legacyFactories,
     },
-    { validateCredential }
+    { validateCredential, verifyPresentation }
   )
 }
 
@@ -67,10 +71,15 @@ export const createV6WalletFactories = (
     return BaseNetworkMember.validateCredential(platformCryptographyTools, options, signedCredential, holderKey, didDocument)
   }
 
+  const verifyPresentation = async (options: StaticValidateOptions, vp: unknown, challenge?: string, didDocuments?: any) => {
+    return BaseNetworkMember.verifyPresentation(platformCryptographyTools, options, vp, challenge, didDocuments)
+  }
+
   return {
     ...cognitoFactories,
     ...cognitolessFactories,
     ...publicToolsFactories,
     validateCredential,
+    verifyPresentation,
   }
 }

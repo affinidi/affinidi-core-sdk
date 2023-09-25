@@ -1001,6 +1001,55 @@ export abstract class BaseNetworkMember {
     }
   }
 
+  static async verifyPresentation(platformCryptographyTools: IPlatformCryptographyTools, options: StaticValidateOptions, vp: unknown, challenge?: string, didDocuments?: any): Promise<PresentationValidationOutput> {
+    const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
+    const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
+    const affinity = new Affinity(
+      {
+        apiKey: accessApiKey,
+        registryUrl,
+        resolveLegacyElemLocally,
+        resolveKeyLocally,
+        // metricsUrl: metricsUrl,
+        // component: eventComponent,
+        // beforeDocumentLoader: options.otherOptions?.beforeDocumentLoader,
+      },
+      platformCryptographyTools,
+    )
+
+    const response = await affinity.validatePresentation(vp, null, challenge, didDocuments)
+
+    if (response.result === true) {
+      // const vpChallenge = response.data.proof.challenge
+
+      // After validating the VP we need to validate the VP's challenge token
+      // to ensure that it was issued from the correct DID and that it hasn't expired.
+      // try {
+      //   Util.isJWT(vpChallenge) && (await this._holderService.verifyPresentationChallenge(vpChallenge, this.did))
+      // } catch (error) {
+      //   return {
+      //     isValid: false,
+      //     suppliedPresentation: response.data,
+      //     errors: [error],
+      //   }
+      // }
+
+      return {
+        isValid: true,
+        did: response.data.holder.id,
+        challenge: vpChallenge,
+        suppliedPresentation: response.data,
+      }
+    } else {
+      return {
+        isValid: false,
+        suppliedPresentation: vp,
+        errors: [response.error],
+      }
+    }
+
+  }
+
   /**
    * Wrapper for Affinity class validateJWT method.
    * @param token
