@@ -40,11 +40,27 @@ export const createV5CompatibleWalletFactories = (
   const cognitolessFactories = createCognitolessWalletFactories(platformCryptographyTools, component)
   const publicToolsFactories = createPublicToolsFactories(platformCryptographyTools, component)
 
-  const validateCredential = async (options: StaticValidateOptions, signedCredential: SignedCredential, holderKey?: string, didDocument?: any) => {
-    return BaseNetworkMember.validateCredential(platformCryptographyTools, options, signedCredential, holderKey, didDocument)
+  const validateCredential = async (
+    options: StaticValidateOptions,
+    signedCredential: SignedCredential,
+    holderKey?: string,
+    didDocument?: any
+  ) => {
+    return BaseNetworkMember.validateCredential(
+      platformCryptographyTools,
+      options,
+      signedCredential,
+      holderKey,
+      didDocument
+    )
   }
 
-  const verifyPresentation = async (options: StaticValidateOptions, vp: unknown, challenge?: string, didDocuments?: any) => {
+  const verifyPresentation = async (
+    options: StaticValidateOptions,
+    vp: unknown,
+    challenge?: string,
+    didDocuments?: any
+  ) => {
     return BaseNetworkMember.verifyPresentation(platformCryptographyTools, options, vp, challenge, didDocuments)
   }
 
@@ -67,11 +83,21 @@ export const createV6WalletFactories = (
   const cognitolessFactories = createCognitolessWalletFactories(platformCryptographyTools, component)
   const publicToolsFactories = createPublicToolsFactories(platformCryptographyTools, component)
 
-  const validateCredential = async (options: StaticValidateOptions, signedCredential: SignedCredential, holderKey?: string, didDocument?: any) => {
+  const validateCredential = async (
+    options: StaticValidateOptions,
+    signedCredential: SignedCredential,
+    holderKey?: string,
+    didDocument?: any
+  ) => {
     return BaseNetworkMember.validateCredential(platformCryptographyTools, options, signedCredential, holderKey, didDocument)
   }
 
-  const verifyPresentation = async (options: StaticValidateOptions, vp: unknown, challenge?: string, didDocuments?: any) => {
+  const verifyPresentation = async (
+    options: StaticValidateOptions,
+    vp: unknown,
+    challenge?: string,
+    didDocuments?: any
+  ) => {
     return BaseNetworkMember.verifyPresentation(platformCryptographyTools, options, vp, challenge, didDocuments)
   }
 

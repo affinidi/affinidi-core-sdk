@@ -723,7 +723,13 @@ export abstract class BaseNetworkMember {
     return this._affinity.validateCredential(signedCredential, holderKey, didDocument)
   }
 
-  static async validateCredential(platformCryptographyTools: IPlatformCryptographyTools, options: StaticValidateOptions, signedCredential: SignedCredential, holderKey?: string, didDocument?: any) {
+  static async validateCredential(
+    platformCryptographyTools: IPlatformCryptographyTools,
+    options: StaticValidateOptions,
+    signedCredential: SignedCredential,
+    holderKey?: string,
+    didDocument?: any
+  ) {
     const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
     const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
     const affinity = new Affinity(
@@ -1001,7 +1007,13 @@ export abstract class BaseNetworkMember {
     }
   }
 
-  static async verifyPresentation(platformCryptographyTools: IPlatformCryptographyTools, options: StaticValidateOptions, vp: unknown, challenge?: string, didDocuments?: any): Promise<PresentationValidationOutput> {
+  static async verifyPresentation(
+    platformCryptographyTools: IPlatformCryptographyTools,
+    options: StaticValidateOptions,
+    vp: unknown,
+    challenge?: string,
+    didDocuments?: any
+  ): Promise<PresentationValidationOutput> {
     const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
     const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
     const affinity = new Affinity(
@@ -1047,7 +1059,6 @@ export abstract class BaseNetworkMember {
         errors: [response.error],
       }
     }
-
   }
 
   /**
