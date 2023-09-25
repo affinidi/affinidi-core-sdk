@@ -630,8 +630,9 @@ describe('CommonNetworkMember', () => {
       resolveKeyLocally: true,
     }
     const sucessStaticMethodResult = await AffinidiWallet.validateCredential(
-      testPlatformTools, staticOptions as StaticValidateOptions,
-      signedCredential as SignedCredential
+      testPlatformTools,
+      staticOptions as StaticValidateOptions,
+      signedCredential as SignedCredential,
     )
     expect(sucessStaticMethodResult.result).to.equal(true)
   })

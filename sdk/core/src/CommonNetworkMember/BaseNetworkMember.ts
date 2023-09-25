@@ -728,7 +728,7 @@ export abstract class BaseNetworkMember {
     options: StaticValidateOptions,
     signedCredential: SignedCredential,
     holderKey?: string,
-    didDocument?: any
+    didDocument?: any,
   ) {
     const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
     const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
@@ -1012,7 +1012,7 @@ export abstract class BaseNetworkMember {
     options: StaticValidateOptions,
     vp: unknown,
     challenge?: string,
-    didDocuments?: any
+    didDocuments?: any,
   ): Promise<PresentationValidationOutput> {
     const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
     const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
