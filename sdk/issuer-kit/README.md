@@ -1,3 +1,6 @@
+> :warning: **WARNING:**
+> Please be advised that the Affinidi SDK is deprecated and will no longer receive future updates. We have initiated this transition to streamline our development efforts and enhance the efficiency of our systems.
+
 # Introduction
 
 Issuer Kit is a library that spins up a VC producing server based on configurations defined by the Application. The Application defines a few key functions required to build the VC, including any helpers or external connections required to collect and validate the data prior to issuance.
