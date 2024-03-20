@@ -1,5 +1,8 @@
 # Affinity SDK for browser
 
+> :warning: **WARNING:**
+> Please be advised that the Affinidi SDK is deprecated and will no longer receive future updates. We have initiated this transition to streamline our development efforts and enhance the efficiency of our systems.
+
 > WARNING **Action required from you**  
 > Update your services to use Affinidi SDK v6.0.4 or above.  
 > Note please pay attention to the changelog while upgrading the version of SDK as some methods may be changed or deprecated.
