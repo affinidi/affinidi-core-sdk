@@ -1,6 +1,6 @@
 {
   "name": "@affinidi/wallet-core-sdk",
-  "version": "7.19.1",
+  "version": "7.19.2",
   "description": "SDK core monorepo for affinity DID solution",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

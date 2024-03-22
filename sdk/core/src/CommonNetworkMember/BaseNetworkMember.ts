@@ -35,6 +35,7 @@ import {
   KeyAlgorithmType,
   KeyOptions,
   DidMethod,
+  StaticValidateOptions,
 } from '../dto/shared.dto'
 
 import {
@@ -55,6 +56,8 @@ import HolderService from '../services/HolderService'
 import KeyManagementService from '../services/KeyManagementService'
 import { register } from '../services/registeringHandler'
 import WalletStorageService from '../services/WalletStorageService'
+
+import { getBasicOptionsFromEnvironment } from '../shared/getOptionsFromEnvironment'
 
 import { Util } from './Util'
 
@@ -720,6 +723,28 @@ export abstract class BaseNetworkMember {
     return this._affinity.validateCredential(signedCredential, holderKey, didDocument)
   }
 
+  static async validateCredential(
+    platformCryptographyTools: IPlatformCryptographyTools,
+    options: StaticValidateOptions,
+    signedCredential: SignedCredential,
+    holderKey?: string,
+    didDocument?: any,
+  ) {
+    const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
+    const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
+    const affinity = new Affinity(
+      {
+        apiKey: accessApiKey,
+        registryUrl,
+        resolveLegacyElemLocally,
+        resolveKeyLocally,
+      },
+      platformCryptographyTools,
+    )
+
+    return affinity.validateCredential(signedCredential, holderKey, didDocument)
+  }
+
   async verifyDidAuthResponse(
     didAuthResponseToken: string,
     didAuthRequestToken?: string,
@@ -961,6 +986,61 @@ export abstract class BaseNetworkMember {
           isValid: false,
           suppliedPresentation: response.data,
           errors: [error],
+        }
+      }
+
+      return {
+        isValid: true,
+        did: response.data.holder.id,
+        challenge: vpChallenge,
+        suppliedPresentation: response.data,
+      }
+    } else {
+      return {
+        isValid: false,
+        suppliedPresentation: vp,
+        errors: [response.error],
+      }
+    }
+  }
+
+  static async verifyPresentation(
+    platformCryptographyTools: IPlatformCryptographyTools,
+    options: StaticValidateOptions,
+    vp: unknown,
+    verifierDid?: string,
+    challenge?: string,
+    didDocuments?: any,
+  ): Promise<PresentationValidationOutput> {
+    const { accessApiKey, resolveLegacyElemLocally, resolveKeyLocally } = options
+    const { registryUrl } = getBasicOptionsFromEnvironment({ registryUrl: options.registryUrl, env: 'prod' })
+    const affinity = new Affinity(
+      {
+        apiKey: accessApiKey,
+        registryUrl,
+        resolveLegacyElemLocally,
+        resolveKeyLocally,
+      },
+      platformCryptographyTools,
+    )
+
+    const response = await affinity.validatePresentation(vp, null, challenge, didDocuments)
+
+    if (response.result === true) {
+      const vpChallenge = response.data.proof.challenge
+
+      if (verifierDid) {
+        // After validating the VP we need to validate the VP's challenge token
+        // to ensure that it was issued from the correct DID and that it hasn't expired.
+        try {
+          Util.isJWT(vpChallenge) &&
+            (await HolderService.verifyPresentationChallenge(affinity, vpChallenge, verifierDid))
+        } catch (error) {
+          return {
+            isValid: false,
+            suppliedPresentation: response.data,
+            errors: [error],
+          }
         }
       }
 

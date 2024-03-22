@@ -1578,6 +1578,19 @@ describe('CommonNetworkMember', () => {
       expect(result.suppliedPresentation).to.deep.eq(vp)
       expect.fail(result.errors.join('\n'))
     }
+
+    const staticOptions = {
+      resolveLegacyElemLocally: true,
+      resolveKeyLocally: true,
+    }
+
+    const resultStaticMethod = await AffinidiWallet.verifyPresentation(
+      testPlatformTools,
+      staticOptions,
+      vp,
+      requesterCommonNetworkMember.did,
+    )
+    expect(resultStaticMethod.isValid).to.eq(true)
   })
 
   it("#verifyPresentation fails when the challenge wasn't signed by the correct party", async () => {

@@ -245,6 +245,34 @@ export default class HolderService {
       throw new Error('Token expired or invalid expiration')
     }
   }
+
+  static async verifyPresentationChallenge(affinityService: any, challenge: string, expectedIssuer: string) {
+    const token = Affinity.fromJwt(challenge)
+
+    const { payload } = token
+
+    const strippedExpectedIssuer = stripParamsFromDidUrl(expectedIssuer)
+    const strippedPayloadIssuer = stripParamsFromDidUrl(payload.iss)
+    if (strippedExpectedIssuer !== strippedPayloadIssuer) {
+      throw new Error('Token not issued by expected issuer.')
+    }
+
+    const did = DidDocumentService.keyIdToDid(expectedIssuer)
+    const didDocument = await affinityService.resolveDid(did)
+    const publicKey = DidDocumentService.getPublicKey(strippedExpectedIssuer, didDocument, payload.kid)
+
+    const digestService = new DigestService()
+    const { digest: tokenDigest, signature } = digestService.getTokenDigest(token)
+    const isSignatureVerified = KeysService.verify(tokenDigest, publicKey, signature)
+
+    if (!isSignatureVerified) {
+      throw new Error('Signature on token is invalid')
+    }
+
+    if (payload.exp < Date.now()) {
+      throw new Error('Token expired or invalid expiration')
+    }
+  }
   async verifyCredentialOfferRequest(credentialOfferRequestToken: string) {
     try {
       await this._affinityService.validateJWT(credentialOfferRequestToken)

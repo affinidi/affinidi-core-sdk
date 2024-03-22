@@ -18,7 +18,7 @@ import {
 } from '../helpers'
 import { credentialShareRequestTokenToFilterCredentials } from '../factory/credentialShareRequestToken'
 import { generateCredentials } from '../helpers/generateCredentials'
-import { SignedCredential, SdkOptions } from '../../src/dto'
+import { SignedCredential, SdkOptions, StaticValidateOptions } from '../../src/dto'
 import { testPlatformTools } from '../helpers/testPlatformTools'
 import { RegistryApiService } from '@affinidi/internal-api-clients'
 import { createUserManagementService } from '../../src/shared/createUserManagementService'
@@ -624,6 +624,17 @@ describe('CommonNetworkMember', () => {
 
     const sucessResult = await commonNetworkMember.validateCredential(signedCredential as SignedCredential)
     expect(sucessResult.result).to.equal(true)
+
+    const staticOptions = {
+      resolveLegacyElemLocally: true,
+      resolveKeyLocally: true,
+    }
+    const sucessStaticMethodResult = await AffinidiWallet.validateCredential(
+      testPlatformTools,
+      staticOptions as StaticValidateOptions,
+      signedCredential as SignedCredential,
+    )
+    expect(sucessStaticMethodResult.result).to.equal(true)
   })
 
   it('#verifyCredentialShareResponseToken function to pull request token passed', async () => {
